@@ -14,6 +14,7 @@ v0.7.0 - User preferences and viewing history
 
 v1.0.0 - Full-text search, entity linking, advanced analytics
 v1.1.0 - Data dashboard
+v1.2.0 - Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss
 
 ## Long Term: LLM-driven features
 

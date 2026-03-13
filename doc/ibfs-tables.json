@@ -1,0 +1,5990 @@
+[
+  {
+    "ddlName": "CONSTRAINTS",
+    "appName": "constraints",
+    "datFile": "constr.dat",
+    "columns": [
+      {
+        "name": "frequency_lower",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "frequency_upper",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "routine_processing",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "min_diameter",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "max_bandwidth",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "max_eirp_den",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "max_power",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "emission_type",
+        "sybaseType": "char(9)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tr_flag",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "internat_domestic",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "analog_digital",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "nature_of_service",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "antenna_meets_std",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "citation",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "provision",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "frequency_lower",
+      "frequency_upper"
+    ]
+  },
+  {
+    "ddlName": "COORD_ANTENNA",
+    "appName": "coord_antenna",
+    "datFile": "coord_antenna.dat",
+    "columns": [
+      {
+        "name": "coord_stn_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "coord_antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_diameter",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "antenna_gain",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "COORD_ARC",
+    "appName": "coord_arc",
+    "datFile": "coord_arc.dat",
+    "columns": [
+      {
+        "name": "coord_stn_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "coord_arc_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "sat_arc_east",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "sat_arc_west",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "sat_hemi_east",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "sat_hemi_west",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "COORD_FREQUENCY",
+    "appName": "coord_frequency",
+    "datFile": "coord_frequency.dat",
+    "columns": [
+      {
+        "name": "coord_stn_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "frequency_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "frequency_no",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "frequency_1",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_2",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "emission",
+        "sybaseType": "char(9)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "eirp",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "eirp_density",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "date_sent",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_replied",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "reply_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "reply_comments",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "COORD_MEXICO",
+    "appName": "coord_mexico",
+    "datFile": "coord_mexico.dat",
+    "columns": [
+      {
+        "name": "coord_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "coord_type",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "num_stn_total",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "num_stn_new",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "num_stn_resend",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "COORD_STN",
+    "appName": "coord_stn",
+    "datFile": "coord_stn.dat",
+    "columns": [
+      {
+        "name": "coord_stn_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "file_number",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "coser_no",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "admin_sent_to",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "site_id",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "lat_deg",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_min",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "lat_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "long_deg",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "long_min",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "long_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "long_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_state",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_elevation",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "count_arc",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "count_antenna",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "count_pts",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "count_freq",
+        "sybaseType": "smallint",
+        "duckdbType": "SMALLINT",
+        "nullable": true
+      },
+      {
+        "name": "fno_class_of_stn",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_sent",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_replied",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "reply_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "reply_comments",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "old_callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "rsntemperature",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SYSTEM_KEY",
+    "appName": "system_key",
+    "datFile": "system_key.dat",
+    "columns": [
+      {
+        "name": "system_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "MISC_SEQUENCE",
+    "appName": "misc_sequence",
+    "datFile": "misc_sequence.dat",
+    "columns": [
+      {
+        "name": "sequence_type",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "sequence_number",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "sequence_year",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "sequence_type"
+    ]
+  },
+  {
+    "ddlName": "CARS_TRACKING",
+    "appName": "cars_tracking",
+    "datFile": "cars_tracking.dat",
+    "columns": [
+      {
+        "name": "cars_num",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "app_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "version_number",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "reported_by",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "phone_num",
+        "sybaseType": "varchar(15)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "description",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "date_of_report",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "date_received",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_assigned",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_complete",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "priority_assigned",
+        "sybaseType": "numeric(1)",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "priority_final",
+        "sybaseType": "numeric(1)",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "assigned_to",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "assigned_phone",
+        "sybaseType": "varchar(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "analysis",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "action_taken",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "resolved_by",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "flag_web_app",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "cars_num"
+    ]
+  },
+  {
+    "ddlName": "RANGE",
+    "appName": "range",
+    "datFile": "range.dat",
+    "columns": [
+      {
+        "name": "ttable",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "col",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_APP_LOOKUP",
+    "appName": "sod_app_lookup",
+    "datFile": "sod_app_lookup.dat",
+    "columns": [
+      {
+        "name": "app_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "app_type_desc",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_CATEGORY",
+    "appName": "sod_category",
+    "datFile": "sod_category.dat",
+    "columns": [
+      {
+        "name": "subsystem_num",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "app_type_num",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_CATEGORY_GROUP",
+    "appName": "sod_category_group",
+    "datFile": "sod_category_group.dat",
+    "columns": [
+      {
+        "name": "category_profile_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      },
+      {
+        "name": "category_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_CATEGORY_PROFILE",
+    "appName": "sod_category_profile",
+    "datFile": "sod_category_profile.dat",
+    "columns": [
+      {
+        "name": "name",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "cr_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_DAY_RANGE",
+    "appName": "sod_day_range",
+    "datFile": "sod_day_range.dat",
+    "columns": [
+      {
+        "name": "begin_day",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "end_day",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_DAY_RANGE_GROUP",
+    "appName": "sod_day_range_group",
+    "datFile": "sod_day_range_group.dat",
+    "columns": [
+      {
+        "name": "day_range_profile_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      },
+      {
+        "name": "day_range_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_DAY_RANGE_PROFILE",
+    "appName": "sod_day_range_profile",
+    "datFile": "sod_day_range_profile.dat",
+    "columns": [
+      {
+        "name": "name",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "cr_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_DIAG",
+    "appName": "sod_diag",
+    "datFile": "sod_diag.dat",
+    "columns": [
+      {
+        "name": "name",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "parm1",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "parm2",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "when",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_GOAL",
+    "appName": "sod_goal",
+    "datFile": "sod_goal.dat",
+    "columns": [
+      {
+        "name": "bureau_goal",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "customer_goal",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "name",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "cr_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "actual_SOD_percent",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      },
+      {
+        "name": "backlog_multiplier",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_PERIOD",
+    "appName": "sod_period",
+    "datFile": "sod_period.dat",
+    "columns": [
+      {
+        "name": "begin_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "end_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "period_desc",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_PERIOD_GROUP",
+    "appName": "sod_period_group",
+    "datFile": "sod_period_group.dat",
+    "columns": [
+      {
+        "name": "period_profile_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      },
+      {
+        "name": "date_id",
+        "sybaseType": "numeric(5)",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_PERIOD_PROFILE",
+    "appName": "sod_period_profile",
+    "datFile": "sod_period_profile.dat",
+    "columns": [
+      {
+        "name": "name",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "cr_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_REPORT",
+    "appName": "sod_report",
+    "datFile": "sod_report.dat",
+    "columns": [
+      {
+        "name": "report_title",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "report_desc",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_REPORTS",
+    "appName": "sod_reports",
+    "datFile": "sod_reports.dat",
+    "columns": [
+      {
+        "name": "category_profile_id",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "period_profile_id",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "day_range_profile_id",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "goal_id",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "is_official",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "SOD_SUBSYSTEM_LOOKUP",
+    "appName": "sod_subsystem_lookup",
+    "datFile": "sod_subsystem_lookup.dat",
+    "columns": [
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_desc",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "AUTOGRANT_HISTORY",
+    "appName": "autogrant_history",
+    "datFile": "autogrant_history.dat",
+    "columns": [
+      {
+        "name": "date_autogrant",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": []
+  },
+  {
+    "ddlName": "CLASS_OF_STATION_CODE",
+    "appName": "class_of_station_code",
+    "datFile": "class.dat",
+    "columns": [
+      {
+        "name": "class_of_station_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "class_of_station_code"
+    ]
+  },
+  {
+    "ddlName": "COUNTRY_CODE",
+    "appName": "country_code",
+    "datFile": "country_code.dat",
+    "columns": [
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "country_name",
+        "sybaseType": "varchar(62)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "blocked_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "block_start_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "block_expired_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "block_authorized_by",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "block_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "wto_member_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "country_code"
+    ]
+  },
+  {
+    "ddlName": "NATURE_OF_SERVICE_CODE",
+    "appName": "nature_of_service_code",
+    "datFile": "nat_serv_code.dat",
+    "columns": [
+      {
+        "name": "nature_of_service_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "nature_of_service_code"
+    ]
+  },
+  {
+    "ddlName": "POLARIZATION_CODE",
+    "appName": "polarization_code",
+    "datFile": "polar.dat",
+    "columns": [
+      {
+        "name": "polarization_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "polarization_type",
+        "sybaseType": "varchar(28)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "polarization_code"
+    ]
+  },
+  {
+    "ddlName": "SPACE_STATION",
+    "appName": "space_station",
+    "datFile": "space_sta.dat",
+    "columns": [
+      {
+        "name": "space_station_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "us_name",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "itu_name",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "orbit_location",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "verbose",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "space_station_key"
+    ]
+  },
+  {
+    "ddlName": "STATE",
+    "appName": "state",
+    "datFile": "state.dat",
+    "columns": [
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "state_name",
+        "sybaseType": "char(14)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "state_code"
+    ]
+  },
+  {
+    "ddlName": "STATUS_CODE",
+    "appName": "status_code",
+    "datFile": "status_code.dat",
+    "columns": [
+      {
+        "name": "status_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "status_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "internal_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "status_code"
+    ]
+  },
+  {
+    "ddlName": "SUBSYSTEM_CODE",
+    "appName": "subsystem_code",
+    "datFile": "subsys_code.dat",
+    "columns": [
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "TYPE_APPLICANT_CODE",
+    "appName": "type_applicant_code",
+    "datFile": "type_appl_code.dat",
+    "columns": [
+      {
+        "name": "type_applicant_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "type_applicant_code"
+    ]
+  },
+  {
+    "ddlName": "IB_GROUP",
+    "appName": "ib_group",
+    "datFile": "ib_group.dat",
+    "columns": [
+      {
+        "name": "group_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "group_name",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "group_code"
+    ]
+  },
+  {
+    "ddlName": "PURPOSE_CODE",
+    "appName": "purpose_code",
+    "datFile": "purpose_code.dat",
+    "columns": [
+      {
+        "name": "purpose_code",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "purpose_code"
+    ]
+  },
+  {
+    "ddlName": "SECTION_214_SERVICE_CODE",
+    "appName": "section_214_service_code",
+    "datFile": "sect_214_code.dat",
+    "columns": [
+      {
+        "name": "section_214_service_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "section_214_service_code"
+    ]
+  },
+  {
+    "ddlName": "ACTION_CODE",
+    "appName": "action_code",
+    "datFile": "act_code.dat",
+    "columns": [
+      {
+        "name": "action_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "verbose",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "action_code"
+    ]
+  },
+  {
+    "ddlName": "ANTENNA_TYPE_CODE",
+    "appName": "antenna_type_code",
+    "datFile": "ant_type_code.dat",
+    "columns": [
+      {
+        "name": "antenna_type_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "antenna_type_code"
+    ]
+  },
+  {
+    "ddlName": "REPORT",
+    "appName": "report",
+    "datFile": "report.dat",
+    "columns": [
+      {
+        "name": "report_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "report_name",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "report_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "report_dataobject",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "report_args_dataobject",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "report_id"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_GROUP",
+    "appName": "pub_notice_group",
+    "datFile": "pub_notice_group.dat",
+    "columns": [
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_group_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_group_prefix",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "pub_notice_group_code"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_TYPE",
+    "appName": "pub_notice_type",
+    "datFile": "pub_notice_type.dat",
+    "columns": [
+      {
+        "name": "pub_notice_type_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_type_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_type_suffix",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "pub_notice_type_code"
+    ]
+  },
+  {
+    "ddlName": "BLOCKED_REASON_CODE",
+    "appName": "blocked_reason_code",
+    "datFile": "blk_reas_code.dat",
+    "columns": [
+      {
+        "name": "blocked_reason_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "blocked_reason_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "blocked_reason_code"
+    ]
+  },
+  {
+    "ddlName": "NOTE_TYPE_CODE",
+    "appName": "note_type_code",
+    "datFile": "note_type_code.dat",
+    "columns": [
+      {
+        "name": "note_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "verbose",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "note_type_code"
+    ]
+  },
+  {
+    "ddlName": "FILE_TYPE_LK",
+    "appName": "file_type_lk",
+    "datFile": "file_type_lk.dat",
+    "columns": [
+      {
+        "name": "id_file_type",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": false
+      },
+      {
+        "name": "file_extension",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "file_type_description",
+        "sybaseType": "varchar(18)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "mime_type",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "id_file_type"
+    ]
+  },
+  {
+    "ddlName": "ADDRESS",
+    "appName": "address",
+    "datFile": "address.dat",
+    "columns": [
+      {
+        "name": "address_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "dba_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street1",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street2",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "zipcode",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "address_key"
+    ]
+  },
+  {
+    "ddlName": "CONTACT",
+    "appName": "contact",
+    "datFile": "contact.dat",
+    "columns": [
+      {
+        "name": "contact_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "contact_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "title",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "company_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street1",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street2",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "zipcode",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "contact_key"
+    ]
+  },
+  {
+    "ddlName": "MAIN",
+    "appName": "filing",
+    "datFile": "main.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_state",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "file_number",
+        "sybaseType": "char(19)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "status_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "status_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "last_action",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "last_action_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "mts_number",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "date_filed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "mellon_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_grant",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_deny",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_dismiss",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_surrender",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_begin",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_expire",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_last_update",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "aff_pub_notice_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "aff_pub_notice_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "act_pub_notice_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "act_pub_notice_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "submission_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "fee_control_number",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "app_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "filing_other_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "keyword1",
+        "sybaseType": "char(6)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "keyword2",
+        "sybaseType": "char(6)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tower_cleared_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_blocked",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "blocked_reason_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "blocked_reason",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "type_applicant_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "applicant_other_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "class_of_station_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "class_other_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "signer_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "signer_title",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_signed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "description",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "address_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "contact_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_relationship",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "other_purpose_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "ACCOUNTING_CHANGE",
+    "appName": "accounting_change",
+    "datFile": "accnt.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "carrier",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "administration",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "ASSIGNMENT",
+    "appName": "assignment",
+    "datFile": "assign.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "licensee_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "licensee_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferor_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "transferor_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferor_relationship",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferor_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferor_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferor_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferee_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "transferee_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferee_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferee_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "transferee_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "num_stns",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licsigner_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licsigner_title",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licsigner_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "fromsigner_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "fromsigner_title",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "fromsigner_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "tosigner_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tosigner_title",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tosigner_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "ATTACHMENT",
+    "appName": "attachment",
+    "datFile": "attach.dat",
+    "columns": [
+      {
+        "name": "attachment_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "attachment_name",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "transmission_start_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "transmission_end_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "processed_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "attachment_key"
+    ]
+  },
+  {
+    "ddlName": "FORM_312",
+    "appName": "form_312",
+    "datFile": "form_312.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filenum_refer",
+        "sybaseType": "char(19)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "filenum_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "required_construction_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "completed_construction_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "blanket_callsign_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "common_carrier_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "us_sat_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "non_us_sat_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "type_of_facility",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "environ_effect_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_govt_rep_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_applicant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_corp_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_officer_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "waivers_req_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "revoked_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "felony_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "monopoly_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "public_switched_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pend_action_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "drug_abuse_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "nature_of_service_other_text",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "sat_common_name",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "orbit_location",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "non_us_lic_sat_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "administration",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "operation_start_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "SITE",
+    "appName": "site",
+    "datFile": "site.dat",
+    "columns": [
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_id",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "site_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "contact_person",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_street1",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_street2",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_county",
+        "sybaseType": "char(22)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_state",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_zipcode",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_telephone",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "site_elevation",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "lat_deg",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_min",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "lat_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "long_deg",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "long_min",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "long_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "long_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "nad_ind",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "num_vsats_built",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "vsat_report_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "faa_coord_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "comply_25209a_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "comply_25209a2_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "remote_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_freq_coord_req_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "freq_coord_req_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "site_key"
+    ]
+  },
+  {
+    "ddlName": "FORM_325C",
+    "appName": "form_325c",
+    "datFile": "form_325c.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "studio_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "studio_city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "studio_state",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "studio_zipcode",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "delivery_means",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "citizen_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "partners_citizens_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "corp_state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_ownership_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_officer_5c_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_officer_5f_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "corporate_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "subsidiary_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "association_no_members",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "association_no_alien_members",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "principal_bussiness",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "am_fm_tv_interest_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_rep_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "revoked_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "denied_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "felony_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "monopoly_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "NATIVE_APP",
+    "appName": "native_app",
+    "datFile": "native_app.dat",
+    "columns": [
+      {
+        "name": "attachment_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "id_file_type",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "attachment_key"
+    ]
+  },
+  {
+    "ddlName": "ANTENNA",
+    "appName": "antenna",
+    "datFile": "anten.dat",
+    "columns": [
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_id",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "diameter",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "diameter_minor",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "diameter_major",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "height_bldg_agl",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "height_max_agl",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "height_max_amsl",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "height_max_aroof",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "manufacturer",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "max_input_power",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "max_output_eirp",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "model",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "quantity",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "tower_id",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tower_cleared_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "antenna_key"
+    ]
+  },
+  {
+    "ddlName": "PTCOMM",
+    "appName": "ptcomm",
+    "datFile": "ptcomm.dat",
+    "columns": [
+      {
+        "name": "ptcomm_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "space_station_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "ptcomm_key"
+    ]
+  },
+  {
+    "ddlName": "ANTENNA_FX",
+    "appName": "antenna_fx",
+    "datFile": "ant_fx.dat",
+    "columns": [
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_id",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "gain_1",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "gain_2",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "frequency_1",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_2",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "polarization_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_lower",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_upper",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "height_max_amsl",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "height_max_agl",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "elevation",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "manufacturer",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "model",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "quantity",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "tower_id",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "beamwidth",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "rotatable_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "take_off_angle",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "slewable_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "slew_amt",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "target_zone",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "antenna_type_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "antenna_pattern",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "schematic_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "operation_desc",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tower_cleared_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "antenna_key"
+    ]
+  },
+  {
+    "ddlName": "FREQUENCY",
+    "appName": "frequency",
+    "datFile": "freq.dat",
+    "columns": [
+      {
+        "name": "frequency_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "polarization_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "eirp",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "eirp_density",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "emission",
+        "sybaseType": "char(9)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_lower",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_upper",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "trans_mode",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "modulation",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "frequency_key"
+    ]
+  },
+  {
+    "ddlName": "APP_TYPE_CODE",
+    "appName": "app_type_code",
+    "datFile": "app_typ_code.dat",
+    "columns": [
+      {
+        "name": "app_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "application_type",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "verbose",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pb_class_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pb_license_class_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "inactive_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "app_type_code",
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "CONDITION",
+    "appName": "condition",
+    "datFile": "cond.dat",
+    "columns": [
+      {
+        "name": "condition_code",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "condition_text",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "condition_note",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "condition_code"
+    ]
+  },
+  {
+    "ddlName": "IB_USER",
+    "appName": "ib_user",
+    "datFile": "ib_user.dat",
+    "columns": [
+      {
+        "name": "user_id",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "print_name",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "active_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "access_level",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "support_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "external_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "group_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "autogrant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "user_id"
+    ]
+  },
+  {
+    "ddlName": "AUTH_SUBSYSTEM",
+    "appName": "auth_subsystem",
+    "datFile": "auth_subsystem.dat",
+    "columns": [
+      {
+        "name": "user_id",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "user_id",
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_GROUP_TYPE",
+    "appName": "pub_notice_group_type",
+    "datFile": "pub_notice_group_type.dat",
+    "columns": [
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_type_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pb_class_name",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "pub_notice_group_code",
+      "pub_notice_type_code"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_REPORT",
+    "appName": "pub_notice_report",
+    "datFile": "pub_notice_report.dat",
+    "columns": [
+      {
+        "name": "report_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_type_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "report_number",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "da_number",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_published",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "date_processed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "send_to_opa",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "opa_file_name",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "report_key"
+    ]
+  },
+  {
+    "ddlName": "ASSIGN_LIST",
+    "appName": "assign_list",
+    "datFile": "assign_lst.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "callsign"
+    ]
+  },
+  {
+    "ddlName": "FILING_TRACKING",
+    "appName": "filing_tracking",
+    "datFile": "filing_tracking.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "to_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "to_user",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "from_user",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "by_user",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "acknowledged_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_acknowledged",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_completed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "to_date",
+      "to_user"
+    ]
+  },
+  {
+    "ddlName": "AZIMUTH",
+    "appName": "azimuth",
+    "datFile": "azimuth.dat",
+    "columns": [
+      {
+        "name": "azimuth_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "azimuth",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "azimuth_key"
+    ]
+  },
+  {
+    "ddlName": "COMMENT",
+    "appName": "comment",
+    "datFile": "comment.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "date_entered",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "date_filed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "commenter_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "file_name",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "date_entered"
+    ]
+  },
+  {
+    "ddlName": "COORD_PT",
+    "appName": "coord_pt",
+    "datFile": "coord_pt.dat",
+    "columns": [
+      {
+        "name": "coord_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "coord_pt",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "space_station_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "coord_key"
+    ]
+  },
+  {
+    "ddlName": "COUNTY",
+    "appName": "county",
+    "datFile": "county.dat",
+    "columns": [
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "county",
+        "sybaseType": "varchar(22)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "fips_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "canada_ind",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "state_code",
+      "county"
+    ]
+  },
+  {
+    "ddlName": "DESTINATION",
+    "appName": "destination",
+    "datFile": "destina.dat",
+    "columns": [
+      {
+        "name": "destination_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "ptcomm_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "destination_key"
+    ]
+  },
+  {
+    "ddlName": "DNIC",
+    "appName": "dnic",
+    "datFile": "dnic.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "dnic_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "from_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "to_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "from_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "to_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "reason",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "network_name",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "deadline_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "type_request_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "reassignment_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "provisional_assignment_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "authorization_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "international_service",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "FILENUM_XREF",
+    "appName": "filenum_xref",
+    "datFile": "filenum_xref.dat",
+    "columns": [
+      {
+        "name": "old_file_number",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "FREQ_COORD",
+    "appName": "freq_coord",
+    "datFile": "freq_coord.dat",
+    "columns": [
+      {
+        "name": "coord_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "azimuth_east",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "azimuth_west",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "elevation_east",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "elevation_west",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "freq_limit_low",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "freq_limit_high",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "horiz_max_density",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "sat_arc_east",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "sat_arc_west",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "sat_hemi_east",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "sat_hemi_west",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "sat_orbit_type",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "coord_key"
+    ]
+  },
+  {
+    "ddlName": "FREQUENCY_FX",
+    "appName": "frequency_fx",
+    "datFile": "freq_fx.dat",
+    "columns": [
+      {
+        "name": "frequency_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "polarization_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "eirp",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "emission",
+        "sybaseType": "char(9)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_lower",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "frequency_upper",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "trans_mode",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "frequency_key"
+    ]
+  },
+  {
+    "ddlName": "ISPC",
+    "appName": "ispc",
+    "datFile": "ispc.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "ispc_code",
+        "sybaseType": "char(7)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "network_city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "network_state",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "deadline_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "implementation_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "assign_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "reassignment_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "provisional_assignment_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "KEYWORD",
+    "appName": "keyword",
+    "datFile": "keyword.dat",
+    "columns": [
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "keyword",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "subsystem_code",
+      "keyword"
+    ]
+  },
+  {
+    "ddlName": "LICENSE_CONDITION",
+    "appName": "license_condition",
+    "datFile": "lic_cond.dat",
+    "columns": [
+      {
+        "name": "condition_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "condition_code",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "condition_key"
+    ]
+  },
+  {
+    "ddlName": "NATURE_OF_SERVICE",
+    "appName": "nature_of_service",
+    "datFile": "nat_serv.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "nature_of_service_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "nature_of_service_code"
+    ]
+  },
+  {
+    "ddlName": "NOTE",
+    "appName": "note",
+    "datFile": "note.dat",
+    "columns": [
+      {
+        "name": "note_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "note_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "aff_pub_notice_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "act_pub_notice_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_created",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "user_id",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "note_text",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "note_key"
+    ]
+  },
+  {
+    "ddlName": "OTHER_COMPANY",
+    "appName": "other_company",
+    "datFile": "other_company.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "other_company_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "other_company_name"
+    ]
+  },
+  {
+    "ddlName": "PAINT_LIGHT",
+    "appName": "paint_light",
+    "datFile": "pls.dat",
+    "columns": [
+      {
+        "name": "paint_light_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "paint_light",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "paint_light_key"
+    ]
+  },
+  {
+    "ddlName": "PETITION_TO_DENY",
+    "appName": "petition_to_deny",
+    "datFile": "petit_deny.dat",
+    "columns": [
+      {
+        "name": "petition_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "date_filed",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "filed_by",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "petition_key"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_HISTORY",
+    "appName": "pub_notice_history",
+    "datFile": "pub_notice_history.dat",
+    "columns": [
+      {
+        "name": "report_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "report_key",
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "PURPOSE",
+    "appName": "purpose",
+    "datFile": "purpose.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "purpose_code",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "purpose_code"
+    ]
+  },
+  {
+    "ddlName": "REMOTE_CONTROL",
+    "appName": "remote_control",
+    "datFile": "rem_contrl.dat",
+    "columns": [
+      {
+        "name": "remote_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "county",
+        "sybaseType": "char(15)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street1",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street2",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "telephone",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "zip_code",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "remote_key"
+    ]
+  },
+  {
+    "ddlName": "SECTION_214",
+    "appName": "section_214",
+    "datFile": "sect_214.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "da_number",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "section_214_service_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "space_station_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "place_of_incorp",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "streamlined_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_applicant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "mult_alien_applicant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "drug_abuse_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "FILENUM_SEQUENCE",
+    "appName": "filenum_sequence",
+    "datFile": "filenum_sequence.dat",
+    "columns": [
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "sequence_year",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "sequence_number",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "subsystem_code",
+      "sequence_year"
+    ]
+  },
+  {
+    "ddlName": "STATUS_TRACKING",
+    "appName": "status_tracking",
+    "datFile": "stat_track.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "status_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "status_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "action_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "status_code",
+      "status_date"
+    ]
+  },
+  {
+    "ddlName": "TRANSMITTER",
+    "appName": "transmitter",
+    "datFile": "transmitter.dat",
+    "columns": [
+      {
+        "name": "transmitter_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "transmitter_description",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "quantity",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "manufacturer",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "model",
+        "sybaseType": "varchar(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "serial_num",
+        "sybaseType": "char(15)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "emission_type",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "power",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "tolerance",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "transmitter_key"
+    ]
+  },
+  {
+    "ddlName": "ROA",
+    "appName": "roa",
+    "datFile": "roa.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "incorporation_location",
+        "sybaseType": "varchar(60)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "streamlined_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_applicant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "mult_alien_applicant_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "drug_abuse_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "common_carrier_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "harmful_interference_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "enhanced_service_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "article_6_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "required_attachments_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "SPACE_STATION_STA",
+    "appName": "space_station_sta",
+    "datFile": "space_sta_sta.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "type_sta_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "requested_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "requested_location",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "EARTH_STATION_STA",
+    "appName": "earth_station_sta",
+    "datFile": "earth_sta.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "type_sta_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "requested_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "lat_deg",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_min",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "lat_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "lat_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "long_deg",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "long_min",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": true
+      },
+      {
+        "name": "long_sec",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      },
+      {
+        "name": "long_hemi",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "SECTION_214_STA",
+    "appName": "section_214_sta",
+    "datFile": "sect_214_sta.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "type_sta_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "requested_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "FX",
+    "appName": "fx",
+    "datFile": "fx.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filenum_refer",
+        "sybaseType": "char(19)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "filenum_refer_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "irac_status",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "tower_status",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "cp_expires_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "proximity_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "nepa_major_action_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "radiation_hazard_report_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "citizen_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "partners_citizens_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "corp_state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_ownership_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_officer_4c_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "alien_officer_4f_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "corporate_control_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "subsidiary_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "association_no_members",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "association_no_alien_members",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": true
+      },
+      {
+        "name": "principal_bussiness",
+        "sybaseType": "varchar(50)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "am_fm_tv_interest_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "foreign_rep_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "revoked_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "denied_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "felony_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "monopoly_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "assets_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "capital_assurance_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "DEFAULT_USER",
+    "appName": "default_user",
+    "datFile": "default_user.dat",
+    "columns": [
+      {
+        "name": "user_id",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "FILING_HISTORY",
+    "appName": "filing_history",
+    "datFile": "fil_hist.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "refer_filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "original_filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "refer_filing_key",
+      "original_filing_key"
+    ]
+  },
+  {
+    "ddlName": "ACCOUNTING_CHANGE_RATE",
+    "appName": "accounting_change_rate",
+    "datFile": "acct_rt.dat",
+    "columns": [
+      {
+        "name": "accounting_rate_change_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "service",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "current_rate",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "new_rate",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "surcharge",
+        "sybaseType": "varchar(30)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "date_effective",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "date_expire",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "type_arrangement_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "prop_return_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "accounting_rate_change_key"
+    ]
+  },
+  {
+    "ddlName": "ANTENNA_GAIN",
+    "appName": "antenna_gain",
+    "datFile": "ant_gain.dat",
+    "columns": [
+      {
+        "name": "gain_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "gain",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": false
+      },
+      {
+        "name": "frequency",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "gain_key"
+    ]
+  },
+  {
+    "ddlName": "ADDRESS_HISTORY",
+    "appName": "address_history",
+    "datFile": "address_history.dat",
+    "columns": [
+      {
+        "name": "address_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "date_archived",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "address_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "address_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "dba_name",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street1",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "street2",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "city",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "state_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "zipcode",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "address_key",
+      "date_archived"
+    ]
+  },
+  {
+    "ddlName": "LICENSEE_HISTORY",
+    "appName": "licensee_history",
+    "datFile": "licensee_history.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "assign_filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "licensee_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "licensee_attention",
+        "sybaseType": "varchar(80)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_phone_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_fax_num",
+        "sybaseType": "char(25)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "licensee_e_mail",
+        "sybaseType": "varchar(40)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "assign_filing_key"
+    ]
+  },
+  {
+    "ddlName": "STATION",
+    "appName": "station",
+    "datFile": "station.dat",
+    "columns": [
+      {
+        "name": "station_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "station_callsign",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "station_broadcast_type",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "station_frequency",
+        "sybaseType": "char(17)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "station_channel",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "station_city",
+        "sybaseType": "varchar(20)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "country_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "station_key"
+    ]
+  },
+  {
+    "ddlName": "FORM_405",
+    "appName": "form_405",
+    "datFile": "form_405.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "rulepart_code",
+        "sybaseType": "char(2)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "filenum_refer",
+        "sybaseType": "char(19)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "callsign_refer",
+        "sybaseType": "char(10)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "removal_of_equipment_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "removal_of_equipment_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "ownership_interest_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "environmental_impact_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "drug_abuse_sw",
+        "sybaseType": "char(1)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "SUBSYSTEM_REPORT",
+    "appName": "subsystem_report",
+    "datFile": "subsys_rpt.dat",
+    "columns": [
+      {
+        "name": "report_id",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "report_id",
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_SEQUENCE",
+    "appName": "pub_notice_sequence",
+    "datFile": "pub_notice_sequence.dat",
+    "columns": [
+      {
+        "name": "report_sequence_number",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "report_sequence_number",
+      "pub_notice_group_code"
+    ]
+  },
+  {
+    "ddlName": "FORM_325C_STA",
+    "appName": "form_325c_sta",
+    "datFile": "form_325c_sta.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "type_sta_code",
+        "sybaseType": "char(5)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "requested_date",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_SUBSYSTEM",
+    "appName": "pub_notice_subsystem",
+    "datFile": "pub_notice_subsystem.dat",
+    "columns": [
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "subsystem_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "pub_notice_group_code",
+      "subsystem_code"
+    ]
+  },
+  {
+    "ddlName": "FEE_TYPE",
+    "appName": "fee_type",
+    "datFile": "fee_type.dat",
+    "columns": [
+      {
+        "name": "fee_type_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "fee_type_code",
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_PROCESSING",
+    "appName": "pub_notice_processing",
+    "datFile": "pub_notice_processing.dat",
+    "columns": [
+      {
+        "name": "report_key",
+        "sybaseType": "integer",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "report_number",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "da_number",
+        "sybaseType": "char(12)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_type_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "date_published",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "report_key",
+      "filing_key"
+    ]
+  },
+  {
+    "ddlName": "FILENUM_ASSIGN_LIST",
+    "appName": "filenum_assign_list",
+    "datFile": "filenum_assign_list.dat",
+    "columns": [
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "file_number",
+        "sybaseType": "char(19)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "filing_key",
+      "file_number"
+    ]
+  },
+  {
+    "ddlName": "PUB_NOTICE_TEXT",
+    "appName": "pub_notice_text",
+    "datFile": "pub_notice_text.dat",
+    "columns": [
+      {
+        "name": "pub_notice_group_code",
+        "sybaseType": "char(3)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_type_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "pub_notice_header",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_subheader",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_header_text",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "pub_notice_footer_text",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "pub_notice_group_code",
+      "pub_notice_type_code"
+    ]
+  },
+  {
+    "ddlName": "SITE_CONDITION",
+    "appName": "site_condition",
+    "datFile": "site_cond.dat",
+    "columns": [
+      {
+        "name": "condition_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "condition_code",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "condition_key"
+    ]
+  },
+  {
+    "ddlName": "ANTENNA_CONDITION",
+    "appName": "antenna_condition",
+    "datFile": "ant_cond.dat",
+    "columns": [
+      {
+        "name": "condition_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "antenna_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "condition_code",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "condition_key"
+    ]
+  },
+  {
+    "ddlName": "FREQUENCY_CONDITION",
+    "appName": "frequency_condition",
+    "datFile": "freq_cond.dat",
+    "columns": [
+      {
+        "name": "condition_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "frequency_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "condition_code",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "condition_key"
+    ]
+  },
+  {
+    "ddlName": "PDF",
+    "appName": "pdf",
+    "datFile": "pdf.dat",
+    "columns": [
+      {
+        "name": "attachment_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "id_file_type",
+        "sybaseType": "tinyint",
+        "duckdbType": "TINYINT",
+        "nullable": false
+      }
+    ],
+    "primaryKey": [
+      "attachment_key"
+    ]
+  },
+  {
+    "ddlName": "PTCOMM_FX",
+    "appName": "ptcomm_fx",
+    "datFile": "ptcomm_fx.dat",
+    "columns": [
+      {
+        "name": "ptcomm_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "site_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "location",
+        "sybaseType": "varchar(255)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      },
+      {
+        "name": "distance",
+        "sybaseType": "float",
+        "duckdbType": "DOUBLE",
+        "nullable": true
+      }
+    ],
+    "primaryKey": [
+      "ptcomm_key"
+    ]
+  },
+  {
+    "ddlName": "BLOCKED_HISTORY",
+    "appName": "blocked_history",
+    "datFile": "blk_hist.dat",
+    "columns": [
+      {
+        "name": "blocked_history_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "filing_key",
+        "sybaseType": "int",
+        "duckdbType": "INTEGER",
+        "nullable": false
+      },
+      {
+        "name": "date_blocked",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": false
+      },
+      {
+        "name": "blocked_reason_code",
+        "sybaseType": "char(4)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "blocked_reason",
+        "sybaseType": "text",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "blocked_by",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": false
+      },
+      {
+        "name": "date_unblocked",
+        "sybaseType": "datetime",
+        "duckdbType": "TIMESTAMP",
+        "nullable": true
+      },
+      {
+        "name": "unblocked_by",
+        "sybaseType": "char(8)",
+        "duckdbType": "VARCHAR",
+        "nullable": true
+      }
+    ],
+    "primaryKey": []
+  }
+]
