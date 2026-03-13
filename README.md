@@ -42,14 +42,61 @@ Many applications require extra information in the form of attachments. The IBFS
 This application downloads and stores all Application and Comment attachments into its blob storage.
 When possible, the attachment's text content is extracted and indexed for search.
 
-## 5. Technologies
+## 5. Architecture
 
-- [DuckDB](https://duckdb.org/)
-- [Vite](https://vitejs.dev/)
-- [React](https://reactjs.org/) with [React Compiler](https://react.dev/learn/react-compiler) enabled
-- [Tailwind](https://tailwindcss.com/)
+The project is a pnpm monorepo with two packages:
+
+```mermaid
+graph TD
+    Browser["Browser\n(@daily-orbit/web)"]
+    Server["REST API Server\n(@daily-orbit/server)"]
+    DB[("DuckDB\ndata/daily-orbit.duckdb")]
+    Auth["Better Auth\n(sessions & accounts)"]
+    FCC["FCC IBFS Feed\n(public data source)"]
+    Blob["Blob Storage\n(local fs or S3)"]
+
+    Browser -- "HTTP :5173 → :9000" --> Server
+    Server -- "SQL queries" --> DB
+    Server -- "auth adapter" --> Auth
+    Auth -- "DuckDB tables" --> DB
+    Server -- "scrape CLI" --> FCC
+    FCC -- "attachments" --> Blob
+    Server -- "attachment URLs" --> Blob
+```
+
+### Packages
+
+| Package               | Path               | Port | Purpose                               |
+| --------------------- | ------------------ | ---- | ------------------------------------- |
+| `@daily-orbit/web`    | `packages/web/`    | 5173 | Vite + React + fbtee frontend         |
+| `@daily-orbit/server` | `packages/server/` | 9000 | Hono REST API + auth + data ingestion |
+
+### Data flow
+
+1. The **scrape CLI** fetches Application metadata and attachments from the FCC IBFS feed and stores them in DuckDB + blob storage.
+2. The **server** exposes a REST API consumed by the browser frontend and enforces session-based auth via Better Auth.
+3. The **web** client renders Application, Applicant, and Comment views driven entirely by the API.
+
+## 6. Technologies
+
+### Frontend (`packages/web`)
+
+- [Vite](https://vitejs.dev/) + [React 19](https://reactjs.org/) with [React Compiler](https://react.dev/learn/react-compiler)
+- [Tailwind CSS](https://tailwindcss.com/)
 - [fbtee](https://github.com/nkzw-tech/fbtee) for i18n
 - [Better Auth](https://www.better-auth.com/) for authentication
-- [React Router](https://reactrouter.com/)
-- [TypeScript](https://www.typescriptlang.org)
-- [pnpm](https://pnpm.io/)
+- [React Router v7](https://reactrouter.com/)
+
+### Backend (`packages/server`)
+
+- [Hono](https://hono.dev/) on [Node.js 23+](https://nodejs.org/) (native TypeScript strip-types)
+- [DuckDB](https://duckdb.org/) via `@duckdb/node-api`
+- [Better Auth](https://www.better-auth.com/) with a custom DuckDB adapter
+- [tsdown](https://github.com/sxzz/tsdown) (Rolldown-based) for production builds
+
+### Shared tooling
+
+- [TypeScript](https://www.typescriptlang.org) + [tsgo](https://github.com/microsoft/typescript-go) for type checking
+- [oxlint](https://oxc.rs/docs/guide/usage/linter.html) + [oxfmt](https://github.com/nicolo-ribaudo/oxfmt) for linting and formatting
+- [vitest](https://vitest.dev/) for testing
+- [pnpm](https://pnpm.io/) workspaces

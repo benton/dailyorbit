@@ -1,0 +1,38 @@
+{
+  "name": "@daily-orbit/server",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "nodemon --exec 'node --no-warnings src/index.ts' --ext ts",
+    "dev:setup": "echo 'No server setup needed'",
+    "format": "oxfmt",
+    "lint": "oxlint .",
+    "lint:format": "oxfmt --check",
+    "test": "npm-run-all2 --parallel tsc:check vitest:run lint lint:format",
+    "tsc:check": "tsgo",
+    "vitest:run": "vitest run"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "1.5.0-r.1",
+    "@hono/node-server": "^1.14.3",
+    "@nkzw/define-env": "^1.1.0",
+    "better-auth": "^1.4.18",
+    "hono": "^4.7.11"
+  },
+  "devDependencies": {
+    "@nkzw/oxlint-config": "^1.0.1",
+    "@typescript/native-preview": "7.0.0-dev.20260212.1",
+    "nodemon": "^3.1.10",
+    "npm-run-all2": "^8.0.4",
+    "oxfmt": "^0.32.0",
+    "oxlint": "^1.47.0",
+    "tsdown": "^0.12.9",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=23.0.0",
+    "pnpm": ">=10.0.0"
+  }
+}
