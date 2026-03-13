@@ -134,7 +134,7 @@ export const auth = betterAuth({
   secret: BETTER_AUTH_SECRET,
   baseURL: BETTER_AUTH_URL,
   trustedOrigins: [CLIENT_DOMAIN],
-  database: createDuckDbAdapter(),
+  database: createDuckDbAdapter,
   emailAndPassword: {
     enabled: true,
   },

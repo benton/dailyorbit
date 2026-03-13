@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "dev": "nodemon --exec 'node --no-warnings src/index.ts' --ext ts",
-    "dev:setup": "echo 'No server setup needed'",
+    "dev": "nodemon --exec 'node --no-warnings --env-file=.env src/index.ts' --ext ts",
+    "dev:setup": "mkdir -pv data",
     "format": "oxfmt",
     "lint": "oxlint .",
     "lint:format": "oxfmt",
