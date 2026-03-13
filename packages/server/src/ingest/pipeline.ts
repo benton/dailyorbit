@@ -32,6 +32,7 @@ export type IngestOptions = {
 
 /** Result of the full ingest pipeline */
 export type IngestResult = {
+  ingestId: number;
   tablesLoaded: LoadTableResult[];
   tablesSkipped: string[];
   totalRecords: number;
@@ -46,7 +47,7 @@ export type IngestResult = {
  */
 export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   const start: number = Date.now();
-  const log = options.onProgress ?? console.log;
+  const log: (message: string) => void = options.onProgress ?? console.log;
 
   // Stage 1: Load table definitions from DDL
   log('Loading table definitions...');
@@ -86,6 +87,7 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   if (options.dryRun === true) {
     log('Dry run — skipping database writes');
     return {
+      ingestId: 0,
       tablesLoaded: availableTables.map((t) => ({
         tableName: t.appName,
         recordCount: 0,
@@ -103,22 +105,57 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
 
   await createMetadataTables(conn);
 
+  // Insert ingest_log row with status 'running'
+  // Use lower 31 bits of timestamp as a simple unique ID that fits in INTEGER
+  const ingestId: number = Date.now() % 2_147_483_647;
+  const sourceUrl: string = options.sourceUrl ?? 'local';
+
+  await conn.run(
+    `INSERT INTO "ingest_log"
+      ("ingest_id", "started_at", "source_url", "zip_size_bytes", "status")
+      VALUES ($1, current_timestamp, $2, $3, $4)`,
+    [ingestId, sourceUrl, options.zipSizeBytes ?? null, 'running'] as DuckDBValue[],
+  );
+
   // Stage 5: Load each table
   const results: LoadTableResult[] = [];
   let totalRecords: number = 0;
 
-  for (const tableDef of availableTables) {
-    log(`Loading ${tableDef.appName} (${tableDef.datFile})...`);
-    const result: LoadTableResult = await loadTable(
-      conn,
-      tableDef,
-      options.datDir,
+  try {
+    for (const tableDef of availableTables) {
+      log(`Loading ${tableDef.appName} (${tableDef.datFile})...`);
+      const result: LoadTableResult = await loadTable(
+        conn,
+        tableDef,
+        options.datDir,
+      );
+      results.push(result);
+      totalRecords += result.recordCount;
+      log(
+        `  ${String(result.recordCount)} records loaded${result.extraColumnCount > 0 ? `, ${String(result.extraColumnCount)} extra columns` : ''}`,
+      );
+    }
+
+    // Update ingest_log to 'completed'
+    const tableResults: string = JSON.stringify(results);
+    await conn.run(
+      `UPDATE "ingest_log"
+        SET "status" = $1, "completed_at" = current_timestamp, "table_results" = $2
+        WHERE "ingest_id" = $3`,
+      ['completed', tableResults, ingestId] as DuckDBValue[],
     );
-    results.push(result);
-    totalRecords += result.recordCount;
-    log(
-      `  ${String(result.recordCount)} records loaded${result.extraColumnCount > 0 ? `, ${String(result.extraColumnCount)} extra columns` : ''}`,
+  } catch (error: unknown) {
+    // Update ingest_log to 'failed'
+    const errorMessage: string =
+      error instanceof Error ? error.message : String(error);
+    await conn.run(
+      `UPDATE "ingest_log"
+        SET "status" = $1, "completed_at" = current_timestamp, "error_message" = $2
+        WHERE "ingest_id" = $3`,
+      ['failed', errorMessage, ingestId] as DuckDBValue[],
     );
+    conn.closeSync();
+    throw error;
   }
 
   conn.closeSync();
@@ -129,6 +166,7 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   );
 
   return {
+    ingestId,
     tablesLoaded: results,
     tablesSkipped: skippedTables,
     totalRecords,
