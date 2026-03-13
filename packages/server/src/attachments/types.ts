@@ -38,6 +38,7 @@ export type AttachmentPipelineOptions = {
   discoverOnly?: boolean;
   retryFailed?: boolean;
   delayMs?: number;
+  concurrency?: number;
   onProgress?: (msg: string) => void;
 };
 

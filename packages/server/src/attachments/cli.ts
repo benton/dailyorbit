@@ -20,6 +20,7 @@ import type { AttachmentPipelineResult } from './types.ts';
  *   --discover-only  Discover metadata only, skip downloads
  *   --retry-failed   Re-attempt failed downloads
  *   --delay          ms between requests (default: 500)
+ *   --concurrency    Number of concurrent requests (default: 1)
  *   --provider       fcc-report (default) | fcc-gov
  */
 async function main(): Promise<void> {
@@ -35,6 +36,7 @@ async function main(): Promise<void> {
       'discover-only': { type: 'boolean', default: false },
       'retry-failed': { type: 'boolean', default: false },
       delay: { type: 'string', default: '500' },
+      concurrency: { type: 'string', default: '1' },
       provider: { type: 'string', default: 'fcc-report' },
     },
     strict: true,
@@ -52,6 +54,7 @@ async function main(): Promise<void> {
   const discoverOnly: boolean = values['discover-only'] ?? false;
   const retryFailed: boolean = values['retry-failed'] ?? false;
   const delayMs: number = Number(values.delay);
+  const concurrency: number = Number(values.concurrency);
   const provider: 'fcc-report' | 'fcc-gov' =
     values.provider === 'fcc-gov' ? 'fcc-gov' : 'fcc-report';
 
@@ -69,6 +72,7 @@ async function main(): Promise<void> {
     discoverOnly,
     retryFailed,
     delayMs,
+    concurrency,
   });
 
   console.log('\nSummary:');

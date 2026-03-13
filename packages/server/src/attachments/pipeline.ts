@@ -1,6 +1,7 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { compactToHyphenated } from './file-number.ts';
 import { createProvider } from './provider.ts';
+import { processQueue } from './queue.ts';
 import {
   createAttachmentTable,
   getFilingsForScope,
@@ -16,6 +17,7 @@ import {
   getFileSize,
 } from './storage.ts';
 import type {
+  AttachmentMetadata,
   AttachmentPipelineOptions,
   AttachmentPipelineResult,
   AttachmentRow,
@@ -23,9 +25,11 @@ import type {
   UpsertResult,
 } from './types.ts';
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+type DownloadResult = {
+  attachmentKey: number;
+  destPath: string;
+  fileSizeBytes: number;
+};
 
 export async function runAttachmentPipeline(
   options: AttachmentPipelineOptions,
@@ -33,6 +37,7 @@ export async function runAttachmentPipeline(
   const start: number = Date.now();
   const log: (msg: string) => void = options.onProgress ?? console.log;
   const delayMs: number = options.delayMs ?? 500;
+  const concurrency: number = options.concurrency ?? 1;
   const providerName: 'fcc-report' | 'fcc-gov' =
     options.provider ?? 'fcc-report';
 
@@ -44,42 +49,51 @@ export async function runAttachmentPipeline(
 
   // Stage 2: Query filings matching scope
   const filings: FilingRow[] = await getFilingsForScope(conn, options.scope);
-  log(`Found ${String(filings.length)} filings matching scope`);
+  log(
+    `Found ${String(filings.length)} filings matching scope (concurrency: ${String(concurrency)})`,
+  );
 
-  // Stage 3: Discover attachments for each filing
+  // Stage 3: Discover attachments — concurrent HTTP, sequential DB writes
   let totalDiscovered: number = 0;
   let filingsProcessed: number = 0;
+  const discoveryErrors: Set<number> = new Set();
 
-  for (const filing of filings) {
-    const provider = createProvider(
-      providerName,
-      filing.subsystemCode,
-      filing.appTypeCode,
+  const discoveryResults: (AttachmentMetadata[] | undefined)[] =
+    await processQueue(
+      filings,
+      async (filing: FilingRow): Promise<AttachmentMetadata[]> => {
+        const provider = createProvider(
+          providerName,
+          filing.subsystemCode,
+          filing.appTypeCode,
+        );
+        return provider.discover(filing.fileNumber, filing.filingKey);
+      },
+      {
+        concurrency,
+        delayMs,
+        onError: (error: unknown, _filing: FilingRow, index: number) => {
+          discoveryErrors.add(index);
+          const msg: string =
+            error instanceof Error ? error.message : String(error);
+          log(`${filings[index]!.fileNumber}: ERROR — ${msg}`);
+        },
+      },
     );
 
-    try {
-      const attachments = await provider.discover(
-        filing.fileNumber,
-        filing.filingKey,
-      );
-      const result: UpsertResult = await upsertAttachments(conn, attachments);
-      totalDiscovered += result.inserted;
-      filingsProcessed++;
-      log(
-        `[${String(filingsProcessed)}/${String(filings.length)}] ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
-      );
-    } catch (error: unknown) {
-      const msg: string =
-        error instanceof Error ? error.message : String(error);
-      log(
-        `[${String(filingsProcessed + 1)}/${String(filings.length)}] ${filing.fileNumber}: ERROR — ${msg}`,
-      );
-      filingsProcessed++;
+  for (let i: number = 0; i < filings.length; i++) {
+    filingsProcessed++;
+    if (discoveryErrors.has(i)) {
+      continue;
     }
 
-    if (delayMs > 0 && filingsProcessed < filings.length) {
-      await delay(delayMs);
-    }
+    const filing: FilingRow = filings[i]!;
+    const attachments: AttachmentMetadata[] = discoveryResults[i]!;
+    const result: UpsertResult = await upsertAttachments(conn, attachments);
+    totalDiscovered += result.inserted;
+    log(
+      `[${String(filingsProcessed)}/${String(filings.length)}] ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+    );
   }
 
   // Stage 4: Download attachments (unless discoverOnly)
@@ -95,47 +109,66 @@ export async function runAttachmentPipeline(
     );
     log(`${String(pending.length)} attachments pending download`);
 
-    for (const att of pending) {
-      const filing: FilingRow = filings.find(
-        (f) => f.filingKey === att.filingKey,
-      )!;
+    const filingByKey: Map<number, FilingRow> = new Map(
+      filings.map((f) => [f.filingKey, f]),
+    );
+    const downloadErrors: Set<number> = new Set();
 
-      const hyphenated: string = compactToHyphenated(
-        filing.fileNumber,
-        filing.subsystemCode,
-        filing.appTypeCode,
-      );
-      const destPath: string = attachmentStoragePath(
-        options.storageBasePath,
-        filing.subsystemCode,
-        hyphenated,
-        att.attachmentKey,
-      );
+    const downloadResults: (DownloadResult | undefined)[] = await processQueue(
+      pending,
+      async (att: AttachmentRow): Promise<DownloadResult> => {
+        const filing: FilingRow = filingByKey.get(att.filingKey)!;
+        const hyphenated: string = compactToHyphenated(
+          filing.fileNumber,
+          filing.subsystemCode,
+          filing.appTypeCode,
+        );
+        const destPath: string = attachmentStoragePath(
+          options.storageBasePath,
+          filing.subsystemCode,
+          hyphenated,
+          att.attachmentKey,
+        );
 
-      // Skip if file already exists on disk
-      if (fileExists(destPath)) {
-        const size: number | null = await getFileSize(destPath);
-        await markDownloaded(conn, att.attachmentKey, destPath, size ?? 0);
-        log(`Already on disk: ${destPath}`);
-        attachmentsDownloaded++;
-        continue;
-      }
+        if (fileExists(destPath)) {
+          const size: number = (await getFileSize(destPath)) ?? 0;
+          return {
+            attachmentKey: att.attachmentKey,
+            destPath,
+            fileSizeBytes: size,
+          };
+        }
 
-      try {
         const { fileSizeBytes } = await downloadFile(att.downloadUrl, destPath);
-        await markDownloaded(conn, att.attachmentKey, destPath, fileSizeBytes);
-        attachmentsDownloaded++;
-        log(`Downloaded: ${destPath} (${String(fileSizeBytes)} bytes)`);
-      } catch (error: unknown) {
-        const msg: string =
-          error instanceof Error ? error.message : String(error);
-        log(`Failed to download ${att.downloadUrl}: ${msg}`);
+        return { attachmentKey: att.attachmentKey, destPath, fileSizeBytes };
+      },
+      {
+        concurrency,
+        delayMs,
+        onError: (error: unknown, att: AttachmentRow, index: number) => {
+          downloadErrors.add(index);
+          const msg: string =
+            error instanceof Error ? error.message : String(error);
+          log(`Failed to download ${att.downloadUrl}: ${msg}`);
+        },
+      },
+    );
+
+    for (let i: number = 0; i < pending.length; i++) {
+      const att: AttachmentRow = pending[i]!;
+      if (downloadErrors.has(i)) {
         await markFailed(conn, att.attachmentKey);
         attachmentsFailed++;
-      }
-
-      if (delayMs > 0) {
-        await delay(delayMs);
+      } else {
+        const dl: DownloadResult = downloadResults[i]!;
+        await markDownloaded(
+          conn,
+          dl.attachmentKey,
+          dl.destPath,
+          dl.fileSizeBytes,
+        );
+        attachmentsDownloaded++;
+        log(`Downloaded: ${dl.destPath} (${String(dl.fileSizeBytes)} bytes)`);
       }
     }
   }

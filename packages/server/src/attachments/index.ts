@@ -17,6 +17,7 @@ export {
 export { createProvider } from './provider.ts';
 export { createFccReportProvider } from './fcc-report.ts';
 export { fccGovProvider } from './fcc-gov.ts';
+export { processQueue } from './queue.ts';
 export { runAttachmentPipeline } from './pipeline.ts';
 export type {
   AttachmentMetadata,
