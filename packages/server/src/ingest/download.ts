@@ -9,11 +9,11 @@ export const DEFAULT_SOURCE_URL: string =
 /** Options for the download-and-extract stage */
 export type DownloadOptions = {
   /** URL to fetch the zip from (defaults to DEFAULT_SOURCE_URL) */
-  sourceUrl?: string;
+  sourceUrl?: string | undefined;
   /** Directory to extract into (defaults to tmp/IBFS) */
-  extractDir?: string;
+  extractDir?: string | undefined;
   /** Callback for progress reporting */
-  onProgress?: (message: string) => void;
+  onProgress?: ((message: string) => void) | undefined;
 };
 
 /** Result of the download-and-extract stage */
@@ -38,7 +38,9 @@ export function zipPathForExtractDir(extractDir: string): string {
  * Uses `curl` for FTP download and `unzip` for extraction,
  * avoiding any npm dependency on FTP or zip libraries.
  */
-export function downloadAndExtract(options: DownloadOptions = {}): DownloadResult {
+export function downloadAndExtract(
+  options: DownloadOptions = {},
+): DownloadResult {
   const sourceUrl: string = options.sourceUrl ?? DEFAULT_SOURCE_URL;
   const extractDir: string = options.extractDir ?? 'tmp/IBFS';
   const log: (message: string) => void = options.onProgress ?? console.log;
@@ -55,15 +57,19 @@ export function downloadAndExtract(options: DownloadOptions = {}): DownloadResul
   // Stage 1: Download
   log(`Downloading ${sourceUrl} ...`);
   try {
-    execFileSync('curl', [
-      '--fail',
-      '--silent',
-      '--show-error',
-      '--location',
-      '--output',
-      zipPath,
-      sourceUrl,
-    ], { stdio: ['ignore', 'inherit', 'inherit'] });
+    execFileSync(
+      'curl',
+      [
+        '--fail',
+        '--silent',
+        '--show-error',
+        '--location',
+        '--output',
+        zipPath,
+        sourceUrl,
+      ],
+      { stdio: ['ignore', 'inherit', 'inherit'] },
+    );
   } catch (err: unknown) {
     throw new Error(`Download failed from ${sourceUrl}: ${String(err)}`);
   }

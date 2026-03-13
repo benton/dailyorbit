@@ -102,8 +102,8 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   }
 
   // Stage 4: Open DB connection and create metadata tables
-  const db: DuckDBInstance = options.dbInstance
-    ?? await DuckDBInstance.create(options.databaseUrl!);
+  const db: DuckDBInstance =
+    options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));
   const conn: DuckDBConnection = await DuckDBConn.create(db);
 
   await createMetadataTables(conn);
@@ -117,7 +117,12 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
     `INSERT INTO "ingest_log"
       ("ingest_id", "started_at", "source_url", "zip_size_bytes", "status")
       VALUES ($1, current_timestamp, $2, $3, $4)`,
-    [ingestId, sourceUrl, options.zipSizeBytes ?? null, 'running'] as DuckDBValue[],
+    [
+      ingestId,
+      sourceUrl,
+      options.zipSizeBytes ?? null,
+      'running',
+    ] as DuckDBValue[],
   );
 
   // Stage 5: Load each table

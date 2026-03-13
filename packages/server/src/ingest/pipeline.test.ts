@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
-import {
-  parseCountsManifest,
-  loadTable,
-  runIngest,
-} from './pipeline.ts';
+import { parseCountsManifest, loadTable, runIngest } from './pipeline.ts';
 import type { IngestResult, LoadTableResult } from './pipeline.ts';
 import { createMetadataTables, loadTableDefsFromDdl } from './schema.ts';
 import type { TableDef } from './types.ts';
@@ -142,7 +138,6 @@ describe('runIngest ingest_log recording', () => {
   it('records completed status and valid table_results JSON in ingest_log', async () => {
     const { mkdtempSync, rmSync } = await import('node:fs');
     const { tmpdir } = await import('node:os');
-    const { dirname } = await import('node:path');
     const tmpDir: string = mkdtempSync(resolve(tmpdir(), 'ingest-test-'));
     const dbPath: string = resolve(tmpDir, 'test.duckdb');
 
