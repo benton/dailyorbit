@@ -1,3 +1,5 @@
+export { downloadAndExtract, DEFAULT_SOURCE_URL } from './download.ts';
+export type { DownloadOptions, DownloadResult } from './download.ts';
 export { parseDdl } from './ddl-parser.ts';
 export { parseRecords, coerceValue } from './dat-parser.ts';
 export {

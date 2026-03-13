@@ -22,6 +22,10 @@ export type IngestOptions = {
   tables?: string[] | undefined;
   /** If true, parse and validate only — no DB writes */
   dryRun?: boolean;
+  /** URL the zip was downloaded from (recorded in ingest log) */
+  sourceUrl?: string | undefined;
+  /** Size of the downloaded zip in bytes (recorded in ingest log) */
+  zipSizeBytes?: number | undefined;
   /** Callback for progress reporting */
   onProgress?: (message: string) => void;
 };
