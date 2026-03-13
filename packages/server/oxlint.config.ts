@@ -1,9 +1,9 @@
-import { defineConfig } from "oxlint";
+import { defineConfig } from 'oxlint';
 
 export default defineConfig({
-  ignorePatterns: ["dist/"],
+  ignorePatterns: ['dist/'],
   rules: {
-    "no-unused-vars": "error",
-    "no-console": "off",
+    'no-unused-vars': 'error',
+    'no-console': 'off',
   },
 });

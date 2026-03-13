@@ -1,4 +1,4 @@
-import type { Where } from "better-auth";
+import type { Where } from 'better-auth';
 
 export function buildWhereClause(
   where: Where[],
@@ -10,47 +10,47 @@ export function buildWhereClause(
 
   for (const condition of where) {
     const field = `"${condition.field}"`;
-    switch (condition.operator ?? "eq") {
-      case "eq":
+    switch (condition.operator ?? 'eq') {
+      case 'eq':
         parts.push(`${field} = $${i++}`);
         params.push(condition.value);
         break;
-      case "in":
+      case 'in':
         if (Array.isArray(condition.value)) {
-          const placeholders = condition.value.map(() => `$${i++}`).join(", ");
+          const placeholders = condition.value.map(() => `$${i++}`).join(', ');
           parts.push(`${field} IN (${placeholders})`);
           params.push(...condition.value);
         }
         break;
-      case "contains":
+      case 'contains':
         parts.push(`${field} LIKE $${i++}`);
         params.push(`%${String(condition.value)}%`);
         break;
-      case "starts_with":
+      case 'starts_with':
         parts.push(`${field} LIKE $${i++}`);
         params.push(`${String(condition.value)}%`);
         break;
-      case "ends_with":
+      case 'ends_with':
         parts.push(`${field} LIKE $${i++}`);
         params.push(`%${String(condition.value)}`);
         break;
-      case "gt":
+      case 'gt':
         parts.push(`${field} > $${i++}`);
         params.push(condition.value);
         break;
-      case "gte":
+      case 'gte':
         parts.push(`${field} >= $${i++}`);
         params.push(condition.value);
         break;
-      case "lt":
+      case 'lt':
         parts.push(`${field} < $${i++}`);
         params.push(condition.value);
         break;
-      case "lte":
+      case 'lte':
         parts.push(`${field} <= $${i++}`);
         params.push(condition.value);
         break;
-      case "ne":
+      case 'ne':
         parts.push(`${field} != $${i++}`);
         params.push(condition.value);
         break;
@@ -58,7 +58,7 @@ export function buildWhereClause(
   }
 
   return {
-    sql: parts.length > 0 ? `WHERE ${parts.join(" AND ")}` : "",
+    sql: parts.length > 0 ? `WHERE ${parts.join(' AND ')}` : '',
     params,
   };
 }

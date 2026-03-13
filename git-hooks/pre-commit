@@ -1,7 +1,16 @@
 #!/bin/sh
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
 [ -z "$FILES" ] && exit 0
-echo "$FILES" | xargs pnpm oxfmt --write --no-error-on-unmatched-pattern
-echo "$FILES" | xargs git add
+
+format_package() {
+  pkg="$1"
+  pkg_files=$(echo "$FILES" | grep "^packages/$pkg/" | sed "s|^packages/$pkg/||")
+  [ -z "$pkg_files" ] && return
+  (cd "packages/$pkg" && echo "$pkg_files" | xargs pnpm oxfmt --write --no-error-on-unmatched-pattern)
+  echo "$pkg_files" | sed "s|^|packages/$pkg/|" | xargs git add
+}
+
+format_package web
+format_package server
 
 exit 0

@@ -1,10 +1,10 @@
-import Stack from "@nkzw/stack";
-import { FormEvent, useState } from "react";
-import AuthClient from "./AuthClient.tsx";
+import Stack from '@nkzw/stack';
+import { FormEvent, useState } from 'react';
+import AuthClient from './AuthClient.tsx';
 
 export default function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const signIn = async (event: FormEvent) => {
     event.preventDefault();

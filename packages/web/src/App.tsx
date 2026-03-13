@@ -1,16 +1,16 @@
-import Stack from "@nkzw/stack";
-import { useLocaleContext } from "fbtee";
-import { AnchorHTMLAttributes, useTransition } from "react";
-import { LinkProps, Link as ReactRouterLink, Route, Routes } from "react-router";
-import AvailableLanguages from "./AvailableLanguages.tsx";
-import AuthClient from "./user/AuthClient.tsx";
-import SignIn from "./user/SignIn.tsx";
+import Stack from '@nkzw/stack';
+import { useLocaleContext } from 'fbtee';
+import { AnchorHTMLAttributes, useTransition } from 'react';
+import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
+import AvailableLanguages from './AvailableLanguages.tsx';
+import AuthClient from './user/AuthClient.tsx';
+import SignIn from './user/SignIn.tsx';
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
     className={
-      "text-pink-700 underline hover:no-underline dark:text-pink-400" +
-      (className ? ` ${className}` : "")
+      'text-pink-700 underline hover:no-underline dark:text-pink-400' +
+      (className ? ` ${className}` : '')
     }
     {...props}
   />
@@ -24,7 +24,7 @@ const LocaleSwitcher = () => {
     <div>
       <a
         className="cursor-pointer text-pink-700 underline select-none hover:no-underline dark:text-pink-400"
-        onClick={() => startTransition(() => setLocale(locale === "ja_JP" ? "en_US" : "ja_JP"))}
+        onClick={() => startTransition(() => setLocale(locale === 'ja_JP' ? 'en_US' : 'ja_JP'))}
       >
         {AvailableLanguages.get(locale)}
       </a>
@@ -50,7 +50,7 @@ const Home = () => {
       </p>
       <p className="my-4">
         <fbt desc="Template tools">
-          Using{" "}
+          Using{' '}
           <fbt:list
             items={[
               <Link key="vite" target="_blank" to="https://vitejs.dev/">
@@ -79,10 +79,10 @@ const Home = () => {
       </p>
       <p className="my-4">
         <fbt desc="Instructions">
-          Change{" "}
+          Change{' '}
           <code className="rounded-sm border border-pink-700 bg-neutral-100 px-1 py-1 font-mono text-pink-700 dark:border-pink-400 dark:bg-neutral-700 dark:text-pink-400">
             src/App.tsx
-          </code>{" "}
+          </code>{' '}
           for live updates.
         </fbt>
       </p>

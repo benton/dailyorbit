@@ -1,21 +1,21 @@
-import { DuckDBConnection } from "@duckdb/node-api";
-import type { DuckDBValue } from "@duckdb/node-api";
-import { betterAuth } from "better-auth";
-import type { Adapter } from "better-auth";
-import { buildWhereClause } from "./auth-helpers.ts";
-import { getDb } from "./db.ts";
-import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, CLIENT_DOMAIN } from "./env.ts";
+import { DuckDBConnection } from '@duckdb/node-api';
+import type { DuckDBValue } from '@duckdb/node-api';
+import { betterAuth } from 'better-auth';
+import type { Adapter } from 'better-auth';
+import { buildWhereClause } from './auth-helpers.ts';
+import { getDb } from './db.ts';
+import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, CLIENT_DOMAIN } from './env.ts';
 
 function createDuckDbAdapter(): Adapter {
   const adapter: Adapter = {
-    id: "duckdb",
+    id: 'duckdb',
 
     async create({ model, data }) {
       const db = await getDb();
       const conn = await DuckDBConnection.create(db);
       const keys = Object.keys(data);
-      const cols = keys.map((k) => `"${k}"`).join(", ");
-      const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+      const cols = keys.map((k) => `"${k}"`).join(', ');
+      const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
       const values = Object.values(data) as DuckDBValue[];
       const reader = await conn.runAndReadAll(
         `INSERT INTO "${model}" (${cols}) VALUES (${placeholders}) RETURNING *`,
@@ -29,7 +29,9 @@ function createDuckDbAdapter(): Adapter {
       const db = await getDb();
       const conn = await DuckDBConnection.create(db);
       const cols =
-        select != null && select.length > 0 ? select.map((c) => `"${String(c)}"`).join(", ") : "*";
+        select != null && select.length > 0
+          ? select.map((c) => `"${String(c)}"`).join(', ')
+          : '*';
       const { sql, params } = buildWhereClause(where);
       const reader = await conn.runAndReadAll(
         `SELECT ${cols} FROM "${model}" ${sql} LIMIT 1`,
@@ -45,9 +47,11 @@ function createDuckDbAdapter(): Adapter {
       const conn = await DuckDBConnection.create(db);
       const { sql, params } = buildWhereClause(where ?? []);
       const order =
-        sortBy != null ? `ORDER BY "${sortBy.field}" ${sortBy.direction.toUpperCase()}` : "";
-      const limitSql = limit != null ? `LIMIT ${limit}` : "";
-      const offsetSql = offset != null ? `OFFSET ${offset}` : "";
+        sortBy != null
+          ? `ORDER BY "${sortBy.field}" ${sortBy.direction.toUpperCase()}`
+          : '';
+      const limitSql = limit != null ? `LIMIT ${limit}` : '';
+      const offsetSql = offset != null ? `OFFSET ${offset}` : '';
       const reader = await conn.runAndReadAll(
         `SELECT * FROM "${model}" ${sql} ${order} ${limitSql} ${offsetSql}`,
         params as DuckDBValue[],
@@ -62,7 +66,7 @@ function createDuckDbAdapter(): Adapter {
       const setValues = Object.values(data) as DuckDBValue[];
       const setClauses = Object.keys(data)
         .map((k, i) => `"${k}" = $${i + 1}`)
-        .join(", ");
+        .join(', ');
       const { sql, params } = buildWhereClause(where, setValues.length + 1);
       const reader = await conn.runAndReadAll(
         `UPDATE "${model}" SET ${setClauses} ${sql} RETURNING *`,
@@ -79,7 +83,7 @@ function createDuckDbAdapter(): Adapter {
       const setValues = Object.values(data) as DuckDBValue[];
       const setClauses = Object.keys(data)
         .map((k, i) => `"${k}" = $${i + 1}`)
-        .join(", ");
+        .join(', ');
       const { sql, params } = buildWhereClause(where, setValues.length + 1);
       await conn.run(`UPDATE "${model}" SET ${setClauses} ${sql}`, [
         ...setValues,

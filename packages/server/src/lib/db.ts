@@ -1,5 +1,5 @@
-import { DuckDBInstance } from "@duckdb/node-api";
-import { DATABASE_URL } from "./env.ts";
+import { DuckDBInstance } from '@duckdb/node-api';
+import { DATABASE_URL } from './env.ts';
 
 let instance: DuckDBInstance | null = null;
 
