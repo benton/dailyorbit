@@ -3,7 +3,8 @@
 ## Short Term
 
 v0.1.0 - Data modeling and download
-v0.2.0 - Hello World UI
+v0.1.5 - Attachment discovery and download
+v0.2.0 - Enriched data model: Applicant (Company?) - Related filings
 v0.3.0 - Basic Entity viewing and search
 v0.4.0 - Attachment storage and text extraction
 v0.5.0 - Advanced viewing and search - timelines, relationships

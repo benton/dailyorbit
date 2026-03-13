@@ -18,3 +18,4 @@ doc/*.pdf
 .worktrees/
 settings.local.json
 tmp/
+packages/*/scripts/

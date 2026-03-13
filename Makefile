@@ -9,6 +9,7 @@ setup: ## Install deps and create .env files
 	pnpm install
 	cp -n packages/web/.env.example packages/web/.env || true
 	cp -n packages/server/.env.example packages/server/.env || true
+	mkdir -p packages/server/scripts packages/web/scripts
 	pnpm dev:setup
 
 dev: ## Start development server

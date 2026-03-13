@@ -246,6 +246,24 @@ export async function loadTable(
   const buf: Buffer = readFileSync(datPath);
   let rows: Record<string, unknown>[] = parseRecords(buf, tableDef);
 
+  // Deduplicate rows by primary key — FCC source data contains exact duplicate
+  // rows (e.g. space_station: 144k rows but only 837 unique PKs).
+  // Keep the last occurrence per PK to match "latest wins" semantics.
+  if (tableDef.primaryKey.length > 0) {
+    const beforeCount: number = rows.length;
+    const seen: Map<string, number> = new Map();
+    for (let i: number = 0; i < rows.length; i++) {
+      const key: string = tableDef.primaryKey
+        .map((col) => String(rows[i]![col] ?? ''))
+        .join('|');
+      seen.set(key, i);
+    }
+    if (seen.size < beforeCount) {
+      const uniqueIndices: number[] = [...seen.values()].sort((a, b) => a - b);
+      rows = uniqueIndices.map((idx) => rows[idx]!);
+    }
+  }
+
   if (options.sampleSize != null && options.sampleSize < rows.length) {
     rows = rows.slice(0, options.sampleSize);
   }

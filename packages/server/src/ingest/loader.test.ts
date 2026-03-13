@@ -251,7 +251,7 @@ describe('upsertBatch (staging + MERGE)', () => {
     expect(result[1]!._last_seen_at).not.toBeNull();
   });
 
-  it('preserves rows not present in new snapshot (soft delete)', async () => {
+  it('drops rows not present in new snapshot (full snapshot reload)', async () => {
     await createTable(conn, FILING_TABLE);
 
     // Initial load with 2 rows
@@ -261,7 +261,7 @@ describe('upsertBatch (staging + MERGE)', () => {
     ];
     await upsertBatch(conn, FILING_TABLE, initialRows);
 
-    // Second load with only 1 row — filing_key=2 is "deleted" from snapshot
+    // Second load with only 1 row — filing_key=2 is absent from the new snapshot
     const newRows: Record<string, unknown>[] = [
       { filing_key: 1, callsign: 'ABC', file_number: 'SAT-LOA-20040701' },
     ];
@@ -271,7 +271,7 @@ describe('upsertBatch (staging + MERGE)', () => {
       'SELECT COUNT(*) AS cnt FROM "filing"',
     );
     const result = reader.getRowObjectsJS();
-    // Both rows should still exist (soft delete — row 2 is preserved)
-    expect(Number(result[0]!.cnt)).toBe(2);
+    // Only the row from the new snapshot should exist (drop-and-reload)
+    expect(Number(result[0]!.cnt)).toBe(1);
   });
 });

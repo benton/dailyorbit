@@ -169,20 +169,19 @@ export async function insertBatch(
 }
 
 /**
- * Upserts by dropping and reloading the table.
+ * Upserts by dropping and reloading, then reconciling _first_seen_at
+ * from the previous table snapshot.
  *
- * DuckDB's MERGE and UPDATE-with-JOIN via the Node.js Appender API hang
- * on tables with >10k rows (likely a bug in @duckdb/node-api 1.5.x).
- * Since the FCC provides full snapshots and a fresh load of all 3.5M rows
- * takes ~15s, the simplest workaround is to drop and reload.
+ * MERGE cannot be used because the DDL-declared primary keys contain
+ * duplicate values in the FCC source data (e.g. space_station has
+ * 144k rows but only 837 unique PKs), which causes cartesian-product
+ * explosion in the MERGE join.
  *
- * Change tracking columns are reset on each load:
- * - _first_seen_at = now() (not carried forward from previous load)
- * - _last_seen_at = now()
- * - _modified_at = now()
- *
- * TODO: Once the DuckDB Node.js API fixes UPDATE-after-Appender,
- * restore swap-and-reconcile to preserve _first_seen_at history.
+ * Instead, we:
+ * 1. Rename the existing table to a backup
+ * 2. Create a fresh table and bulk-load via Appender
+ * 3. UPDATE _first_seen_at from the backup using a row-content hash
+ * 4. Drop the backup
  */
 export async function upsertBatch(
   conn: DuckDBConnection,
@@ -194,9 +193,39 @@ export async function upsertBatch(
     return { inserted: 0, updated: 0 };
   }
 
-  await conn.run(`DROP TABLE IF EXISTS "${tableDef.appName}"`);
+  const table: string = tableDef.appName;
+  const backupName: string = `${table}_old`;
+
+  // Build list of data column names (DDL + extras, no tracking)
+  const dataColNames: string[] = tableDef.columns.map((c) => c.name);
+  const ddlColCount: number = tableDef.columns.length;
+  for (let i: number = 0; i < extraColumnCount; i++) {
+    dataColNames.push(`_extra_${String(ddlColCount + i + 1)}`);
+  }
+
+  // Step 1: Rename old table
+  await conn.run(`ALTER TABLE "${table}" RENAME TO "${backupName}"`);
+
+  // Step 2: Create fresh table and load new snapshot via Appender
   await createTable(conn, tableDef, extraColumnCount);
   await insertBatch(conn, tableDef, rows, extraColumnCount);
+
+  // Step 3: Carry forward _first_seen_at from matching rows in the old table.
+  // Because DDL-declared PKs may contain duplicates in the source data,
+  // we match rows by a hash of all data columns for a reliable join.
+  const hashCols: string = dataColNames
+    .map((c) => `COALESCE(CAST("${c}" AS VARCHAR), '')`)
+    .join(" || '|' || ");
+  await conn.run(
+    `UPDATE "${table}" SET "_first_seen_at" = o."_first_seen_at"
+     FROM (SELECT DISTINCT ON (md5(${hashCols})) md5(${hashCols}) AS _rh, "_first_seen_at"
+           FROM "${backupName}") o
+     WHERE md5(${hashCols}) = o._rh
+       AND o."_first_seen_at" < "${table}"."_first_seen_at"`,
+  );
+
+  // Step 4: Drop backup
+  await conn.run(`DROP TABLE IF EXISTS "${backupName}"`);
 
   return { inserted: rows.length, updated: 0 };
 }

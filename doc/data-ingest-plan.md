@@ -50,7 +50,7 @@ These are the primary tables for the application's data model:
 | **COMMENT** (comment.dat) | TBD | 5 | TBD | filing_key, date_entered | Public comments: commenter name, file reference |
 | **ADDRESS** (address.dat) | 141,072 | 10 | ~15 | address_key | Applicant addresses |
 | **CONTACT** (contact.dat) | 112,283 | 11 | ~13 | contact_key | Filing contacts |
-| **SPACE_STATION** (space_sta.dat) | 144,004 | 5 | ~8 | space_station_key | Satellite reference: US name, ITU name, orbit location |
+| **SPACE_STATION** (space_sta.dat) | 144,004 (837 after dedup) | 5 | ~8 | space_station_key | Satellite reference: US name, ITU name, orbit location |
 | **STATUS_TRACKING** (stat_track.dat) | 401,025 | 4 | ~5 | filing_key, status_code, status_date | Status change history |
 | **FILING_HISTORY** (fil_hist.dat) | 140,333 | 3 | ~4 | filing_key, refer_filing_key, original_filing_key | Filing version chain |
 | **PTCOMM** (ptcomm.dat) | 145,856 | TBD | TBD | ptcomm_key | Points of communication (site ↔ satellite links) |
@@ -218,17 +218,21 @@ orbital data scrape            ┌───────────────�
 - **Batch size**: 5,000 rows per INSERT for balance of speed and memory
 - **Transaction**: Each table load is a single transaction; rollback on failure
 
-#### Stage 5: Reconcile
-- Since the FCC provides a full snapshot (not a diff), we need to detect changes:
-  1. Load new data into staging tables (`_staging` suffix)
-  2. Compare staging vs. current using primary keys and a hash of non-key columns
-  3. Classify rows as: **new**, **modified**, **deleted**, **unchanged**
-  4. Apply changes to production tables, updating change tracking columns (Section 4.2):
-     - **new** rows: set `_first_seen_at`, `_last_seen_at`, `_modified_at` to `now()`
-     - **modified** rows: update `_last_seen_at` and `_modified_at` to `now()`
-     - **unchanged** rows: update `_last_seen_at` to `now()` only
-     - **deleted** rows: leave in place (do not delete); `_last_seen_at` will not be updated, allowing the app to detect stale records
-  5. Record change summary in an `ingest_log` metadata table
+#### Stage 4b: Deduplicate
+- The FCC source data contains massive duplicate primary keys (e.g. `space_station`: 144k raw rows, only 837 unique PKs — the worst case has 61k exact duplicate rows for a single key).
+- After parsing, rows are deduplicated by primary key, keeping the last occurrence per unique PK combination.
+- This reduces the total record count from ~3.5M to ~3.15M.
+
+#### Stage 5: Reconcile (Swap-and-Reconcile)
+- Since the FCC provides a full snapshot (not a diff), we use a **swap-and-reconcile** strategy:
+  1. Rename the existing table to a backup (`_old` suffix)
+  2. Create a fresh table and bulk-load the deduped snapshot via Appender
+  3. Carry forward `_first_seen_at` from the backup using an MD5 hash of all data columns
+  4. Drop the backup
+  5. Record ingest summary in the `ingest_log` metadata table
+- **Why not MERGE INTO?** The duplicate PKs in FCC source data cause cartesian-product explosion in the MERGE join. Additionally, DuckDB's `MERGE INTO` uses ~256x more memory than equivalent INSERT operations (see DuckDB issue #19958). The swap-and-reconcile pattern avoids both problems and is faster for full-snapshot refreshes.
+- **Why not a PK constraint?** DuckDB's Appender API crashes (SIGABRT) when combined with PRIMARY KEY constraints at scale (~550k+ cumulative rows). Dedup at the application layer is sufficient.
+- Change tracking: `_first_seen_at` is preserved for rows whose content hash matches between old and new snapshots. Rows absent from a new snapshot are dropped. Stale records can be detected by comparing `_last_seen_at` across ingest runs.
 - This enables the "new information" surfacing feature (User Story 5.2)
 
 #### Stage 6: Cleanup
@@ -315,7 +319,9 @@ CREATE TABLE unknown_columns (
 | Extra columns as VARCHAR | Safe default; can be re-typed once identified |
 | Lookup tables loaded first | Ensures FK integrity if we ever enable constraints |
 | `main.dat` → `filing` table | "MAIN" is too generic for app code; `filing` matches the domain concept (an ICFS Filing) |
-| Soft-delete on reconcile | Rows missing from a snapshot are not deleted; `_last_seen_at` stops updating, preserving history |
+| Swap-and-reconcile over MERGE | MERGE fails on duplicate PKs (cartesian product) and has high memory usage (DuckDB #19958); swap-and-reconcile is faster for full snapshots |
+| Application-layer dedup over DB PK constraint | DuckDB Appender crashes with PK constraints at scale; dedup in pipeline.ts is reliable and fast |
+| Full snapshot reload (no soft delete) | Rows absent from a new snapshot are dropped; staleness detected via `_last_seen_at` across ingest runs |
 | In-process ingest via second connection | DuckDB MVCC allows concurrent read/write; no server restart needed |
 
 | Risk | Mitigation |
@@ -325,6 +331,7 @@ CREATE TABLE unknown_columns (
 | Embedded delimiters in text fields | The `\|^\|` terminator handles this; parser tested against known edge cases |
 | Large file memory pressure | Streaming parser; batch inserts |
 | Data quality issues | Lenient parsing with sentinels; validation report per ingest |
+| Duplicate primary keys in source data | Application-layer dedup by PK before loading; verified with space_station (144k→837 rows) |
 
 ---
 

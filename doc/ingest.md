@@ -56,14 +56,24 @@ node packages/server/src/ingest/cli.ts [options]
 
 3. **Parse** — Splits each `.dat` file on the `|^|\r\n` record terminator, then splits fields on `|`. Type coercion maps Sybase types to DuckDB types. Parse failures produce sentinel values (not NULLs) so "missing" and "invalid" are distinguishable.
 
-4. **Load** — On first load, uses the DuckDB Appender API for fast bulk insert. On subsequent loads, uses a staging table + `MERGE INTO` for upsert with change detection.
+4. **Deduplicate** — The FCC source data contains massive duplicate primary keys (e.g. `space_station` has 144,004 raw rows but only 837 unique `space_station_key` values). After parsing, rows are deduplicated by primary key, keeping the last occurrence per unique PK combination.
 
-5. **Reconcile** — The MERGE step compares incoming rows against existing rows using primary keys and an MD5 hash of non-key columns. Three change-tracking columns are maintained:
-   - `_first_seen_at` — set once on initial insert
-   - `_last_seen_at` — updated every time the row appears in a snapshot
-   - `_modified_at` — updated only when non-key column content changes
+5. **Load** — On first load, uses the DuckDB Appender API for fast bulk insert. On subsequent loads, uses a swap-and-reconcile pattern (see below).
 
-   Rows missing from a new snapshot are **not deleted** (soft delete). Their `_last_seen_at` stops advancing, allowing the app to detect stale records.
+6. **Reconcile** — On upsert, the pipeline uses a **swap-and-reconcile** strategy instead of `MERGE INTO`:
+   1. Rename the existing table to a backup (`_old` suffix)
+   2. Create a fresh table and bulk-load the new snapshot via Appender
+   3. Carry forward `_first_seen_at` from the backup using an MD5 hash of all data columns to match rows
+   4. Drop the backup
+
+   This avoids DuckDB's `MERGE INTO`, which cannot be used because duplicate PKs in the source data cause cartesian-product explosion in the MERGE join (O(n²) per PK group). The swap-and-reconcile approach is also faster than staging + MERGE for full-snapshot refreshes.
+
+   Three change-tracking columns are maintained:
+   - `_first_seen_at` — set on initial insert; preserved across reloads via row-content hash matching
+   - `_last_seen_at` — set to `now()` on every load (all rows in the new snapshot get the current timestamp)
+   - `_modified_at` — set to `now()` on every load (content change detection is implicit: rows whose content hash matches the backup retain their original `_first_seen_at`)
+
+   Rows absent from a new snapshot are dropped (full snapshot reload). Stale records can be detected by comparing `_last_seen_at` across ingest runs via the `ingest_log` table.
 
 ## Architecture
 
@@ -73,8 +83,9 @@ runIngest(options)          — top-level orchestrator (pipeline.ts)
 ├── parseCountsManifest()   — manifest validation (pipeline.ts)
 └── loadTable() per table   — per-table orchestration (pipeline.ts)
     ├── parseRecords()      — .dat parser (dat-parser.ts)
+    ├── dedup by PK         — removes duplicate primary keys (pipeline.ts)
     ├── insertBatch()       — Appender bulk insert (loader.ts)
-    └── upsertBatch()       — staging + MERGE upsert (loader.ts)
+    └── upsertBatch()       — swap-and-reconcile upsert (loader.ts)
 ```
 
 `runIngest()` is a standalone function with no server dependency. It can be called from:
@@ -121,11 +132,13 @@ The FCC's central table is called `MAIN` in the DDL and stored as `main.dat`. In
 
 ## Performance
 
-Benchmarks on a single core (no parallelism):
+Benchmarks on Apple Silicon (no parallelism):
 
-| Tables | Records | Time |
-|---|---|---|
-| 3 lookup tables | 127 | <1s |
-| 6 core tables (incl. filing + frequency) | 674,571 | ~6s |
+| Scenario | Tables | Records | Time |
+|---|---|---|---|
+| Fresh load (all tables) | 67 | ~3.15M | ~15s |
+| Upsert (swap-and-reconcile) | 67 | ~3.15M | ~20s |
 
-The DuckDB Appender API handles 100k+ row inserts in under 1 second per table.
+The DuckDB Appender API handles 100k+ row inserts in under 1 second per table. The upsert overhead (~5s) comes from the rename → reload → hash-join → drop cycle per table.
+
+Note: The raw FCC data contains ~3.5M rows, but after PK deduplication the actual record count is ~3.15M.

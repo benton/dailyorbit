@@ -73,13 +73,28 @@ describe('end-to-end ingest (real data, in-memory DuckDB)', () => {
     expect(acRows[0]!.status_text).toBe('Action Complete');
   });
 
-  it('loads space_station table (144,004 records) via Appender', async () => {
+  it('loads space_station table with dedup (144,004 raw → 837 unique PKs)', async () => {
     const tableDef: TableDef = findTable('space_station');
     const buf: Buffer = readFileSync(resolve(DAT_DIR, tableDef.datFile));
-    const rows: Record<string, unknown>[] = parseRecords(buf, tableDef);
-    const extraCount: number = countExtraColumns(rows);
+    const rawRows: Record<string, unknown>[] = parseRecords(buf, tableDef);
+    const extraCount: number = countExtraColumns(rawRows);
 
-    expect(rows.length).toBe(144004);
+    expect(rawRows.length).toBe(144004);
+
+    // Deduplicate by PK (same logic as loadTable in pipeline.ts)
+    const seen: Map<string, number> = new Map();
+    for (let i: number = 0; i < rawRows.length; i++) {
+      const key: string = tableDef.primaryKey
+        .map((col) => String(rawRows[i]![col] ?? ''))
+        .join('|');
+      seen.set(key, i);
+    }
+    const uniqueIndices: number[] = [...seen.values()].sort((a, b) => a - b);
+    const rows: Record<string, unknown>[] = uniqueIndices.map(
+      (idx) => rawRows[idx]!,
+    );
+
+    expect(rows.length).toBe(837);
 
     await createTable(conn, tableDef, extraCount);
     await insertBatch(conn, tableDef, rows, extraCount);
@@ -87,7 +102,7 @@ describe('end-to-end ingest (real data, in-memory DuckDB)', () => {
     const reader = await conn.runAndReadAll(
       'SELECT COUNT(*) AS cnt FROM "space_station"',
     );
-    expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toBe(144004);
+    expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toBe(837);
   }, 60000);
 
   it('loads first 100 rows from filing (main.dat) with extra columns', async () => {
