@@ -5,11 +5,14 @@ The ingest pipeline loads FCC IBFS bulk data into the application's DuckDB datab
 ## Quick Start
 
 ```bash
+# Download, extract, and load all tables in one command
+make ingest-download
+
+# Load from already-extracted data in tmp/IBFS/
+make ingest
+
 # Dry run — validate data without writing to DB
 make ingest-dry-run
-
-# Load all available tables
-make ingest
 
 # Load specific tables
 make ingest ARGS="--tables filing,status_code,frequency"
@@ -17,22 +20,32 @@ make ingest ARGS="--tables filing,status_code,frequency"
 
 ## Prerequisites
 
-The pipeline expects extracted IBFS data in `tmp/IBFS/`. To obtain it:
+The pipeline needs IBFS data in `tmp/IBFS/`. Two options:
 
+**Option A: Automatic download** (recommended)
+```bash
+make ingest-download
+```
+This fetches `IBFS.zip` via FTP, extracts it, and runs the full ingest.
+
+**Option B: Manual download**
 1. Download `IBFS.zip` from `ftp://ftp.fcc.gov/pub/Bureaus/International/databases/IBFS.zip`
 2. Unzip to `tmp/IBFS/`
 3. Ensure `tmp/ibfs-schema.txt` exists (the Sybase DDL from the same FTP directory)
+4. Run `make ingest`
 
 ## CLI Options
 
 ```
 node packages/server/src/ingest/cli.ts [options]
 
---database   Path to DuckDB file       (default: data/daily-orbit.duckdb)
---ddl        Path to Sybase DDL file    (default: tmp/ibfs-schema.txt)
---dat-dir    Path to extracted .dat dir (default: tmp/IBFS)
---tables     Comma-separated table list (default: all available)
---dry-run    Parse and validate only
+--database    Path to DuckDB file       (default: data/daily-orbit.duckdb)
+--ddl         Path to Sybase DDL file    (default: tmp/ibfs-schema.txt)
+--dat-dir     Path to extracted .dat dir (default: tmp/IBFS)
+--tables      Comma-separated table list (default: all available)
+--dry-run     Parse and validate only
+--download    Download and extract IBFS.zip before ingesting
+--source-url  Override the FTP URL       (default: ftp://ftp.fcc.gov/...)
 ```
 
 ## Pipeline Stages
@@ -65,14 +78,29 @@ runIngest(options)          — top-level orchestrator (pipeline.ts)
 ```
 
 `runIngest()` is a standalone function with no server dependency. It can be called from:
-- The CLI (`make ingest`)
-- The server process (future admin UI), using a second DuckDB connection from the shared instance
+- The CLI (`make ingest` or `make ingest-download`)
+- The server process (admin UI), using the shared DuckDB instance:
+
+```typescript
+import { getDb } from './lib/db.ts';
+import { runIngest } from './ingest/index.ts';
+
+const db = await getDb();
+const result = await runIngest({
+  dbInstance: db,
+  ddlPath: 'tmp/ibfs-schema.txt',
+  datDir: 'tmp/IBFS',
+  onProgress: (msg) => websocket.send(msg),
+});
+```
+
+When `dbInstance` is provided, `databaseUrl` is ignored. The pipeline creates its own connection from the instance and closes it when done. DuckDB MVCC ensures readers are not blocked during the load.
 
 ## Metadata Tables
 
 Two application-internal tables track ingest state:
 
-- **`ingest_log`** — records each ingest run (start/end time, status, error message, table results)
+- **`ingest_log`** — records each ingest run with `started_at`, `completed_at`, `status` (`running`/`completed`/`failed`), `source_url`, `zip_size_bytes`, `error_message`, and `table_results` (JSON array of per-table load results). The `ingest_id` is returned in `IngestResult` for programmatic access.
 - **`unknown_columns`** — tracks extra columns beyond the DDL definition, with sample values for manual identification
 
 ## Table Naming
