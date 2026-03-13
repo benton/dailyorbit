@@ -1,4 +1,5 @@
 export { compactToHyphenated } from './file-number.ts';
+export { fetchWithRetry } from './fetch-retry.ts';
 export { parseAttachmentsFromHtml } from './html-parser.ts';
 export {
   createAttachmentTable,

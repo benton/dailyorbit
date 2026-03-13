@@ -1,3 +1,4 @@
+import { fetchWithRetry } from './fetch-retry.ts';
 import { compactToHyphenated } from './file-number.ts';
 import { parseAttachmentsFromHtml } from './html-parser.ts';
 import type { AttachmentMetadata, DiscoveryProvider } from './types.ts';
@@ -26,7 +27,7 @@ export function createFccReportProvider(
       );
       const url: string = `${FCC_REPORT_BASE}/${hyphenated}`;
 
-      const response: Response = await fetch(url);
+      const response: Response = await fetchWithRetry(url);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch ${url}: ${String(response.status)} ${response.statusText}`,

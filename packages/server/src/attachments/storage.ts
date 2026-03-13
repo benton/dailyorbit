@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
 import { stat } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fetchWithRetry } from './fetch-retry.ts';
 
 /**
  * Build a deterministic local path for an attachment file.
@@ -31,7 +32,7 @@ export async function downloadFile(
 ): Promise<{ fileSizeBytes: number }> {
   await mkdir(dirname(destPath), { recursive: true });
 
-  const response: Response = await fetch(url);
+  const response: Response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(
       `Download failed: ${String(response.status)} ${response.statusText} for ${url}`,
