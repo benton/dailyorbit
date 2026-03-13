@@ -12,3 +12,4 @@ doc/plans/
 doc/*.pdf
 .DS_Store
 *.env
+.worktrees/
