@@ -1,5 +1,6 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { compactToHyphenated } from './file-number.ts';
+import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
 import {
@@ -78,6 +79,9 @@ export async function runAttachmentPipeline(
             error instanceof Error ? error.message : String(error);
           log(`${filings[index]!.fileNumber}: ERROR — ${msg}`);
         },
+        onItemComplete: (completed: number, total: number) => {
+          printProgress(completed, total, 'Discovering');
+        },
       },
     );
 
@@ -89,10 +93,14 @@ export async function runAttachmentPipeline(
 
     const filing: FilingRow = filings[i]!;
     const attachments: AttachmentMetadata[] = discoveryResults[i]!;
+    if (attachments.length === 0) {
+      continue;
+    }
+
     const result: UpsertResult = await upsertAttachments(conn, attachments);
     totalDiscovered += result.inserted;
     log(
-      `[${String(filingsProcessed)}/${String(filings.length)}] ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+      `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
     );
   }
 
@@ -151,6 +159,9 @@ export async function runAttachmentPipeline(
             error instanceof Error ? error.message : String(error);
           log(`Failed to download ${att.downloadUrl}: ${msg}`);
         },
+        onItemComplete: (completed: number, total: number) => {
+          printProgress(completed, total, 'Downloading');
+        },
       },
     );
 
@@ -168,7 +179,6 @@ export async function runAttachmentPipeline(
           dl.fileSizeBytes,
         );
         attachmentsDownloaded++;
-        log(`Downloaded: ${dl.destPath} (${String(dl.fileSizeBytes)} bytes)`);
       }
     }
   }
