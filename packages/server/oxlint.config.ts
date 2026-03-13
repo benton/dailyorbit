@@ -1,7 +1,9 @@
-import nkzw from "@nkzw/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
-  extends: [nkzw],
   ignorePatterns: ["dist/"],
+  rules: {
+    "no-unused-vars": "error",
+    "no-console": "off",
+  },
 });

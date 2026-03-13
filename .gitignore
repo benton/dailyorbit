@@ -7,6 +7,7 @@ coverage/
 dist/
 source_strings.json
 src/translations
+packages/web/src/translations
 tsconfig.tsbuildinfo
 vite.config.ts.timestamp-*
 data/

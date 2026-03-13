@@ -79,6 +79,7 @@ These rules ensure maintainability, safety, and developer velocity.
 
 ### 5 — Code Organization
 
+- **O-0 (MUST)** Any complex command that needs to be run repeatedly should be wrapped in a `make` target.
 - **O-1 (MUST)** Place code in `src/[module name]` as per the standard ES modules layout.
 - **O-2 (MUST)** Place deployment-related code in `deploy`
 - **O-3 (MUST)** Place documentation in `doc`

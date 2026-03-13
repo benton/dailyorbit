@@ -10,7 +10,7 @@ describe("buildWhereClause", () => {
 
   it("builds an eq clause for a single condition", () => {
     const { sql, params } = buildWhereClause([{ field: "id", value: "42", operator: "eq" }]);
-    expect(sql).toEqual('WHERE "id" = ?');
+    expect(sql).toEqual('WHERE "id" = $1');
     expect(params).toEqual(["42"]);
   });
 
@@ -18,7 +18,7 @@ describe("buildWhereClause", () => {
     const { sql, params } = buildWhereClause([
       { field: "status", value: ["active", "pending"], operator: "in" },
     ]);
-    expect(sql).toEqual('WHERE "status" IN (?, ?)');
+    expect(sql).toEqual('WHERE "status" IN ($1, $2)');
     expect(params).toEqual(["active", "pending"]);
   });
 
@@ -26,22 +26,22 @@ describe("buildWhereClause", () => {
     const { sql, params } = buildWhereClause([
       { field: "name", value: "orbit", operator: "contains" },
     ]);
-    expect(sql).toEqual('WHERE "name" LIKE ?');
+    expect(sql).toEqual('WHERE "name" LIKE $1');
     expect(params).toEqual(["%orbit%"]);
   });
 
-  it("joins multiple conditions with AND", () => {
+  it("joins multiple conditions with AND and increments param indices", () => {
     const { sql, params } = buildWhereClause([
       { field: "id", value: "1", operator: "eq" },
       { field: "email", value: "test@example.com", operator: "eq" },
     ]);
-    expect(sql).toEqual('WHERE "id" = ? AND "email" = ?');
+    expect(sql).toEqual('WHERE "id" = $1 AND "email" = $2');
     expect(params).toEqual(["1", "test@example.com"]);
   });
 
   it("defaults to eq when operator is omitted", () => {
     const { sql, params } = buildWhereClause([{ field: "id", value: "7" }]);
-    expect(sql).toEqual('WHERE "id" = ?');
+    expect(sql).toEqual('WHERE "id" = $1');
     expect(params).toEqual(["7"]);
   });
 });

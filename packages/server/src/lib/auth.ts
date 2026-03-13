@@ -1,109 +1,129 @@
+import { DuckDBConnection } from "@duckdb/node-api";
+import type { DuckDBValue } from "@duckdb/node-api";
 import { betterAuth } from "better-auth";
 import type { Adapter } from "better-auth";
 import { buildWhereClause } from "./auth-helpers.ts";
 import { getDb } from "./db.ts";
 import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, CLIENT_DOMAIN } from "./env.ts";
 
-function toRecord(row: unknown): Record<string, unknown> {
-  return row as Record<string, unknown>;
-}
-
 function createDuckDbAdapter(): Adapter {
-  return {
+  const adapter: Adapter = {
     id: "duckdb",
 
     async create({ model, data }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
       const keys = Object.keys(data);
       const cols = keys.map((k) => `"${k}"`).join(", ");
-      const placeholders = keys.map(() => "?").join(", ");
-      const values = Object.values(data);
-      const stmt = await conn.prepare(
+      const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+      const values = Object.values(data) as DuckDBValue[];
+      const reader = await conn.runAndReadAll(
         `INSERT INTO "${model}" (${cols}) VALUES (${placeholders}) RETURNING *`,
+        values,
       );
-      const result = await stmt.query(...values);
-      await conn.close();
-      return toRecord(result.getRowObjects()[0]) as never;
+      conn.closeSync();
+      return reader.getRowObjectsJS()[0] as never;
     },
 
     async findOne({ model, where, select }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
       const cols =
         select != null && select.length > 0 ? select.map((c) => `"${String(c)}"`).join(", ") : "*";
       const { sql, params } = buildWhereClause(where);
-      const stmt = await conn.prepare(`SELECT ${cols} FROM "${model}" ${sql} LIMIT 1`);
-      const result = await stmt.query(...params);
-      await conn.close();
-      const rows = result.getRowObjects();
-      return rows.length > 0 ? (toRecord(rows[0]) as never) : null;
+      const reader = await conn.runAndReadAll(
+        `SELECT ${cols} FROM "${model}" ${sql} LIMIT 1`,
+        params as DuckDBValue[],
+      );
+      conn.closeSync();
+      const rows = reader.getRowObjectsJS();
+      return rows.length > 0 ? (rows[0] as never) : null;
     },
 
     async findMany({ model, where, limit, offset, sortBy }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
       const { sql, params } = buildWhereClause(where ?? []);
       const order =
         sortBy != null ? `ORDER BY "${sortBy.field}" ${sortBy.direction.toUpperCase()}` : "";
       const limitSql = limit != null ? `LIMIT ${limit}` : "";
       const offsetSql = offset != null ? `OFFSET ${offset}` : "";
-      const stmt = await conn.prepare(
+      const reader = await conn.runAndReadAll(
         `SELECT * FROM "${model}" ${sql} ${order} ${limitSql} ${offsetSql}`,
+        params as DuckDBValue[],
       );
-      const result = await stmt.query(...params);
-      await conn.close();
-      return result.getRowObjects().map((r) => toRecord(r)) as never;
+      conn.closeSync();
+      return reader.getRowObjectsJS() as never;
     },
 
     async update({ model, where, update: data }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
+      const setValues = Object.values(data) as DuckDBValue[];
       const setClauses = Object.keys(data)
-        .map((k) => `"${k}" = ?`)
+        .map((k, i) => `"${k}" = $${i + 1}`)
         .join(", ");
-      const setValues = Object.values(data);
-      const { sql, params } = buildWhereClause(where);
-      const stmt = await conn.prepare(`UPDATE "${model}" SET ${setClauses} ${sql} RETURNING *`);
-      const result = await stmt.query(...setValues, ...params);
-      await conn.close();
-      const rows = result.getRowObjects();
-      return rows.length > 0 ? (toRecord(rows[0]) as never) : null;
+      const { sql, params } = buildWhereClause(where, setValues.length + 1);
+      const reader = await conn.runAndReadAll(
+        `UPDATE "${model}" SET ${setClauses} ${sql} RETURNING *`,
+        [...setValues, ...(params as DuckDBValue[])],
+      );
+      conn.closeSync();
+      const rows = reader.getRowObjectsJS();
+      return rows.length > 0 ? (rows[0] as never) : null;
     },
 
     async updateMany({ model, where, update: data }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
+      const setValues = Object.values(data) as DuckDBValue[];
       const setClauses = Object.keys(data)
-        .map((k) => `"${k}" = ?`)
+        .map((k, i) => `"${k}" = $${i + 1}`)
         .join(", ");
-      const setValues = Object.values(data);
-      const { sql, params } = buildWhereClause(where);
-      const stmt = await conn.prepare(`UPDATE "${model}" SET ${setClauses} ${sql}`);
-      await stmt.query(...setValues, ...params);
-      await conn.close();
+      const { sql, params } = buildWhereClause(where, setValues.length + 1);
+      await conn.run(`UPDATE "${model}" SET ${setClauses} ${sql}`, [
+        ...setValues,
+        ...(params as DuckDBValue[]),
+      ]);
+      conn.closeSync();
       return 0;
     },
 
     async delete({ model, where }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
       const { sql, params } = buildWhereClause(where);
-      const stmt = await conn.prepare(`DELETE FROM "${model}" ${sql}`);
-      await stmt.query(...params);
-      await conn.close();
+      await conn.run(`DELETE FROM "${model}" ${sql}`, params as DuckDBValue[]);
+      conn.closeSync();
     },
 
     async deleteMany({ model, where }) {
       const db = await getDb();
-      const conn = await db.connect();
+      const conn = await DuckDBConnection.create(db);
       const { sql, params } = buildWhereClause(where);
-      const stmt = await conn.prepare(`DELETE FROM "${model}" ${sql}`);
-      await stmt.query(...params);
-      await conn.close();
+      await conn.run(`DELETE FROM "${model}" ${sql}`, params as DuckDBValue[]);
+      conn.closeSync();
       return 0;
     },
+
+    async count({ model, where }) {
+      const db = await getDb();
+      const conn = await DuckDBConnection.create(db);
+      const { sql, params } = buildWhereClause(where ?? []);
+      const reader = await conn.runAndReadAll(
+        `SELECT COUNT(*) AS count FROM "${model}" ${sql}`,
+        params as DuckDBValue[],
+      );
+      conn.closeSync();
+      const rows = reader.getRowObjectsJS();
+      return Number(rows[0]?.count ?? 0);
+    },
+
+    async transaction(callback) {
+      return callback(adapter);
+    },
   };
+  return adapter;
 }
 
 export const auth = betterAuth({
