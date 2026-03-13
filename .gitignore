@@ -16,3 +16,4 @@ doc/*.pdf
 *.env
 !*.env.example
 .worktrees/
+settings.local.json
