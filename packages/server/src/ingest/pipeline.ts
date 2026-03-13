@@ -13,7 +13,9 @@ import type { TableDef } from './types.ts';
 /** Options for the full ingest pipeline */
 export type IngestOptions = {
   /** Path to the DuckDB database file */
-  databaseUrl: string;
+  databaseUrl?: string | undefined;
+  /** Existing DuckDB instance to use (e.g. from getDb()). Takes precedence over databaseUrl. */
+  dbInstance?: DuckDBInstance | undefined;
   /** Path to the Sybase DDL file (tmp/ibfs-schema.txt) */
   ddlPath: string;
   /** Path to the directory containing .dat files (tmp/IBFS/) */
@@ -100,7 +102,8 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   }
 
   // Stage 4: Open DB connection and create metadata tables
-  const db: DuckDBInstance = await DuckDBInstance.create(options.databaseUrl);
+  const db: DuckDBInstance = options.dbInstance
+    ?? await DuckDBInstance.create(options.databaseUrl!);
   const conn: DuckDBConnection = await DuckDBConn.create(db);
 
   await createMetadataTables(conn);

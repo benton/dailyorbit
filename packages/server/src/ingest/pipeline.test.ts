@@ -102,6 +102,23 @@ describe('loadTable', () => {
   }, 30000);
 });
 
+describe('runIngest', () => {
+  it('accepts an existing DuckDBInstance instead of databaseUrl', async () => {
+    const db: DuckDBInstance = await DuckDBInstance.create(':memory:');
+    const result: IngestResult = await runIngest({
+      dbInstance: db,
+      ddlPath: DDL_PATH,
+      datDir: DAT_DIR,
+      tables: ['status_code'],
+      onProgress: () => {},
+    });
+    expect(result.tablesLoaded).toHaveLength(1);
+    expect(result.tablesLoaded[0]!.tableName).toBe('status_code');
+    expect(result.tablesLoaded[0]!.recordCount).toBe(82);
+    expect(result.ingestId).toBeGreaterThan(0);
+  });
+});
+
 describe('runIngest ingest_log recording', () => {
   it('creates an ingest_log row with status completed on success', async () => {
     const result: IngestResult = await runIngest({
