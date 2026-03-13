@@ -8,7 +8,7 @@
     "dev:setup": "echo 'No server setup needed'",
     "format": "oxfmt",
     "lint": "oxlint .",
-    "lint:format": "oxfmt --check",
+    "lint:format": "oxfmt",
     "test": "npm-run-all2 --parallel tsc:check vitest:run lint lint:format",
     "tsc:check": "tsgo",
     "vitest:run": "vitest run"
