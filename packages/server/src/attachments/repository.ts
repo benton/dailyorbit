@@ -17,15 +17,29 @@ const CREATE_TABLE_SQL: string = `
     download_url VARCHAR NOT NULL,
     download_status VARCHAR NOT NULL DEFAULT 'pending',
     file_size_bytes BIGINT,
+    content_type VARCHAR,
     local_path VARCHAR,
     discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
-    downloaded_at TIMESTAMP
+    downloaded_at TIMESTAMP,
+    full_text TEXT,
+    text_length INTEGER,
+    summary TEXT
   )`;
+
+const MIGRATE_COLUMNS_SQL: string[] = [
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS content_type VARCHAR`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS full_text TEXT`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_length INTEGER`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summary TEXT`,
+];
 
 export async function createAttachmentTable(
   conn: DuckDBConnection,
 ): Promise<void> {
   await conn.run(CREATE_TABLE_SQL);
+  for (const sql of MIGRATE_COLUMNS_SQL) {
+    await conn.run(sql);
+  }
 }
 
 export async function upsertAttachments(
@@ -153,7 +167,8 @@ export async function getPendingDownloads(
     SELECT
       attachment_key, filing_key, file_number, attachment_name,
       description, download_url, download_status, file_size_bytes,
-      local_path, discovered_at, downloaded_at
+      content_type, local_path, discovered_at, downloaded_at,
+      full_text, text_length, summary
     FROM attachment
     WHERE ${statusCondition} AND filing_key IN (${filingPlaceholders})
     ORDER BY attachment_key`;
@@ -170,9 +185,13 @@ export async function getPendingDownloads(
     downloadUrl: String(r.download_url),
     downloadStatus: String(r.download_status),
     fileSizeBytes: r.file_size_bytes != null ? Number(r.file_size_bytes) : null,
+    contentType: r.content_type != null ? String(r.content_type) : null,
     localPath: r.local_path != null ? String(r.local_path) : null,
     discoveredAt: String(r.discovered_at),
     downloadedAt: r.downloaded_at != null ? String(r.downloaded_at) : null,
+    fullText: r.full_text != null ? String(r.full_text) : null,
+    textLength: r.text_length != null ? Number(r.text_length) : null,
+    summary: r.summary != null ? String(r.summary) : null,
   }));
 }
 
@@ -181,15 +200,17 @@ export async function markDownloaded(
   attachmentKey: number,
   localPath: string,
   fileSizeBytes: number,
+  contentType: string | null,
 ): Promise<void> {
   await conn.run(
     `UPDATE attachment
       SET download_status = 'downloaded',
           local_path = $1,
           file_size_bytes = $2,
+          content_type = $3,
           downloaded_at = current_timestamp
-      WHERE attachment_key = $3`,
-    [localPath, fileSizeBytes, attachmentKey] as DuckDBValue[],
+      WHERE attachment_key = $4`,
+    [localPath, fileSizeBytes, contentType, attachmentKey] as DuckDBValue[],
   );
 }
 

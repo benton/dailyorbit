@@ -53,6 +53,47 @@ describe('attachment repository', () => {
       );
       expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(0);
     });
+
+    it('migrates new columns onto a pre-existing table', async () => {
+      const freshDb: DuckDBInstance = await DuckDBInstance.create(':memory:');
+      const freshConn: DuckDBConnection =
+        await DuckDBConnection.create(freshDb);
+
+      // Create an old-schema table without the new columns
+      await freshConn.run(`
+        CREATE TABLE attachment (
+          attachment_key INTEGER NOT NULL PRIMARY KEY,
+          filing_key INTEGER NOT NULL,
+          file_number VARCHAR NOT NULL,
+          attachment_name VARCHAR NOT NULL,
+          description VARCHAR NOT NULL DEFAULT '',
+          download_url VARCHAR NOT NULL,
+          download_status VARCHAR NOT NULL DEFAULT 'pending',
+          file_size_bytes BIGINT,
+          local_path VARCHAR,
+          discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
+          downloaded_at TIMESTAMP
+        )
+      `);
+
+      // Migrate should add the new columns
+      await createAttachmentTable(freshConn);
+
+      const reader = await freshConn.runAndReadAll(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_name = 'attachment'
+         ORDER BY ordinal_position`,
+      );
+      const columns: string[] = reader
+        .getRowObjectsJS()
+        .map((r) => String(r.column_name));
+      expect(columns).toContain('content_type');
+      expect(columns).toContain('full_text');
+      expect(columns).toContain('text_length');
+      expect(columns).toContain('summary');
+
+      freshConn.closeSync();
+    });
   });
 
   describe('upsertAttachments', () => {
@@ -95,6 +136,7 @@ describe('attachment repository', () => {
         ATTACHMENT_A.attachmentKey,
         '/tmp/a.pdf',
         1024,
+        'application/pdf',
       );
       const pending: AttachmentRow[] = await getPendingDownloads(conn, [1]);
       expect(pending).toHaveLength(1);
@@ -104,7 +146,13 @@ describe('attachment repository', () => {
     it('includes failed attachments when retryFailed is true', async () => {
       await upsertAttachments(conn, [ATTACHMENT_A, ATTACHMENT_B]);
       await markFailed(conn, ATTACHMENT_A.attachmentKey);
-      await markDownloaded(conn, ATTACHMENT_B.attachmentKey, '/tmp/b.pdf', 512);
+      await markDownloaded(
+        conn,
+        ATTACHMENT_B.attachmentKey,
+        '/tmp/b.pdf',
+        512,
+        'application/pdf',
+      );
 
       const withoutRetry: AttachmentRow[] = await getPendingDownloads(
         conn,
@@ -124,17 +172,18 @@ describe('attachment repository', () => {
   });
 
   describe('markDownloaded', () => {
-    it('updates status, path, and file size', async () => {
+    it('updates status, path, file size, and content type', async () => {
       await upsertAttachments(conn, [ATTACHMENT_A]);
       await markDownloaded(
         conn,
         ATTACHMENT_A.attachmentKey,
         '/data/a.pdf',
         2048,
+        'application/pdf',
       );
 
       const reader = await conn.runAndReadAll(
-        `SELECT download_status, local_path, file_size_bytes
+        `SELECT download_status, local_path, file_size_bytes, content_type
          FROM attachment WHERE attachment_key = $1`,
         [ATTACHMENT_A.attachmentKey],
       );
@@ -142,6 +191,7 @@ describe('attachment repository', () => {
       expect(String(row.download_status)).toEqual('downloaded');
       expect(String(row.local_path)).toEqual('/data/a.pdf');
       expect(Number(row.file_size_bytes)).toEqual(2048);
+      expect(String(row.content_type)).toEqual('application/pdf');
     });
   });
 

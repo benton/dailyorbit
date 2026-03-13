@@ -29,7 +29,7 @@ export function attachmentStoragePath(
 export async function downloadFile(
   url: string,
   destPath: string,
-): Promise<{ fileSizeBytes: number }> {
+): Promise<{ fileSizeBytes: number; contentType: string | null }> {
   await mkdir(dirname(destPath), { recursive: true });
 
   const response: Response = await fetchWithRetry(url);
@@ -39,11 +39,13 @@ export async function downloadFile(
     );
   }
 
+  const contentType: string | null =
+    response.headers.get('content-type') ?? null;
   const buffer: ArrayBuffer = await response.arrayBuffer();
   await writeFile(destPath, Buffer.from(buffer));
 
   const fileSizeBytes: number = buffer.byteLength;
-  return { fileSizeBytes };
+  return { fileSizeBytes, contentType };
 }
 
 /** Check whether a file exists at the given path. */

@@ -30,6 +30,7 @@ type DownloadResult = {
   attachmentKey: number;
   destPath: string;
   fileSizeBytes: number;
+  contentType: string | null;
 };
 
 export async function runAttachmentPipeline(
@@ -144,11 +145,20 @@ export async function runAttachmentPipeline(
             attachmentKey: att.attachmentKey,
             destPath,
             fileSizeBytes: size,
+            contentType: null,
           };
         }
 
-        const { fileSizeBytes } = await downloadFile(att.downloadUrl, destPath);
-        return { attachmentKey: att.attachmentKey, destPath, fileSizeBytes };
+        const { fileSizeBytes, contentType } = await downloadFile(
+          att.downloadUrl,
+          destPath,
+        );
+        return {
+          attachmentKey: att.attachmentKey,
+          destPath,
+          fileSizeBytes,
+          contentType,
+        };
       },
       {
         concurrency,
@@ -177,6 +187,7 @@ export async function runAttachmentPipeline(
           dl.attachmentKey,
           dl.destPath,
           dl.fileSizeBytes,
+          dl.contentType,
         );
         attachmentsDownloaded++;
       }

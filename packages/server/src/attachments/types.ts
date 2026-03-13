@@ -69,7 +69,11 @@ export type UpsertResult = {
 export type AttachmentRow = AttachmentMetadata & {
   downloadStatus: string;
   fileSizeBytes: number | null;
+  contentType: string | null;
   localPath: string | null;
   discoveredAt: string;
   downloadedAt: string | null;
+  fullText: string | null;
+  textLength: number | null;
+  summary: string | null;
 };
