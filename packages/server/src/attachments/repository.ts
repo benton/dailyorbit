@@ -134,11 +134,20 @@ export async function getFilingsForScope(
 
 export async function getPendingDownloads(
   conn: DuckDBConnection,
+  filingKeys: number[],
   retryFailed: boolean = false,
 ): Promise<AttachmentRow[]> {
+  if (filingKeys.length === 0) {
+    return [];
+  }
+
   const statusCondition: string = retryFailed
     ? `download_status IN ('pending', 'failed')`
     : `download_status = 'pending'`;
+
+  const filingPlaceholders: string = filingKeys
+    .map((_, i) => `$${String(i + 1)}`)
+    .join(', ');
 
   const sql: string = `
     SELECT
@@ -146,10 +155,10 @@ export async function getPendingDownloads(
       description, download_url, download_status, file_size_bytes,
       local_path, discovered_at, downloaded_at
     FROM attachment
-    WHERE ${statusCondition}
+    WHERE ${statusCondition} AND filing_key IN (${filingPlaceholders})
     ORDER BY attachment_key`;
 
-  const reader = await conn.runAndReadAll(sql);
+  const reader = await conn.runAndReadAll(sql, filingKeys as DuckDBValue[]);
   const rows = reader.getRowObjectsJS();
 
   return rows.map((r) => ({

@@ -82,7 +82,7 @@ describe('attachment repository', () => {
   describe('getPendingDownloads', () => {
     it('returns all pending attachments', async () => {
       await upsertAttachments(conn, [ATTACHMENT_A, ATTACHMENT_B]);
-      const pending: AttachmentRow[] = await getPendingDownloads(conn);
+      const pending: AttachmentRow[] = await getPendingDownloads(conn, [1]);
       expect(pending).toHaveLength(2);
       expect(pending[0]!.downloadStatus).toEqual('pending');
       expect(pending[1]!.downloadStatus).toEqual('pending');
@@ -96,7 +96,7 @@ describe('attachment repository', () => {
         '/tmp/a.pdf',
         1024,
       );
-      const pending: AttachmentRow[] = await getPendingDownloads(conn);
+      const pending: AttachmentRow[] = await getPendingDownloads(conn, [1]);
       expect(pending).toHaveLength(1);
       expect(pending[0]!.attachmentKey).toEqual(ATTACHMENT_B.attachmentKey);
     });
@@ -108,11 +108,16 @@ describe('attachment repository', () => {
 
       const withoutRetry: AttachmentRow[] = await getPendingDownloads(
         conn,
+        [1],
         false,
       );
       expect(withoutRetry).toHaveLength(0);
 
-      const withRetry: AttachmentRow[] = await getPendingDownloads(conn, true);
+      const withRetry: AttachmentRow[] = await getPendingDownloads(
+        conn,
+        [1],
+        true,
+      );
       expect(withRetry).toHaveLength(1);
       expect(withRetry[0]!.attachmentKey).toEqual(ATTACHMENT_A.attachmentKey);
     });

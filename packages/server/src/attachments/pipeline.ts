@@ -87,26 +87,18 @@ export async function runAttachmentPipeline(
   let attachmentsFailed: number = 0;
 
   if (options.discoverOnly !== true) {
+    const filingKeys: number[] = filings.map((f) => f.filingKey);
     const pending: AttachmentRow[] = await getPendingDownloads(
       conn,
+      filingKeys,
       options.retryFailed ?? false,
     );
     log(`${String(pending.length)} attachments pending download`);
 
     for (const att of pending) {
-      // Find the filing row to get subsystem/appType for hyphenation
-      const filing: FilingRow | undefined = filings.find(
+      const filing: FilingRow = filings.find(
         (f) => f.filingKey === att.filingKey,
-      );
-
-      if (filing == null) {
-        log(
-          `Skipping attachment ${String(att.attachmentKey)}: filing not in scope`,
-        );
-        attachmentsFailed++;
-        await markFailed(conn, att.attachmentKey);
-        continue;
-      }
+      )!;
 
       const hyphenated: string = compactToHyphenated(
         filing.fileNumber,
