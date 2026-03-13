@@ -42,7 +42,6 @@ Many applications require extra information in the form of attachments. The IBFS
 This application downloads and stores all Application and Comment attachments into its blob storage.
 When possible, the attachment's text content is extracted and indexed for search.
 
-
 ## 5. Technologies
 
 - [DuckDB](https://duckdb.org/)

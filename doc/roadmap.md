@@ -16,6 +16,7 @@ v1.0.0 - Full-text search, entity linking, advanced analytics
 v1.1.0 - Data dashboard
 
 ## Long Term: LLM-driven features
+
 v2.0.0 - Summarizations: per App, Comment, and Timeline
 v2.1.0 - RAG
 v2.2.0 - The Daily Orbit newspaper as home page

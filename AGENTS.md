@@ -10,15 +10,15 @@
 ## Implementation Best Practices
 
 1. **THE GOLDEN RULE**: Always follow the existing conventions of the codebase!
-    In this case, that means observing sound practices for TypeScript and React.
-    When in doubt, first check the framework documentation at 
-        https://github.com/nkzw-tech/web-app-template
-    when you need examples of good default design decisions
+   In this case, that means observing sound practices for TypeScript and React.
+   When in doubt, first check the framework documentation at
+   https://github.com/nkzw-tech/web-app-template
+   when you need examples of good default design decisions
 
-  For specific TypeScript and React best practices (only as a reference), see:
-   - TypeScript: https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html
-   - React: https://www.tatvasoft.com/blog/reactjs-best-practices/
+For specific TypeScript and React best practices (only as a reference), see:
 
+- TypeScript: https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html
+- React: https://www.tatvasoft.com/blog/reactjs-best-practices/
 
 2. **THE SILVER RULE**:
    All high-level User UI actions - that is, at a minimum, anything that _corresponds to a User story_ or _modifies the state of the system_ - should be implemented as a Services layer method, with a corresponding API method. The general principle is that anything a User can do through the UI should be easily automatable by driving a simple, high-level API call. Think hard and ask any necessary questions when considering this rule and its implications.
@@ -87,7 +87,6 @@ These rules ensure maintainability, safety, and developer velocity.
 ---
 
 ### 6 — Tooling
-
 
 - Use `pnpm dev` to run the development server
 - Use `pnpm test` to run tests.
