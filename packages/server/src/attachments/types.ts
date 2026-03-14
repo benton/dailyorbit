@@ -42,6 +42,7 @@ export type AttachmentPipelineOptions = {
   provider?: 'fcc-report' | 'fcc-gov';
   scope: DiscoveryScope;
   discoverOnly?: boolean;
+  downloadOnly?: boolean;
   retryFailed?: boolean;
   delayMs?: number;
   concurrency?: number;
@@ -64,6 +65,7 @@ export type FilingRow = {
   fileNumber: string;
   subsystemCode: string;
   appTypeCode: string;
+  lastScrapedAt: string | null;
 };
 
 /** Result of an upsert operation */

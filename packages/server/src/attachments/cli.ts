@@ -19,6 +19,7 @@ import type { AttachmentPipelineResult } from './types.ts';
  *   --date-to        YYYY-MM-DD
  *   --limit          Max filings to process
  *   --discover-only  Discover metadata only, skip downloads
+ *   --download-only  Download pending attachments only, skip discovery
  *   --retry-failed   Re-attempt failed downloads
  *   --delay          ms between requests (default: 500)
  *   --concurrency    Number of concurrent requests (default: 1)
@@ -38,6 +39,7 @@ async function main(): Promise<void> {
       'date-to': { type: 'string' },
       limit: { type: 'string' },
       'discover-only': { type: 'boolean', default: false },
+      'download-only': { type: 'boolean', default: false },
       'retry-failed': { type: 'boolean', default: false },
       delay: { type: 'string', default: '500' },
       concurrency: { type: 'string', default: '1' },
@@ -59,6 +61,7 @@ async function main(): Promise<void> {
   const limit: number | undefined =
     values.limit != null ? Number(values.limit) : undefined;
   const discoverOnly: boolean = values['discover-only'] ?? false;
+  const downloadOnly: boolean = values['download-only'] ?? false;
   const retryFailed: boolean = values['retry-failed'] ?? false;
   const delayMs: number = Number(values.delay);
   const concurrency: number = Number(values.concurrency);
@@ -82,6 +85,7 @@ async function main(): Promise<void> {
       staleAfter,
     },
     discoverOnly,
+    downloadOnly,
     retryFailed,
     delayMs,
     concurrency,

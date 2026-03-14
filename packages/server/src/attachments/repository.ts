@@ -191,7 +191,8 @@ export async function getFilingsForScope(
       f.filing_key AS filing_key,
       f.file_number AS file_number,
       f.subsystem_code AS subsystem_code,
-      f.app_type_code AS app_type_code
+      f.app_type_code AS app_type_code,
+      f.last_scraped_at AS last_scraped_at
     FROM filing f
     ${whereClause}
     ORDER BY f.filing_key
@@ -205,6 +206,7 @@ export async function getFilingsForScope(
     fileNumber: String(r.file_number),
     subsystemCode: String(r.subsystem_code),
     appTypeCode: String(r.app_type_code),
+    lastScrapedAt: r.last_scraped_at != null ? String(r.last_scraped_at) : null,
   }));
 }
 

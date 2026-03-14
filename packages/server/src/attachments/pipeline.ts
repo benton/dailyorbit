@@ -64,68 +64,86 @@ export async function runAttachmentPipeline(
     `Found ${String(filings.length)} filings matching scope (concurrency: ${String(concurrency)})`,
   );
 
-  // Stage 3: Discover attachments — concurrent HTTP, sequential DB writes
+  // Stage 3: Discover attachments — only for un-scraped (or stale) filings
+  // Already-scraped filings are included in the download phase but skip discovery.
+  // downloadOnly skips discovery entirely.
+  const skipDiscovery: boolean = options.downloadOnly === true;
+  const needsDiscovery: boolean =
+    options.scope.staleAfter != null || options.scope.notScrapedSince != null;
+  const filingsToDiscover: FilingRow[] = skipDiscovery
+    ? []
+    : needsDiscovery
+      ? filings
+      : filings.filter((f) => f.lastScrapedAt == null);
+
   let totalDiscovered: number = 0;
-  let filingsProcessed: number = 0;
+  const filingsProcessed: number = filings.length;
   const discoveryErrors: Set<number> = new Set();
 
-  const discoveryResults: (AttachmentMetadata[] | undefined)[] =
-    await processQueue(
-      filings,
-      async (filing: FilingRow): Promise<AttachmentMetadata[]> => {
-        const provider = createProvider(
-          providerName,
-          filing.subsystemCode,
-          filing.appTypeCode,
-        );
-        return provider.discover(filing.fileNumber, filing.filingKey);
-      },
-      {
-        concurrency,
-        delayMs,
-        onError: (error: unknown, _filing: FilingRow, index: number) => {
-          discoveryErrors.add(index);
-          const msg: string =
-            error instanceof Error ? error.message : String(error);
-          log(`${filings[index]!.fileNumber}: ERROR — ${msg}`);
-        },
-        onItemComplete: (completed: number, total: number) => {
-          printProgress(completed, total, 'Discovering');
-        },
-      },
+  if (filingsToDiscover.length > 0) {
+    log(
+      `Discovering attachments for ${String(filingsToDiscover.length)} un-scraped filings`,
     );
 
-  const succeededFilingKeys: number[] = [];
-
-  for (let i: number = 0; i < filings.length; i++) {
-    filingsProcessed++;
-    if (discoveryErrors.has(i)) {
-      continue;
-    }
-
-    const filing: FilingRow = filings[i]!;
-    succeededFilingKeys.push(filing.filingKey);
-    const attachments: AttachmentMetadata[] = discoveryResults[i]!;
-    if (attachments.length === 0) {
-      continue;
-    }
-
-    const result: UpsertResult = await upsertAttachments(conn, attachments);
-    totalDiscovered += result.inserted;
-    if (verbose) {
-      log(
-        `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+    const discoveryResults: (AttachmentMetadata[] | undefined)[] =
+      await processQueue(
+        filingsToDiscover,
+        async (filing: FilingRow): Promise<AttachmentMetadata[]> => {
+          const provider = createProvider(
+            providerName,
+            filing.subsystemCode,
+            filing.appTypeCode,
+          );
+          return provider.discover(filing.fileNumber, filing.filingKey);
+        },
+        {
+          concurrency,
+          delayMs,
+          onError: (error: unknown, _filing: FilingRow, index: number) => {
+            discoveryErrors.add(index);
+            const msg: string =
+              error instanceof Error ? error.message : String(error);
+            log(`${filingsToDiscover[index]!.fileNumber}: ERROR — ${msg}`);
+          },
+          onItemComplete: (completed: number, total: number) => {
+            printProgress(completed, total, 'Discovering');
+          },
+        },
       );
-    }
-  }
 
-  // Mark successfully scraped filings
-  if (succeededFilingKeys.length > 0) {
-    await markFilingsScraped(conn, succeededFilingKeys);
+    const succeededFilingKeys: number[] = [];
+
+    for (let i: number = 0; i < filingsToDiscover.length; i++) {
+      if (discoveryErrors.has(i)) {
+        continue;
+      }
+
+      const filing: FilingRow = filingsToDiscover[i]!;
+      succeededFilingKeys.push(filing.filingKey);
+      const attachments: AttachmentMetadata[] = discoveryResults[i]!;
+      if (attachments.length === 0) {
+        continue;
+      }
+
+      const result: UpsertResult = await upsertAttachments(conn, attachments);
+      totalDiscovered += result.inserted;
+      if (verbose) {
+        log(
+          `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+        );
+      }
+    }
+
+    // Mark successfully scraped filings
+    if (succeededFilingKeys.length > 0) {
+      await markFilingsScraped(conn, succeededFilingKeys);
+    }
+  } else {
+    log('All filings already scraped — skipping discovery');
   }
 
   log(
-    `Discovery: ${String(totalDiscovered)} new attachments from ${String(succeededFilingKeys.length)} filings (${String(discoveryErrors.size)} errors)`,
+    `Discovery: ${String(totalDiscovered)} new attachments (${String(discoveryErrors.size)} errors)`,
   );
 
   // Check for duplicate attachment keys after discovery
