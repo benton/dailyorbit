@@ -1,12 +1,25 @@
 import { DuckDBInstance } from '@duckdb/node-api';
-import { DATABASE_URL } from './env.ts';
 import { trackInstance } from './graceful-shutdown.ts';
 
 let instance: DuckDBInstance | null = null;
+let configuredPath: string | null = null;
+
+/** Set the database path before the first getDb() call. */
+export function setDbPath(path: string): void {
+  if (instance != null) {
+    throw new Error('Cannot set DB path after database is already open');
+  }
+  configuredPath = path;
+}
 
 export async function getDb(): Promise<DuckDBInstance> {
   if (instance == null) {
-    instance = await DuckDBInstance.create(DATABASE_URL);
+    if (configuredPath == null) {
+      throw new Error(
+        'Database path not configured. Call setDbPath() during startup.',
+      );
+    }
+    instance = await DuckDBInstance.create(configuredPath);
     trackInstance(instance);
   }
   return instance;

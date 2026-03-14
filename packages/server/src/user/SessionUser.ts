@@ -1,5 +1,6 @@
-import type { auth } from '../lib/auth.ts';
+import type { betterAuth } from 'better-auth';
 
-type User = typeof auth.$Infer.Session.user;
+type AuthInstance = ReturnType<typeof betterAuth>;
+type User = AuthInstance['$Infer']['Session']['user'];
 
 export type SessionUser = Pick<User, 'email' | 'id' | 'name'>;

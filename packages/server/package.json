@@ -1,10 +1,13 @@
 {
   "name": "@daily-orbit/server",
   "version": "0.1.5",
+  "bin": {
+    "daily-orbit": "./dist/bin.js"
+  },
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "dev": "nodemon --exec 'node --no-warnings --env-file=.env src/index.ts' --ext ts",
+    "dev": "nodemon --exec 'node --no-warnings src/index.ts' --ext ts",
     "dev:setup": "mkdir -pv data",
     "format": "oxfmt",
     "lint": "oxlint .",
@@ -16,8 +19,9 @@
   "dependencies": {
     "@duckdb/node-api": "1.5.0-r.1",
     "@hono/node-server": "^1.14.3",
-    "@nkzw/define-env": "^1.1.0",
     "better-auth": "^1.4.18",
+    "citty": "^0.2.1",
+    "consola": "^3.4.2",
     "hono": "^4.7.11",
     "node-html-parser": "^7.1.0"
   },

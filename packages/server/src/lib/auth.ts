@@ -3,8 +3,9 @@ import type { DuckDBValue } from '@duckdb/node-api';
 import { betterAuth } from 'better-auth';
 import type { Adapter } from 'better-auth';
 import { buildWhereClause } from './auth-helpers.ts';
+import type { ConfigService } from './config-service.ts';
 import { getDb } from './db.ts';
-import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, CLIENT_DOMAIN } from './env.ts';
+import type { SecretValue } from './encryption.ts';
 
 function createDuckDbAdapter(): Adapter {
   const adapter: Adapter = {
@@ -130,12 +131,25 @@ function createDuckDbAdapter(): Adapter {
   return adapter;
 }
 
-export const auth = betterAuth({
-  secret: BETTER_AUTH_SECRET,
-  baseURL: BETTER_AUTH_URL,
-  trustedOrigins: [CLIENT_DOMAIN],
-  database: createDuckDbAdapter,
-  emailAndPassword: {
-    enabled: true,
-  },
-});
+let authInstance: ReturnType<typeof betterAuth> | null = null;
+
+export function initializeAuth(config: ConfigService): void {
+  authInstance = betterAuth({
+    secret: (config.get('betterAuthSecret') as SecretValue).unwrap(),
+    baseURL: config.get('betterAuthUrl') as string,
+    trustedOrigins: [config.get('clientDomain') as string],
+    database: createDuckDbAdapter,
+    emailAndPassword: {
+      enabled: true,
+    },
+  });
+}
+
+export function getAuth(): ReturnType<typeof betterAuth> {
+  if (authInstance == null) {
+    throw new Error(
+      'Auth not initialized. Call initializeAuth() during startup.',
+    );
+  }
+  return authInstance;
+}
