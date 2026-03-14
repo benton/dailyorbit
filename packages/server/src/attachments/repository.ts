@@ -47,9 +47,22 @@ async function migratePrimaryKeyConstraint(
     return;
   }
 
+  // Use explicit column names because old and new schemas may differ in column order
+  const colReader = await conn.runAndReadAll(`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = 'attachment'
+    ORDER BY ordinal_position
+  `);
+  const columns: string = colReader
+    .getRowObjectsJS()
+    .map((r) => String(r.column_name))
+    .join(', ');
+
   await conn.run(`ALTER TABLE attachment RENAME TO attachment_old`);
   await conn.run(CREATE_TABLE_SQL);
-  await conn.run(`INSERT INTO attachment SELECT * FROM attachment_old`);
+  await conn.run(
+    `INSERT INTO attachment (${columns}) SELECT ${columns} FROM attachment_old`,
+  );
   await conn.run(`DROP TABLE attachment_old`);
 }
 

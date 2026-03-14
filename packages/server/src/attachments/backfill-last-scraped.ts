@@ -1,6 +1,11 @@
+import { resolve } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
 
-const DB_PATH: string = process.argv[2] ?? 'data/daily-orbit.duckdb';
+const rootDir: string = resolve(import.meta.dirname, '../../../..');
+const DB_PATH: string = resolve(
+  rootDir,
+  process.argv[2] ?? 'data/daily-orbit.duckdb',
+);
 
 const db: DuckDBInstance = await DuckDBInstance.create(DB_PATH);
 const conn = await db.connect();
@@ -11,7 +16,7 @@ await conn.run(
 );
 
 // Backfill: set last_scraped_at for filings that have discovered attachments
-const result = await conn.runAndReadAll(`
+await conn.run(`
   UPDATE filing
   SET last_scraped_at = current_timestamp
   WHERE filing_key IN (SELECT DISTINCT filing_key FROM attachment)
