@@ -4,7 +4,7 @@
 
 - v0.1.0 [✅] Data modeling and download
 - v0.1.5 [✅] Attachment discovery and download
-- v0.1.6 [ ] HTML-only filing data: supplemental filings, transfer parties, service type, red light status
+- v0.1.6 [✅] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
 - v0.2.0 [ ] Enriched data model: Applicant (Company?): Related filings
 - v0.3.0 [ ] Basic Entity viewing and search
 - v0.4.0 [ ] Attachment processing and text extraction
@@ -24,7 +24,8 @@
 - v2.0.0 [ ] Summarizations: per App, Comment, and Timeline. check out [Flock][4]
 - v2.1.0 [ ] RAG and interrogation mode: LLM-powered question answering
 
-- v3.x.x [ ] The Daily Orbit newspaper as home page
+- v3.0.x [ ] The Daily Orbit newspaper as home page
+- v3.1.x [ ] Syndication from other LoE-satellite-related news sources
 
 ## Off the Wall Ideas
 
