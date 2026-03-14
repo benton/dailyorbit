@@ -14,19 +14,16 @@ export async function searchFilings(
   const source: string = options.source ?? 'ibfs-search-applications';
   const count: number = options.count ?? 200;
 
-  const response: Response = await fetch(
-    `${ICFS_BASE_URL}/api/now/sp/search`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query,
-        portal: ICFS_PORTAL_ID,
-        source,
-        count,
-      }),
-    },
-  );
+  const response: Response = await fetch(`${ICFS_BASE_URL}/api/now/sp/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query,
+      portal: ICFS_PORTAL_ID,
+      source,
+      count,
+    }),
+  });
 
   if (!response.ok) {
     throw new Error(`ICFS search failed: ${String(response.status)}`);
@@ -47,9 +44,7 @@ export async function getFilingDetail(
   const response: Response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(
-      `ICFS filing detail failed: ${String(response.status)}`,
-    );
+    throw new Error(`ICFS filing detail failed: ${String(response.status)}`);
   }
 
   const json: unknown = await response.json();

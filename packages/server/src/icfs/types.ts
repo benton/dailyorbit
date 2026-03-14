@@ -1,8 +1,6 @@
 /** ICFS ServiceNow portal constants */
-export const ICFS_BASE_URL =
-  'https://fccprod.servicenowservices.com' as const;
-export const ICFS_PORTAL_ID =
-  '6865628b1bd2625069c154e2604bcbf2' as const;
+export const ICFS_BASE_URL = 'https://fccprod.servicenowservices.com' as const;
+export const ICFS_PORTAL_ID = '6865628b1bd2625069c154e2604bcbf2' as const;
 
 /** A single result from the ICFS search API */
 export type IcfsSearchResult = {

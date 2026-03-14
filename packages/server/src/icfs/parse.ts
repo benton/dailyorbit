@@ -93,7 +93,14 @@ export function parseFilingDetail(json: unknown): IcfsFilingDetail {
   const attachments: IcfsAttachment[] = parseAttachments(data);
   const pleadings: IcfsPleading[] = parsePleadings(data);
 
-  return { found: true, summary, transferParties, serviceTypes, attachments, pleadings };
+  return {
+    found: true,
+    summary,
+    transferParties,
+    serviceTypes,
+    attachments,
+    pleadings,
+  };
 }
 
 function parseSummary(data: unknown): IcfsFilingSummary {
@@ -141,7 +148,11 @@ function parseSummary(data: unknown): IcfsFilingSummary {
 
 function parseTransferParties(data: unknown): IcfsTransferParties | null {
   const tc: unknown = get(data, 'tc_asg_summary');
-  if (tc == null || typeof tc !== 'object' || Object.keys(tc as object).length === 0) {
+  if (
+    tc == null ||
+    typeof tc !== 'object' ||
+    Object.keys(tc as object).length === 0
+  ) {
     return null;
   }
 

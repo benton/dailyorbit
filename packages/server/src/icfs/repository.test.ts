@@ -33,7 +33,9 @@ const CREATE_FILING_TABLE: string = `
   )
 `;
 
-function makeSummary(overrides: Partial<IcfsFilingSummary> = {}): IcfsFilingSummary {
+function makeSummary(
+  overrides: Partial<IcfsFilingSummary> = {},
+): IcfsFilingSummary {
   return {
     fileNumber: 'SAT-LOA-20250221-00050',
     sysId: 'abc123',
@@ -76,7 +78,9 @@ function makeSummary(overrides: Partial<IcfsFilingSummary> = {}): IcfsFilingSumm
   };
 }
 
-function makeDetail(overrides: Partial<IcfsFilingDetail> = {}): IcfsFilingDetail {
+function makeDetail(
+  overrides: Partial<IcfsFilingDetail> = {},
+): IcfsFilingDetail {
   return {
     found: true,
     summary: makeSummary(),

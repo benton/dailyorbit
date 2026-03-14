@@ -36,9 +36,7 @@ const ICFS_COLUMNS: Array<[string, string]> = [
  * Add ICFS-specific columns to the filing table.
  * Safe to call multiple times — uses ADD COLUMN IF NOT EXISTS.
  */
-export async function ensureIcfsColumns(
-  conn: DuckDBConnection,
-): Promise<void> {
+export async function ensureIcfsColumns(conn: DuckDBConnection): Promise<void> {
   for (const [name, type] of ICFS_COLUMNS) {
     await conn.run(
       `ALTER TABLE filing ADD COLUMN IF NOT EXISTS "${name}" ${type}`,

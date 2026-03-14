@@ -22,9 +22,10 @@ describe('parseSearchResponse', () => {
 
     expect(results.length).toEqual(2);
     expect(results[0]).toEqual({
-      sysId: 'DRAFT-SAT-LOA-20250915-00277' === results[0]!.fileNumber
-        ? results[0]!.sysId
-        : results[0]!.sysId,
+      sysId:
+        'DRAFT-SAT-LOA-20250915-00277' === results[0]!.fileNumber
+          ? results[0]!.sysId
+          : results[0]!.sysId,
       fileNumber: expect.stringContaining('SAT-LOA-2025') as string,
       applicantName: expect.any(String) as string,
       subsystem: 'SAT',
@@ -64,9 +65,7 @@ describe('parseFilingDetail', () => {
     expect(detail.summary!.applicantCity).toEqual('Irvine');
     expect(detail.summary!.applicantState).toEqual('CA');
     expect(detail.summary!.contactName).toEqual('George V. John');
-    expect(detail.summary!.sysId).toEqual(
-      '0e294fa41bdea6104c2b877ae54bcb6f',
-    );
+    expect(detail.summary!.sysId).toEqual('0e294fa41bdea6104c2b877ae54bcb6f');
   });
 
   it('returns found: false for a missing filing', () => {
