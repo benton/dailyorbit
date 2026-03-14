@@ -1,5 +1,10 @@
 import { resolve } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
+import {
+  closeAll,
+  trackConnection,
+  trackInstance,
+} from '../lib/graceful-shutdown.ts';
 
 const rootDir: string = resolve(import.meta.dirname, '../../../..');
 const DB_PATH: string = resolve(
@@ -8,7 +13,9 @@ const DB_PATH: string = resolve(
 );
 
 const db: DuckDBInstance = await DuckDBInstance.create(DB_PATH);
+trackInstance(db);
 const conn = await db.connect();
+trackConnection(conn);
 
 // Add column if missing
 await conn.run(
@@ -35,5 +42,5 @@ console.log(
   `Backfill complete: ${String(row.scraped)} scraped, ${String(row.unscraped)} unscraped, ${String(row.total)} total filings`,
 );
 
-conn.closeSync();
+closeAll();
 process.exit(0);

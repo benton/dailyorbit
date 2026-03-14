@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { closeAll } from '../lib/graceful-shutdown.ts';
 import { runAttachmentPipeline } from './pipeline.ts';
 import type { AttachmentPipelineResult } from './types.ts';
 
@@ -100,10 +101,12 @@ async function main(): Promise<void> {
     `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,
   );
 
+  closeAll();
   process.exit(0);
 }
 
 main().catch((err: unknown) => {
   console.error('Attachment pipeline failed:', err);
+  closeAll();
   process.exit(1);
 });

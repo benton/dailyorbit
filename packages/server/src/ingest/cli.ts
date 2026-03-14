@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { closeAll } from '../lib/graceful-shutdown.ts';
 import { downloadAndExtract } from './download.ts';
 import type { DownloadResult } from './download.ts';
 import { runIngest } from './pipeline.ts';
@@ -69,10 +70,12 @@ async function main(): Promise<void> {
     console.log(`Skipped tables: ${result.tablesSkipped.join(', ')}`);
   }
 
+  closeAll();
   process.exit(0);
 }
 
 main().catch((err: unknown) => {
   console.error('Ingest failed:', err);
+  closeAll();
   process.exit(1);
 });

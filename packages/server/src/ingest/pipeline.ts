@@ -5,6 +5,11 @@ import {
   DuckDBConnection as DuckDBConn,
   DuckDBInstance,
 } from '@duckdb/node-api';
+import {
+  trackConnection,
+  trackInstance,
+  untrackConnection,
+} from '../lib/graceful-shutdown.ts';
 import { parseRecords } from './dat-parser.ts';
 import { createTable, insertBatch, upsertBatch } from './loader.ts';
 import { createMetadataTables, loadTableDefsFromDdl } from './schema.ts';
@@ -104,7 +109,9 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   // Stage 4: Open DB connection and create metadata tables
   const db: DuckDBInstance =
     options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));
+  trackInstance(db);
   const conn: DuckDBConnection = await DuckDBConn.create(db);
+  trackConnection(conn);
 
   await createMetadataTables(conn);
 
@@ -162,10 +169,12 @@ export async function runIngest(options: IngestOptions): Promise<IngestResult> {
         WHERE "ingest_id" = $3`,
       ['failed', errorMessage, ingestId] as DuckDBValue[],
     );
+    untrackConnection(conn);
     conn.closeSync();
     throw error;
   }
 
+  untrackConnection(conn);
   conn.closeSync();
 
   const durationMs: number = Date.now() - start;
