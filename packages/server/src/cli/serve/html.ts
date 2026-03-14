@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { defineCommand } from 'citty';
 
@@ -16,23 +16,15 @@ export const serveHtmlCommand = defineCommand({
     },
   },
   run({ args }) {
-    const webDir: string = resolve(import.meta.dirname, '../../../web');
+    const webDir: string = resolve(import.meta.dirname, '../../../../web');
+    const vite: string = resolve(webDir, 'node_modules/.bin/vite');
     const port: string = args.port;
 
     console.log(`Starting Vite dev server on http://localhost:${port}`);
 
-    const child = spawn('pnpm', ['dev', '--port', port], {
+    execFileSync(vite, ['dev', '--port', port], {
       cwd: webDir,
       stdio: 'inherit',
-    });
-
-    child.on('error', (error: Error) => {
-      console.error(`Failed to start Vite: ${error.message}`);
-      process.exit(1);
-    });
-
-    child.on('exit', (code: number | null) => {
-      process.exit(code ?? 0);
     });
   },
 });

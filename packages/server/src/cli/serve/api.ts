@@ -85,7 +85,10 @@ export const serveApiCommand = defineCommand({
     } else {
       const { readKeyFile } = await import('../../lib/encryption.ts');
       encryptionKey = readKeyFile(keyPath);
-      await getDb();
+      const db = await getDb();
+      // Ensure schema is up to date for existing databases
+      const { initializeDatabase } = await import('../../lib/db-init.ts');
+      await initializeDatabase(db);
       console.log(`Database: ${dbPath}`);
     }
 
