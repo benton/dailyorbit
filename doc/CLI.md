@@ -12,10 +12,14 @@ Most common operations also have Makefile targets (run `make help` to list them)
 
 ## `daily-orbit serve`
 
-Start the HTTP server.
+Start application servers. Has two subcommands: `api` and `html`.
+
+### `serve api`
+
+Start the backend API server.
 
 ```
-daily-orbit serve [OPTIONS] [DATABASE] [KEYFILE]
+daily-orbit serve api [OPTIONS] [DATABASE] [KEYFILE]
 ```
 
 | Argument/Option | Default | Description |
@@ -23,6 +27,18 @@ daily-orbit serve [OPTIONS] [DATABASE] [KEYFILE]
 | `DATABASE` | `data/daily-orbit.duckdb` | Path to DuckDB database file |
 | `KEYFILE` | `data/daily-orbit.key` | Path to database encryption key file |
 | `-p, --port` | `9000` | Port to listen on |
+
+### `serve html`
+
+Start the Vite frontend dev server.
+
+```
+daily-orbit serve html [OPTIONS]
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-p, --port` | `5173` | Port for the Vite dev server |
 
 ---
 
@@ -228,5 +244,5 @@ node --no-warnings packages/server/src/bin.ts db query "SELECT COUNT(*) FROM fil
 ## Global Notes
 
 - **DuckDB single-process constraint:** DuckDB only allows one process to open a database file at a time. CLI commands cannot run while the server is running against the same database. Stop the server first, or use `db query` within the server process.
-- **All paths** default to project-root-relative locations (e.g., `data/daily-orbit.duckdb`). Override with `--database` on any command.
+- **All paths** default to CWD-relative locations (e.g., `data/daily-orbit.duckdb`). Override with `--database` on any command.
 - **Help:** Every command supports `--help` for usage details.

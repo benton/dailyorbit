@@ -1,15 +1,15 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { defineCommand } from 'citty';
-import { resolveFromRoot } from './shared/context.ts';
+import { resolveFromRoot } from '../shared/context.ts';
 
 const DEFAULT_DATABASE: string = 'data/daily-orbit.duckdb';
 const DEFAULT_KEY_FILE: string = 'data/daily-orbit.key';
 
-export const serveCommand = defineCommand({
+export const serveApiCommand = defineCommand({
   meta: {
-    name: 'serve',
-    description: 'Start the HTTP server',
+    name: 'api',
+    description: 'Start the backend API server',
   },
   args: {
     database: {
@@ -55,7 +55,7 @@ export const serveCommand = defineCommand({
       process.exit(1);
     }
 
-    const { setDbPath, getDb } = await import('../lib/db.ts');
+    const { setDbPath, getDb } = await import('../../lib/db.ts');
     setDbPath(dbPath);
 
     let encryptionKey: Buffer;
@@ -69,40 +69,40 @@ export const serveCommand = defineCommand({
       mkdirSync(dirname(dbPath), { recursive: true });
       mkdirSync(dirname(keyPath), { recursive: true });
 
-      const { generateKeyFile } = await import('../lib/encryption.ts');
+      const { generateKeyFile } = await import('../../lib/encryption.ts');
       encryptionKey = generateKeyFile(keyPath);
       console.log(`  Generated encryption key: ${keyPath}`);
 
       const db = await getDb();
-      const { initializeDatabase } = await import('../lib/db-init.ts');
+      const { initializeDatabase } = await import('../../lib/db-init.ts');
       await initializeDatabase(db);
       console.log(`  Initialized database:     ${dbPath}`);
 
-      const { ConfigService } = await import('../lib/config-service.ts');
+      const { ConfigService } = await import('../../lib/config-service.ts');
       const config = new ConfigService(db, encryptionKey);
       await config.seedDefaults();
       console.log('  Seeded default config');
     } else {
-      const { readKeyFile } = await import('../lib/encryption.ts');
+      const { readKeyFile } = await import('../../lib/encryption.ts');
       encryptionKey = readKeyFile(keyPath);
       await getDb();
       console.log(`Database: ${dbPath}`);
     }
 
     // Initialize config service
-    const { ConfigService } = await import('../lib/config-service.ts');
+    const { ConfigService } = await import('../../lib/config-service.ts');
     const db = await getDb();
     const config = new ConfigService(db, encryptionKey);
     await config.load();
 
-    const { setConfigService } = await import('../lib/config.ts');
+    const { setConfigService } = await import('../../lib/config.ts');
     setConfigService(config);
 
-    const { initializeAuth } = await import('../lib/auth.ts');
+    const { initializeAuth } = await import('../../lib/auth.ts');
     initializeAuth(config);
 
     const { serve } = await import('@hono/node-server');
-    const { default: app } = await import('../app.ts');
+    const { default: app } = await import('../../app.ts');
     serve({ fetch: app.fetch, port }, () => {
       console.log(`Server running at http://localhost:${String(port)}`);
     });

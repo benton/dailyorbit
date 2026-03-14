@@ -2,6 +2,8 @@ import Stack from '@nkzw/stack';
 import { useLocaleContext } from 'fbtee';
 import { AnchorHTMLAttributes, useTransition } from 'react';
 import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
+import AdminLayout from './admin/AdminLayout.tsx';
+import ConfigEditor from './admin/ConfigEditor.tsx';
 import AvailableLanguages from './AvailableLanguages.tsx';
 import AuthClient from './user/AuthClient.tsx';
 import SignIn from './user/SignIn.tsx';
@@ -135,6 +137,9 @@ export default function App() {
     <Routes>
       <Route element={<Home />} path="/" />
       <Route element={<About />} path="/about" />
+      <Route element={<AdminLayout />} path="/admin">
+        <Route element={<ConfigEditor />} index />
+      </Route>
     </Routes>
   );
 }

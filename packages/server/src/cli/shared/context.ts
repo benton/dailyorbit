@@ -2,10 +2,8 @@ import { resolve } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { trackInstance } from '../../lib/graceful-shutdown.ts';
 
-export const ROOT_DIR: string = resolve(import.meta.dirname, '../../../..');
-
 export function resolveFromRoot(relativePath: string): string {
-  return resolve(ROOT_DIR, relativePath);
+  return resolve(process.cwd(), relativePath);
 }
 
 export async function createDb(databasePath: string): Promise<DuckDBInstance> {

@@ -3,7 +3,7 @@ import { attachmentsCommand } from './attachments/index.ts';
 import { configCommand } from './config/index.ts';
 import { dbCommand } from './db/index.ts';
 import { ingestCommand } from './ingest/index.ts';
-import { serveCommand } from './serve.ts';
+import { serveCommand } from './serve/index.ts';
 
 export const main = defineCommand({
   meta: {
@@ -11,10 +11,10 @@ export const main = defineCommand({
     description: 'Daily Orbit — FCC filing explorer CLI',
   },
   subCommands: {
-    serve: serveCommand,
-    config: configCommand,
-    ingest: ingestCommand,
     attachments: attachmentsCommand,
+    config: configCommand,
     db: dbCommand,
+    ingest: ingestCommand,
+    serve: serveCommand,
   },
 });
