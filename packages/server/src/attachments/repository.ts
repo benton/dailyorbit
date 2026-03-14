@@ -13,6 +13,7 @@ const CREATE_TABLE_SQL: string = `
     attachment_key INTEGER NOT NULL,
     filing_key INTEGER NOT NULL,
     file_number VARCHAR NOT NULL,
+    source VARCHAR DEFAULT 'attachment',
     attachment_name VARCHAR NOT NULL,
     description VARCHAR NOT NULL DEFAULT '',
     download_url VARCHAR NOT NULL,
@@ -32,6 +33,7 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS full_text TEXT`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_length INTEGER`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summary TEXT`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'attachment'`,
 ];
 
 async function migratePrimaryKeyConstraint(
@@ -109,12 +111,13 @@ export async function upsertAttachments(
     } else {
       await conn.run(
         `INSERT INTO attachment
-          (attachment_key, filing_key, file_number, attachment_name, description, download_url)
-          VALUES ($1, $2, $3, $4, $5, $6)`,
+          (attachment_key, filing_key, file_number, source, attachment_name, description, download_url)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           att.attachmentKey,
           att.filingKey,
           att.fileNumber,
+          att.source,
           att.attachmentName,
           att.description,
           att.downloadUrl,
@@ -224,7 +227,7 @@ export async function getPendingDownloads(
 
   const sql: string = `
     SELECT
-      attachment_key, filing_key, file_number, attachment_name,
+      attachment_key, filing_key, file_number, source, attachment_name,
       description, download_url, download_status, file_size_bytes,
       content_type, local_path, discovered_at, downloaded_at,
       full_text, text_length, summary
@@ -239,6 +242,7 @@ export async function getPendingDownloads(
     attachmentKey: Number(r.attachment_key),
     filingKey: Number(r.filing_key),
     fileNumber: String(r.file_number),
+    source: String(r.source),
     attachmentName: String(r.attachment_name),
     description: String(r.description),
     downloadUrl: String(r.download_url),

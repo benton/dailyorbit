@@ -5,6 +5,8 @@ export type AttachmentMetadata = {
   attachmentKey: number;
   filingKey: number;
   fileNumber: string;
+  /** Origin section: 'attachment' (from Attachments table) or 'file' (from Files table) */
+  source: string;
   attachmentName: string;
   description: string;
   downloadUrl: string;
