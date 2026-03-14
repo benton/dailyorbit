@@ -73,7 +73,7 @@ The site's page header should include "breadcrumb"-style navigation links that m
 
 ### 6.1 Data scraping
 
-The `orbital data` CLI command provides a `scrape` command which accepts one or more arguments specifying the date of the data set to fetch from the FCC feed. The default is to download the latest data set. Both metadata and binary attachments are downloaded, and the full text or any attachments is extracted and indexed for search.
+The `daily-orbit data` CLI command provides a `scrape` command which accepts one or more arguments specifying the date of the data set to fetch from the FCC feed. The default is to download the latest data set. Both metadata and binary attachments are downloaded, and the full text or any attachments is extracted and indexed for search.
 
 ### 6.2 Admin Login features
 

@@ -42,7 +42,41 @@ Many applications require extra information in the form of attachments. The IBFS
 This application downloads and stores all Application and Comment attachments into its blob storage.
 When possible, the attachment's text content is extracted and indexed for search.
 
-## 5. Architecture
+## 5. Configuration
+
+All application configuration is stored in the DuckDB database and managed via the CLI. See [doc/configuration.md](doc/configuration.md) for details on config keys, encryption, the `SecretValue` wrapper, and the `daily-orbit config` CLI commands.
+
+## 6. CLI
+
+The `daily-orbit` CLI provides commands for server operation, data ingestion, attachment management, configuration, and ad-hoc database queries. Run it directly via Node or through Make targets:
+
+```bash
+# Direct invocation
+node --no-warnings packages/server/src/bin.ts --help
+
+# Or via Makefile (most common tasks have targets)
+make help
+```
+
+Top-level commands:
+
+```
+daily-orbit serve          Start the HTTP server
+daily-orbit config         Manage application configuration
+daily-orbit ingest         Data ingestion (ibfs, icfs)
+daily-orbit attachments    Attachment discovery and download
+daily-orbit db             Database utilities
+```
+
+Every command and subcommand supports `--help` for usage details:
+
+```bash
+node --no-warnings packages/server/src/bin.ts ingest icfs --help
+```
+
+For the full CLI reference, see [doc/CLI.md](doc/CLI.md).
+
+## 7. Architecture
 
 The project is a pnpm monorepo with two packages:
 
@@ -77,7 +111,7 @@ graph TD
 2. The **server** exposes a REST API consumed by the browser frontend and enforces session-based auth via Better Auth.
 3. The **web** client renders Application, Applicant, and Comment views driven entirely by the API.
 
-## 6. Technologies
+## 8. Technologies
 
 ### Frontend (`packages/web`)
 
