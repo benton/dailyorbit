@@ -1,3 +1,4 @@
+import { processQueue } from '../attachments/queue.ts';
 import { searchFilings } from './client.ts';
 import type { IcfsSearchResult } from './types.ts';
 
@@ -44,21 +45,33 @@ export function buildDiscoveryQueries(
 /** Run all discovery queries and return deduplicated file numbers */
 export async function discoverNewFilings(
   queries: string[],
-  options?: { delayMs?: number },
+  options?: { delayMs?: number; concurrency?: number },
 ): Promise<IcfsSearchResult[]> {
+  const concurrency: number = options?.concurrency ?? 1;
+
+  const batches: (IcfsSearchResult[] | undefined)[] = await processQueue(
+    queries,
+    async (query: string): Promise<IcfsSearchResult[]> => searchFilings(query),
+    {
+      concurrency,
+      delayMs: options?.delayMs ?? 0,
+      onError: (error: unknown, query: string) => {
+        console.error(`Discovery query failed: ${query} — ${String(error)}`);
+      },
+    },
+  );
+
   const seen: Set<string> = new Set();
   const results: IcfsSearchResult[] = [];
 
-  for (const query of queries) {
-    const batch: IcfsSearchResult[] = await searchFilings(query);
+  for (const batch of batches) {
+    if (batch == null) continue;
     for (const r of batch) {
+      if (r.fileNumber.startsWith('DRAFT-')) continue;
       if (!seen.has(r.fileNumber)) {
         seen.add(r.fileNumber);
         results.push(r);
       }
-    }
-    if (options?.delayMs) {
-      await new Promise((resolve) => setTimeout(resolve, options.delayMs));
     }
   }
 

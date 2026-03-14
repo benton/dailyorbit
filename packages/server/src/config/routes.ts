@@ -41,7 +41,10 @@ configRoutes.put('/:key', async (c) => {
   }
   const body = await c.req.json<{ value: string }>();
   if (typeof body.value !== 'string') {
-    return c.json({ error: 'Request body must include a string "value" field' }, 400);
+    return c.json(
+      { error: 'Request body must include a string "value" field' },
+      400,
+    );
   }
   const service = getConfigService();
   await service.set(key as ConfigKey, body.value);

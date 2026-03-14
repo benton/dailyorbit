@@ -1,4 +1,5 @@
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import { processQueue } from '../attachments/queue.ts';
 import { getFilingDetail } from './client.ts';
 import { buildDiscoveryQueries, discoverNewFilings } from './discovery.ts';
 import { upsertIcfsFiling } from './repository.ts';
@@ -19,6 +20,8 @@ export type IcfsIngestOptions = {
   fileNumbers?: string[];
   /** Delay between API requests in ms (default: 500) */
   delayMs?: number;
+  /** Number of concurrent HTTP requests (default: 1) */
+  concurrency?: number;
   onProgress?: (msg: string) => void;
 };
 
@@ -40,6 +43,7 @@ const DEFAULT_APP_TYPES: string[] = [
   'ASG',
   'LIC',
   'RWL',
+  'REG',
 ];
 
 export async function runIcfsIngest(
@@ -48,6 +52,7 @@ export async function runIcfsIngest(
   const start: number = Date.now();
   const log = options.onProgress ?? (() => {});
   const delayMs: number = options.delayMs ?? 500;
+  const concurrency: number = options.concurrency ?? 1;
 
   const conn: DuckDBConnection = await options.dbInstance.connect();
 
@@ -77,41 +82,66 @@ export async function runIcfsIngest(
 
       const results: IcfsSearchResult[] = await discoverNewFilings(queries, {
         delayMs,
+        concurrency,
       });
       fileNumbers = results.map((r) => r.fileNumber);
       log(`Discovered ${String(fileNumbers.length)} unique file number(s)`);
     }
 
-    // 3. Fetch detail for each and upsert
+    // 3. Fetch details concurrently
+    log(
+      `Fetching ${String(fileNumbers.length)} filing details (concurrency: ${String(concurrency)})...`,
+    );
+    let completedCount: number = 0;
+    const fetchErrors: Set<number> = new Set();
+
+    const details: (IcfsFilingDetail | undefined)[] = await processQueue(
+      fileNumbers,
+      async (fileNumber: string): Promise<IcfsFilingDetail> =>
+        getFilingDetail(fileNumber),
+      {
+        concurrency,
+        delayMs,
+        onError: (error: unknown, fileNumber: string, index: number) => {
+          fetchErrors.add(index);
+          log(`  Failed: ${fileNumber} — ${String(error)}`);
+        },
+        onItemComplete: () => {
+          completedCount++;
+          if (
+            completedCount % 100 === 0 ||
+            completedCount === fileNumbers.length
+          ) {
+            log(
+              `  Fetched ${String(completedCount)}/${String(fileNumbers.length)}`,
+            );
+          }
+        },
+      },
+    );
+
+    // 4. Write to DB sequentially
     let ingested: number = 0;
     let notFound: number = 0;
-    let failed: number = 0;
+    let failed: number = fetchErrors.size;
 
     for (let i: number = 0; i < fileNumbers.length; i++) {
+      if (fetchErrors.has(i)) continue;
+
+      const detail: IcfsFilingDetail = details[i]!;
       const fileNumber: string = fileNumbers[i]!;
-      log(
-        `[${String(i + 1)}/${String(fileNumbers.length)}] Fetching ${fileNumber}...`,
-      );
 
-      try {
-        const detail: IcfsFilingDetail = await getFilingDetail(fileNumber);
-
-        if (!detail.found) {
-          log(`  Not found: ${fileNumber}`);
-          notFound++;
-          continue;
-        }
-
-        await upsertIcfsFiling(conn, detail);
-        ingested++;
-        log(`  Ingested: ${fileNumber}`);
-      } catch (err: unknown) {
-        failed++;
-        log(`  Failed: ${fileNumber} — ${String(err)}`);
+      if (!detail.found) {
+        notFound++;
+        continue;
       }
 
-      if (i < fileNumbers.length - 1 && delayMs > 0) {
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        await upsertIcfsFiling(conn, detail);
+        ingested++;
+      } catch (err: unknown) {
+        failed++;
+        log(`  DB write failed: ${fileNumber} — ${String(err)}`);
       }
     }
 

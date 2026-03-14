@@ -34,6 +34,11 @@ export const icfsCommand = defineCommand({
       description: 'Delay between requests in ms',
       default: '500',
     },
+    concurrency: {
+      type: 'string',
+      description: 'Number of concurrent HTTP requests',
+      default: '4',
+    },
   },
   async run({ args }) {
     const fileNumbers: string[] | undefined = args['file-numbers']?.split(',');
@@ -42,6 +47,7 @@ export const icfsCommand = defineCommand({
     const subsystems: string[] | undefined = args.subsystems?.split(',');
     const appTypes: string[] | undefined = args['app-types']?.split(',');
     const delayMs: number = Number(args.delay);
+    const concurrency: number = Number(args.concurrency);
 
     if (!fileNumbers && !dateFrom) {
       console.error(
@@ -59,6 +65,7 @@ export const icfsCommand = defineCommand({
       dateFrom,
       dateTo,
       delayMs,
+      concurrency,
       onProgress: (msg: string) => console.log(msg),
       ...(fileNumbers != null ? { fileNumbers } : {}),
       ...(subsystems != null ? { subsystems } : {}),
