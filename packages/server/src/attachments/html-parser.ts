@@ -85,7 +85,7 @@ export function parseAttachmentsFromHtml(
         source: section.source,
         attachmentName,
         description,
-        downloadUrl: `${FCC_REPORT_BASE}${href}`,
+        downloadUrl: `${FCC_REPORT_BASE}${href}.pdf`,
       });
     }
   }

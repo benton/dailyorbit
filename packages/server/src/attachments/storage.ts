@@ -6,25 +6,36 @@ import { fetchWithRetry } from './fetch-retry.ts';
 
 /**
  * Build a deterministic local path for an attachment file.
- * Pattern: {basePath}/{subsystem}/{hyphenatedFileNumber}/{attachmentKey}.pdf
+ * Pattern: {basePath}/{subsystem}/{hyphenatedFileNumber}/{attachmentKey}.{ext}
  */
 export function attachmentStoragePath(
   basePath: string,
   subsystem: string,
   hyphenatedFileNumber: string,
   attachmentKey: number,
+  extension: string,
 ): string {
   return join(
     basePath,
     subsystem,
     hyphenatedFileNumber,
-    `${String(attachmentKey)}.pdf`,
+    `${String(attachmentKey)}.${extension}`,
   );
+}
+
+/**
+ * Ensure a download URL ends with `.pdf` (fcc.report's raw-file suffix).
+ * Existing DB rows may lack this suffix.
+ */
+export function normalizeDownloadUrl(url: string): string {
+  return url.endsWith('.pdf') ? url : `${url}.pdf`;
 }
 
 /**
  * Download a file from a URL and save it to destPath.
  * Creates parent directories as needed.
+ * Normalizes the URL to append `.pdf` for raw file retrieval from fcc.report.
+ * Throws if the response is an FCC "Access Denied" error page.
  */
 export async function downloadFile(
   url: string,
@@ -32,16 +43,30 @@ export async function downloadFile(
 ): Promise<{ fileSizeBytes: number; contentType: string | null }> {
   await mkdir(dirname(destPath), { recursive: true });
 
-  const response: Response = await fetchWithRetry(url);
+  const fetchUrl: string = normalizeDownloadUrl(url);
+  const response: Response = await fetchWithRetry(fetchUrl);
   if (!response.ok) {
     throw new Error(
-      `Download failed: ${String(response.status)} ${response.statusText} for ${url}`,
+      `Download failed: ${String(response.status)} ${response.statusText} for ${fetchUrl}`,
     );
   }
 
   const contentType: string | null =
     response.headers.get('content-type') ?? null;
   const buffer: ArrayBuffer = await response.arrayBuffer();
+
+  // Detect FCC "Access Denied" error pages
+  const baseContentType: string = (contentType ?? '')
+    .split(';')[0]!
+    .trim()
+    .toLowerCase();
+  if (baseContentType === 'text/html') {
+    const text: string = new TextDecoder().decode(buffer);
+    if (text.includes('Access Denied')) {
+      throw new Error(`Access Denied for ${fetchUrl}`);
+    }
+  }
+
   await writeFile(destPath, Buffer.from(buffer));
 
   const fileSizeBytes: number = buffer.byteLength;

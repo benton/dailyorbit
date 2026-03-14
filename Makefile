@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := build
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-reset
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -39,6 +39,9 @@ attachments: ## Discover and download attachments (pass ARGS for options)
 
 attachments-discover: ## Discover attachment metadata only (pass ARGS for options)
 	node --no-warnings packages/server/src/attachments/cli.ts --discover-only $(ARGS)
+
+attachments-reset: ## Delete all downloaded attachments and reset DB status to pending
+	node --no-warnings packages/server/src/attachments/reset-downloads.ts $(ARGS)
 
 clean: ## Remove node_modules, build artifacts, and DB files
 	rm -rf node_modules packages/*/node_modules packages/*/dist coverage data/*.duckdb

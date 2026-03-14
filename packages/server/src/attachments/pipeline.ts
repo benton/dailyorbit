@@ -1,4 +1,10 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import {
+  trackConnection,
+  trackInstance,
+  untrackConnection,
+} from '../lib/graceful-shutdown.ts';
+import { extensionForContentType } from './content-type.ts';
 import { compactToHyphenated } from './file-number.ts';
 import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
@@ -14,12 +20,7 @@ import {
   markFilingsScraped,
   upsertAttachments,
 } from './repository.ts';
-import {
-  attachmentStoragePath,
-  downloadFile,
-  fileExists,
-  getFileSize,
-} from './storage.ts';
+import { attachmentStoragePath, downloadFile } from './storage.ts';
 import type {
   AttachmentMetadata,
   AttachmentPipelineOptions,
@@ -51,7 +52,9 @@ export async function runAttachmentPipeline(
 
   const db: DuckDBInstance =
     options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));
+  trackInstance(db);
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
   await createAttachmentTable(conn);
   await ensureLastScrapedColumn(conn);
 
@@ -160,27 +163,38 @@ export async function runAttachmentPipeline(
           filing.subsystemCode,
           filing.appTypeCode,
         );
+
+        // Download to a temporary path first, then derive final path from content-type
+        const tmpPath: string = attachmentStoragePath(
+          options.storageBasePath,
+          filing.subsystemCode,
+          hyphenated,
+          att.attachmentKey,
+          'tmp',
+        );
+
+        const { fileSizeBytes, contentType } = await downloadFile(
+          att.downloadUrl,
+          tmpPath,
+        );
+
+        const ext: string = extensionForContentType(
+          contentType ?? 'application/octet-stream',
+        );
         const destPath: string = attachmentStoragePath(
           options.storageBasePath,
           filing.subsystemCode,
           hyphenated,
           att.attachmentKey,
+          ext,
         );
 
-        if (fileExists(destPath)) {
-          const size: number = (await getFileSize(destPath)) ?? 0;
-          return {
-            attachmentKey: att.attachmentKey,
-            destPath,
-            fileSizeBytes: size,
-            contentType: null,
-          };
+        // Rename tmp → final path (same directory, just extension change)
+        if (tmpPath !== destPath) {
+          const { rename } = await import('node:fs/promises');
+          await rename(tmpPath, destPath);
         }
 
-        const { fileSizeBytes, contentType } = await downloadFile(
-          att.downloadUrl,
-          destPath,
-        );
         return {
           attachmentKey: att.attachmentKey,
           destPath,
@@ -222,6 +236,7 @@ export async function runAttachmentPipeline(
     }
   }
 
+  untrackConnection(conn);
   conn.closeSync();
 
   const durationMs: number = Date.now() - start;

@@ -57,7 +57,8 @@ describe('parseAttachmentsFromHtml', () => {
         source: 'attachment',
         attachmentName: 'Attachment Narrative',
         description: '',
-        downloadUrl: 'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902690',
+        downloadUrl:
+          'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902690.pdf',
       },
       {
         attachmentKey: 22902694,
@@ -66,7 +67,8 @@ describe('parseAttachmentsFromHtml', () => {
         source: 'attachment',
         attachmentName: 'Attachment Application',
         description: '',
-        downloadUrl: 'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902694',
+        downloadUrl:
+          'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902694.pdf',
       },
       {
         attachmentKey: 22902695,
@@ -75,7 +77,8 @@ describe('parseAttachmentsFromHtml', () => {
         source: 'attachment',
         attachmentName: 'Attachment HTML',
         description: 'PDF',
-        downloadUrl: 'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902695',
+        downloadUrl:
+          'https://fcc.report/IBFS/SAT-STA-20230614-00142/22902695.pdf',
       },
     ]);
   });
@@ -95,7 +98,8 @@ describe('parseAttachmentsFromHtml', () => {
         source: 'file',
         attachmentName: 'Viasat Ex Parte on Kuiper',
         description: 'LETTER\n2022-01-13',
-        downloadUrl: 'https://fcc.report/IBFS/SAT-LOA-20200526-00055/14552447',
+        downloadUrl:
+          'https://fcc.report/IBFS/SAT-LOA-20200526-00055/14552447.pdf',
       },
       {
         attachmentKey: 14553085,
@@ -104,7 +108,8 @@ describe('parseAttachmentsFromHtml', () => {
         source: 'file',
         attachmentName: 'Grant Request For Extension',
         description: 'DECISION\n2022-01-13',
-        downloadUrl: 'https://fcc.report/IBFS/SAT-LOA-20200526-00055/14553085',
+        downloadUrl:
+          'https://fcc.report/IBFS/SAT-LOA-20200526-00055/14553085.pdf',
       },
     ]);
   });
