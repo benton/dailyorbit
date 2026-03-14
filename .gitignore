@@ -19,3 +19,5 @@ doc/*.pdf
 settings.local.json
 tmp/
 packages/*/scripts/
+.playwright-mcp
+.mcp.json

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.fcc.gov)",
+      "WebFetch(domain:opendata.fcc.gov)",
+      "WebFetch(domain:ftp.fcc.gov)",
+      "WebFetch(domain:gatiaher.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.socrata.com)",
+      "WebFetch(domain:transition.fcc.gov)",
+      "WebFetch(domain:fcc.report)",
+      "WebFetch(domain:blog.luke.lol)",
+      "WebFetch(domain:reboot.fcc.gov)",
+      "WebFetch(domain:licensing.fcc.gov)",
+      "WebFetch(domain:fccprod.servicenowservices.com)",
+      "WebFetch(domain:duckdb.org)",
+      "WebFetch(domain:ducklake.select)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:docs.fcc.gov)",
+      "WebFetch(domain:catalog.data.gov)"
+    ]
+  }
+}

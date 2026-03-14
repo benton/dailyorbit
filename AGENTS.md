@@ -83,7 +83,7 @@ These rules ensure maintainability, safety, and developer velocity.
 - **O-1 (MUST)** Place code in `src/[module name]` as per the standard ES modules layout.
 - **O-2 (MUST)** Place deployment-related code in `deploy`
 - **O-3 (MUST)** Place documentation in `doc`
-- **O-4 (MUST)** Place short-term, development-only scripts in `scripts` - permanent application tooling should be integrated into the appliction's CLI
+- **O-4 (SHOULD)** Place short-term, development-only scripts in `scripts` - permanent application tooling should be integrated into the appliction's CLI. If a script needs to access app modules, if should be a CLI subcommand because transitive imports may fail.
 
 ---
 
