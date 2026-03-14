@@ -4,11 +4,14 @@ import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
 import {
+  countDuplicateKeys,
   createAttachmentTable,
+  ensureLastScrapedColumn,
   getFilingsForScope,
   getPendingDownloads,
   markDownloaded,
   markFailed,
+  markFilingsScraped,
   upsertAttachments,
 } from './repository.ts';
 import {
@@ -44,10 +47,13 @@ export async function runAttachmentPipeline(
     options.provider ?? 'fcc-report';
 
   // Stage 1: Connect to DB and ensure table exists
+  const verbose: boolean = options.verbose ?? false;
+
   const db: DuckDBInstance =
     options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   await createAttachmentTable(conn);
+  await ensureLastScrapedColumn(conn);
 
   // Stage 2: Query filings matching scope
   const filings: FilingRow[] = await getFilingsForScope(conn, options.scope);
@@ -86,6 +92,8 @@ export async function runAttachmentPipeline(
       },
     );
 
+  const succeededFilingKeys: number[] = [];
+
   for (let i: number = 0; i < filings.length; i++) {
     filingsProcessed++;
     if (discoveryErrors.has(i)) {
@@ -93,6 +101,7 @@ export async function runAttachmentPipeline(
     }
 
     const filing: FilingRow = filings[i]!;
+    succeededFilingKeys.push(filing.filingKey);
     const attachments: AttachmentMetadata[] = discoveryResults[i]!;
     if (attachments.length === 0) {
       continue;
@@ -100,8 +109,27 @@ export async function runAttachmentPipeline(
 
     const result: UpsertResult = await upsertAttachments(conn, attachments);
     totalDiscovered += result.inserted;
+    if (verbose) {
+      log(
+        `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+      );
+    }
+  }
+
+  // Mark successfully scraped filings
+  if (succeededFilingKeys.length > 0) {
+    await markFilingsScraped(conn, succeededFilingKeys);
+  }
+
+  log(
+    `Discovery: ${String(totalDiscovered)} new attachments from ${String(succeededFilingKeys.length)} filings (${String(discoveryErrors.size)} errors)`,
+  );
+
+  // Check for duplicate attachment keys after discovery
+  const dupeCount: number = await countDuplicateKeys(conn);
+  if (dupeCount > 0) {
     log(
-      `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+      `WARNING: ${String(dupeCount)} duplicate attachment_key values detected`,
     );
   }
 

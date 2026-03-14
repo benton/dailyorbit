@@ -11,7 +11,7 @@ import type { AttachmentPipelineResult } from './types.ts';
 async function seedFilingTable(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
     CREATE TABLE IF NOT EXISTS filing (
-      filing_key INTEGER PRIMARY KEY,
+      filing_key INTEGER NOT NULL,
       file_number VARCHAR NOT NULL,
       subsystem_code VARCHAR NOT NULL,
       app_type_code VARCHAR NOT NULL,
@@ -84,6 +84,28 @@ describe('runAttachmentPipeline', () => {
       l.includes('pending download'),
     );
     expect(downloadLogs).toHaveLength(0);
+  });
+
+  it('sets last_scraped_at on successfully processed filings', async () => {
+    await runAttachmentPipeline({
+      dbInstance: db,
+      storageBasePath: '/tmp/test-attachments',
+      provider: 'fcc-gov',
+      scope: { subsystems: ['SAT'], limit: 1 },
+      discoverOnly: true,
+      delayMs: 0,
+    });
+
+    const checkConn: DuckDBConnection = await DuckDBConnection.create(db);
+    const reader = await checkConn.runAndReadAll(
+      `SELECT filing_key, last_scraped_at FROM filing ORDER BY filing_key`,
+    );
+    const rows = reader.getRowObjectsJS();
+    // SAT filing (key=1) was processed — should have a timestamp
+    expect(rows[0]!.last_scraped_at).not.toBeNull();
+    // SES filing (key=2) was not in scope — should be null
+    expect(rows[1]!.last_scraped_at).toBeNull();
+    checkConn.closeSync();
   });
 
   it('reports pipeline duration in milliseconds', async () => {

@@ -22,6 +22,9 @@ import type { AttachmentPipelineResult } from './types.ts';
  *   --delay          ms between requests (default: 500)
  *   --concurrency    Number of concurrent requests (default: 1)
  *   --provider       fcc-report (default) | fcc-gov
+ *   --not-scraped-since  ISO timestamp — only filings not scraped since then
+ *   --stale-after    Duration — only filings not scraped within this window (e.g. "7d", "24h")
+ *   --verbose        Log per-filing discovery details
  */
 async function main(): Promise<void> {
   const { values } = parseArgs({
@@ -38,6 +41,9 @@ async function main(): Promise<void> {
       delay: { type: 'string', default: '500' },
       concurrency: { type: 'string', default: '1' },
       provider: { type: 'string', default: 'fcc-report' },
+      'not-scraped-since': { type: 'string' },
+      'stale-after': { type: 'string' },
+      verbose: { type: 'boolean', default: false },
     },
     strict: true,
   });
@@ -57,6 +63,9 @@ async function main(): Promise<void> {
   const concurrency: number = Number(values.concurrency);
   const provider: 'fcc-report' | 'fcc-gov' =
     values.provider === 'fcc-gov' ? 'fcc-gov' : 'fcc-report';
+  const notScrapedSince: string | undefined = values['not-scraped-since'];
+  const staleAfter: string | undefined = values['stale-after'];
+  const verbose: boolean = values.verbose ?? false;
 
   const result: AttachmentPipelineResult = await runAttachmentPipeline({
     databaseUrl,
@@ -68,11 +77,14 @@ async function main(): Promise<void> {
       dateFrom,
       dateTo,
       limit,
+      notScrapedSince,
+      staleAfter,
     },
     discoverOnly,
     retryFailed,
     delayMs,
     concurrency,
+    verbose,
   });
 
   console.log('\nSummary:');

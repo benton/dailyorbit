@@ -17,6 +17,10 @@ export type DiscoveryScope = {
   dateFrom?: string | undefined;
   dateTo?: string | undefined;
   limit?: number | undefined;
+  /** Only filings not scraped since this ISO timestamp */
+  notScrapedSince?: string | undefined;
+  /** Only filings not scraped within this duration (e.g. "7d", "24h", "30m") */
+  staleAfter?: string | undefined;
 };
 
 /** Interface for attachment discovery providers */
@@ -39,6 +43,7 @@ export type AttachmentPipelineOptions = {
   retryFailed?: boolean;
   delayMs?: number;
   concurrency?: number;
+  verbose?: boolean;
   onProgress?: (msg: string) => void;
 };
 

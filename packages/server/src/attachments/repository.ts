@@ -1,4 +1,5 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
+import { parseDuration } from './duration.ts';
 import type {
   AttachmentMetadata,
   AttachmentRow,
@@ -9,7 +10,7 @@ import type {
 
 const CREATE_TABLE_SQL: string = `
   CREATE TABLE IF NOT EXISTS attachment (
-    attachment_key INTEGER NOT NULL PRIMARY KEY,
+    attachment_key INTEGER NOT NULL,
     filing_key INTEGER NOT NULL,
     file_number VARCHAR NOT NULL,
     attachment_name VARCHAR NOT NULL,
@@ -33,6 +34,25 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summary TEXT`,
 ];
 
+async function migratePrimaryKeyConstraint(
+  conn: DuckDBConnection,
+): Promise<void> {
+  const reader = await conn.runAndReadAll(`
+    SELECT COUNT(*) AS cnt
+    FROM information_schema.table_constraints
+    WHERE table_name = 'attachment' AND constraint_type = 'PRIMARY KEY'
+  `);
+  const hasPk: boolean = Number(reader.getRowObjectsJS()[0]!.cnt) > 0;
+  if (!hasPk) {
+    return;
+  }
+
+  await conn.run(`ALTER TABLE attachment RENAME TO attachment_old`);
+  await conn.run(CREATE_TABLE_SQL);
+  await conn.run(`INSERT INTO attachment SELECT * FROM attachment_old`);
+  await conn.run(`DROP TABLE attachment_old`);
+}
+
 export async function createAttachmentTable(
   conn: DuckDBConnection,
 ): Promise<void> {
@@ -40,6 +60,16 @@ export async function createAttachmentTable(
   for (const sql of MIGRATE_COLUMNS_SQL) {
     await conn.run(sql);
   }
+  await migratePrimaryKeyConstraint(conn);
+}
+
+export async function countDuplicateKeys(
+  conn: DuckDBConnection,
+): Promise<number> {
+  const reader = await conn.runAndReadAll(`
+    SELECT COUNT(*) - COUNT(DISTINCT attachment_key) AS dupes FROM attachment
+  `);
+  return Number(reader.getRowObjectsJS()[0]!.dupes);
 }
 
 export async function upsertAttachments(
@@ -116,6 +146,22 @@ export async function getFilingsForScope(
   if (scope.dateTo != null) {
     conditions.push(`f.date_filed <= $${String(paramIdx++)}`);
     params.push(scope.dateTo as DuckDBValue);
+  }
+
+  if (scope.notScrapedSince != null) {
+    conditions.push(
+      `(f.last_scraped_at IS NULL OR f.last_scraped_at < $${String(paramIdx++)})`,
+    );
+    params.push(scope.notScrapedSince as DuckDBValue);
+  }
+
+  if (scope.staleAfter != null) {
+    const ms: number = parseDuration(scope.staleAfter);
+    const threshold: Date = new Date(Date.now() - ms);
+    conditions.push(
+      `(f.last_scraped_at IS NULL OR f.last_scraped_at < $${String(paramIdx++)})`,
+    );
+    params.push(threshold.toISOString() as DuckDBValue);
   }
 
   const whereClause: string =
@@ -223,5 +269,31 @@ export async function markFailed(
       SET download_status = 'failed'
       WHERE attachment_key = $1`,
     [attachmentKey] as DuckDBValue[],
+  );
+}
+
+export async function ensureLastScrapedColumn(
+  conn: DuckDBConnection,
+): Promise<void> {
+  await conn.run(
+    `ALTER TABLE filing ADD COLUMN IF NOT EXISTS last_scraped_at TIMESTAMP`,
+  );
+}
+
+export async function markFilingsScraped(
+  conn: DuckDBConnection,
+  filingKeys: number[],
+): Promise<void> {
+  if (filingKeys.length === 0) {
+    return;
+  }
+
+  const placeholders: string = filingKeys
+    .map((_, i) => `$${String(i + 1)}`)
+    .join(', ');
+  await conn.run(
+    `UPDATE filing SET last_scraped_at = current_timestamp
+     WHERE filing_key IN (${placeholders})`,
+    filingKeys as DuckDBValue[],
   );
 }
