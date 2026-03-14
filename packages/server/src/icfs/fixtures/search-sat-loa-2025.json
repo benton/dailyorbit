@@ -1,0 +1,1426 @@
+{
+  "result": {
+    "facets": {
+      "ibfs-search-applications": []
+    },
+    "additionalResults": [
+      {
+        "sys_id": "070f33651b507e10cca55538624bcbd4",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250930-00313",
+        "fields": [
+          {
+            "display_value": "Space Logistics LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250930-00313",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "0e294fa41bdea6104c2b877ae54bcb6f",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250221-00050",
+        "fields": [
+          {
+            "display_value": "ICEYE US, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250221-00050",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "135947e41bdea6104c2b877ae54bcbf9",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250214-00046",
+        "fields": [
+          {
+            "display_value": "Pixxel Space Technologies, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250214-00046",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "162e0b3593dd761063defb786cba10e7",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20251119-00332",
+        "fields": [
+          {
+            "display_value": "Muon Space Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20251119-00332",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "165243579723e61039deff2ad053af43",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00233",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00233",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "1ba96a6587f2e610cc02a8ed3fbb354e",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250717-00176",
+        "fields": [
+          {
+            "display_value": "DISH Operating L.L.C.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250717-00176",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "20f847a41bdea6104c2b877ae54bcb79",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250605-00138",
+        "fields": [
+          {
+            "display_value": "Sirius XM Radio LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250605-00138",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "240a03681bdea6104c2b877ae54bcb8d",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250406-00093",
+        "fields": [
+          {
+            "display_value": "Impulse Space, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250406-00093",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "27298fa41bdea6104c2b877ae54bcb43",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250108-00005",
+        "fields": [
+          {
+            "display_value": "Umbra Lab Inc",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250108-00005",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "2d9c8793972be6104d74b42ad053af19",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00238",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00238",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "2eb80b641bdea6104c2b877ae54bcb73",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250618-00152",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250618-00152",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "2f50fc0e87293e10604211fc3fbb358e",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251202-00350",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251202-00350",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "3258a89597af2a1046e139b0f053af43",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250822-00224",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250822-00224",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "32995c1f1bc0f21011336467624bcb77",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250922-00296",
+        "fields": [
+          {
+            "display_value": "Embratel TVSAT Telecomunicacoes S.A.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250922-00296",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "38d84f641bdea6104c2b877ae54bcbe0",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250527-00126",
+        "fields": [
+          {
+            "display_value": "Space Exploration Holdings, LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250527-00126",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "39c488d2476ba21073fd0c03e16d436d",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250825-00227",
+        "fields": [
+          {
+            "display_value": "SpaceX Services, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250825-00227",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "39f887a41bdea6104c2b877ae54bcb4a",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250331-00087",
+        "fields": [
+          {
+            "display_value": "Loft Orbital Solutions Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250331-00087",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "3a40992897aa6e104d74b42ad053afa8",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250701-00131",
+        "fields": [
+          {
+            "display_value": "AST & Science, LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250701-00131",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "3b5501fa976b261039deff2ad053af26",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250827-00231",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250827-00231",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "46d8cf641bdea6104c2b877ae54bcb97",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250609-00140",
+        "fields": [
+          {
+            "display_value": "NOVI Space, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250609-00140",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "5408acc7dbc2fa1049639f95f39619bb",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20251230-00409",
+        "fields": [
+          {
+            "display_value": "Impulse Space, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20251230-00409",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "5e294fa41bdea6104c2b877ae54bcb84",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250117-00019",
+        "fields": [
+          {
+            "display_value": "Umbra Lab Inc",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250117-00019",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "650d16871b08b2103216433ee54bcbf4",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250922-00293",
+        "fields": [
+          {
+            "display_value": "Spire Global, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250922-00293",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "69b80b641bdea6104c2b877ae54bcb31",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250618-00149",
+        "fields": [
+          {
+            "display_value": "Intuitive Machines",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250618-00149",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "6ad8c99187c03610604211fc3fbb359d",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250916-00282",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250916-00282",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "6e66feb1875d7610604211fc3fbb356a",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251119-00330",
+        "fields": [
+          {
+            "display_value": "Mark A Sturza",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251119-00330",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "6fd64f511b14fa1011336467624bcbd4",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250929-00307",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250929-00307",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "7d848d7097fb26501a6df06ad053afe8",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250902-00244",
+        "fields": [
+          {
+            "display_value": "Zoo Communications, LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250902-00244",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "7ec903539763e61039deff2ad053af36",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00237",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00237",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "849fd3f81bc8b210dea35396624bcb6b",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250915-00276",
+        "fields": [
+          {
+            "display_value": "ICEYE US, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250915-00276",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "893a2bf41b0cb210dea35396624bcb2c",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250915-00278",
+        "fields": [
+          {
+            "display_value": "ICEYE US, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250915-00278",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "896e7a6a1b2d7e103252ec20f54bcb3c",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251204-00361",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251204-00361",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "9567caba1bd2a6104ff40e1ce54bcb1c",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250626-00121",
+        "fields": [
+          {
+            "display_value": "David C Morse",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250626-00121",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "98ff63541ba22e1090724000f54bcb83",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250701-00127",
+        "fields": [
+          {
+            "display_value": "CesiumAstro, Inc",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250701-00127",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "9c8c53611b99361011336467624bcb02",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20251118-00327",
+        "fields": [
+          {
+            "display_value": "Argo Space Corp.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20251118-00327",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "9f094ba41bdea6104c2b877ae54bcb56",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250407-00094",
+        "fields": [
+          {
+            "display_value": "Astrobotic Technology, Inc",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250407-00094",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "9fc8cb641bdea6104c2b877ae54bcbc6",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250523-00123",
+        "fields": [
+          {
+            "display_value": "Starfish Space Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250523-00123",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "a05647db9723e61039deff2ad053af63",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00235",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00235",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "a13dcdac8786b210b986a7570cbb356f",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251222-00396",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251222-00396",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "a548d24393693250ae2efdd86cba108c",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251205-00372",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251205-00372",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "a8fa44eb97abe6107738f21de053af48",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00239",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00239",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "b6e37a26975b2290a59057a00153afef",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250814-00216",
+        "fields": [
+          {
+            "display_value": "Logos Space Services, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250814-00216",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "b78c3dd01bd7a6504b29a682604bcba2",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250807-00202",
+        "fields": [
+          {
+            "display_value": "Ligado Networks Subsidiary LLC, Debtor-in-Possession",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250807-00202",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "b85907e41bdea6104c2b877ae54bcb72",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250116-00017",
+        "fields": [
+          {
+            "display_value": "Lunasonde, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250116-00017",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "ba094ba41bdea6104c2b877ae54bcb1b",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250310-00067",
+        "fields": [
+          {
+            "display_value": "Basalt Technologies Corp.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250310-00067",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "bb10ea87db8efa1049639f95f3961985",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20251230-00413",
+        "fields": [
+          {
+            "display_value": "Starfish Space Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20251230-00413",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "be7bfef91b72e61084ab85d6624bcb62",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250718-00178",
+        "fields": [
+          {
+            "display_value": "JSAT Beyond Innovation LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250718-00178",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "c9290fa41bdea6104c2b877ae54bcbd9",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250212-00043",
+        "fields": [
+          {
+            "display_value": "Starfish Space Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250212-00043",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "ca3cbfd487e6ee10b986a7570cbb352c",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250701-00129",
+        "fields": [
+          {
+            "display_value": "Reflect Orbital",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250701-00129",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "d44e1a2b1b9db2104911404fe54bcb17",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20251124-00338",
+        "fields": [
+          {
+            "display_value": "Astroscale U.S. Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20251124-00338",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "d4712b9687aea250dc93b848cebb3558",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250707-00143",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250707-00143",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "de588d3887e1f610e1cc75d9cebb35a0",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251128-00345",
+        "fields": [
+          {
+            "display_value": "Oligo Space",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251128-00345",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "dfef1561874b2e10369441550cbb3543",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250729-00192",
+        "fields": [
+          {
+            "display_value": "Venturi Astrolab, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250729-00192",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "e4dcc86f97abe6107738f21de053af57",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00240",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00240",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "e8203c751be9ba1068b6a64ce54bcbde",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251201-00347",
+        "fields": [
+          {
+            "display_value": "Mark A Sturza",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251201-00347",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "eaf7cf5f9723e61039deff2ad053af51",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250829-00236",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250829-00236",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "edfcad451b776e104c2b877ae54bcba5",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250903-00250",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250903-00250",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "eeb855861bbf22504c2b877ae54bcb47",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250906-00251",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250906-00251",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "f04d298b1b8eba104ff40e1ce54bcbb8",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251230-00412",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251230-00412",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "f1a3b73b1b21765068b6a64ce54bcb56",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20251208-00375",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20251208-00375",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "f93d78a997a322104d74b42ad053af08",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250823-00225",
+        "fields": [
+          {
+            "display_value": "Astranis Projects USA LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250823-00225",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "f95afbb6871aa610f05b63d40cbb353b",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "SAT-LOA-20250626-00122",
+        "fields": [
+          {
+            "display_value": "Momentus Space LLC",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=SAT-LOA-20250626-00122",
+        "table": "x_fmc_ibfs_base_table"
+      }
+    ],
+    "results": [
+      {
+        "sys_id": "0026e7701b0cb210dea35396624bcbcb",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250915-00277",
+        "fields": [
+          {
+            "display_value": "ICEYE US, Inc.",
+            "label": "Applicant Name"
+          },
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250915-00277",
+        "table": "x_fmc_ibfs_base_table"
+      },
+      {
+        "sys_id": "00d391fb87cc36109f0cc8460cbb3503",
+        "__search_source_id__": "ibfs-search-applications",
+        "table_fields": [
+          "number",
+          "call_sign",
+          "applicant_name",
+          "submission_date"
+        ],
+        "label": "DRAFT-SAT-LOA-20250924-00299",
+        "fields": [
+          {
+            "display_value": "SAT",
+            "label": "Subsystem"
+          }
+        ],
+        "url": "?id=ibfs_application_summary&number=DRAFT-SAT-LOA-20250924-00299",
+        "table": "x_fmc_ibfs_base_table"
+      }
+    ],
+    "$$uiNotification": [],
+    "pagination_supported": true,
+    "total_number_results": 0
+  }
+}

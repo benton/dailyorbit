@@ -1,0 +1,488 @@
+{
+  "result": {
+    "$$uiNotification": [],
+    "metatags": [],
+    "theme": {
+      "footer_fixed": false,
+      "turn_off_scss_compilation": false,
+      "footer": {
+        "template": "<footer class=\"container\">\n <div class=\"nav-footer\">\n  <div class=\"footergriditems\">\n   <div class=\"grid-item\">\n    <address>Federal Communications Commission <br>45 L Street NE, Washington, DC 20554</address>\n    <ul class=\"footermenu footermenu__phone\">\n     <li><a class=\"phone-link\" href=\"tel:+18882255322\">Phone: 1-888-225-5322</a></li>\n     <li><a class=\"phone-link\" href=\"tel:+18444322275\">Videophone: 1-844-432-2275</a></li>\n     <li><a class=\"phone-link\" href=\"tel:+18664180232\">Fax: 1-866-418-0232</a></li>\n     <li><a class=\"phone-link\" href=\"tel:+12024182222\">ICFS Help Line: 1-202-418-2222</a></li>\n     <li><a href=\"https://www.fcc.gov/about/contact\">Contact Us</a></li>\n    </ul>\n    <ul class=\"socialmediaicons\">\n     <li><a class=\"link-ext social-media twitter\" href=\"https://twitter.com/fcc\">Twitter</a></li>\n     <li><a class=\"link-ext social-media facebook\" href=\"https://www.facebook.com/FCC\">Facebook</a></li>\n     <li><a class=\"link-ext social-media youtube\" href=\"https://www.youtube.com/user/fccdotgovvideo\">Youtube</a></li>\n     <li><a class=\"social-media flickr\" href=\"https://www.flickr.com/photos/fccdotgov\">Flickr</a></li>\n     <li><a class=\"link-ext social-media instagram\" href=\"https://www.instagram.com/fcc\">Instagram</a></li>\n    </ul>\n   </div>\n   <div class=\"grid-item\">\n    <ul class=\"footermenu footermenu__categories\">\n     <li><a href=\"https://fcc.gov/general/website-notices\">Website Policies &amp; Notices</a></li>\n     <li><a href=\"https://fcc.gov/general/foia-0\">FOIA</a></li>\n     <li><a href=\"https://fcc.gov/general/no-fear-act-data\">No Fear Act Data</a></li>\n     <li><a href=\"https://fcc.gov/digitalstrategy\">FCC Digital Strategy</a></li>\n     <li><a href=\"https://fcc.gov/general/open-government-fcc\">Open Government Directive</a></li>\n     <li><a href=\"https://fcc.gov/general/plain-writing-fcc\">Plain Writing Act</a></li>\n     <li><a href=\"https://fcc.gov/general/rss-feeds-and-email-updates-fcc\">RSS Feeds &amp; Email Updates</a></li>\n     <li><a href=\"https://fcc.gov/general/disability-rights-office\">Disability Rights</a></li>\n    </ul>\n   </div>\n   <div class=\"grid-item\">\n    <ul class=\"footermenu footermenu__categories\">\n     <li>CATEGORIES</li>\n     <li><a href=\"https://fcc.gov/about/overview\">About the FCC</a></li>\n     <li><a href=\"https://fcc.gov/proceedings-actions\">Proceedings &amp; Actions</a></li>\n     <li><a href=\"https://fcc.gov/licensing\">Licensing &amp; Databases</a></li>\n     <li><a href=\"https://fcc.gov/reports-research\">Reports &amp; Research</a></li>\n     <li><a href=\"https://fcc.gov/news-events\">News &amp; Events</a></li>\n     <li><a href=\"https://fcc.gov/consumers\">For Consumers</a></li>\n    </ul>\n   </div>\n   <div class=\"grid-item\">\n    <ul class=\"footermenu footermenu__bureaus\">\n     <li>BUREAUS &amp; OFFICES</li>\n     <li><a href=\"https://fcc.gov/consumer-and-governmental-affairs#block-menu-block-4\">Consumer</a></li>\n     <li><a href=\"https://fcc.gov/enforcement#block-menu-block-4\">Enforcement</a></li>\n     <li><a href=\"https://fcc.gov/inspector-general\">Inspector General</a></li>\n     <li><a href=\"https://fcc.gov/international#block-menu-block-4\">International</a></li>\n     <li><a href=\"https://fcc.gov/media#block-menu-block-4\">Media</a></li>\n     <li><a href=\"https://fcc.gov/public-safety-and-homeland-security#block-menu-block-4\">Public Safety</a></li>\n     <li><a href=\"https://fcc.gov/wireless-telecommunications#block-menu-block-4\">Wireless</a></li>\n     <li><a href=\"https://fcc.gov/wireline-competition#block-menu-block-4\">Wireline</a></li>\n     <li><a href=\"https://fcc.gov/offices-bureaus#block-menu-block-4\">Offices</a></li>\n    </ul>\n   </div>\n  </div>\n  <div class=\"fcc-seal\">\n   Federal Communications Commission\n  </div>\n </div>\n</footer>",
+        "css": "\n.v8b76b54bdb89c0100b3d75131f961969 button.lookup {\n\tdisplay: none;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 footer {\n\tmargin-left: auto;\n\tpadding: 0rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .navbar {\n\tmargin-bottom: 0;\n\tborder: 0;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-primary {\n\theight: 5.8rem;\n\tbox-shadow: inset 0 -1.1rem 3rem 0 rgba(0, 0, 0, .3);\n}\n@media screen and (min-width: 768px) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-primary {\n\theight: 7.3rem;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-header {\n\tfloat: left;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-brand {\n\tmargin: 0;\n\theight: auto;\n\tpadding-left: 1rem;\n\tpadding-right: 1rem;\n}\n@media screen and (min-width: 768px) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-brand {\n\tpadding-top: 2.1rem;\n\tpadding-bottom: 2.1rem;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-logo {\n\tbackground-image: url('/assets/images/icons-sa0dc29a632.png');\n\tbackground-position: 0 -244rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\theight: 3rem;\n\twidth: 13.7rem;\n\tfont-size: 1em;\n\tdisplay: block;\n}\n@media screen and (min-width: 768px) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .navbar-logo {\n\twidth: 17.5rem;\n\theight: 3.8rem;\n\tbackground: url(/assets/images/fcc-logo-lg.png) 0 0 no-repeat;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .docs-attribution {\n\tpadding: .6rem;\n}\n@media (min-width: 768px) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .docs-attribution {\n\tpadding: 0 4rem;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 footer {\n\tmargin-left: auto;\n}\n@media (min-width: 768px) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 footer {\n\tmargin-left: auto;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .docs-collapsed-nav footer {\n\tmargin-left: 0;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .footer {\n\tclear: both;\n\toverflow: hidden;\n\tbackground: white;\n\tcolor: #1d2b3e;\n\tline-height: 1.2;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .footer a {\n\tcolor: #2c75d6;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer {\n\tfont-size: 1em;\n\tpadding: 4.4rem 0 7.7rem;\n\tborder-top: .1rem solid #d2d2d2;\n\tfont-weight: 500;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul {\n\tmargin: 0;\n\tpadding: 0;\n\tlist-style: none;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .docs-attribution {\n\tbackground: #eee;\n\tpadding-bottom: .5rem;\n\tpadding-top: 1rem;\n\tmargin-bottom: 2rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .docs-attribution .h5 {\n\tmargin-bottom: 1rem;\n}\n@media all and (min-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer {\n\tfont-size: 1.15em;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer:before {\n\tcontent: \" \";\n\tdisplay: block;\n\tposition: relative;\n\ttop: -4.2rem;\n\twidth: 100%;\n\theight: 0;\n}\n@media screen and (min-width: 66em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer:before {\n\tz-index: -1;\n\tborder-top: .1rem solid #d2d2d2;\n}\n}\n@media all and (min-width: 46.8em) and (max-width: 66em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .footergriditems {\n\tfloat: left;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer:before, \n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer:after {\n\tcontent: \"\";\n\tdisplay: table;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer:after {\n\tclear: both;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item {\n\tpadding: 0 1.75rem;\n}\n@media screen and (min-width: 66em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(1) {\n\tfloat: left;\n\twidth: 33.33333%;\n\tmargin-left: 0%;\n\tmargin-right: -33.33333%;\n\tpadding-left: 1.7rem;\n\tpadding-right: 1.8rem;\n\t-moz-box-sizing: border-box;\n\t-webkit-box-sizing: border-box;\n\t-ms-box-sizing: border-box;\n\tbox-sizing: border-box;\n\tword-wrap: break-word;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(2) {\n\tfloat: left;\n\twidth: 22.22222%;\n\tmargin-left: 33.33333%;\n\tmargin-right: -55.55556%;\n\tpadding-left: 1.7rem;\n\tpadding-right: 1.8rem;\n\t-moz-box-sizing: border-box;\n\t-webkit-box-sizing: border-box;\n\t-ms-box-sizing: border-box;\n\tbox-sizing: border-box;\n\tword-wrap: break-word;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(3) {\n\tfloat: left;\n\twidth: 22.22222%;\n\tmargin-left: 55.55556%;\n\tmargin-right: -77.77778%;\n\tpadding-left: 1.7rem;\n\tpadding-right: 1.8rem;\n\t-moz-box-sizing: border-box;\n\t-webkit-box-sizing: border-box;\n\t-ms-box-sizing: border-box;\n\tbox-sizing: border-box;\n\tword-wrap: break-word;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(4) {\n\tfloat: left;\n\twidth: 22.22222%;\n\tmargin-left: 77.77778%;\n\tmargin-right: -100%;\n\tpadding-left: 1.7rem;\n\tpadding-right: 1.8rem;\n\t-moz-box-sizing: border-box;\n\t-webkit-box-sizing: border-box;\n\t-ms-box-sizing: border-box;\n\tbox-sizing: border-box;\n\tword-wrap: break-word;\n}\n}\n@media screen and (max-width: 66em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(1) {\n\tfloat: left;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:not(:nth-of-type(1)) {\n\tdisplay: none;\n}\n}\n@media screen and (max-width: 50em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer .grid-item:nth-of-type(1) {\n\tmargin: 0 auto;\n\tpadding: 0 1.75rem;\n\tfloat: none;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu {\n\tpadding: 0;\n}\n@media all and (max-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu {\n\tmargin: 1.5rem 0 0;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer {\n\tmargin-left: 2rem;\n\tmargin-right: 2rem;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 address {\n\tpadding-left: 1rem;\n\tpadding-right: 1rem;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .docs-attribution {\n\tmargin: 2rem;\n\tpadding: 2rem;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a {\n\tcolor: #134b96;\n}\n@media all and (min-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a:hover {\n\ttext-decoration: underline;\n}\n}\n@media all and (max-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a {\n\tcolor: #2c75d6;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a.contactus {\n\tdisplay: inline-block;\n\tbackground: #2c75d6;\n\tcolor: white;\n\tline-height: 1;\n\tfont-weight: bold;\n\tpadding: 1.1rem 2rem;\n\tborder: 0;\n\tborder-radius: .3rem;\n\ttext-align: center;\n\twidth: 100%;\n\tmargin-top: 2em;\n\tbox-sizing: border-box;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a.contactus:hover, \n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a.contactus:focus {\n\tbackground-color: #134b96;\n\tcolor: white;\n}\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu a.contactus.disabled {\n\tbackground: #eeeeee;\n\tcolor: gray;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu li {\n\tborder-top: .1rem solid #dddddd;\n\tpadding: 1.2rem 1rem 1.2rem .8rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu li:nth-last-of-type(1) {\n\tborder-bottom: .1rem solid #dddddd;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .fcc-seal, \n.v8b76b54bdb89c0100b3d75131f961969 .social-media {\n\ttext-indent: 100%;\n\twhite-space: nowrap;\n\toverflow: hidden;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .fcc-seal {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 0;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\tfont-size: 1em;\n\twidth: 18.4rem;\n\theight: 18.4rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media {\n\tfloat: left;\n\twidth: 5.2rem;\n\theight: 5.2rem;\n\tmargin: 3rem .4rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .facebook {\n\tbackground-position: 0 -236.89999rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .flickr {\n\tbackground-position: 0 -269.39999rem;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media.twitter {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 -34.6rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\theight: 5.1rem;\n\twidth: 5.1rem;\n\tfont-size: 1em;\n\tmargin-left: 0;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media.facebook {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 -48.8rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\theight: 5.1rem;\n\twidth: 5.1rem;\n\tfont-size: 1em;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media.youtube {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 -27.5rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\theight: 5.1rem;\n\twidth: 5.1rem;\n\tfont-size: 1em;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media.flickr {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 -41.7rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\theight: 5.1rem;\n\twidth: 5.1rem;\n\tfont-size: 1em;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .social-media.instagram {\n\tbackground-image: url(\"icons-s0bc2f34441.png\");\n\tbackground-position: 0 -20.4rem;\n\tbackground-repeat: no-repeat;\n\toverflow: hidden;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\theight: 5.1rem;\n\twidth: 5.1rem;\n\tfont-size: 1em;\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .youtube {\n\tbackground-position: 0 -368.89999rem;\n}\n@media all and (min-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.footermenu li {\n\tborder: 0 !important;\n\tpadding: 0 0 1.2rem 0;\n\tline-height: 1.25em;\n}\n}\n@media all and (max-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer ul.socialmediaicons {\n\twidth: 30rem;\n\tmargin: auto;\n}\n}\n\n.v8b76b54bdb89c0100b3d75131f961969 .nav-footer address {\n\tfont-style: normal;\n\tmargin-bottom: 0;\n}\n@media all and (max-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .fcc-seal {\n\tdisplay: block;\n\tfloat: none;\n\tclear: left;\n\tmargin: 0 auto;\n}\n}\n@media all and (min-width: 46.8em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .fcc-seal {\n\tclear: none;\n\tfloat: right;\n\tmargin: 0 1.75rem;\n}\n}\n@media all and (min-width: 66em) {\n\t\n.v8b76b54bdb89c0100b3d75131f961969 .fcc-seal {\n\tclear: both;\n\tfloat: left;\n}\n}",
+        "static": false,
+        "data": {},
+        "roles": "",
+        "link": "function link(scope, element, attrs, controller) {  }",
+        "_metastack_size": 0,
+        "option_schema": "",
+        "sys_class_name": "sp_header_footer",
+        "dependencies": [],
+        "sys_id": "8b76b54bdb89c0100b3d75131f961969",
+        "public": true,
+        "client_script": "function() {\n  var c = this;\n}\n",
+        "name": "New ICFS Footer",
+        "options": {
+          "sp_widget_dv": "",
+          "sp_column_dv": "",
+          "active": false,
+          "sys_tags": "",
+          "order": -1
+        },
+        "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+        "id": "new-ibfs-footer",
+        "field_list": "",
+        "controller_as": "c",
+        "providers": [],
+        "_server_time": "0.009"
+      },
+      "footer_dv": "New ICFS Footer",
+      "navbar_fixed": false,
+      "sys_tags": "",
+      "header_dv": "ICFS Header",
+      "sys_class_name": "sp_theme",
+      "css_variables": "$sp-logo-margin-x: \t\t15px !default;\r\n$sp-tagline-color:\t\t$text-color !default;\r\n$navbar-inverse-bg: \t#2c75d6 !default;\r\n$navbar-inverse-link-color: #ffffff !default;\r\n$navbar-inverse-link-hover-color: #bdc0c4 !default;\r\n$body-bg: \t\t\t\t#f0f3f4 !default;\r\n$dropdown-link-disabled-color: #fff;\r\nbutton.lookup { // DFCT0019267\r\ndisplay: none;\r\n}",
+      "sys_id": "8d0ea37adbac84100b3d75131f961973",
+      "name": "ICFS Theme",
+      "header": {
+        "template": "<sp-widget widget=\"data.globalRedirectWidget\"></sp-widget>\n<div class=\"header-bg\">\n <nav class=\"navbar-inverse container\" ng-class=\"::{'navbar':!isViewNative, 'is-native': isViewNative}\" role=\"navigation\">\n  <div aria-label=\"{{::portal.title}}\" ng-show=\"::!isViewNative\" class=\"navbar-header\" style=\"margin-top:-15px\"><a aria-labelledby=\"portal-title\" class=\"navbar-brand\" ng-if=\"::!portal.logo\" href=\"?id={{::portal.homepage_dv}}\"><span id=\"portal-title\">{{::portal.title}}</span></a> <a class=\"navbar-brand navbar-brand-logo\" ng-if=\"::portal.logo\" href=\"?id={{::portal.homepage_dv}}\" style=\"padding-right:15px\"> <img ng-src=\"x_fmc_ibfs.logo_white_gold.png\"> </a> <a class=\"navbar-brand navbar-brand-logo\" ng-if=\"::portal.logo\" href=\"https://www.fcc.gov\"> <img aria-label=\"FCC Logo\" ng-src=\"{{::portal.logo}}\" alt=\"{{::portal.title}}\"> </a> <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#sp-nav-bar\"> <span class=\"sr-only\">Toggle navigation</span> <span class=\"icon-bar\"></span> <span class=\"icon-bar\"></span> <span class=\"icon-bar\"></span> </button>\n  </div>\n  <div sp-navbar-toggle=\"\" class=\"collapse navbar-collapse navbar-right\" id=\"sp-nav-bar\"><!-- Include The Menu -->\n   <ul ng-if=\"::(!user.logged_in &amp;&amp; page.id != portal.login_page_dv &amp;&amp; !data.hasLogin)\" class=\"nav navbar-nav\">\n    <li><a href ng-click=\"openLogin()\">Log in</a></li>\n   </ul>\n   <ul ng-if=\"::user.logged_in\" class=\"nav navbar-nav\"><!-- chat, avatar, and logout -->\n    <li ng-if=\"::data.connect_support_queue_id\"><a href ng-click=\"openPopUp()\">Live Chat</a></li>\n    <li class=\"dropdown hidden-xs\"><a href=\"javascript:void(0)\" class=\"dropdown-toggle\" data-toggle=\"dropdown\"> <!-- <span class=\"navbar-avatar\"><sn-avatar class=\"avatar-small-medium\" primary=\"userID\" /></span> --> <span class=\"visible-lg-inline\"><font color=\"white\">{{::user.name}}</font></span> </a>\n     <ul class=\"dropdown-menu\">\n      <li><a ng-href=\"?id=user_profile&amp;sys_id={{::user.sys_id}}\">Profile</a></li>\n      <li><a href=\"{{::portal.logoutUrl}}\">Logout</a></li> <!-- Line below is the new line to add -->\n      <li><a ng-if=\"data.isAdmin\" ng-click=\"openImpersonationWindow()\">Impersonate</a></li>\n      <li><a ng-if=\"data.is_impersonating\" ng-click=\"impersonate(data.impersonating)\"><i class=\"fa fa-reply\" style=\"margin-right: 5px;\"></i>End Impersonation</a></li>\n     </ul></li>\n    <li class=\"visible-xs-block\"><a ng-href=\"?id=user_profile&amp;sys_id={{::user.sys_id}}\"><span class=\"navbar-avatar\">\n       <sn-avatar class=\"avatar-small-medium\" primary=\"userID\" /></span>{{::user.name}}</a></li>\n    <li class=\"visible-xs-block\"><a href=\"{{::portal.logoutUrl}}\">Logout</a></li>\n   </ul>\n   <div ng-if=\"user.logged_in == true\" class=\"search-widget\" style=\"margin-top:15px\"><sp-widget widget=\"data.typeahead\"></sp-widget>\n   </div>\n  </div>\n </nav>\n</div>\n<div class=\"w-100\" id=\"ibfs-loading-container\" ng-class=\"{'darker-yellow-background':isLoading}\">\n <div id=\"ibfs-loading-bar\" ng-class=\"{'fill-yellow-left-to-right':isLoading}\"></div>\n</div>\n<div id=\"subnavbar\">\n <div class=\"container\">\n  <sp-widget id=\"submenus-widget\" widget=\"data.menu\"></sp-widget>\n </div>\n</div>",
+        "css": "\n.v73dcfb76dbec84100b3d75131f9619c1 button.lookup {\n\tdisplay: none;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .nav > li > a {\n\tpadding: 1.6rem 1.6rem 1rem 1.6rem;\n\tborder-bottom: .6rem solid transparent;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #ibfs-loading-container {\n\tbackground-color: #FFCC45;\n\toverflow: hidden;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #ibfs-loading-bar {\n\tbackground-color: transparent;\n\tmin-height: .6rem;\n\tposition: relative;\n\twidth: 100%;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .darker-yellow-background {\n\tbackground-color: #997000 !important;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .fill-yellow-left-to-right {\n\twidth: 30rem !important;\n\tbackground-color: #FFCC45 !important;\n\tanimation: left_to_right 2s infinite;\n}\n@keyframes left_to_right {\n\t\t0% {\n\t\tleft: -133%;\n\t}\n\t\t100% {\n\t\tleft: 100%;\n\t}\n\t}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .search-widget {\n\tposition: relative;\n\tz-index: 0;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .search-widget a {\n\toverflow: hidden;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .header-bg {\n\tbackground: #12428B url(/bg-pattern-header.png);\n\tpadding: 0;\n\tpadding-top: 1rem;\n\tpadding-bottom: 1rem;\n\twidth: 100%;\n\ttop: 0rem;\n\tz-index: 1000;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar {\n\ttransition: 250ms opacity ease-in-out;\n\t-webkit-transition: 250ms opacity ease-in-out;\n\tborder: 0;\n\tborder-bottom: 0rem solid #FFCC45;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .search-widget {\n\tfloat: right;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-fade {\n\topacity: .4;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-inverse {\n\tbackground-color: rgba(255, 255, 255, 0);\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-inverse .navbar-toggle {\n\tborder-color: rgba(255, 255, 255, .25);\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-brand {\n\theight: 8rem;\n\tpadding: 0;\n\twidth: auto;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .dropdown-menu {\n\tpadding: 0rem;\n\tborder: none;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #x26f9195bdba408100b3d75131f96195a {\n\tmargin-left: -1.5rem;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #x26f9195bdba408100b3d75131f96195a > li a:hover {\n\tcursor: pointer;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #x26f9195bdba408100b3d75131f96195a > li ul li a {\n\tcolor: #eee;\n\tborder-top: .3rem solid transparent;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #x26f9195bdba408100b3d75131f96195a > li ul li a:hover {\n\tcolor: #2C75D6;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar {\n\tbackground: #12428B;\n\tmin-height: 4rem;\n\tcolor: #FFF;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar li {\n\tline-height: 4rem;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar li a {\n\tcolor: #FFF;\n\tmargin-bottom: 0rem;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar li a:hover, \n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar li a:active {\n\tborder-bottom: .6rem solid #FFCC45;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar ul.dropdown-menu li a {\n\tborder-bottom: .6rem solid transparent;\n\tmargin-bottom: 0rem !important;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar ul.dropdown-menu li a:hover, \n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar ul.dropdown-menu li a:active {\n\tborder-bottom: .6rem solid #FFCC45;\n\tmargin-bottom: 0rem !important;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 #subnavbar .dropdown-menu > li > a {\n\tcolor: #3a3f51;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .nav .open > a, \n.v73dcfb76dbec84100b3d75131f9619c1 .nav .open > a:hover, \n.v73dcfb76dbec84100b3d75131f9619c1 .nav .open > a:focus {\n\tbackground-color: #12428B;\n\tborder-bottom: .6rem solid #ffd34d;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .nav > li > a:hover, \n.v73dcfb76dbec84100b3d75131f9619c1 .nav > li > a:focus {\n\ttext-decoration: none;\n\tbackground-color: #12428B;\n\tborder-bottom: .6rem solid #ffd34d;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-brand img, \n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-brand span {\n\tmargin-left: .2rem;\n\tmargin-right: .2rem;\n\tmargin-top: .5rem;\n\tmargin-bottom: .5rem;\n\tdisplay: block;\n\tmax-height: 4rem;\n\tmax-width: 36rem;\n\tposition: relative;\n\ttop: 50%;\n\t-webkit-transform: translateY(-50%);\n\t-ms-transform: translateY(-50%);\n\ttransform: translateY(-50%);\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .breadcrumb-container {\n\tbackground-color: #fff;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-inverse.is-native {\n\tbackground-color: #405060;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 nav {\n\tmargin-bottom: 0rem;\n\tborder-radius: 0rem;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-collapse {\n\tpadding-right: 0rem;\n}\n\n.v73dcfb76dbec84100b3d75131f9619c1 .navbar-nav {\n\tmargin: 0rem;\n}",
+        "static": false,
+        "data": {
+          "globalRedirectWidget": {
+            "template": "",
+            "sys_id": "",
+            "data": {},
+            "name": "",
+            "id": "",
+            "sys_class_name": "",
+            "controller_as": ""
+          },
+          "connect_support_queue_id": null,
+          "login_page": null,
+          "isAdmin": false,
+          "menu": {},
+          "loginWidget": {
+            "template": "<div ng-if=\"!data.is_logged_in\" class=\"sp-login-widget\" ng-class=\"::(c.options.use_advanced == 'true' ? 'advanced' : '')\">\n <form ng-if=\"!c.externalLoginMode\" class=\"form-signin\" ng-submit=\"c.login(c.username, c.password)\" method=\"post\">\n  <div ng-class=\"::{'panel panel-default': c.options.show_panel}\">\n   <div ng-if=\"::c.options.show_panel\" class=\"panel-heading padder-v\">\n    <h3 class=\"panel-title\">Log in</h3>\n   </div>\n   <div ng-class=\"::{'panel-body': c.options.show_panel}\">\n    <div class=\"list-group list-group-sm\">\n     <div class=\"list-group-item\"><label for=\"username\" class=\"label-advanced\">{{::data.usernameMsg}}</label> <input id=\"username\" name=\"username\" autocapitalize=\"off\" ng-keypress=\"c.message = ''\" ng-click=\"c.message = ''\" class=\"form-control input-advanced input-group-advanced\" type=\"text\" autofocus=\"true\" ng-model=\"c.username\" autocomplete=\"off\">\n     </div>\n     <div class=\"list-group-item\"><label for=\"password\" class=\"label-advanced\">{{::data.passwordMsg}}</label>\n      <p id=\"btnDescription\" class=\"sr-only\" aria-live=\"polite\">\"Password hidden</p>\n      <div class=\"input-group password-group input-group-advanced\"><input id=\"password\" name=\"password\" ng-keypress=\"c.message = ''\" ng-click=\"c.message = ''\" class=\"form-control input-advanced\" type=\"password\" ng-model=\"c.password\" autocomplete=\"off\"> <span class=\"input-advanced\"> <button id=\"mask_icon\" type=\"button\" class=\"btn btn-default icon-preview input-group-append mask_btn sn-tooltip-basic\" ng-click=\"c.renderMaskIcon()\" aria-label=\"Show Password\" data-toggle=\"tooltip\" data-container=\"body\" data-original-title=\"Show password\"></button> </span>\n      </div>\n     </div>\n    </div>\n    <div ng-if=\"c.message\" class=\"alert alert-danger login-alert\" role=\"alert\">\n     {{c.message}}\n    </div>\n    <div ng-if=\"c.success\" class=\"alert alert-success login-alert\" role=\"alert\">\n     {{c.success}}\n    </div>\n    <div ng-if=\"::!c.data.forgetMe\" class=\"checkbox\"><label> <input name=\"c.remember_me\" ng-model=\"c.remember_me\" checked id=\"remember_me\" type=\"checkbox\" class=\"checkbox\" value=\"true\"> Remember me </label>\n    </div> <!--STRY50033370: Forgot Password link in the login widget-->\n    <div class=\"forgot-pwd-div m-b\">\n     <div class=\"row\">\n      <div ng-if=\"::(c.data.forgotPwdLinkProp == 'true')\" class=\"forgot-text\" ng-class=\"::(c.options.use_advanced == 'true' ? 'col-xs-8' : 'col-xs-12')\"><a class=\"forgot-pwd-link\" ng-href=\"{{::c.data.pswdResetUrl}}\">Forgot Password ?</a>\n      </div>\n      <div ng-class=\"::(c.options.use_advanced == 'true' &amp;&amp; c.data.forgotPwdLinkProp =='true' ? 'col-xs-4' : 'col-xs-12')\"><button name=\"login\" type=\"submit\" class=\"btn btn-lg btn-primary btn-block login-button-old\"> Log in </button>\n      </div>\n     </div>\n    </div>\n    <div class=\"row set-login-type-link m-t\" ng-if=\"::data.multisso_enabled\">\n     <div class=\"col-xs-12 text-center\"><a href=\"javascript:void(0)\" ng-click=\"c.setExternalLogin(true)\">Use external login</a>\n     </div>\n    </div>\n    <div ng-class=\"col-xs-12\" ng-if=\"data.cert_based_auth || data.isShowLoginWithIdps\">\n     <p class=\"bar\"><span>or</span></p>\n    </div>\n    <div ng-class=\"col-xs-12\" ng-if=\"::c.data.cert_based_auth\" class=\"loginWithBtn\"><button name=\"login\" type=\"button\" class=\"cert btn btn-lg btn-default\" ng-click=\"c.login(null, null, true)\"><img alt=\"\" ng-src=\"certLoginLogo.svg\">Login with PIV/CAC card</button>\n    </div>\n    <div ng-repeat=\"a in ::c.data.oidcRecords\">\n     <div ng-class=\"col-xs-12\" class=\"loginWithBtn\"><a name=\"login\" class=\"idp btn btn-lg btn-default\" href=\"javascript:void(0)\" ng-click=\"c.oidcLogin(a.sysId)\"> <img ng-if=\"::a.isLogoUrlValid\" alt=\"\" ng-src=\"{{::a.logoUrl}}\">Log in with {{::a.name}} </a>\n     </div>\n    </div>\n   </div>\n  </div>\n </form>\n <form ng-if=\"c.externalLoginMode\" class=\"form-signin\" ng-submit=\"c.externalLogin()\" method=\"post\">\n  <div ng-class=\"::{'panel panel-default': c.options.show_panel}\">\n   <div ng-if=\"::c.options.show_panel\" class=\"panel-heading\">\n    <h3 class=\"panel-title\">External login</h3>\n   </div>\n   <div ng-class=\"::{'panel-body': c.options.show_panel}\">\n    <div class=\"list-group list-group-sm\">\n     <div class=\"list-group-item\"><label for=\"username\" class=\"label-advanced\">User ID</label> <input id=\"username\" name=\"username\" ng-click=\"message = ''\" class=\"form-control input-advanced\" type=\"text\" autofocus=\"true\" ng-model=\"c.username\">\n     </div>\n    </div>\n    <div class=\"submit-btn row\">\n     <div class=\"col-xs-12\"><button name=\"login\" type=\"submit\" class=\"btn btn-lg btn-primary btn-block\"> Submit </button>\n     </div>\n    </div>\n    <div class=\"set-login-type-link row m-t\">\n     <div class=\"col-xs-12 text-center\"><a href=\"javascript:void(0)\" ng-click=\"c.setExternalLogin(false)\">Use internal login</a>\n     </div>\n    </div>\n   </div>\n  </div>\n </form>\n <div class=\"sp-self-registration forgot-pwd-link\" ng-if=\"::c.data.self_registration_record_producer\">\n  Don't have an account? <a ng-href=\"/{{::c.data.url_suffix}}?id=sn_user_registration&amp;sys_id={{::c.data.self_registration_record_producer}}\">{{::c.data.self_registration_label}}</a>\n </div>\n</div>",
+            "css": "\n.v6506d341cb33020000f8d856634c9cdc button.lookup {\n\tdisplay: none;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .panel-body {\n\tpadding: 1.5rem 1.5rem 1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .form-control, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget label[for=\"username\"], \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget label[for=\"password\"] {\n\tcolor: black;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .btn {\n\tfont-weight: 600;\n\tfont-size: 2rem;\n\tbackground-color: #12428B;\n\tborder-color: #0f3774;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .list-group {\n\tmargin-bottom: 1.2rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .login-button-old {\n\tmargin-top: .7rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .login-alert {\n\tmargin-left: 0rem;\n\tmargin-right: 0rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .panel-title {\n\tfont-size: 2.5rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .panel-default > .panel-heading {\n\tbackground-color: #fff;\n\tborder: 0rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .panel-body {\n\tpadding: 0rem 0rem 1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced [placeholder]::-webkit-input-placeholder {\n\ttransition: opacity .01s .01s ease !important;\n\topacity: 0 !important;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .list-group-item {\n\tborder: 0rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .login-alert {\n\tmargin-left: 1.5rem;\n\tmargin-right: 1.5rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .btn {\n\tfont-weight: 400 !important;\n\tborder-color: #12428B;\n\tbackground-color: #12428B;\n\tborder-radius: .2rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .forgot-pwd-div {\n\tpadding-right: 1.5rem;\n\tpadding-left: 1.5rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .forgot-pwd-div .forgot-text {\n\tfont-size: 1.6rem;\n\tline-height: 2rem;\n\tpadding-top: .8rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .forgot-pwd-div .btn {\n\tline-height: 1.6rem;\n\tfont-size: 1.4rem;\n\tmargin-top: 0rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .submit-btn {\n\tpadding-right: 1.5rem;\n\tpadding-left: 1.5rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .input-group-advanced {\n\tmargin-top: 1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .input-advanced {\n\tborder: .1rem solid #939393 !important;\n\tborder-radius: .3rem !important;\n\tbackground-color: #fff !important;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .checkbox {\n\tpadding-left: 1.5rem !important;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .label-advanced {\n\tposition: relative;\n\twidth: 100%;\n\tpadding: 0;\n\toverflow: visible;\n\tborder: 0;\n\theight: 1.9rem;\n\tcolor: #717171;\n\tfont-size: 1.6rem;\n\tline-height: 1.9rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .mask_btn {\n\tbackground-color: #fcfcfc;\n\tborder-color: #939393;\n\tborder-left: 0rem;\n\twidth: fit-content;\n\tborder-top-left-radius: 0rem !important;\n\tborder-bottom-left-radius: 0rem !important;\n\tfont-size: 1.4rem !important;\n\tposition: relative;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .mask_btn.active:after {\n\tbackground-color: #2e2e2e;\n\tcontent: \"\";\n\theight: 1.6rem;\n\tleft: 50%;\n\tmargin-top: -.8rem;\n\tmargin-inline-start: -.1rem;\n\tmargin-block-start: -.8rem;\n\tposition: absolute;\n\ttop: 50%;\n\ttransform: rotate(45deg);\n\twidth: .1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget.advanced .form-signin .loginWithBtn {\n\tpadding: 0 1.5rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-self-registration {\n\ttext-align: center;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar {\n\tmargin: 1.2rem 0;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar span {\n\tposition: relative;\n\tdisplay: block;\n\ttext-align: center;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar span:before, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar span:after {\n\tcontent: \"\";\n\tposition: absolute;\n\twidth: calc(50% - 24px);\n\theight: .1rem;\n\tbackground-color: #b3bac7;\n\ttop: .8rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar span:before {\n\tright: 0;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .bar span:after {\n\tleft: 0;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget button.cert, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget a.idp {\n\tbackground-color: #fff !important;\n\tborder-color: #ccc !important;\n\twidth: 100%;\n\tmargin-bottom: 1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget button.cert:hover, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget a.idp:hover {\n\tborder-color: #adadad;\n\tbackground-color: #e6e6e6;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget button.cert img, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget a.idp img {\n\theight: 2rem;\n\twidth: 2rem;\n\tmargin-bottom: .3rem;\n\tmargin-right: .9rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget img.eye-icon {\n\tcontent: url(\"eye.svg\");\n\tcursor: pointer;\n\twidth: 1.8rem;\n\theight: 1.8rem;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-items: center;\n\tfloat: left;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget img.eye-icon.slashed {\n\tcontent: url(\"eye-slash.svg\");\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .password-group {\n\tdisplay: flex;\n\tflex-direction: row;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .mask_btn {\n\tbackground-color: #fcfcfc;\n\tborder-color: #939393;\n\tborder-left: 0rem;\n\twidth: fit-content;\n\tborder-top-left-radius: 0rem !important;\n\tborder-bottom-left-radius: 0rem !important;\n\tfont-size: 1.4rem !important;\n\tposition: relative;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget .mask_btn.active:after {\n\tbackground-color: #2e2e2e;\n\tcontent: \"\";\n\theight: 1.6rem;\n\tleft: 50%;\n\tmargin-top: -.8rem;\n\tmargin-inline-start: -.1rem;\n\tmargin-block-start: -.8rem;\n\tposition: absolute;\n\ttop: 50%;\n\ttransform: rotate(45deg);\n\twidth: .1rem;\n}\n\n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget input::-ms-reveal, \n.v6506d341cb33020000f8d856634c9cdc .sp-login-widget input::-ms-clear {\n\tdisplay: none;\n}",
+            "data": {
+              "usernameMsg": "User name",
+              "certAuthRedirect": false,
+              "isMultiSSOActive": true,
+              "pageURI": "/api/now/sp/page?id=ibfs_application_summary&portal_id=6865628b1bd2625069c154e2604bcbf2&number=NONEXISTENT-00000000-99999",
+              "forgetMe": true,
+              "rememberMeDefault": false,
+              "passwordMsg": "Password",
+              "multisso_enabled": true,
+              "default_idp": "10db4616dbb07200f2f2f6531f9619de ",
+              "errorMsg": "There was an error processing your request",
+              "isShowLoginWithIdps": false,
+              "oidcRecords": [],
+              "is_logged_in": false,
+              "errorMsg2": "An error has occurred - please contact your system administrator",
+              "pswdResetUrl": "/$pwd_reset.do?sysparm_url=ss_default",
+              "forgotPwdLinkProp": "true",
+              "multiFactorAuthEnabled": true
+            },
+            "roles": "",
+            "rectangle_id": "b0bc0058cb21120000f8d856634c9c06",
+            "_metastack_size": 1,
+            "option_schema": "[{\"name\":\"show_panel\",\"section\":\"Presentation\",\"default_value\":\"true\",\"label\":\"Show Panel\",\"type\":\"boolean\"},{\"name\":\"use_advanced\",\"section\":\"Presentation\",\"default_value\":\"false\",\"label\":\"Use Advanced View\",\"type\":\"boolean\"}]",
+            "sys_class_name": "sp_widget",
+            "dependencies": [],
+            "sys_id": "6506d341cb33020000f8d856634c9cdc",
+            "public": true,
+            "client_script": "function loginCtrl($scope, $http, $window, $location, glideUserSession, glideSystemProperties, spUtil) {\n\tvar c = this;\n\tc.remember_me = c.data.forgetMe ? false : c.data.rememberMeDefault;\n\tc.data.url_suffix = $scope.portal ? $scope.portal.url_suffix : \"\";\n\tc.masked = true;\n\tif (!c.data.is_logged_in && c.data.multisso_enabled && c.data.default_idp) {\n\t\tvar pageId = $location.search().id || $scope.page.id;\n\t\tvar isLoginPage = ($scope.portal.login_page_dv == pageId) || ('login' == pageId);\n\t\tc.server.get({\n\t\t\taction: \"set_sso_destination\",\n\t\t\tpageURI: isLoginPage ? null : $location.url()\n\t\t}).then(function() {\n$window.location = \"/login_with_sso.do?glide_sso_id=\" + c.data.default_idp;\n\t\t});\n\t} else if (!c.data.is_logged_in && c.data.certAuthRedirect && c.data.cert_based_auth && c.data.certHeader == \"true\") {\n        login(null, null, true);\n    }\n    \n    c.login = function(username, password, isCertLogin) {\n        login(username, password, isCertLogin);\n    };\n\t\n\tfunction login(username, password, isCertLogin) {\n\t\tvar url = spUtil.getURL({sysparm_type: 'view_form.login'});\n\t\t\n\t\tvar pageId = $location.search().id || $scope.page.id;\n\t\tvar isLoginPage = ($scope.portal.login_page_dv == pageId) || ('login' == pageId);\n\t\treturn $http({\n\t\t\tmethod: 'post',\n\t\t\turl: url,\n\t\t\tdata: $.param({\n\t\t\t\t'sysparm_type': 'login',\n\t\t\t\t'ni.nolog.user_password': true,\n\t\t\t\t'remember_me': !!c.remember_me ? true : false,\n\t\t\t\t'user_name': username,\n\t\t\t\t'user_password': password,\n\t\t\t\t'get_redirect_url': true,\n\t\t\t\t'is_direct_redirect': true,\n\t\t\t\t'sysparm_goto_url': isLoginPage ? null : $location.url(),\n\t\t\t\t'mfa_redirect_url': isLoginPage ? null : c.data.pageURI,\n\t\t\t\t'cert_login' : !!isCertLogin\n\t\t\t}),\n\t\t\theaders: {\n'Content-Type': 'application/x-www-form-urlencoded'\n\t\t\t}\n\t\t}).then(function(response) {\n\t\t\tif (!response.data) {\n\t\t\t\tc.message = $scope.data.errorMsg;\n\t\t\t\treturn;\n\t\t\t}\n\t\t\tif (response.data.status == 'success') {\n\t\t\t\tif (c.data.multiFactorAuthEnabled) {\n\t\t\t\t\tc.server.get({\n\t\t\t\t\t\taction: \"multi_factor_auth_setup\",\n\t\t\t\t\t\tdirectTo: response.data.redirect_url\n\t\t\t\t\t}).then(handleLoginResponse.bind(response), handleLoginResponse.bind(response));\n\t\t\t\t} else {\n\t\t\t\t\thandleLoginResponse.call(response);\n\t\t\t\t}\n\t\t\t} else if (response.data.status == 'mfa_code_required') {\n$window.location = '/validate_multifactor_auth_code.do';\n\t\t\t} else {\n\t\t\t\tc.message = response.data.message;\n\t\t\t\tc.password = \"\";\n\t\t\t\tc.username = \"\";\n\t\t\t\tangular.element(\"#username\").focus();\n\t\t\t}\n\t\t}, function errorCallback(response) {\n\t\t\tc.message = $scope.data.errorMsg;\n\t\t});\n\t};\n\tc.oidcLogin = function(idProvider){\n\t\tvar pageId = $location.search().id || $scope.page.id;\n\t\tvar isLoginPage = $scope.portal.login_page_dv == pageId;\n\t\tc.server.get({\n\t\t\taction: \"set_sso_destination\",\n\t\t\tpageURI: isLoginPage ? null : $location.url()\n\t\t}).then(function() {\n$window.location = \"/login_with_sso.do?glide_sso_id=\" + idProvider;\n\t\t});\n\t};\n\t\n\tc.externalLogin = function() {\n\t\tvar pageId = $location.search().id || $scope.page.id;\n\t\tvar isLoginPage = ($scope.portal.login_page_dv == pageId) || ('login' == pageId);\n\t\tc.server.get({\n\t\t\taction: \"set_sso_destination\",\n\t\t\tpageURI: isLoginPage ? null : $location.url()\n\t\t}).then(function() {\n\t\t\tglideSystemProperties.set(\"glide.authenticate.multisso.enabled\", true);\n\t\t\tglideUserSession.getSsoRedirectUrlForUsername(c.username)\n\t\t\t\t.then(function(url) {\n\t\t\t\t\t$window.location = url;\n\t\t\t\t}, function(err) {\n\t\t\t\t\tspUtil.addErrorMessage($scope.data.errorMsg2);\n\t\t\t\t});\n\t\t});\n\t}\n\tfunction handleLoginResponse() {\n\t\tc.success = this.data.message;\n\t\t$window.location = this.data.redirect_url;\n\t\tif ($window.location.hash.length > 0)\n\t\t\t$window.location.reload();\n\t}\n\tc.setExternalLogin = function(newVal) {\n\t\tc.externalLoginMode = newVal;\n\t\tif(!newVal)\n\t\t\tc.masked = true;\n\t}\n\t\n\tc.renderMaskIcon = function() {\n\t\tvar passwordEle = document.getElementById(\"password\");\n\t\tvar maskEle = document.getElementById(\"mask_icon\");\n\t\t$(maskEle).tooltip('hide');\n\t\tvar btnDescription = document.getElementById(\"btnDescription\");\n\t\tvar element = document.getElementsByClassName(\"mask_btn\")[0];\n\t\tvar isPasswordType = passwordEle.type === 'password';\n\t\tmaskEle.classList.toggle('active', isPasswordType);\n    \t\tmaskEle.setAttribute('data-original-title', (isPasswordType) ? 'Hide password' : 'Show password');\n    \t\telement.setAttribute('aria-label', (isPasswordType) ? 'Hide password' : 'Show password');\t\t\n\t\tpasswordEle.type  = (isPasswordType) ? 'text' : 'password';\n\t\tbtnDescription.textContent = (isPasswordType)? 'Password shown' : 'Password hidden';\n\t}\n}\n",
+            "name": "Login",
+            "options": {
+              "color": "default",
+              "show_panel": true,
+              "sp_column_dv": "",
+              "active": true,
+              "use_advanced": "false",
+              "color_dv": "Default",
+              "title": "Login",
+              "sys_tags": "",
+              "sys_class_name": "sp_instance",
+              "size_dv": "Medium",
+              "sp_widget_dv": "Login",
+              "size": "md",
+              "sys_name": "Login",
+              "id": "login-modal",
+              "sp_widget": "6506d341cb33020000f8d856634c9cdc",
+              "sys_class_name_dv": "Instance",
+              "order": 1
+            },
+            "sys_scope": "global",
+            "id": "widget-login",
+            "field_list": "",
+            "controller_as": "c",
+            "providers": [],
+            "_server_time": "0.017"
+          },
+          "typeahead": {
+            "template": "<form ng-submit=\"c.submitSearch()\"><input type=\"hidden\" name=\"id\" value=\"search\"> <input type=\"hidden\" name=\"t\" value=\"{{c.searchType}}\">\n <div class=\"input-group input-group-{{::c.options.size}}\"><!-- Custom search source filter -->\n  <div class=\"input-group-btn\" ng-if=\"c.options.filter\"><label for=\"search-source-id\" class=\"sr-only\">Search Filter</label> <select ng-model=\"c.searchSourceId\" ng-change=\"c.changeSearchFilter()\" id=\"search-source-id\" name=\"search-source-id\" class=\"form-control\"> <option title=\"All\" value=\"ibfs-search-all\">All</option> <option title=\"Application Files\" value=\"ibfs-search-applications\">File Numbers</option> <option title=\"Callsigns &amp; Auth ID\" value=\"ibfs-search-callsigns\">Call Signs/AuthID</option> <option title=\"FRNs\" value=\"ibfs-search-frns\">FRNs</option> <option title=\"Pleadings &amp; Comments\" value=\"ibfs-search-pcs\">Pleadings &amp; Comments</option> <option title=\"Public Notices\" value=\"ibfs-search-pns\">Public Notices</option> <option title=\"Company Name\" value=\"ibfs-search-all\">Company Name</option> </select>\n  </div> <!-- uses ui.bootstrap.typeahead --> <input name=\"q\" type=\"text\" placeholder=\"{{::c.options.title}}\" ng-model=\"c.searchTerm\" autocomplete=\"off\" class=\"form-control input-typeahead\" role=\"textbox\" aria-label=\"{{::c.options.title}}\" tabindex=\"0\" aria-haspopup=\"true\"> <span class=\"input-group-btn\"> <button name=\"search\" type=\"submit\" class=\"btn btn-{{::c.options.color}}\" title=\"{{::c.data.searchMsg}}\" aria-label=\"{{::c.data.searchMsg}}\"> <i ng-if=\"::c.options.glyph\" class=\"fa fa-{{::c.options.glyph}}\"></i> </button> </span>\n </div>\n</form>",
+            "css": "\n.v6d88cc9ddbe6c0508c817e508c961912 button.lookup {\n\tdisplay: none;\n}\n\n.v6d88cc9ddbe6c0508c817e508c961912 ul.dropdown-menu {\n\tmin-width: 100%;\n\tborder-radius: 0rem 0rem .4rem .4rem;\n\tmargin: 0rem;\n}\n\n.v6d88cc9ddbe6c0508c817e508c961912 ul.dropdown-menu a.ta-item {\n\tline-height: 2rem;\n}\n\n.v6d88cc9ddbe6c0508c817e508c961912 ul.dropdown-menu i.ta-icon, \n.v6d88cc9ddbe6c0508c817e508c961912 i.ta-img {\n\twidth: 2rem;\n\theight: 2rem;\n\tbackground-size: contain;\n\tdisplay: inline-block;\n\tbackground-repeat: no-repeat;\n\tbackground-position: center center;\n\ttext-align: center;\n\tline-height: 2rem;\n\tfloat: left;\n\tmargin-right: .8rem;\n}\n\n.v6d88cc9ddbe6c0508c817e508c961912 input[name=\"q\"] {\n\tcolor: black;\n}\n\n.v6d88cc9ddbe6c0508c817e508c961912 #search-source-id {\n\tborder-top-left-radius: .4rem;\n\tborder-top-right-radius: 0rem;\n\tborder-bottom-right-radius: 0rem;\n\tborder-bottom-left-radius: .4rem;\n\twidth: 20rem;\n\tborder-right: none;\n}\n@media (max-width: 576px) {\n\t\n.v6d88cc9ddbe6c0508c817e508c961912 #search-source-id {\n\twidth: 10rem !important;\n}\n}\n@media (max-width: 767px) {\n\t\n.v6d88cc9ddbe6c0508c817e508c961912 #search-source-id {\n\twidth: 10rem;\n}\n}\n@media (max-width: 992px) {\n\t\n.v6d88cc9ddbe6c0508c817e508c961912 #search-source-id {\n\twidth: 14rem;\n}\n}",
+            "ngTemplates": {
+              "ibfs-sp-typeahead-popup.html": "<ul class=\"dropdown-menu\" ng-show=\"isOpen() &amp;&amp; !moveInProgress\" ng-style=\"{top: position().top+'px', left: position().left+'px'}\" role=\"listbox\" aria-hidden=\"{{!isOpen()}}\">\n <li role=\"option\" aria-hidden=\"true\" style=\"display: none\"></li>\n <li ng-repeat=\"match in matches track by $index\" ng-class=\"{active: isActive($index) }\" ng-mouseenter=\"selectActive($index)\" ng-click=\"selectMatch($index, $event)\" role=\"option\" id=\"{{::match.id}}\">\n  <div uib-typeahead-match index=\"$index\" match=\"match\" query=\"query\" template-url=\"templateUrl\"></div></li>\n</ul>",
+              "ibfs-sp-typeahead.html": "<a class=\"ta-item\" ng-href=\"{{match.model.target != '_blank' ? match.model.url : ''}}\" target=\"{{match.model.target}}\">\n <div ng-if=\"!match.model.templateID\"><i class=\"ta-icon fa fa-{{match.model.glyph}}\" ng-if=\"match.model.glyph\"></i> <span ng-bind-html=\"match.label | uibTypeaheadHighlight:query\"></span>\n </div>\n <div ng-if=\"match.model.templateID\" ng-include=\"match.model.templateID\"></div> </a>"
+            },
+            "data": {
+              "searchSourceId": "ibfs-search-all",
+              "navigationMsg": "To navigate, use up and down arrow keys while holding ",
+              "refreshPageOnSearch": true,
+              "resultMsg": "search results"
+            },
+            "roles": "",
+            "link": "function(scope) {\n\tvar lazyLoader = $injector.get(\"lazyLoader\");\n\tlazyLoader.putTemplates(scope.data.typeaheadTemplates);\n}",
+            "_metastack_size": 1,
+            "option_schema": "[{\"name\":\"title\",\"section\":\"Presentation\",\"label\":\"Title\",\"type\":\"string\"},{\"name\":\"color\",\"section\":\"Presentation\",\"label\":\"Color\",\"type\":\"string\"},{\"name\":\"glyph\",\"section\":\"Presentation\",\"label\":\"glyph\",\"type\":\"string\"},{\"name\":\"size\",\"section\":\"Presentation\",\"label\":\"Size\",\"type\":\"string\"},{\"hint\":\"Number of typeahead search results returned (default 15)\",\"name\":\"limit\",\"section\":\"Behavior\",\"label\":\"Limit\",\"type\":\"integer\"},{\"displayValue\":\"Search Source\",\"hint\":\"If provided, limit the scope of the typeahead search to the given search sources\",\"name\":\"contextual_search_sources\",\"display_value_list\":[],\"section\":\"Behavior\",\"label\":\"Contextual Search Sources\",\"type\":\"glide_list\",\"value\":\"sp_search_source\",\"ed\":{\"reference\":\"sp_search_source\"}},{\"name\":\"filter\",\"section\":\"Behavior\",\"label\":\"Filter\",\"type\":\"boolean\"}]",
+            "sys_class_name": "sp_widget",
+            "dependencies": [],
+            "sys_id": "6d88cc9ddbe6c0508c817e508c961912",
+            "public": true,
+            "client_script": "function ($http, $filter, $location,spAriaUtil, $window, $scope, spAriaFocusManager) {\n\tvar c = this;\n\tc.options.glyph = c.options.glyph || 'search';\n\tc.options.title = c.options.title || c.data.searchMsg;\n\tc.options.color = c.options.color || \"default\";\n\tc.searchTerm = c.data.q;\n\t\n\tc.searchSourceId = c.data.searchSourceId;\n\tc.changeSearchFilter = function(){\n\t\tc.searchType = c.searchSourceId;\n\t}\n\t\n\t\n\tc.onSelect = function($item, $model, $label) {\nc.searchTerm = \"\";\n\t\tif ($item.target)\n\t\t\twindow.open($item.url, $item.target);\n\t\telse {\n\t\t\tvar newUrl = $location.url($item.url);\n\t\t\tspAriaFocusManager.navigateToLink(newUrl.url());\n\t\t}\n\t};\n\tc.getResults = function(query) {\n\t\tvar payload = {\n\t\t\t\"query\": query,\n\t\t\t\"portal\": c.data.portalID,\n\t\t\t\"source\": c.data.searchSources,\n\t\t\t\"include_facets\": false,\n\t\t\t\"searchType\": \"typeahead\"\n\t\t};\n\t\tif (c.options.limit || c.options.limit == 0)\n\t\t\tpayload.count = c.options.limit;\nreturn $http.post(\"/api/now/sp/search\", payload).then(function(response) {\n\t\t\tif ($location.search().q == query)\n\t\t\t\treturn;\n\t\t\tvar result = response.data.result;\n\t\t\tspAriaUtil.sendLiveMessage(result.results.length + \" \" +\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t c.data.resultMsg + \" \" +\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t c.data.navigationMsg +\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t getNavigationKeys());\n\t\t\treturn result.results.map(function(item) {\n\t\t\t\tvar config = c.data.searchSourceConfiguration[item.__search_source_id__];\n\t\t\t\tif (config.type == \"ADVANCED\") {\n\t\t\t\t\titem.templateID = config.template;\n\t\t\t\t} else {\n\t\t\t\t\titem.glyph = config.glyph;\n\t\t\t\t\tif (!item.url && config.linkToPage) {\n\t\t\t\t\t\titem.url = \"?id=\" + config.linkToPage;\n\t\t\t\t\t\tif (item.sys_id)\n\t\t\t\t\t\t\titem.url += \"&sys_id=\" + item.sys_id;\n\t\t\t\t\t\tif (item.table)\n\t\t\t\t\t\t\titem.url += \"&table=\" + item.table\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn item;\n\t\t\t});\n\t\t});\n\t}\n\tc.searchType = c.data.searchType;\n\t$scope.$on('$locationChangeSuccess', onLocationChangeSuccess);\n\tfunction onLocationChangeSuccess(event, newUrl, oldUrl) {\n\t\tif(searchSourceChanged(newUrl, oldUrl)) {\nvar newUrlParams = newUrl.match(/t=.+/);\n\t\t\tif(!newUrlParams) {\n\t\t\t\tc.searchType = null;\n\t\t\t} else {\n\t\t\t\tc.searchType = newUrlParams[0].split(\"&\")[0].substring(2);\n\t\t\t}\n\t\t}\n  }\n\tfunction searchSourceChanged(newUrl, oldUrl) {\nvar newUrlParams = newUrl.match(/t=.+/),\noldUrlParams = oldUrl.match(/t=.+/);\n\t\tif(!newUrlParams && !oldUrlParams) {\n\t\t\treturn false;\n\t\t}\n\t\tif((!newUrlParams && oldUrlParams) || (newUrlParams && !oldUrlParams)) {\n\t\t\treturn true;\n\t\t}\n\t\treturn newUrlParams[0].split(\"&\")[0] !== oldUrlParams[0].split(\"&\")[0];\n\t}\n\tc.submitSearch = function() {\n\t\tvar shouldReloadPage = c.data.refreshPageOnSearch && $location.search().id === 'ibfs_search';\n\t\tconsole.log(c.searchType);\t\t\n\t\tconsole.log(c.data.searchSources);\n\t\t$scope.isInternalView = $location.search().internal_view == \"true\";\n\t\t\n\t\tif (c.searchTerm) {\n\t\t\tvar url = {\n\t\t\t\tid: 'ibfs_search',\n\t\t\t\tt: c.searchType,\n\t\t\t\tq: c.searchTerm\n\t\t\t};\n\t\t\tif($scope.isInternalView){\n\t\t\t\turl.internal_view = \"true\";\n\t\t\t}\n\t\t\tvar newUrl = $location.search(url);\n\t\t\t\n\t\t\tif (shouldReloadPage)\n\t\t\t\t$scope.$emit(\"sp.page.reload\");\n\t\t\t\n\t\t\tspAriaFocusManager.navigateToLink(newUrl.url());\n\t\t}\n\t}\n\tfunction getNavigationKeys() {\n\t\tif($window.navigator.userAgent.indexOf(\"Mac OS X\") > -1)\n\t\t\treturn '⌘';\n\t\treturn 'Control';\n\t}\n}\n",
+            "name": "IBFS Typeahead Search",
+            "options": {
+              "sp_widget_dv": "",
+              "color": "info",
+              "size": "sm",
+              "sp_column_dv": "",
+              "active": false,
+              "sys_tags": "",
+              "order": -1
+            },
+            "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+            "id": "ibfs-typeahead-search",
+            "field_list": "",
+            "controller_as": "c",
+            "providers": [],
+            "_server_time": "0.007"
+          }
+        },
+        "roles": "",
+        "link": "function(scope, element) {\t\n\t$(element).on('click.nav','.navbar-collapse.in',function(e) {\t\n\t\tvar target = $(e.target);\n\t\tif (target.is('a')) {\n\t\t\t// collapse mobile nav if clicked an anchor\n\t\t\t$(this).removeClass('in').addClass('collapse');\n\t\t\treturn;\n\t\t}\n\t\t\n\t\t// if neither target nor parent is an anchor, do nothing\n\t\tif (!target.parent().is('a'))\n\t\t\treturn;\n\t\t\n\t\t// collapse mobile nav if target is part of a submenu\n\t\tif (target.parents(\"ul.dropdown-menu\").length > 0)\n\t\t\t$(this).removeClass('in').addClass('collapse');\n\t});\n\n\t\n}",
+        "_metastack_size": 0,
+        "option_schema": "",
+        "sys_class_name": "sp_header_footer",
+        "dependencies": [],
+        "sys_id": "73dcfb76dbec84100b3d75131f9619c1",
+        "public": true,
+        "client_script": "function ($rootScope, $scope, snRecordWatcher, spUtil, $location, $uibModal, cabrillo, $timeout, $http, spModal) {\n\t$scope.userID = $scope.user.sys_id;\n\t\n\tif($location.search().internal_view == \"true\"){\n\t\t$(\"header\").css(\"display\",\"none\");\n\t\t$(\"footer\").css(\"display\",\"none\");\n\t}\n\tif (cabrillo.isNative())\n\t\t$scope.isViewNative = true;\n\t$scope.$on('sp_loading_indicator', function(e, value) {\n\t\t$scope.isLoading = value;\n\t});\n\t$scope.openPopUp = function() {\n\t\tvar url = \"$chat_support.do?queueID=\" + $scope.data.connect_support_queue_id;\n\t\tvar popup = window.open (url, \"popup\", \"width=900, height=600\"); \n\t};\n\t$scope.openLogin = function () {\n\t\t$location.search('id=ibfs_sso_redirect');\n\t\t$scope.modalInstance = $uibModal.open({\n\t\t\ttemplateUrl: 'modalLogin',\n\t\t\tscope: $scope\n\t\t});\n\t};\n\t$rootScope.$on('sp.avatar_changed', function() {\n\t\t$scope.userID = \"\";\n\t\t$timeout(function(){\n\t\t\t$scope.userID = $scope.user.sys_id;\n\t\t});\n\t});\n\t$scope.isHomepage = function() {\n\t\tif (!$scope.page.id)\n\t\t\treturn true;\n\t\tif ($scope.page.id == $scope.portal.homepage_dv)\n\t\t\treturn true;\n\t\treturn false;\n\t};\n\t$scope.openImpersonationWindow = function(){\n\t\tspModal.prompt('UserID to impersonate?',this.impersonatingUserID).then(function (answer) {\n            $scope.impersonate(answer);\n        });\n\t};\n\t$scope.impersonate = function(user_name) {\n\t\tif (!user_name)\n\t\t\treturn;\n\t\t\n$http.post('/api/now/ui/impersonate/' + user_name, {}).success(function() {\n\t\t\t$scope.show_error = false;\n\t\t\tlocation.reload();\n\t\t}).error(function(response) {\n             if (response.error) {\n\t\t\t\t $scope.show_error = true;\n\t\t\t\t $scope.error = response.error;\n\t\t\t\t console.error(\"Impersonate failed\", response.error);\n\t\t\t }\n\t\t});\n\t};\n}\n",
+        "name": "ICFS Header",
+        "options": {
+          "sp_widget_dv": "",
+          "sp_column_dv": "",
+          "active": false,
+          "sys_tags": "",
+          "order": -1
+        },
+        "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+        "id": "ibfs-header",
+        "field_list": "",
+        "controller_as": "c",
+        "providers": [],
+        "_server_time": "0.043"
+      },
+      "sys_name": "ICFS Theme",
+      "sys_class_name_dv": "Theme"
+    },
+    "containers": [
+      {
+        "sys_id": "7a89a5b7db4a0410d02ffb0e0f961910",
+        "bootstrap_alt": false,
+        "subheader": false,
+        "background": "{\"background-size\":\"initial\",\"background-position\":\"center center\"}",
+        "width": "container-fluid",
+        "container_class_name": "",
+        "title": "",
+        "rows": [
+          {
+            "sys_id": "84992db7db4a0410d02ffb0e0f96193a",
+            "columns": [
+              {
+                "sys_id": "08992db7db4a0410d02ffb0e0f96193c",
+                "size_classes": "col-md-12 ",
+                "rows": [],
+                "widgets": [
+                  {
+                    "sys_id": "96c9f0a2dbeec8508c817e508c9619e8",
+                    "widget": {
+                      "template": "<div class=\"jumbotron offset-15\">\n <div class=\"container\">\n  <div class=\"row\">\n   <div class=\"col-xs-12\">\n    <ul class=\"nav nav-pills nav-sm\" aria-label=\"Navigation breadcrumbs\">\n     <li><span> <a ng-href=\"?id=ibfs_home\">Home</a> </span></li>\n     <li ng-if=\"c.options.hide_second_link != 'true'\"><span> &nbsp; <i aria-hidden=\"true\" class=\"fa fa-chevron-right\"></i> &nbsp; <a ng-href=\"{{c.second_link_url}}\">{{c.second_link_label}}</a> </span></li>\n     <li ng-if=\"c.currentItem\"><span> &nbsp; <i aria-hidden=\"true\" class=\"fa fa-chevron-right\"></i> &nbsp; <a style=\"\" id=\"ibfs-summary-current-item\">{{c.currentItem}}</a> </span></li>\n    </ul>\n   </div>\n  </div>\n  <div class=\"row\">\n   <div class=\"col-xs-12\">\n    <div class=\"summary-header\">\n     {{c.currentItem || c.options.main_header_label}}\n    </div>\n   </div>\n  </div>\n </div>\n</div>",
+                      "css": "\n.v60ee7904dbd28410d02ffb0e0f96196a button.lookup {\n\tdisplay: none;\n}\n\n.v60ee7904dbd28410d02ffb0e0f96196a .jumbotron {\n\tpadding-top: 3rem;\n\tpadding-bottom: 3rem;\n\tmargin-bottom: 6rem;\n\tbackground-color: #2C75D6;\n\tborder-radius: 0rem;\n\tcolor: white;\n}\n\n.v60ee7904dbd28410d02ffb0e0f96196a .jumbotron a {\n\tcolor: white !important;\n}\n\n.v60ee7904dbd28410d02ffb0e0f96196a .jumbotron a:hover {\n\ttext-decoration: underline;\n}\n\n.v60ee7904dbd28410d02ffb0e0f96196a #ibfs-summary-current-item:hover {\n\ttext-decoration: none;\n}\n\n.v60ee7904dbd28410d02ffb0e0f96196a .summary-header {\n\tcolor: #ffffff;\n\tfont-family: \"Open Sans\" !important;\n\tfont-size: 3.2rem;\n\tfont-weight: 590;\n\tline-height: 3.2rem;\n\tmargin-top: 2rem;\n}",
+                      "data": {},
+                      "roles": "",
+                      "link": "function link(scope, element, attrs, controller) { \n\n }",
+                      "rectangle_id": "96c9f0a2dbeec8508c817e508c9619e8",
+                      "_metastack_size": 0,
+                      "option_schema": "[{\"name\":\"hide_second_link\",\"section\":\"Presentation\",\"default_value\":\"false\",\"label\":\"Hide Second Link\",\"type\":\"boolean\",\"choices\":\"\"},{\"name\":\"second_link_url\",\"section\":\"Behavior\",\"default_value\":\"?id=ibfs_search\",\"label\":\"Second Link URL\",\"type\":\"string\"},{\"name\":\"second_link_label\",\"section\":\"Presentation\",\"default_value\":\"Quick Search\",\"label\":\"Second Link Label\",\"type\":\"string\"},{\"name\":\"main_header_label\",\"section\":\"Presentation\",\"label\":\"Main Header Label\",\"type\":\"string\"}]",
+                      "sys_class_name": "sp_widget",
+                      "dependencies": [],
+                      "sys_id": "60ee7904dbd28410d02ffb0e0f96196a",
+                      "public": true,
+                      "client_script": "function($scope,$rootScope,$location) {\n\tvar c = this;\n\tc.currentItem = \"\";\n\tc.second_link_url = c.options.second_link_url || \"?id=ibfs_search\";\n\tc.second_link_label = c.options.second_link_label || \"Quick Search\";\n\t\n\tvar params = $location.search();\n\tif(params.hasOwnProperty(\"number\")){\n\t\tc.currentItem = params.number;\n\t}\n\telse if(c.data.file_number){\n\t\tc.currentItem = c.data.file_number;\n\t}\n\tc.currentItem = c.options.currentItem || c.currentItem;\n}\n",
+                      "name": "IBFS Summary Header",
+                      "options": {
+                        "color": "default",
+                        "second_link_url": "?id=ibfs_search",
+                        "sp_column": "08992db7db4a0410d02ffb0e0f96193c",
+                        "sp_column_dv": "1",
+                        "active": true,
+                        "color_dv": "Default",
+                        "sys_tags": "",
+                        "sys_class_name": "sp_instance",
+                        "second_link_label": "Quick Search",
+                        "size_dv": "Medium",
+                        "sp_widget_dv": "IBFS Summary Header",
+                        "size": "md",
+                        "hide_second_link": "false",
+                        "sp_widget": "60ee7904dbd28410d02ffb0e0f96196a",
+                        "sys_class_name_dv": "Instance",
+                        "order": 1
+                      },
+                      "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+                      "id": "ibfs-summary-header",
+                      "field_list": "",
+                      "controller_as": "c",
+                      "providers": [],
+                      "_server_time": "0.005"
+                    },
+                    "instance_id": "96c9f0a2dbeec8508c817e508c9619e8",
+                    "title": ""
+                  }
+                ],
+                "class_name": "",
+                "semantic_tag": "",
+                "order": 1
+              }
+            ],
+            "class_name": "",
+            "semantic_tag": "",
+            "order": 1
+          }
+        ],
+        "class_name": "",
+        "semantic_tag": "",
+        "order": 1
+      },
+      {
+        "sys_id": "bbf159a31b3ec81089df9796bc4bcbcf",
+        "bootstrap_alt": false,
+        "subheader": false,
+        "background": "{\"background-size\":\"initial\",\"background-position\":\"center center\"}",
+        "width": "container",
+        "container_class_name": "",
+        "title": "",
+        "rows": [
+          {
+            "sys_id": "811295a31b3ec81089df9796bc4bcbe1",
+            "columns": [
+              {
+                "sys_id": "4d1295a31b3ec81089df9796bc4bcbe2",
+                "size_classes": "col-md-12 ",
+                "rows": [],
+                "widgets": [
+                  {
+                    "sys_id": "16ff0c771b724c1089df9796bc4bcb3f",
+                    "widget": {
+                      "template": "",
+                      "sys_id": "",
+                      "data": {},
+                      "name": "",
+                      "id": "",
+                      "sys_class_name": "",
+                      "controller_as": ""
+                    },
+                    "instance_id": "16ff0c771b724c1089df9796bc4bcb3f",
+                    "title": ""
+                  }
+                ],
+                "class_name": "",
+                "semantic_tag": "",
+                "order": 1
+              }
+            ],
+            "class_name": "",
+            "semantic_tag": "",
+            "order": 1
+          }
+        ],
+        "class_name": "",
+        "semantic_tag": "",
+        "order": 2
+      },
+      {
+        "sys_id": "2fb930a2dbeec8508c817e508c96196d",
+        "bootstrap_alt": false,
+        "subheader": false,
+        "background": "{\"background-size\":\"initial\",\"background-position\":\"center center\"}",
+        "width": "container",
+        "container_class_name": "",
+        "title": "",
+        "rows": [
+          {
+            "sys_id": "5cc97462dbeec8508c817e508c96199b",
+            "columns": [
+              {
+                "sys_id": "50c934a2dbeec8508c817e508c961988",
+                "size_classes": "col-md-12 ",
+                "rows": [],
+                "widgets": [
+                  {
+                    "sys_id": "89eecf56dbd284508c817e508c96197f",
+                    "widget": {
+                      "template": "<div class=\"offset-15 ibfs-summary-page\" ng-if=\"c.data.found &amp;&amp; c.data.viewable\">\n <div class=\"container\">\n  <div class=\"row\">\n   <div class=\"col-xs-12\">\n    <div class=\"panel-background\">\n     <div class=\"row\">\n      <div class=\"col-xs-12\"><!-- <button ng-if=\"c.data.formHref\" class=\"btn btn-light\" style=\"float: right;\" type=\"button\" ng-click=\"c.navigateToForm()\">View Form</button> --> <a ng-if=\"c.data.formHref\" class=\"btn btn-info\" style=\"float: right; color: white;\" href=\"{{c.data.formHref}}\">View Form</a>\n       <h4 style=\"font-weight: bold;\">Application Information</h4>\n       <p>{{c.data.summary.brief_application_description.display_value}}</p>\n      </div>\n     </div>\n     <div class=\"row\">\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl>\n        <dt>\n         {{c.data.summary.number.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.number.display_value}\">\n         {{c.data.summary.number.display_value}}\n        </dd> <!-- <dt>{{c.data.summary.action.label}}</dt>\n                <dd ng-class=\"{'summary-empty-entry':!c.data.summary.action.display_value}\">{{c.data.summary.action.display_value}}</dd>\n\t\t\t\t-->\n        <dt>\n         {{c.data.summary.last_action.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.last_action.display_value}\">\n         {{c.data.summary.last_action.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.state.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.state.display_value}\">\n         {{c.data.summary.state.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.red_light_status.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.red_light_status.display_value}\">\n         {{c.data.summary.red_light_status.display_value}}\n        </dd>\n       </dl>\n      </div>\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl>\n        <dt>\n         {{c.data.summary.call_sign.label}}\n        </dt>\n        <dd ng-if=\"c.data.summary.call_sign.display_value\" ng-class=\"{'summary-empty-entry':!c.data.summary.call_sign.display_value}\"><a ng-href=\"?id=ibfs_callsign_summary&amp;number={{c.data.summary.call_sign.display_value}}\">{{c.data.summary.call_sign.display_value}}</a>\n        </dd>\n        <dt>\n         {{c.data.summary.streamlined.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.streamlined.display_value}\">\n         {{c.data.summary.streamlined.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.action_taken_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.action_taken_date.display_value}\">\n         {{c.data.summary.action_taken_date.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.status_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.status_date.display_value}\">\n         {{c.data.summary.status_date.display_value}}\n        </dd>\n       </dl>\n      </div>\n     </div>\n     <div class=\"row\">\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl><!-- <dt>{{c.data.summary.action_pn_da_number.label}}</dt>\n                <dd ng-class=\"{'summary-empty-entry':!c.data.summary.action_pn_da_number.display_value}\">{{c.data.summary.action_pn_da_number.display_value}}</dd> -->\n        <dt>\n         {{c.data.summary.da_number.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.da_number.display_value}\">\n         {{c.data.summary.da_number.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.action_pn_date.label}}\n        </dt>\n        <dd ng-if=\"!c.data.summary.action_pn_date.display_value || !c.data.summary.action_pn_date.url\" ng-class=\"{'summary-empty-entry':!c.data.summary.action_pn_date.display_value}\">\n         {{c.data.summary.action_pn_date.display_value}}\n        </dd>\n        <dd ng-if=\"c.data.summary.action_pn_date.display_value &amp;&amp; c.data.summary.action_pn_date.url\"><a ng-href=\"{{c.data.summary.action_pn_date.url}}\" target=\"{{1=1 ? '_blank' : '_self']]\">{{c.data.summary.action_pn_date.display_value}}</a>\n        </dd>\n        <dt>\n         {{c.data.summary.grant_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.grant_date.display_value}\">\n         {{c.data.summary.grant_date.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.release_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.release_date.display_value}\">\n         {{c.data.summary.release_date.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.begin_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.begin_date.display_value}\">\n         {{c.data.summary.begin_date.display_value}}\n        </dd>\n       </dl>\n      </div>\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl><!-- <dt>{{c.data.summary.accepted_pn_da_number.label}}</dt>\n                <dd ng-class=\"{'summary-empty-entry':!c.data.summary.accepted_pn_da_number.display_value}\">{{c.data.summary.accepted_pn_da_number.display_value}}</dd> -->\n        <dt></dt>\n        <dd></dd>\n        <dt>\n         {{c.data.summary.afpn_date.label}}\n        </dt>\n        <dd ng-if=\"!c.data.summary.afpn_date.display_value || !c.data.summary.afpn_date.url\" ng-class=\"{'summary-empty-entry':!c.data.summary.afpn_date.display_value}\">\n         {{c.data.summary.afpn_date.display_value}}\n        </dd>\n        <dd ng-if=\"c.data.summary.afpn_date.display_value &amp;&amp; c.data.summary.afpn_date.url\"><a ng-href=\"{{c.data.summary.afpn_date.url}}\" target=\"{{1=1 ? '_blank' : '_self']]\">{{c.data.summary.afpn_date.display_value}}</a>\n        </dd>\n        <dt>\n         {{c.data.summary.submission_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.submission_date.display_value}\">\n         {{c.data.summary.submission_date.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.adopted_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.adopted_date.display_value}\">\n         {{c.data.summary.adopted_date.display_value}}\n        </dd>\n        <dt>\n         {{c.data.summary.expiration_date.label}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.expiration_date.display_value}\">\n         {{c.data.summary.expiration_date.display_value}}\n        </dd>\n       </dl>\n      </div>\n     </div>\n     <div class=\"row\">\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl>\n        <dt>\n         Service Type{{c.data.isITC214 ? \"(s)\" : \"\"}}\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.nature_of_service.display_value}\" ng-show=\"!c.data.isITC214\">\n         {{c.data.summary.nature_of_service.display_value}}\n        </dd>\n       </dl>\n       <div style=\"margin-top: -12px; margin-bottom: 15px;\" ng-show=\"c.data.isITC214\">\n        <p ng-class=\"{'summary-empty-entry':false}\" ng-repeat=\"itc214ServiceType in c.data.itc214ServiceTypes track by $index\" ng-show=\"itc214ServiceType.value==1\" style=\"white-space: pre; line-height: .7;\">{{itc214ServiceType.label}}</p>\n       </div>\n      </div>\n      <div class=\"col-xs-12 col-sm-6\">\n       <dl>\n        <dt>\n         Environmental Impact\n        </dt>\n        <dd ng-class=\"{'summary-empty-entry':!c.data.summary.environmental_impact.display_value}\">\n         {{c.data.summary.environmental_impact.display_value}}\n        </dd>\n       </dl>\n      </div>\n     </div>\n     <div class=\"row\">\n      <div class=\"col-xs-12 col-sm-6\">\n       <dt>\n        Applicant Info\n       </dt>\n       <dd ng-class=\"{'summary-empty-entry':!c.data.summary.applicant_info_found}\">\n        <div ng-if=\"c.data.summary.applicant_frns.length != 0\">\n         FRN(s):<br>\n         <div ng-repeat=\"frn in c.data.summary.applicant_frns track by $index\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{frn}}\">{{frn}}</a>\n         </div>\n        </div>\n        <div ng-if=\"c.data.summary.applicant_frn.display_value\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{c.data.summary.applicant_frn.display_value}}\">{{c.data.summary.applicant_frn.display_value}}</a>\n        </div>\n        <div ng-repeat=\"info in c.data.summary.applicant_info track by $index\">\n         {{info}}<br>\n        </div>\n       </dd>\n      </div>\n      <div class=\"col-xs-12 col-sm-6\">\n       <dt>\n        Contact Info\n       </dt>\n       <dd ng-class=\"{'summary-empty-entry':!c.data.summary.contact_info_found}\">\n        <div ng-if=\"c.data.summary.contact_frns.length != 0\">\n         FRN(s):<br>\n         <div ng-repeat=\"frn in c.data.summary.contact_frns track by $index\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{frn}}\">{{frn}}</a>\n         </div>\n        </div>\n        <div ng-if=\"c.data.summary.contact_frn.display_value\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{c.data.summary.contact_frn.display_value}}\">{{c.data.summary.contact_frn.display_value}}</a>\n        </div>\n        <div ng-repeat=\"info in c.data.summary.contact_info track by $index\">\n         {{info}}<br>\n        </div>\n       </dd>\n      </div>\n     </div>\n     <div class=\"row\" ng-if=\"c.data.summary.transferor_info_found\">\n      <div class=\"col-xs-12 col-sm-6\">\n       <dt>\n        From\n       </dt>\n       <dd ng-class=\"{'summary-empty-entry':!c.data.summary.transferor_info_found}\">\n        <div ng-if=\"c.data.summary.tranferor_frn.display_value\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{c.data.summary.transferor_frn.display_value}}\">{{c.data.summary.applicant_frn.display_value}}</a>\n        </div>\n        <div ng-repeat=\"info in c.data.summary.transferor_info track by $index\">\n         {{info}}<br>\n        </div>\n       </dd>\n      </div>\n      <div class=\"col-xs-12 col-sm-6\">\n       <dt>\n        To\n       </dt>\n       <dd ng-class=\"{'summary-empty-entry':!c.data.summary.transferee_info_found}\">\n        <div ng-if=\"c.data.summary.tranferor_frn.display_value\"><a ng-href=\"?id=ibfs_frn_summary&amp;number={{c.data.summary.transferee_frn.display_value}}\">{{c.data.summary.applicant_frn.display_value}}</a>\n        </div>\n        <div ng-repeat=\"info in c.data.summary.transferee_info track by $index\">\n         {{info}}<br>\n        </div>\n       </dd>\n      </div>\n     </div>\n     <div id=\"tabs\" class=\"row\" ng-if=\"data.tabs\">\n      <div class=\"col-xs-12 simple-tabs headers-small\"><sp-widget widget=\"data.tabs\"></sp-widget>\n      </div>\n     </div>\n    </div>\n   </div>\n  </div>\n </div>\n</div>\n<sp-widget widget=\"c.data.notFound\" ng-if=\"!c.data.found || !c.data.viewable\"></sp-widget>",
+                      "css": "",
+                      "data": {
+                        "summary": {},
+                        "found": false,
+                        "tc_asg_summary": {},
+                        "itc214ServiceTypes": [
+                          {
+                            "display_value": "",
+                            "label": "Global Facilities-Based Authority",
+                            "value": "",
+                            "field_name": "service_type_gfba"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Limited Facilities-Based Authority",
+                            "value": "",
+                            "field_name": "service_type_lfba"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Global Resale Authority",
+                            "value": "",
+                            "field_name": "service_type_gra"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Limited Resale Authority",
+                            "value": "",
+                            "field_name": "service_type_lra"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Facilities-Based Service to a single destination country",
+                            "value": "",
+                            "field_name": "service_type_fbs"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Resale Service to a single destination country",
+                            "value": "",
+                            "field_name": "service_type_srs"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Overseas Cable Construction",
+                            "value": "",
+                            "field_name": "service_type_occ"
+                          },
+                          {
+                            "display_value": "",
+                            "label": "Other Requests",
+                            "value": "",
+                            "field_name": "service_type_other_requests"
+                          }
+                        ],
+                        "publicly_available": false
+                      },
+                      "roles": "",
+                      "link": "function link(scope, element, attrs, controller) { \n\n }",
+                      "rectangle_id": "89eecf56dbd284508c817e508c96197f",
+                      "_metastack_size": 0,
+                      "option_schema": "",
+                      "sys_class_name": "sp_widget",
+                      "dependencies": [],
+                      "sys_id": "d6c7edb3db4a0410d02ffb0e0f961992",
+                      "public": true,
+                      "client_script": "function($scope, $location, $rootScope, spUtil) {\n    var c = this;\n    $scope.$on(\"data_table.click\", function (e, params) {\n        var url;\n        if (params.record.targetTable == \"x_fmc_ibfs_public_notices\") {\n\t\t\t\t\t\tif (params.record.url) {\n\t\t\t\t\t\t\twindow.open(params.record.url, '_blank');\n\t\t\t\t\t\t}\n        } else if (params.record.targetTable == \"sys_attachment\") {\nwindow.open(\"/sys_attachment.do?sys_id=\" + params.record.sys_id);\n        } else {\n            if (params.record.targetTable == \"x_fmc_ibfs_pleadings_and_comments\") {\n                url = e.targetScope.widget_parameters.url.replace(\"<sys_id>\", params.record.sys_id);\n            } else {\n                url = e.targetScope.widget_parameters.url.replace(\"Number\", params.record.number.display_value);\n            }\n            $location.url(url);\n        }\n    });\n    c.data.noInfoMessage = \"Information Not Provided\"\n    c.data.summary.applicant_info = [];\n    c.data.summary.contact_info = [];\nc.data.summary.transferor_info =[];\nc.data.summary.transferee_info =[];\n    c.navigateToForm = function () {\n        var formUrl = c.data.formHref;\n        $location.url(formUrl);\n    };\n\t c.formatTransfInfo = function(fieldBaseName) {\n\t\tvar field;\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_name\"] ||'';\n\t    if (field && field.display_value != \"\") {\n\t         c.data.summary[fieldBaseName + \"_info\"].push(field.display_value);\n\t    }\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_dba_name\"] ||'';\n\t    if (field && field.display_value != \"\") {\n\t         c.data.summary[fieldBaseName + \"_info\"].push(field.display_value);\n\t    }\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_street\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t         c.data.summary[fieldBaseName + \"_info\"].push(field.display_value);\n\t     }\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_street_2\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t         c.data.summary[fieldBaseName + \"_info\"].push(field.display_value);\n\t     }\n\t     var prefix = \"\";\n\t     var city_state_zip ='';\n\t\t field =  c.data.tc_asg_summary[fieldBaseName + \"_city\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t          city_state_zip = field.display_value;\n\t     }\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_state\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t         prefix = city_state_zip ? \", \" : \"\";\n\t         city_state_zip += prefix + field.display_value;\n\t     }\n \t\t field = c.data.tc_asg_summary[fieldBaseName + \"_zip_code\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t         prefix = city_state_zip ? \" \" : \"\";\n\t         city_state_zip += prefix + field.display_value;\n\t     }\n\t     if (city_state_zip) {\n\t         c.data.summary[fieldBaseName + \"_info\"].push(city_state_zip);\n\t     }\n\t\t field = c.data.tc_asg_summary[fieldBaseName + \"_country\"] || '';\n\t     if (field && field.display_value != \"\") {\n\t         c.data.summary[fieldBaseName + '_info'].push(field.display_value);\n\t     }\n\t }\n\t\n\t c.formatAssignfInfo = function(fieldBaseName) {\n\t\tvar converted_name;\n\t\tif (fieldBaseName == 'assognor') converted_name = 'trasferor';\n\t\telse converted_name = 'trasferee';\n\t     if (c.data.ihf_tc_asg_summary[fieldBaseName + \"_name\"].display_value != \"\") {\n\t         c.data.summary[converted_name + \"_info\"].push(c.data.ihf_tc_asg_summary[fieldBaseName + \"_name\"].display_value);\n\t     }\n\t     if (c.data.ihf_tc_asg_summary[fieldBaseName + \"_street\"].display_value != \"\") {\n\t         c.data.summary[converted_name + \"_info\"].push(c.data.ihf_tc_asg_summary[fieldBaseName + \"_street\"].display_value);\n\t     }\n\t     var prefix = \"\";\n\t     var city_state_zip = c.data.ihf_tc_asg_summary[fieldBaseName + \"_city\"].display_value || \"\";\n\t     if (c.data.ihf_tc_asg_summary[fieldBaseName + \"_state\"].display_value) {\n\t         prefix = city_state_zip ? \", \" : \"\";\n\t         city_state_zip += prefix + c.data.ihf_tc_asg_summary[fieldBaseName + \"_state\"].display_value;\n\t     }\n\t     if (c.data.ihf_tc_asg_summary[converted_name + \"_zip_code\"].display_value) {\n\t         prefix = city_state_zip ? \" \" : \"\";\n\t         city_state_zip += prefix + c.data.ihf_tc_asg_summary[fieldBaseName + \"_zip_code\"].display_value;\n\t     }\n\t     if (city_state_zip) {\n\t         c.data.summary[converted_name + \"_info\"].push(city_state_zip);\n\t     }\n\t     if (c.data.ihf_tc_asg_summary[fieldBaseName + '_country'].display_value != \"\") {\n\t         c.data.summary[converted_name + '_info'].push(c.data.ihf_tc_asg_summary[fieldBaseName + '_country'].display_value);\n\t     }\n\t }\n    c.formatUserInfo = function (fieldBaseName) {\n        if (c.data.summary[fieldBaseName + \"_name\"].display_value != \"\") {\n            c.data.summary[fieldBaseName + \"_info\"].push(c.data.summary[fieldBaseName + \"_name\"].display_value);\n        }\n\t\t\n        if (c.data.summary[fieldBaseName + \"_dba_name\"] && c.data.summary[fieldBaseName + \"_dba_name\"].display_value != \"\") {\n            c.data.summary[fieldBaseName + \"_info\"].push(c.data.summary[fieldBaseName + \"_dba_name\"].display_value);\n        }\n        if (c.data.summary[fieldBaseName + \"_street\"].display_value != \"\") {\n            c.data.summary[fieldBaseName + \"_info\"].push(c.data.summary[fieldBaseName + \"_street\"].display_value);\n        }\n        if (c.data.summary[fieldBaseName + \"_street_2\"].display_value != \"\") {\n            c.data.summary[fieldBaseName + \"_info\"].push(c.data.summary[fieldBaseName + \"_street_2\"].display_value);\n        }\n        var prefix = \"\";\n        var city_state_zip = c.data.summary[fieldBaseName + \"_city\"].display_value || \"\";\n        if (c.data.summary[fieldBaseName + \"_state\"].display_value) {\n            prefix = city_state_zip ? \", \" : \"\";\n            city_state_zip += prefix + c.data.summary[fieldBaseName + \"_state\"].display_value;\n        }\n        if (c.data.summary[fieldBaseName + \"_zip_code\"].display_value) {\n            prefix = city_state_zip ? \" \" : \"\";\n            city_state_zip += prefix + c.data.summary[fieldBaseName + \"_zip_code\"].display_value;\n        }\n        if (city_state_zip) {\n            c.data.summary[fieldBaseName + \"_info\"].push(city_state_zip);\n        }\n        if (c.data.summary[fieldBaseName + '_country'].display_value != \"\") {\n            c.data.summary[fieldBaseName + '_info'].push(c.data.summary[fieldBaseName + '_country'].display_value);\n        }\t\n    }\n    c.data.summary.applicant_info_found = false;\n    c.data.summary.contact_info_found = false;\n\tc.data.summary.tranferor_info_found = false;\n\tc.data.summary.tranferee_info_found = false;\n    if (c.data.found) {\n        c.formatUserInfo(\"contact\");\n        c.formatUserInfo(\"applicant\");\t\nif (c.data.tc_asg_summary && (Object.keys(c.data.tc_asg_summary).length !== 0)) {\n\t\t\tc.formatTransfInfo(\"transferor\");\t\n\t\t\tc.formatTransfInfo(\"transferee\");\n\t\t} \n\t\tif (c.data.summary.hasOwnProperty(\"applicant_frns\")) {\n            c.data.summary.applicant_frns = c.data.summary.applicant_frns.display_value.split(\",\");\n        } else {\n            c.data.summary.applicant_frns = [];\n        }\n        if (c.data.summary.hasOwnProperty(\"contact_frns\")) {\n            c.data.summary.contact_frns = c.data.summary.contact_frns.display_value.split(\",\");\n        } else {\n            c.data.summary.contact_frns = [];\n        }\n        c.data.summary.applicant_info_found = c.data.summary.applicant_frns.length > 0 || c.data.summary.applicant_info.length > 0;\n        c.data.summary.contact_info_found = c.data.summary.contact_frns.length > 0 || c.data.summary.contact_info.length > 0;\n        c.data.summary.transferor_info_found =  c.data.summary.transferor_info.length > 0;\n\t\tc.data.summary.transferee_info_found =  c.data.summary.transferee_info.length > 0;\n    }\n\t\n}\n",
+                      "name": "IBFS Application Summary",
+                      "options": {
+                        "color": "default",
+                        "sp_column": "50c934a2dbeec8508c817e508c961988",
+                        "sp_column_dv": "1",
+                        "active": true,
+                        "color_dv": "Default",
+                        "order_direction": "asc",
+                        "display_field": "number",
+                        "sp_page": "",
+                        "sys_tags": "",
+                        "sys_class_name": "sp_instance_table",
+                        "size_dv": "Medium",
+                        "maximum_entries": 5,
+                        "sp_widget_dv": "IBFS Application Summary",
+                        "size": "md",
+                        "sp_page_dv": "",
+                        "field_list": "number,submission_date,state,call_sign,action,action_taken_date,applicant_frn,applicant_name,applicant_dba_name,applicant_street,applicant_city,applicant_state,applicant_zip_code,contact_frn,contact_name,contact_street,contact_city,contact_state,contact_zip_code",
+                        "order_direction_dv": "Ascending",
+                        "table": "x_fmc_ibfs_base_table",
+                        "sp_widget": "d6c7edb3db4a0410d02ffb0e0f961992",
+                        "sys_class_name_dv": "Instance with Table",
+                        "order": 1
+                      },
+                      "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+                      "id": "ibfs-application-summary",
+                      "field_list": "",
+                      "controller_as": "c",
+                      "providers": [],
+                      "_server_time": "0.013"
+                    },
+                    "instance_id": "89eecf56dbd284508c817e508c96197f",
+                    "title": ""
+                  }
+                ],
+                "class_name": "",
+                "semantic_tag": "",
+                "order": 1
+              }
+            ],
+            "class_name": "",
+            "semantic_tag": "",
+            "order": 1
+          }
+        ],
+        "class_name": "",
+        "semantic_tag": "",
+        "order": 3
+      }
+    ],
+    "page": {
+      "human_readable_url": "",
+      "css": "\n.page-7b272533db4a0410d02ffb0e0f96196a main {\n\tmargin-top: 0rem;\n}",
+      "internal": false,
+      "has_custom_main_tag": false,
+      "use_seo_script": false,
+      "seo_script_dv": "",
+      "title": "ICFS Application Summary",
+      "sys_tags": "",
+      "sys_class_name": "sp_page",
+      "sys_id": "7b272533db4a0410d02ffb0e0f96196a",
+      "omit_watcher": false,
+      "public": true,
+      "draft": false,
+      "sys_name": "ibfs_application_summary",
+      "sys_scope": "95014f3edb80c4100b3d75131f9619e0",
+      "id": "ibfs_application_summary",
+      "category_dv": "Custom",
+      "category": "custom",
+      "static_title": "ICFS Application Summary",
+      "sys_class_name_dv": "Page"
+    },
+    "user": {
+      "sys_id": "5136503cc611227c0183e96598c4f706",
+      "preferred_language_dv": "English",
+      "user_name": "guest",
+      "logged_in": false,
+      "can_debug": false,
+      "name": "Guest",
+      "can_debug_admin": false,
+      "last_name": "Guest",
+      "avatar": "",
+      "first_name": "",
+      "email": "guest@fcc.gov",
+      "preferred_language": "en"
+    },
+    "seotags": []
+  }
+}
