@@ -32,7 +32,14 @@ export type IcfsIngestResult = {
 
 const DEFAULT_SUBSYSTEMS: string[] = ['SAT', 'SES'];
 const DEFAULT_APP_TYPES: string[] = [
-  'LOA', 'MOD', 'STA', 'AMD', 'T/C', 'ASG', 'LIC', 'RWL',
+  'LOA',
+  'MOD',
+  'STA',
+  'AMD',
+  'T/C',
+  'ASG',
+  'LIC',
+  'RWL',
 ];
 
 export async function runIcfsIngest(

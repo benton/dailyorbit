@@ -1,5 +1,5 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ensureIcfsColumns } from './schema.ts';
 import { runIcfsIngest } from './pipeline.ts';
 import type { IcfsIngestResult } from './pipeline.ts';
