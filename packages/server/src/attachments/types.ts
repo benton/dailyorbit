@@ -44,6 +44,8 @@ export type AttachmentPipelineOptions = {
   discoverOnly?: boolean;
   downloadOnly?: boolean;
   retryFailed?: boolean;
+  /** Skip downloading if the file already exists on disk (default: true) */
+  skipExisting?: boolean;
   delayMs?: number;
   concurrency?: number;
   verbose?: boolean;
@@ -56,6 +58,7 @@ export type AttachmentPipelineResult = {
   attachmentsDiscovered: number;
   attachmentsDownloaded: number;
   attachmentsFailed: number;
+  attachmentsSkipped: number;
   durationMs: number;
 };
 

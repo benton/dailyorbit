@@ -20,7 +20,11 @@ import {
   markFilingsDiscovered,
   upsertAttachments,
 } from './repository.ts';
-import { attachmentStoragePath, downloadFile } from './storage.ts';
+import {
+  attachmentStoragePath,
+  downloadFile,
+  findExistingAttachment,
+} from './storage.ts';
 import type {
   AttachmentMetadata,
   AttachmentPipelineOptions,
@@ -157,6 +161,8 @@ export async function runAttachmentPipeline(
   // Stage 4: Download attachments (unless discoverOnly)
   let attachmentsDownloaded: number = 0;
   let attachmentsFailed: number = 0;
+  let attachmentsSkipped: number = 0;
+  const skipExisting: boolean = options.skipExisting !== false;
 
   if (options.discoverOnly !== true) {
     const filingKeys: number[] = filings.map((f) => f.filingKey);
@@ -170,10 +176,59 @@ export async function runAttachmentPipeline(
     const filingByKey: Map<number, FilingRow> = new Map(
       filings.map((f) => [f.filingKey, f]),
     );
+
+    // When skipExisting is enabled, check disk for already-downloaded files
+    // and reconcile them with the DB before queuing network downloads.
+    const toDownload: AttachmentRow[] = [];
+
+    if (skipExisting) {
+      for (const att of pending) {
+        const filing: FilingRow = filingByKey.get(att.filingKey)!;
+        const hyphenated: string = compactToHyphenated(
+          filing.fileNumber,
+          filing.subsystemCode,
+          filing.appTypeCode,
+        );
+        const existing = await findExistingAttachment(
+          options.storageBasePath,
+          filing.subsystemCode,
+          hyphenated,
+          att.attachmentKey,
+        );
+        if (existing != null) {
+          // File already on disk — reconcile DB status without re-downloading
+          const ext: string = existing.path.split('.').pop() ?? 'bin';
+          const mimeGuess: string | null =
+            ext === 'pdf'
+              ? 'application/pdf'
+              : ext === 'html'
+                ? 'text/html'
+                : null;
+          await markDownloaded(
+            conn,
+            att.attachmentKey,
+            existing.path,
+            existing.fileSizeBytes,
+            mimeGuess,
+          );
+          attachmentsSkipped++;
+        } else {
+          toDownload.push(att);
+        }
+      }
+      if (attachmentsSkipped > 0) {
+        log(
+          `Skipped ${String(attachmentsSkipped)} attachments already on disk`,
+        );
+      }
+    } else {
+      toDownload.push(...pending);
+    }
+
     const downloadErrors: Set<number> = new Set();
 
     const downloadResults: (DownloadResult | undefined)[] = await processQueue(
-      pending,
+      toDownload,
       async (att: AttachmentRow): Promise<DownloadResult> => {
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
         const hyphenated: string = compactToHyphenated(
@@ -235,8 +290,8 @@ export async function runAttachmentPipeline(
       },
     );
 
-    for (let i: number = 0; i < pending.length; i++) {
-      const att: AttachmentRow = pending[i]!;
+    for (let i: number = 0; i < toDownload.length; i++) {
+      const att: AttachmentRow = toDownload[i]!;
       if (downloadErrors.has(i)) {
         await markFailed(conn, att.attachmentKey);
         attachmentsFailed++;
@@ -258,8 +313,12 @@ export async function runAttachmentPipeline(
   conn.closeSync();
 
   const durationMs: number = Date.now() - start;
+  const skippedSuffix: string =
+    attachmentsSkipped > 0
+      ? `, ${String(attachmentsSkipped)} skipped (on disk)`
+      : '';
   log(
-    `Pipeline complete: ${String(filingsProcessed)} filings, ${String(totalDiscovered)} discovered, ${String(attachmentsDownloaded)} downloaded, ${String(attachmentsFailed)} failed (${String(Math.round(durationMs / 1000))}s)`,
+    `Pipeline complete: ${String(filingsProcessed)} filings, ${String(totalDiscovered)} discovered, ${String(attachmentsDownloaded)} downloaded, ${String(attachmentsFailed)} failed${skippedSuffix} (${String(Math.round(durationMs / 1000))}s)`,
   );
 
   return {
@@ -267,6 +326,7 @@ export async function runAttachmentPipeline(
     attachmentsDiscovered: totalDiscovered,
     attachmentsDownloaded,
     attachmentsFailed,
+    attachmentsSkipped,
     durationMs,
   };
 }

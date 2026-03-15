@@ -36,6 +36,12 @@ export const downloadCommand = defineCommand({
       description: 'Re-attempt previously failed downloads',
       default: false,
     },
+    'skip-existing': {
+      type: 'boolean',
+      description:
+        'Skip attachments whose files already exist on disk (default: true)',
+      default: true,
+    },
     verbose: {
       type: 'boolean',
       description: 'Log per-filing details',
@@ -61,6 +67,7 @@ export const downloadCommand = defineCommand({
       },
       downloadOnly: true,
       retryFailed: args['retry-failed'],
+      skipExisting: args['skip-existing'],
       delayMs: Number(args.delay),
       concurrency: Number(args.concurrency),
       verbose: args.verbose,

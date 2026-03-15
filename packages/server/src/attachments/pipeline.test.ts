@@ -1,3 +1,7 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import type { DuckDBValue } from '@duckdb/node-api';
@@ -62,6 +66,7 @@ describe('runAttachmentPipeline', () => {
     expect(result.attachmentsDiscovered).toEqual(0);
     expect(result.attachmentsDownloaded).toEqual(0);
     expect(result.attachmentsFailed).toEqual(0);
+    expect(result.attachmentsSkipped).toEqual(0);
     expect(logs.length).toBeGreaterThan(0);
   });
 
@@ -119,5 +124,93 @@ describe('runAttachmentPipeline', () => {
     });
 
     expect(result.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('skip-existing reconciles files on disk without re-downloading', async () => {
+    const tmpDir: string = mkdtempSync(join(tmpdir(), 'att-test-'));
+
+    // Seed a pending attachment in the DB
+    const setupConn: DuckDBConnection = await DuckDBConnection.create(db);
+    await setupConn.run(`
+      CREATE TABLE IF NOT EXISTS attachment (
+        attachment_key INTEGER NOT NULL,
+        filing_key INTEGER NOT NULL,
+        file_number VARCHAR NOT NULL,
+        source VARCHAR DEFAULT 'attachment',
+        attachment_name VARCHAR NOT NULL,
+        description VARCHAR NOT NULL DEFAULT '',
+        download_url VARCHAR NOT NULL,
+        download_status VARCHAR NOT NULL DEFAULT 'pending',
+        file_size_bytes BIGINT,
+        content_type VARCHAR,
+        local_path VARCHAR,
+        discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
+        downloaded_at TIMESTAMP,
+        full_text TEXT,
+        text_length INTEGER,
+        summary TEXT
+      )
+    `);
+    await setupConn.run(
+      `INSERT INTO attachment (attachment_key, filing_key, file_number, attachment_name, download_url)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        99999,
+        1,
+        'SATSTA2023061400142',
+        'Test Attachment',
+        'https://example.com/fake',
+      ] as DuckDBValue[],
+    );
+    // Also seed the discovery log so discovery is skipped
+    await setupConn.run(`
+      CREATE TABLE IF NOT EXISTS attachment_discovery (
+        filing_key INTEGER NOT NULL,
+        discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+      )
+    `);
+    await setupConn.run(
+      `INSERT INTO attachment_discovery (filing_key) VALUES ($1)`,
+      [1] as DuckDBValue[],
+    );
+    setupConn.closeSync();
+
+    // Place a file on disk at the expected path
+    const filePath: string = join(
+      tmpDir,
+      'SAT',
+      'SAT-STA-20230614-00142',
+      '99999.pdf',
+    );
+    await mkdir(join(tmpDir, 'SAT', 'SAT-STA-20230614-00142'), {
+      recursive: true,
+    });
+    await writeFile(filePath, 'fake pdf content');
+
+    const logs: string[] = [];
+    const result: AttachmentPipelineResult = await runAttachmentPipeline({
+      dbInstance: db,
+      storageBasePath: tmpDir,
+      provider: 'fcc-gov',
+      scope: { subsystems: ['SAT'], limit: 1 },
+      downloadOnly: true,
+      skipExisting: true,
+      delayMs: 0,
+      onProgress: (msg: string) => logs.push(msg),
+    });
+
+    expect(result.attachmentsSkipped).toEqual(1);
+    expect(result.attachmentsDownloaded).toEqual(0);
+
+    // Verify the DB record was updated to 'downloaded'
+    const checkConn: DuckDBConnection = await DuckDBConnection.create(db);
+    const reader = await checkConn.runAndReadAll(
+      `SELECT download_status, local_path FROM attachment WHERE attachment_key = $1`,
+      [99999] as DuckDBValue[],
+    );
+    const row = reader.getRowObjectsJS()[0]!;
+    expect(String(row.download_status)).toEqual('downloaded');
+    expect(String(row.local_path)).toEqual(filePath);
+    checkConn.closeSync();
   });
 });

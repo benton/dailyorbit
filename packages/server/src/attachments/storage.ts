@@ -78,6 +78,35 @@ export function fileExists(path: string): boolean {
   return existsSync(path);
 }
 
+/**
+ * Find an existing file for a given attachment key in its expected directory.
+ * Returns the path and size if found, or null if no file exists.
+ * Scans for any extension since we may not know the content type upfront.
+ */
+export async function findExistingAttachment(
+  basePath: string,
+  subsystem: string,
+  hyphenatedFileNumber: string,
+  attachmentKey: number,
+): Promise<{ path: string; fileSizeBytes: number } | null> {
+  const { readdir } = await import('node:fs/promises');
+  const dir: string = join(basePath, subsystem, hyphenatedFileNumber);
+  const prefix: string = `${String(attachmentKey)}.`;
+
+  try {
+    const entries: string[] = await readdir(dir);
+    const match: string | undefined = entries.find((e) => e.startsWith(prefix));
+    if (match == null) {
+      return null;
+    }
+    const fullPath: string = join(dir, match);
+    const stats = await stat(fullPath);
+    return { path: fullPath, fileSizeBytes: stats.size };
+  } catch {
+    return null;
+  }
+}
+
 /** Get file size in bytes, or null if the file doesn't exist. */
 export async function getFileSize(path: string): Promise<number | null> {
   try {
