@@ -347,8 +347,8 @@ export type PendingExtractionRow = {
 };
 
 export type ExtractionQueryOptions = {
-  retryFailed?: boolean;
-  limit?: number;
+  retryFailed?: boolean | undefined;
+  limit?: number | undefined;
 };
 
 export async function getPendingExtractions(

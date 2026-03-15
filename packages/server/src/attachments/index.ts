@@ -23,6 +23,12 @@ export { createFccReportProvider } from './fcc-report.ts';
 export { fccGovProvider } from './fcc-gov.ts';
 export { processQueue } from './queue.ts';
 export { runAttachmentPipeline } from './pipeline.ts';
+export { runExtractionPipeline } from './extract-pipeline.ts';
+export type {
+  ExtractionPipelineOptions,
+  ExtractionPipelineResult,
+} from './extract-pipeline.ts';
+export type { ExtractionResult } from './extract-text.ts';
 export type {
   ExtractionQueryOptions,
   PendingExtractionRow,
