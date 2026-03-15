@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -43,6 +43,9 @@ attachments-discover: ## Discover attachment metadata only (pass ARGS for option
 
 attachments-download: ## Download pending attachments only, skip discovery (pass ARGS for options)
 	$(CLI) attachments download $(ARGS)
+
+attachments-extract: ## Extract text from downloaded PDF attachments
+	$(CLI) attachments extract $(ARGS)
 
 attachments-reset: ## Delete all downloaded attachments and reset DB status to pending
 	$(CLI) attachments reset $(ARGS)

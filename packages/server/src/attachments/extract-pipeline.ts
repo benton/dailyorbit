@@ -20,12 +20,12 @@ import type {
 } from './repository.ts';
 
 export type ExtractionPipelineOptions = {
-  databaseUrl?: string;
-  dbInstance?: DuckDBInstance;
-  retryFailed?: boolean;
-  limit?: number;
-  verbose?: boolean;
-  onProgress?: (msg: string) => void;
+  databaseUrl?: string | undefined;
+  dbInstance?: DuckDBInstance | undefined;
+  retryFailed?: boolean | undefined;
+  limit?: number | undefined;
+  verbose?: boolean | undefined;
+  onProgress?: ((msg: string) => void) | undefined;
 };
 
 export type ExtractionPipelineResult = {
