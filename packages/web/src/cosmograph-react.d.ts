@@ -27,12 +27,15 @@ declare module '@cosmograph/react' {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   export const vg: {
     barY(data: Array<unknown>, options: any): any;
+    colorDomain(domain: Array<string>): any;
     colorLegend(show: boolean): any;
+    colorRange(range: Array<string>): any;
     height(h: number): any;
     plot(...args: Array<any>): HTMLElement;
     width(w: number): any;
     xLabel(label: string): any;
     xTickRotate(angle: number): any;
+    xTickSpacing(px: number): any;
     yGrid(show: boolean): any;
     yLabel(label: string): any;
   };

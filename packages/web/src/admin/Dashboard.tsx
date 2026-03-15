@@ -154,8 +154,8 @@ export default function Dashboard() {
                   </span>
                   <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
                     <div
-                      className={`h-full rounded ${info.bg} transition-all`}
-                      style={{ width: `${String(Math.max(pct, 0.5))}%` }}
+                      className="h-full rounded transition-all"
+                      style={{ backgroundColor: info.hex, width: `${String(Math.max(pct, 0.5))}%` }}
                     />
                   </div>
                   <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">

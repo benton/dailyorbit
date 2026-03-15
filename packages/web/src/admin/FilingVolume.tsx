@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { vg } from '@cosmograph/react';
 import { apiFetch } from '../lib/api.ts';
+import { SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
 
 type YearlyFilingVolume = {
   count: number;
@@ -36,10 +37,13 @@ export default function FilingVolume(): React.ReactElement {
               y: 'count',
             },
           ),
+          vg.colorDomain(SUBSYSTEM_CODES),
           vg.colorLegend(true),
+          vg.colorRange(SUBSYSTEM_COLORS),
           vg.height(400),
           vg.width(800),
           vg.xLabel('Year'),
+          vg.xTickSpacing(120),
           vg.xTickRotate(-45),
           vg.yGrid(true),
           vg.yLabel('Filings'),

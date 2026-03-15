@@ -278,5 +278,18 @@ describe('stats repository', () => {
         { year: '2024', subsystem_code: 'SAT', count: 1 },
       ]);
     });
+
+    it('excludes filings before 1970 and after current date', async () => {
+      await conn.run(`INSERT INTO filing VALUES
+        (1, 'SES-LOA-19600101-00001', 'SES', 'LOA', '1960-01-01', NULL, NULL),
+        (2, 'SAT-LOA-19700101-00002', 'SAT', 'LOA', '1970-01-01', NULL, NULL),
+        (3, 'SAT-MOD-20240601-00003', 'SAT', 'MOD', '2024-06-01', NULL, NULL),
+        (4, 'SES-STA-88880808-00004', 'SES', 'STA', '8888-08-08', NULL, NULL)`);
+      const result = await getYearlyFilingVolume(conn);
+      expect(result).toEqual([
+        { year: '1970', subsystem_code: 'SAT', count: 1 },
+        { year: '2024', subsystem_code: 'SAT', count: 1 },
+      ]);
+    });
   });
 });

@@ -144,6 +144,8 @@ export async function getYearlyFilingVolume(
        count(*)::INTEGER AS count
      FROM filing
      WHERE date_filed IS NOT NULL
+       AND date_filed >= '1970-01-01'
+       AND date_filed <= CURRENT_DATE
      GROUP BY 1, 2
      ORDER BY 1, 2`,
   );
