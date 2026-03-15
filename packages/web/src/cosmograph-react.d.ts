@@ -30,13 +30,18 @@ declare module '@cosmograph/react' {
     colorDomain(domain: Array<string>): any;
     colorLegend(show: boolean): any;
     colorRange(range: Array<string>): any;
+    dot(data: Array<unknown>, options: any): any;
     height(h: number): any;
+    marginBottom(px: number): any;
+    marginLeft(px: number): any;
+    marginTop(px: number): any;
     plot(...args: Array<any>): HTMLElement;
     width(w: number): any;
-    xLabel(label: string): any;
+    xLabel(label: string | null): any;
     xTickRotate(angle: number): any;
     xTickSpacing(px: number): any;
+    yDomain(domain: Array<string>): any;
     yGrid(show: boolean): any;
-    yLabel(label: string): any;
+    yLabel(label: string | null): any;
   };
 }

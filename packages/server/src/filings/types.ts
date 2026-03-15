@@ -31,6 +31,36 @@ export type RelatedSpaceStation = {
 /** Where the filing's data came from */
 export type DataSource = 'icfs' | 'ibfs-legacy';
 
+// ── Timeline types ──────────────────────────────────────────────────
+
+export type TimelineEventSource = 'filing_field' | 'pleading';
+
+export type TimelineEventType =
+  // Filing milestones
+  | 'filed'
+  | 'signed'
+  | 'public_notice'
+  | 'action_notice'
+  | 'granted'
+  | 'effective'
+  | 'expired'
+  | 'last_action'
+  // Pleading types
+  | 'comment'
+  | 'petition'
+  | 'supplement'
+  | 'decision'
+  | 'letter'
+  | 'other';
+
+export type TimelineEvent = {
+  date: string;
+  type: TimelineEventType;
+  label: string;
+  actor: string | null;
+  source: TimelineEventSource;
+};
+
 /** Full detail response for GET /api/filings/:fileNumber */
 export type FilingDetail = {
   dataSource: DataSource;
@@ -65,6 +95,7 @@ export type FilingDetail = {
   companyName: string | null;
   attachments: FilingAttachment[];
   petitions: FilingPetition[];
+  timeline: TimelineEvent[];
   relatedSpaceStation: RelatedSpaceStation | null;
   relatedEarthStationCallsign: string | null;
 };

@@ -69,6 +69,19 @@ const SETUP_SQL: string = `
     description VARCHAR
   );
 
+  CREATE TABLE pleading (
+    pleading_key INTEGER,
+    filing_key INTEGER,
+    file_number VARCHAR,
+    icfs_sys_id VARCHAR,
+    pleading_number VARCHAR,
+    pleading_type VARCHAR,
+    filer_name VARCHAR,
+    created_on TIMESTAMP,
+    exhibit_attachment_html VARCHAR,
+    ingested_at TIMESTAMP DEFAULT current_timestamp
+  );
+
   CREATE TABLE space_station (
     space_station_key INTEGER NOT NULL PRIMARY KEY,
     us_name VARCHAR NOT NULL,
@@ -219,10 +232,10 @@ describe('getFilingByFileNumber', () => {
     await conn.run(SAT_FILING_SQL);
     await conn.run(SPACE_STATION_SQL);
     await conn.run(`
-      INSERT INTO petition_to_deny (filing_key, filed_by, date_filed, description)
+      INSERT INTO pleading (pleading_key, filing_key, file_number, filer_name, created_on, pleading_type, pleading_number)
       VALUES
-        (100, 'Competing Corp.', '2025-03-15', 'Opposition to grant'),
-        (100, 'Industry Alliance', '2025-03-20', 'Comments supporting application')
+        (1, 100, 'SAT-LOA-20250221-00050', 'Competing Corp.', '2025-03-15', 'PETITION', 'PC0001'),
+        (2, 100, 'SAT-LOA-20250221-00050', 'Industry Alliance', '2025-03-20', 'COMMENT', 'PC0002')
     `);
 
     const result: FilingDetail | null = await getFilingByFileNumber(
@@ -232,7 +245,7 @@ describe('getFilingByFileNumber', () => {
 
     expect(result!.petitions).toHaveLength(2);
     expect(result!.petitions[0]!.partyName).toEqual('Competing Corp.');
-    expect(result!.petitions[0]!.description).toEqual('Opposition to grant');
+    expect(result!.petitions[0]!.pleadingType).toEqual('PETITION');
     expect(result!.petitions[1]!.partyName).toEqual('Industry Alliance');
   });
 

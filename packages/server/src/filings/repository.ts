@@ -6,6 +6,7 @@ import type {
   FilingPetition,
   RelatedSpaceStation,
 } from './types.ts';
+import { synthesizeTimeline } from './timeline.ts';
 
 /**
  * Fetch a single filing by file number, enriched with lookup labels,
@@ -87,6 +88,24 @@ export async function getFilingByFileNumber(
   const dataSource: DataSource =
     row.icfs_last_fetched_at != null ? 'icfs' : 'ibfs-legacy';
 
+  const dateFiled: string | null =
+    row.date_filed != null ? String(row.date_filed) : null;
+  const dateSigned: string | null =
+    row.date_signed != null ? String(row.date_signed) : null;
+  const dateGrant: string | null =
+    row.date_grant != null ? String(row.date_grant) : null;
+  const dateBegin: string | null =
+    row.date_begin != null ? String(row.date_begin) : null;
+  const dateExpire: string | null =
+    row.date_expire != null ? String(row.date_expire) : null;
+  const lastActionDate: string | null =
+    row.last_action_date != null ? String(row.last_action_date) : null;
+
+  const timeline = synthesizeTimeline(
+    { dateFiled, dateSigned, dateGrant, dateBegin, dateExpire, lastActionDate },
+    petitions,
+  );
+
   return {
     dataSource,
     filingKey,
@@ -103,14 +122,13 @@ export async function getFilingByFileNumber(
     applicantName:
       row.address_attention != null ? String(row.address_attention) : null,
     applicantFrn: row.applicant_frn != null ? String(row.applicant_frn) : null,
-    dateFiled: row.date_filed != null ? String(row.date_filed) : null,
-    dateSigned: row.date_signed != null ? String(row.date_signed) : null,
-    dateGrant: row.date_grant != null ? String(row.date_grant) : null,
-    dateBegin: row.date_begin != null ? String(row.date_begin) : null,
-    dateExpire: row.date_expire != null ? String(row.date_expire) : null,
+    dateFiled,
+    dateSigned,
+    dateGrant,
+    dateBegin,
+    dateExpire,
     lastAction: row.last_action != null ? String(row.last_action) : null,
-    lastActionDate:
-      row.last_action_date != null ? String(row.last_action_date) : null,
+    lastActionDate,
     briefDescription:
       row.brief_description != null ? String(row.brief_description) : null,
     description: row.description != null ? String(row.description) : null,
@@ -132,6 +150,7 @@ export async function getFilingByFileNumber(
     companyName: row.company_name != null ? String(row.company_name) : null,
     attachments,
     petitions,
+    timeline,
     relatedSpaceStation,
     relatedEarthStationCallsign,
   };

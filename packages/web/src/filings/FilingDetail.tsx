@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
 import { getSubsystem } from '../lib/subsystems.ts';
 import { Badge } from '../ui/badge.tsx';
+import { FilingTimeline } from './FilingTimeline.tsx';
 
 // ── Types mirroring server-side FilingDetail ────────────────────────
 
@@ -31,6 +32,14 @@ type RelatedSpaceStation = {
   usName: string;
   ituName: string | null;
   orbitLocation: string | null;
+};
+
+type TimelineEvent = {
+  date: string;
+  type: string;
+  label: string;
+  actor: string | null;
+  source: 'filing_field' | 'pleading';
 };
 
 type DataSource = 'icfs' | 'ibfs-legacy';
@@ -68,6 +77,7 @@ type FilingDetail = {
   transfereeName: string | null;
   attachments: FilingAttachment[];
   petitions: FilingPetition[];
+  timeline: TimelineEvent[];
   relatedSpaceStation: RelatedSpaceStation | null;
   relatedEarthStationCallsign: string | null;
 };
@@ -280,6 +290,9 @@ export default function FilingDetailPage() {
               </div>
             </section>
           )}
+
+          {/* Timeline */}
+          <FilingTimeline events={filing.timeline} />
 
           {/* Attachments */}
           <section>
