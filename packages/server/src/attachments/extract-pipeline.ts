@@ -74,7 +74,12 @@ export async function runExtractionPipeline(
       const result = extractTextFromPdf(bytes);
 
       if (result.status === 'extracted') {
-        await markExtracted(conn, row.attachmentKey, result.text, result.textLength);
+        await markExtracted(
+          conn,
+          row.attachmentKey,
+          result.text,
+          result.textLength,
+        );
         extracted++;
         if (options.verbose) {
           log(
@@ -82,11 +87,7 @@ export async function runExtractionPipeline(
           );
         }
       } else if (result.status === 'skipped_no_text') {
-        await markExtractionSkipped(
-          conn,
-          row.attachmentKey,
-          'skipped_no_text',
-        );
+        await markExtractionSkipped(conn, row.attachmentKey, 'skipped_no_text');
         skippedNoText++;
         if (options.verbose) {
           log(`  ${String(row.attachmentKey)}: skipped (no text)`);

@@ -25,9 +25,8 @@ export const extractCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const { runExtractionPipeline } = await import(
-      '../../attachments/extract-pipeline.ts'
-    );
+    const { runExtractionPipeline } =
+      await import('../../attachments/extract-pipeline.ts');
 
     const result = await runExtractionPipeline({
       databaseUrl: resolveFromRoot(args.database),
