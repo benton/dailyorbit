@@ -5,12 +5,12 @@ import { type ReactNode } from 'react';
  *
  * The Cosmograph library renders a "Visualized by Cosmograph" badge with an opaque
  * background that matches the container's background color rather than being transparent.
- * By wrapping all Cosmograph instances in a dark container, the badge blends naturally
+ * By wrapping all Cosmograph instances in a black container, the badge blends naturally
  * with the graph background instead of appearing as a floating white rectangle.
  */
 export default function CosmographWrapper({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded bg-[#1a1a2e]" style={{ backgroundColor: '#1a1a2e' }}>
+    <div className="rounded bg-black" style={{ backgroundColor: '#000000' }}>
       {children}
     </div>
   );

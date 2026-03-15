@@ -9,11 +9,9 @@ import SatelliteDetail from './satellites/SatelliteDetail.tsx';
 import SearchPage from './search/SearchPage.tsx';
 import PublicLayout from './ui/PublicLayout.tsx';
 
-const CompanyFilingGraph = lazy(() => import('./home/CompanyFilingGraph.tsx'));
+const HomePage = lazy(() => import('./home/HomePage.tsx'));
 const Companies = lazy(() => import('./admin/Companies.tsx'));
-const CompanyGraph = lazy(() => import('./admin/CompanyGraph.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
-const FilingVolume = lazy(() => import('./admin/FilingVolume.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
@@ -45,7 +43,7 @@ export default function App() {
         <Route
           element={
             <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <CompanyFilingGraph />
+              <HomePage />
             </Suspense>
           }
           path="/"
@@ -70,26 +68,10 @@ export default function App() {
         <Route
           element={
             <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <FilingVolume />
-            </Suspense>
-          }
-          path="volume"
-        />
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
               <Companies />
             </Suspense>
           }
           path="companies"
-        />
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <CompanyGraph />
-            </Suspense>
-          }
-          path="company-graph"
         />
       </Route>
     </Routes>

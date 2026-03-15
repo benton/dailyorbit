@@ -9,7 +9,7 @@ import {
   extractOwnershipEvents,
   getAttributionStats,
   getCompanyDetail,
-  getCompanyFilingGraph,
+
   getCompanyFilings,
   listCompanies,
   removeAlias,
@@ -52,12 +52,6 @@ companyRoutes.get('/', async (c) => {
   const q = c.req.query();
   const pagination: PaginatedRequest = parsePagination(q);
   const result = await withConn((conn) => listCompanies(conn, pagination));
-  return c.json(result);
-});
-
-companyRoutes.get('/graph', async (c) => {
-  const limit: number = Number(c.req.query('limit') ?? '20');
-  const result = await withConn((conn) => getCompanyFilingGraph(conn, limit));
   return c.json(result);
 });
 

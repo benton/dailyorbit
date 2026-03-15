@@ -1,8 +1,10 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+
+const CompanyGraph = lazy(() => import('./CompanyGraph.tsx'));
 
 type CompanyListItem = {
   id: number;
@@ -181,14 +183,25 @@ export default function Companies() {
       )}
 
       {/* Companies table */}
-      <DataTable<CompanyListItem>
-        columns={columns}
-        fetchData={fetchData}
-        defaultSort="name"
-        defaultOrder="asc"
-        defaultPageSize={25}
-        onRowClick={handleRowClick}
-      />
+      <div className="max-h-[50vh] overflow-y-auto">
+        <DataTable<CompanyListItem>
+          columns={columns}
+          fetchData={fetchData}
+          defaultSort="name"
+          defaultOrder="asc"
+          defaultPageSize={25}
+          onRowClick={handleRowClick}
+        />
+      </div>
+
+      {/* Company hierarchy graph */}
+      <div className="mt-8">
+        <Suspense
+          fallback={<p className="text-sm text-neutral-500">Loading company graph...</p>}
+        >
+          <CompanyGraph />
+        </Suspense>
+      </div>
     </>
   );
 }

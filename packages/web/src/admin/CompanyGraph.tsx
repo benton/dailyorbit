@@ -23,7 +23,7 @@ type GraphPoint = {
   idx: number;
   label: string;
   size: number;
-  type: string;
+  color: string;
 };
 
 type GraphLink = {
@@ -37,9 +37,24 @@ function transformData(companies: CompanyListItem[]): {
   links: Array<GraphLink>;
   points: Array<GraphPoint>;
 } {
+  // Build parent name set and child-of-parent set to filter out isolates
+  const parentNames: Set<string> = new Set();
+  const childNames: Set<string> = new Set();
+  for (const c of companies) {
+    if (c.parentName != null) {
+      parentNames.add(c.parentName);
+      childNames.add(c.name);
+    }
+  }
+
+  // Only include companies that are a parent or a child
+  const relevant: CompanyListItem[] = companies.filter(
+    (c) => parentNames.has(c.name) || childNames.has(c.name),
+  );
+
   const idToIdx: Map<number, number> = new Map();
 
-  const points: Array<GraphPoint> = companies.map(
+  const points: Array<GraphPoint> = relevant.map(
     (company: CompanyListItem, i: number): GraphPoint => {
       idToIdx.set(company.id, i);
       return {
@@ -47,15 +62,15 @@ function transformData(companies: CompanyListItem[]): {
         idx: i,
         label: company.name,
         size: Math.max(3, Math.sqrt(company.filingCount) * 2),
-        type: company.parentName != null ? 'subsidiary' : 'parent',
+        color: company.parentName != null ? '#3b82f6' : '#f59e0b',
       };
     },
   );
 
   const links: Array<GraphLink> = [];
-  for (const company of companies) {
+  for (const company of relevant) {
     if (company.parentName != null) {
-      const parentCompany: CompanyListItem | undefined = companies.find(
+      const parentCompany: CompanyListItem | undefined = relevant.find(
         (c) => c.name === company.parentName,
       );
       if (parentCompany != null) {
@@ -99,7 +114,7 @@ export default function CompanyGraph(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-32 items-center justify-center">
         <p className="text-neutral-500 dark:text-neutral-400">Loading company graph...</p>
       </div>
     );
@@ -107,23 +122,30 @@ export default function CompanyGraph(): React.ReactElement {
 
   if (error) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-32 items-center justify-center">
         <p className="text-red-600 dark:text-red-400">{error}</p>
       </div>
+    );
+  }
+
+  if (points.length === 0) {
+    return (
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        No parent-subsidiary relationships found.
+      </p>
     );
   }
 
   return (
     <div>
       <h2 className="mb-1 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-        Company Hierarchy Graph
+        Company Hierarchy
       </h2>
       <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-        Visualizes parent-subsidiary relationships between satellite companies. Node size reflects
-        filing count.
+        Parent-subsidiary relationships. Node size reflects filing count.
       </p>
       <CosmographWrapper>
-        <div className="h-[calc(100vh-200px)] w-full">
+        <div className="h-[400px] w-full" style={{ backgroundColor: '#000000' }}>
           <Cosmograph
             links={links}
             linkSourceBy="source"
@@ -131,7 +153,7 @@ export default function CompanyGraph(): React.ReactElement {
             linkTargetBy="target"
             linkTargetIndexBy="targetIdx"
             linkWidth={3}
-            pointColorBy="type"
+            pointColorBy="color"
             pointIdBy="id"
             pointIndexBy="idx"
             pointLabelBy="label"
@@ -140,10 +162,9 @@ export default function CompanyGraph(): React.ReactElement {
           />
         </div>
       </CosmographWrapper>
-      {/* Color legend */}
-      <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-600 dark:text-neutral-400">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#6b7280]" />
+          <span className="inline-block h-3 w-3 rounded-full bg-[#f59e0b]" />
           <dt className="inline">Parent company</dt>
         </div>
         <div className="flex items-center gap-2">

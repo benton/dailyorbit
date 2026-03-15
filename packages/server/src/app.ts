@@ -11,7 +11,7 @@ import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
-import { statsRoutes } from './stats/routes.ts';
+import { publicStatsRoutes, statsRoutes } from './stats/routes.ts';
 
 const app = new Hono();
 
@@ -37,6 +37,7 @@ app.route('/api/earth-stations', earthStationRoutes);
 app.route('/api/search', searchRoutes);
 app.route('/api/autocomplete', autocompleteRoutes);
 app.route('/api/companies', companyRoutes);
+app.route('/api/stats', publicStatsRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
 // In development, Vite runs separately with hot-reload.

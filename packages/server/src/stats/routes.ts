@@ -4,10 +4,45 @@ import { getDb, getDbPath } from '../lib/db.ts';
 import {
   getApplicantFilings,
   getDatasetStats,
+  getFilingCount,
+  getFilingsBySubsystem,
   getYearlyFilingVolume,
   getTopApplicants,
 } from './repository.ts';
 import { trackConnection } from '../lib/graceful-shutdown.ts';
+
+// ── Public stats routes (/api/stats) ────────────────────────────────
+
+const publicStatsRoutes = new Hono();
+
+publicStatsRoutes.get('/', async (c) => {
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
+  try {
+    const [filing_count, filings_by_subsystem] = await Promise.all([
+      getFilingCount(conn),
+      getFilingsBySubsystem(conn),
+    ]);
+    return c.json({ filing_count, filings_by_subsystem });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+publicStatsRoutes.get('/filing-volume', async (c) => {
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
+  try {
+    const volume = await getYearlyFilingVolume(conn);
+    return c.json(volume);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── Admin stats routes (/api/admin/stats) ───────────────────────────
 
 const statsRoutes = new Hono();
 
@@ -50,4 +85,4 @@ statsRoutes.get('/filing-volume', async (c) => {
   }
 });
 
-export { statsRoutes };
+export { publicStatsRoutes, statsRoutes };
