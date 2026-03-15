@@ -196,9 +196,7 @@ export default function Companies() {
 
       {/* Company hierarchy graph */}
       <div className="mt-8">
-        <Suspense
-          fallback={<p className="text-sm text-neutral-500">Loading company graph...</p>}
-        >
+        <Suspense fallback={<p className="text-sm text-neutral-500">Loading company graph...</p>}>
           <CompanyGraph />
         </Suspense>
       </div>
