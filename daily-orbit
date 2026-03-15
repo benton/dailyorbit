@@ -1,2 +1,5 @@
-#\!/usr/bin/env bash
-exec node --no-warnings "$(dirname "$0")/packages/server/src/bin.ts" "$@"
+#!/usr/bin/env bash
+DIR="$(dirname "$0")"
+BIN="$DIR/packages/server/dist/bin.js"
+[ -f "$BIN" ] || BIN="$DIR/packages/server/src/bin.ts"
+exec node --no-warnings "$BIN" "$@"

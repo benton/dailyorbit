@@ -71,6 +71,7 @@ Some values cannot move to the database because they are consumed at build time 
 |----------|--------|
 | `NODE_ENV` | Read by the Node.js runtime before app code executes |
 | `VITE_SERVER_URL` | Baked into the frontend bundle at build time by Vite |
+| `SERVE_STATIC` | When `true`, the API server serves the built frontend from `packages/web/dist/`. Set automatically in the Docker image. Must **not** be set during development, where Vite runs separately with hot-reload. |
 | `--port` flag | CLI argument for the serve command (default `9000`) — deployment-specific |
 
 These stay as traditional environment variables or CLI flags.

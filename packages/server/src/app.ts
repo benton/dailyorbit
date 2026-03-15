@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { configRoutes } from './config/routes.ts';
 import { earthStationRoutes } from './earth-stations/routes.ts';
 import { filingRoutes } from './filings/routes.ts';
@@ -20,7 +23,7 @@ app.use(
   }),
 );
 
-app.get('/', (c) => c.json({ status: 'ok' }));
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw));
 
@@ -31,5 +34,14 @@ app.route('/api/satellites', satelliteRoutes);
 app.route('/api/earth-stations', earthStationRoutes);
 app.route('/api/search', searchRoutes);
 app.route('/api/autocomplete', autocompleteRoutes);
+
+// Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
+// In development, Vite runs separately with hot-reload.
+const webDistPath: string = resolve(import.meta.dirname ?? '.', '../../web/dist');
+if (process.env.SERVE_STATIC === 'true' && existsSync(webDistPath)) {
+  app.use('*', serveStatic({ root: webDistPath, rewriteRequestPath: (p: string) => p }));
+  // SPA fallback: serve index.html for any non-API path that didn't match a static file
+  app.get('*', serveStatic({ root: webDistPath, rewriteRequestPath: () => '/index.html' }));
+}
 
 export default app;
