@@ -10,6 +10,11 @@ export function compactToHyphenated(
   subsystemCode: string,
   appTypeCode: string,
 ): string {
+  // Already hyphenated — return as-is
+  if (compact.includes('-')) {
+    return compact;
+  }
+
   // The compact format strips '/' from app type codes like 'T/C' -> 'TC'
   const strippedAppType: string = appTypeCode.replace(/\//g, '');
   const prefixLength: number = subsystemCode.length + strippedAppType.length;

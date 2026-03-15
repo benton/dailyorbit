@@ -54,6 +54,11 @@ describe('compactToHyphenated', () => {
     },
   );
 
+  it('passes through already-hyphenated file numbers unchanged', () => {
+    const hyphenated: string = 'SAT-LOA-20250221-00050';
+    expect(compactToHyphenated(hyphenated, 'SAT', 'LOA')).toEqual(hyphenated);
+  });
+
   it('is idempotent — round-trip preserves all components', () => {
     const compact: string = 'SATSTA2023061400142';
     const result: string = compactToHyphenated(compact, 'SAT', 'STA');

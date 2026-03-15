@@ -1,5 +1,6 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import type {
+  DataSource,
   FilingAttachment,
   FilingDetail,
   FilingPetition,
@@ -42,6 +43,7 @@ export async function getFilingByFileNumber(
        f.nature_of_service,
        f.transferor_name,
        f.transferee_name,
+       f.icfs_last_fetched_at,
        sc.status_text,
        sub.description AS subsystem_label,
        atc.application_type AS app_type_label
@@ -79,7 +81,11 @@ export async function getFilingByFileNumber(
       ? callsign
       : null;
 
+  const dataSource: DataSource =
+    row.icfs_last_fetched_at != null ? 'icfs' : 'ibfs-legacy';
+
   return {
+    dataSource,
     filingKey,
     fileNumber: String(row.file_number),
     subsystemCode,

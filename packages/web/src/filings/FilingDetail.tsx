@@ -31,7 +31,10 @@ type RelatedSpaceStation = {
   orbitLocation: string | null;
 };
 
+type DataSource = 'icfs' | 'ibfs-legacy';
+
 type FilingDetail = {
+  dataSource: DataSource;
   filingKey: number;
   fileNumber: string;
   subsystemCode: string;
@@ -200,6 +203,32 @@ export default function FilingDetailPage() {
           {filing.dateFiled != null && <span>Filed: {formatDate(filing.dateFiled)}</span>}
         </div>
       </div>
+
+      {/* ── Legacy data banner ─────────────────────────────────── */}
+      {filing.dataSource === 'ibfs-legacy' && (
+        <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <svg
+            className="mt-0.5 h-5 w-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
+          </svg>
+          <div>
+            <p className="font-medium">Legacy IBFS data only</p>
+            <p className="mt-1 text-amber-700 dark:text-amber-300">
+              This filing was imported from the FCC&apos;s legacy IBFS bulk export and has not been
+              found on the current ICFS system. Some fields may be incomplete or outdated.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Two-column layout ───────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

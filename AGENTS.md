@@ -110,7 +110,7 @@ These rules ensure maintainability, safety, and developer velocity.
 
 #### 6.1 Run node scripts with ESM and TypeScript, fast.
 
-Create a `script.ts` file in `scripts/`, run `chmod x scripts/script.ts` and execute it via `./scripts/script.ts`.
+Create a `script.ts` file in `scripts/`, run `chmod x scripts/script.ts` and execute it via `./scripts/script.ts`. But _check the current dir before executing_ - otherwise imports will likely fail.
 
 ```
 #!/usr/bin/env node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm

@@ -29,7 +29,8 @@ const SETUP_SQL: string = `
     environmental_impact VARCHAR,
     nature_of_service VARCHAR,
     transferor_name VARCHAR,
-    transferee_name VARCHAR
+    transferee_name VARCHAR,
+    icfs_last_fetched_at TIMESTAMP
   );
 
   CREATE TABLE status_code (
@@ -141,6 +142,7 @@ describe('getFilingByFileNumber', () => {
     );
 
     expect(result).not.toBeNull();
+    expect(result!.dataSource).toEqual('ibfs-legacy');
     expect(result!.filingKey).toEqual(100);
     expect(result!.fileNumber).toEqual('SAT-LOA-20250221-00050');
     expect(result!.subsystemCode).toEqual('SAT');
@@ -152,6 +154,20 @@ describe('getFilingByFileNumber', () => {
     expect(result!.applicantName).toEqual('ICEYE US, Inc.');
     expect(result!.applicantFrn).toEqual('0030543268');
     expect(result!.daNumber).toEqual('25-346');
+  });
+
+  it('reports dataSource as icfs when icfs_last_fetched_at is set', async () => {
+    await conn.run(SAT_FILING_SQL);
+    await conn.run(SPACE_STATION_SQL);
+    await conn.run(
+      `UPDATE filing SET icfs_last_fetched_at = '2026-03-15 12:00:00' WHERE filing_key = 100`,
+    );
+
+    const result: FilingDetail | null = await getFilingByFileNumber(
+      conn,
+      'SAT-LOA-20250221-00050',
+    );
+    expect(result!.dataSource).toEqual('icfs');
   });
 
   it('includes attachments associated with the filing', async () => {

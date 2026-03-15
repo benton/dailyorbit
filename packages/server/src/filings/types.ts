@@ -26,8 +26,12 @@ export type RelatedSpaceStation = {
   orbitLocation: string | null;
 };
 
+/** Where the filing's data came from */
+export type DataSource = 'icfs' | 'ibfs-legacy';
+
 /** Full detail response for GET /api/filings/:fileNumber */
 export type FilingDetail = {
+  dataSource: DataSource;
   filingKey: number;
   fileNumber: string;
   subsystemCode: string;
