@@ -16,16 +16,14 @@ function loadFixture(name: string): unknown {
 }
 
 describe('parseSearchResponse', () => {
-  it('extracts file numbers and applicant names from search results', () => {
+  it('extracts file numbers from both results and additionalResults', () => {
     const json: unknown = loadFixture('search-sat-loa-2025.json');
     const results: IcfsSearchResult[] = parseSearchResponse(json);
 
-    expect(results.length).toEqual(2);
+    // Fixture has 2 in results + 62 in additionalResults
+    expect(results.length).toEqual(64);
     expect(results[0]).toEqual({
-      sysId:
-        'DRAFT-SAT-LOA-20250915-00277' === results[0]!.fileNumber
-          ? results[0]!.sysId
-          : results[0]!.sysId,
+      sysId: expect.any(String) as string,
       fileNumber: expect.stringContaining('SAT-LOA-2025') as string,
       applicantName: expect.any(String) as string,
       subsystem: 'SAT',
@@ -33,7 +31,7 @@ describe('parseSearchResponse', () => {
   });
 
   it('returns empty array for zero results', () => {
-    const json: unknown = { result: { results: [] } };
+    const json: unknown = { result: { results: [], additionalResults: [] } };
     const results: IcfsSearchResult[] = parseSearchResponse(json);
     expect(results).toEqual([]);
   });
@@ -42,6 +40,33 @@ describe('parseSearchResponse', () => {
     const json: unknown = { result: {} };
     const results: IcfsSearchResult[] = parseSearchResponse(json);
     expect(results).toEqual([]);
+  });
+
+  it('returns results when only additionalResults is present', () => {
+    const json: unknown = {
+      result: {
+        results: [],
+        additionalResults: [
+          {
+            sys_id: 'abc123',
+            label: 'SAT-LOA-20250101-00001',
+            fields: [
+              { label: 'Applicant Name', display_value: 'Test Corp' },
+              { label: 'Subsystem', display_value: 'SAT' },
+            ],
+          },
+        ],
+      },
+    };
+    const results: IcfsSearchResult[] = parseSearchResponse(json);
+    expect(results).toEqual([
+      {
+        sysId: 'abc123',
+        fileNumber: 'SAT-LOA-20250101-00001',
+        applicantName: 'Test Corp',
+        subsystem: 'SAT',
+      },
+    ]);
   });
 });
 

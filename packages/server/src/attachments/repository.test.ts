@@ -3,12 +3,12 @@ import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import {
   countDuplicateKeys,
   createAttachmentTable,
-  ensureLastScrapedColumn,
+  createDiscoveryLogTable,
   getFilingsForScope,
   getPendingDownloads,
   markDownloaded,
   markFailed,
-  markFilingsScraped,
+  markFilingsDiscovered,
   upsertAttachments,
 } from './repository.ts';
 import type {
@@ -289,78 +289,58 @@ describe('attachment repository', () => {
     });
   });
 
-  describe('ensureLastScrapedColumn', () => {
-    it('adds last_scraped_at column to filing table', async () => {
-      await conn.run(`
-        CREATE TABLE filing (
-          filing_key INTEGER NOT NULL,
-          file_number VARCHAR NOT NULL,
-          subsystem_code VARCHAR NOT NULL,
-          app_type_code VARCHAR NOT NULL,
-          date_filed DATE
-        )
-      `);
-
-      await ensureLastScrapedColumn(conn);
+  describe('createDiscoveryLogTable', () => {
+    it('creates the attachment_discovery table', async () => {
+      await createDiscoveryLogTable(conn);
 
       const reader = await conn.runAndReadAll(
-        `SELECT column_name FROM information_schema.columns
-         WHERE table_name = 'filing' AND column_name = 'last_scraped_at'`,
+        `SELECT COUNT(*) AS cnt FROM information_schema.tables
+         WHERE table_name = 'attachment_discovery'`,
       );
-      expect(reader.getRowObjectsJS()).toHaveLength(1);
+      expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(1);
     });
 
     it('is idempotent', async () => {
-      await conn.run(`
-        CREATE TABLE filing (
-          filing_key INTEGER NOT NULL,
-          file_number VARCHAR NOT NULL,
-          subsystem_code VARCHAR NOT NULL,
-          app_type_code VARCHAR NOT NULL,
-          date_filed DATE
-        )
-      `);
-
-      await ensureLastScrapedColumn(conn);
-      await ensureLastScrapedColumn(conn);
+      await createDiscoveryLogTable(conn);
+      await createDiscoveryLogTable(conn);
 
       const reader = await conn.runAndReadAll(
-        `SELECT column_name FROM information_schema.columns
-         WHERE table_name = 'filing' AND column_name = 'last_scraped_at'`,
+        `SELECT COUNT(*) AS cnt FROM attachment_discovery`,
       );
-      expect(reader.getRowObjectsJS()).toHaveLength(1);
+      expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(0);
     });
   });
 
-  describe('markFilingsScraped', () => {
-    it('sets last_scraped_at on specified filing keys', async () => {
-      await conn.run(`
-        CREATE TABLE filing (
-          filing_key INTEGER NOT NULL,
-          file_number VARCHAR NOT NULL,
-          subsystem_code VARCHAR NOT NULL,
-          app_type_code VARCHAR NOT NULL,
-          date_filed DATE,
-          last_scraped_at TIMESTAMP
-        )
-      `);
-      await conn.run(
-        `INSERT INTO filing (filing_key, file_number, subsystem_code, app_type_code)
-         VALUES (1, 'SAT001', 'SAT', 'STA'), (2, 'SES001', 'SES', 'LOA')`,
-      );
+  describe('markFilingsDiscovered', () => {
+    it('records discovery timestamp for specified filing keys', async () => {
+      await createDiscoveryLogTable(conn);
 
-      await markFilingsScraped(conn, [1]);
+      await markFilingsDiscovered(conn, [1, 2]);
 
       const reader = await conn.runAndReadAll(
-        `SELECT filing_key, last_scraped_at FROM filing ORDER BY filing_key`,
+        `SELECT filing_key, discovered_at FROM attachment_discovery ORDER BY filing_key`,
       );
       const rows = reader.getRowObjectsJS();
-      expect(rows[0]!.last_scraped_at).not.toBeNull();
-      expect(rows[1]!.last_scraped_at).toBeNull();
+      expect(rows).toHaveLength(2);
+      expect(rows[0]!.discovered_at).not.toBeNull();
+      expect(rows[1]!.discovered_at).not.toBeNull();
+    });
+
+    it('is idempotent — re-marking updates the timestamp', async () => {
+      await createDiscoveryLogTable(conn);
+
+      await markFilingsDiscovered(conn, [1]);
+      await markFilingsDiscovered(conn, [1]);
+
+      const reader = await conn.runAndReadAll(
+        `SELECT COUNT(*) AS cnt FROM attachment_discovery WHERE filing_key = 1`,
+      );
+      expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(1);
     });
 
     it('is a no-op for empty array', async () => {
-      await markFilingsScraped(conn, []);
+      await createDiscoveryLogTable(conn);
+      await markFilingsDiscovered(conn, []);
     });
   });
 
@@ -372,34 +352,41 @@ describe('attachment repository', () => {
           file_number VARCHAR NOT NULL,
           subsystem_code VARCHAR NOT NULL,
           app_type_code VARCHAR NOT NULL,
-          date_filed DATE,
-          last_scraped_at TIMESTAMP
+          date_filed DATE
         )
       `);
-      // Filing 1: scraped recently
+      await createDiscoveryLogTable(conn);
+
+      // Filing 1: discovered recently
       await conn.run(
-        `INSERT INTO filing VALUES (1, 'SAT001', 'SAT', 'STA', '2023-06-14', '2026-03-13 12:00:00')`,
+        `INSERT INTO filing VALUES (1, 'SAT001', 'SAT', 'STA', '2023-06-14')`,
       );
-      // Filing 2: scraped long ago
       await conn.run(
-        `INSERT INTO filing VALUES (2, 'SES001', 'SES', 'LOA', '2024-01-01', '2025-01-01 00:00:00')`,
+        `INSERT INTO attachment_discovery VALUES (1, '2026-03-13 12:00:00')`,
       );
-      // Filing 3: never scraped
+      // Filing 2: discovered long ago
       await conn.run(
-        `INSERT INTO filing VALUES (3, 'SAT002', 'SAT', 'LOA', '2024-06-01', NULL)`,
+        `INSERT INTO filing VALUES (2, 'SES001', 'SES', 'LOA', '2024-01-01')`,
+      );
+      await conn.run(
+        `INSERT INTO attachment_discovery VALUES (2, '2025-01-01 00:00:00')`,
+      );
+      // Filing 3: never discovered
+      await conn.run(
+        `INSERT INTO filing VALUES (3, 'SAT002', 'SAT', 'LOA', '2024-06-01')`,
       );
     });
 
-    it('notScrapedSince returns unscraped and stale filings', async () => {
+    it('notScrapedSince returns undiscovered and stale filings', async () => {
       const filings: FilingRow[] = await getFilingsForScope(conn, {
         notScrapedSince: '2026-01-01T00:00:00',
       });
       const keys: number[] = filings.map((f) => f.filingKey);
-      // Filing 2 (scraped 2025-01-01) and filing 3 (never scraped)
+      // Filing 2 (discovered 2025-01-01) and filing 3 (never discovered)
       expect(keys).toEqual([2, 3]);
     });
 
-    it('notScrapedSince with old cutoff returns only never-scraped', async () => {
+    it('notScrapedSince with old cutoff returns only never-discovered', async () => {
       const filings: FilingRow[] = await getFilingsForScope(conn, {
         notScrapedSince: '2024-06-01T00:00:00',
       });
@@ -407,13 +394,12 @@ describe('attachment repository', () => {
       expect(keys).toEqual([3]);
     });
 
-    it('staleAfter returns filings not scraped within duration', async () => {
-      // Use a very large duration that only excludes recently-scraped
+    it('staleAfter returns filings not discovered within duration', async () => {
       const filings: FilingRow[] = await getFilingsForScope(conn, {
         staleAfter: '365d',
       });
       const keys: number[] = filings.map((f) => f.filingKey);
-      // Filing 2 was scraped >365d ago, filing 3 never scraped
+      // Filing 2 was discovered >365d ago, filing 3 never discovered
       expect(keys).toEqual([2, 3]);
     });
 
@@ -423,7 +409,7 @@ describe('attachment repository', () => {
         notScrapedSince: '2026-01-01T00:00:00',
       });
       const keys: number[] = filings.map((f) => f.filingKey);
-      // Only SAT filings not scraped since 2026: filing 3
+      // Only SAT filings not discovered since 2026: filing 3
       expect(keys).toEqual([3]);
     });
 

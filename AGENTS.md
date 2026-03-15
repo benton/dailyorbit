@@ -99,6 +99,9 @@ These rules ensure maintainability, safety, and developer velocity.
 
 - Use `./daily-orbit serve api` to run the API server - it should hot-reload changes
 - Use `./daily-orbit serve html` to run the VITE fontend server - it should hot-reload changes
+- The DUckDB CLI is available. Before running the API server, consider making a copy of the default DB: `cp -pv data/daily-orbit.duckdb data/daily-orbit-query.duckdb`. Then you can use the DuckDB CLI to query the copy while the API server uses the locked default DB.
+- `uv` is installed and a Python virtual env is at `.venv`. This is for debugging only, so use `uv` and create scripts as needed in `scripts`
+- when using Typescript test scripts _check the current dir before executing_ - otherwise imports will likely fail
 - Use `pnpm test` to run tests.
 - `pnpm build` for production builds.
 - Use [`npm-run-all2`](https://github.com/bcomnes/npm-run-all2) to parallelize local test runs.

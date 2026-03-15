@@ -37,11 +37,20 @@ app.route('/api/autocomplete', autocompleteRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
 // In development, Vite runs separately with hot-reload.
-const webDistPath: string = resolve(import.meta.dirname ?? '.', '../../web/dist');
+const webDistPath: string = resolve(
+  import.meta.dirname ?? '.',
+  '../../web/dist',
+);
 if (process.env.SERVE_STATIC === 'true' && existsSync(webDistPath)) {
-  app.use('*', serveStatic({ root: webDistPath, rewriteRequestPath: (p: string) => p }));
+  app.use(
+    '*',
+    serveStatic({ root: webDistPath, rewriteRequestPath: (p: string) => p }),
+  );
   // SPA fallback: serve index.html for any non-API path that didn't match a static file
-  app.get('*', serveStatic({ root: webDistPath, rewriteRequestPath: () => '/index.html' }));
+  app.get(
+    '*',
+    serveStatic({ root: webDistPath, rewriteRequestPath: () => '/index.html' }),
+  );
 }
 
 export default app;

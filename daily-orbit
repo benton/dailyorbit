@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-DIR="$(dirname "$0")"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$DIR"
 BIN="$DIR/packages/server/dist/bin.js"
 [ -f "$BIN" ] || BIN="$DIR/packages/server/src/bin.ts"
 exec node --no-warnings "$BIN" "$@"

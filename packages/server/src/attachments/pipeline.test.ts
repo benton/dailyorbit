@@ -86,7 +86,7 @@ describe('runAttachmentPipeline', () => {
     expect(downloadLogs).toHaveLength(0);
   });
 
-  it('sets last_scraped_at on successfully processed filings', async () => {
+  it('records discovery in attachment_discovery for processed filings', async () => {
     await runAttachmentPipeline({
       dbInstance: db,
       storageBasePath: '/tmp/test-attachments',
@@ -98,13 +98,13 @@ describe('runAttachmentPipeline', () => {
 
     const checkConn: DuckDBConnection = await DuckDBConnection.create(db);
     const reader = await checkConn.runAndReadAll(
-      `SELECT filing_key, last_scraped_at FROM filing ORDER BY filing_key`,
+      `SELECT filing_key, discovered_at FROM attachment_discovery ORDER BY filing_key`,
     );
     const rows = reader.getRowObjectsJS();
-    // SAT filing (key=1) was processed — should have a timestamp
-    expect(rows[0]!.last_scraped_at).not.toBeNull();
-    // SES filing (key=2) was not in scope — should be null
-    expect(rows[1]!.last_scraped_at).toBeNull();
+    // SAT filing (key=1) was processed — should have a discovery record
+    expect(rows).toHaveLength(1);
+    expect(Number(rows[0]!.filing_key)).toEqual(1);
+    expect(rows[0]!.discovered_at).not.toBeNull();
     checkConn.closeSync();
   });
 

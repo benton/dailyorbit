@@ -27,32 +27,47 @@ function get(obj: unknown, ...keys: (string | number)[]): unknown {
   return current;
 }
 
+function parseResultItem(r: unknown): IcfsSearchResult {
+  const fields: unknown[] = Array.isArray(get(r, 'fields'))
+    ? (get(r, 'fields') as unknown[])
+    : [];
+
+  let applicantName: string = '';
+  let subsystem: string = '';
+
+  for (const f of fields) {
+    const label: string = String(get(f, 'label') ?? '');
+    const value: string = String(get(f, 'display_value') ?? '');
+    if (label === 'Applicant Name') applicantName = value;
+    if (label === 'Subsystem') subsystem = value;
+  }
+
+  return {
+    sysId: String(get(r, 'sys_id') ?? ''),
+    fileNumber: String(get(r, 'label') ?? ''),
+    applicantName,
+    subsystem,
+  };
+}
+
 export function parseSearchResponse(json: unknown): IcfsSearchResult[] {
   const results: unknown = get(json, 'result', 'results');
-  if (!Array.isArray(results)) return [];
+  const additionalResults: unknown = get(json, 'result', 'additionalResults');
 
-  return results.map((r: unknown): IcfsSearchResult => {
-    const fields: unknown[] = Array.isArray(get(r, 'fields'))
-      ? (get(r, 'fields') as unknown[])
-      : [];
+  const items: IcfsSearchResult[] = [];
 
-    let applicantName: string = '';
-    let subsystem: string = '';
-
-    for (const f of fields) {
-      const label: string = String(get(f, 'label') ?? '');
-      const value: string = String(get(f, 'display_value') ?? '');
-      if (label === 'Applicant Name') applicantName = value;
-      if (label === 'Subsystem') subsystem = value;
+  if (Array.isArray(results)) {
+    for (const r of results) {
+      items.push(parseResultItem(r));
     }
+  }
+  if (Array.isArray(additionalResults)) {
+    for (const r of additionalResults) {
+      items.push(parseResultItem(r));
+    }
+  }
 
-    return {
-      sysId: String(get(r, 'sys_id') ?? ''),
-      fileNumber: String(get(r, 'label') ?? ''),
-      applicantName,
-      subsystem,
-    };
-  });
+  return items;
 }
 
 /** Navigate to the widget data within the SP page response */

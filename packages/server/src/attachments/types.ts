@@ -65,7 +65,7 @@ export type FilingRow = {
   fileNumber: string;
   subsystemCode: string;
   appTypeCode: string;
-  lastScrapedAt: string | null;
+  discoveredAt: string | null;
 };
 
 /** Result of an upsert operation */

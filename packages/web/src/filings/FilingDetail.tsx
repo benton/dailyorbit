@@ -227,7 +227,8 @@ export default function FilingDetailPage() {
             </h2>
             {(() => {
               const appPdf: FilingAttachment | undefined = filing.attachments.find(
-                (a: FilingAttachment) => a.attachmentName === 'Attachment Application' && a.downloadUrl,
+                (a: FilingAttachment) =>
+                  a.attachmentName === 'Attachment Application' && a.downloadUrl,
               );
               if (appPdf != null) {
                 return (
@@ -237,8 +238,18 @@ export default function FilingDetailPage() {
                     rel="noopener noreferrer"
                     className="mb-4 inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                     Download Application Filing
                     {appPdf.fileSizeBytes != null && (

@@ -166,7 +166,7 @@ export async function getFilingsForScope(
 
   if (scope.notScrapedSince != null) {
     conditions.push(
-      `(f.last_scraped_at IS NULL OR f.last_scraped_at < $${String(paramIdx++)})`,
+      `(ad.discovered_at IS NULL OR ad.discovered_at < $${String(paramIdx++)})`,
     );
     params.push(scope.notScrapedSince as DuckDBValue);
   }
@@ -175,7 +175,7 @@ export async function getFilingsForScope(
     const ms: number = parseDuration(scope.staleAfter);
     const threshold: Date = new Date(Date.now() - ms);
     conditions.push(
-      `(f.last_scraped_at IS NULL OR f.last_scraped_at < $${String(paramIdx++)})`,
+      `(ad.discovered_at IS NULL OR ad.discovered_at < $${String(paramIdx++)})`,
     );
     params.push(threshold.toISOString() as DuckDBValue);
   }
@@ -192,8 +192,9 @@ export async function getFilingsForScope(
       f.file_number AS file_number,
       f.subsystem_code AS subsystem_code,
       f.app_type_code AS app_type_code,
-      f.last_scraped_at AS last_scraped_at
+      ad.discovered_at AS discovered_at
     FROM filing f
+    LEFT JOIN attachment_discovery ad ON ad.filing_key = f.filing_key
     ${whereClause}
     ORDER BY f.filing_key
     ${limitClause}`;
@@ -206,7 +207,7 @@ export async function getFilingsForScope(
     fileNumber: String(r.file_number),
     subsystemCode: String(r.subsystem_code),
     appTypeCode: String(r.app_type_code),
-    lastScrapedAt: r.last_scraped_at != null ? String(r.last_scraped_at) : null,
+    discoveredAt: r.discovered_at != null ? String(r.discovered_at) : null,
   }));
 }
 
@@ -291,15 +292,24 @@ export async function markFailed(
   );
 }
 
-export async function ensureLastScrapedColumn(
+const CREATE_DISCOVERY_LOG_SQL: string = `
+  CREATE TABLE IF NOT EXISTS attachment_discovery (
+    filing_key INTEGER NOT NULL,
+    discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+  )`;
+
+export async function createDiscoveryLogTable(
   conn: DuckDBConnection,
 ): Promise<void> {
-  await conn.run(
-    `ALTER TABLE filing ADD COLUMN IF NOT EXISTS last_scraped_at TIMESTAMP`,
-  );
+  await conn.run(CREATE_DISCOVERY_LOG_SQL);
 }
 
-export async function markFilingsScraped(
+/**
+ * Mark filings as having had their attachments discovered.
+ * Records in the attachment_discovery table so the pipeline knows
+ * which filings have already been checked.
+ */
+export async function markFilingsDiscovered(
   conn: DuckDBConnection,
   filingKeys: number[],
 ): Promise<void> {
@@ -307,12 +317,13 @@ export async function markFilingsScraped(
     return;
   }
 
-  const placeholders: string = filingKeys
-    .map((_, i) => `$${String(i + 1)}`)
-    .join(', ');
-  await conn.run(
-    `UPDATE filing SET last_scraped_at = current_timestamp
-     WHERE filing_key IN (${placeholders})`,
-    filingKeys as DuckDBValue[],
-  );
+  for (const fk of filingKeys) {
+    await conn.run(`DELETE FROM attachment_discovery WHERE filing_key = $1`, [
+      fk,
+    ] as DuckDBValue[]);
+    await conn.run(
+      `INSERT INTO attachment_discovery (filing_key) VALUES ($1)`,
+      [fk] as DuckDBValue[],
+    );
+  }
 }

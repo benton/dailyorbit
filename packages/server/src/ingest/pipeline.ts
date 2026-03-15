@@ -5,6 +5,7 @@ import {
   DuckDBConnection as DuckDBConn,
   DuckDBInstance,
 } from '@duckdb/node-api';
+import { normalizeFileNumber } from '../lib/file-number.ts';
 import {
   trackConnection,
   trackInstance,
@@ -254,6 +255,22 @@ export async function loadTable(
   const datPath: string = resolve(datDir, tableDef.datFile);
   const buf: Buffer = readFileSync(datPath);
   let rows: Record<string, unknown>[] = parseRecords(buf, tableDef);
+
+  // Normalize file_number to canonical hyphenated format on ingest boundary
+  const hasFileNumber: boolean = tableDef.columns.some(
+    (c) => c.name === 'file_number',
+  );
+  if (hasFileNumber) {
+    for (const row of rows) {
+      const raw: unknown = row['file_number'];
+      if (typeof raw === 'string' && raw !== '') {
+        const result = normalizeFileNumber(raw);
+        if (result.ok) {
+          row['file_number'] = result.fileNumber;
+        }
+      }
+    }
+  }
 
   // Deduplicate rows by primary key — FCC source data contains exact duplicate
   // rows (e.g. space_station: 144k rows but only 837 unique PKs).

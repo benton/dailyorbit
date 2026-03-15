@@ -12,12 +12,12 @@ import { processQueue } from './queue.ts';
 import {
   countDuplicateKeys,
   createAttachmentTable,
-  ensureLastScrapedColumn,
+  createDiscoveryLogTable,
   getFilingsForScope,
   getPendingDownloads,
   markDownloaded,
   markFailed,
-  markFilingsScraped,
+  markFilingsDiscovered,
   upsertAttachments,
 } from './repository.ts';
 import { attachmentStoragePath, downloadFile } from './storage.ts';
@@ -56,7 +56,7 @@ export async function runAttachmentPipeline(
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   trackConnection(conn);
   await createAttachmentTable(conn);
-  await ensureLastScrapedColumn(conn);
+  await createDiscoveryLogTable(conn);
 
   // Stage 2: Query filings matching scope
   const filings: FilingRow[] = await getFilingsForScope(conn, options.scope);
@@ -74,7 +74,7 @@ export async function runAttachmentPipeline(
     ? []
     : needsDiscovery
       ? filings
-      : filings.filter((f) => f.lastScrapedAt == null);
+      : filings.filter((f) => f.discoveredAt == null);
 
   let totalDiscovered: number = 0;
   const filingsProcessed: number = filings.length;
@@ -134,9 +134,9 @@ export async function runAttachmentPipeline(
       }
     }
 
-    // Mark successfully scraped filings
+    // Mark filings as having had discovery attempted
     if (succeededFilingKeys.length > 0) {
-      await markFilingsScraped(conn, succeededFilingKeys);
+      await markFilingsDiscovered(conn, succeededFilingKeys);
     }
   } else {
     log('All filings already scraped — skipping discovery');
