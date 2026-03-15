@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
+import { getSubsystem } from '../lib/subsystems.ts';
 
 type SubsystemCount = { count: number; subsystem_code: string };
 type AttachmentStats = {
@@ -64,6 +65,10 @@ export default function Dashboard() {
   }
 
   const { attachment_stats: attachments }: DatasetStats = stats;
+  const maxSubsystemCount: number = Math.max(
+    ...stats.filings_by_subsystem.map((s: SubsystemCount) => s.count),
+    1,
+  );
 
   return (
     <>
@@ -131,21 +136,34 @@ export default function Dashboard() {
         </div>
 
         {/* Filings by Subsystem */}
-        <div className={`${cardClass} sm:col-span-2`}>
+        <div className={`${cardClass} sm:col-span-2 lg:col-span-3`}>
           <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
             Filings by Subsystem
           </p>
-          <div className="mt-2 space-y-1">
-            {stats.filings_by_subsystem.map((sub: SubsystemCount) => (
-              <div className="flex justify-between text-sm" key={sub.subsystem_code}>
-                <span className="font-mono text-neutral-600 dark:text-neutral-300">
-                  {sub.subsystem_code}
-                </span>
-                <span className="font-mono text-neutral-900 dark:text-neutral-100">
-                  {sub.count.toLocaleString()}
-                </span>
-              </div>
-            ))}
+          <div className="mt-3 space-y-1.5">
+            {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
+              const info = getSubsystem(sub.subsystem_code);
+              const pct: number = (sub.count / maxSubsystemCount) * 100;
+              return (
+                <div className="flex items-center gap-2" key={sub.subsystem_code}>
+                  <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    {sub.subsystem_code}
+                  </span>
+                  <span className="w-36 shrink-0 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                    {info.label}
+                  </span>
+                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                    <div
+                      className={`h-full rounded ${info.bg} transition-all`}
+                      style={{ width: `${String(Math.max(pct, 0.5))}%` }}
+                    />
+                  </div>
+                  <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                    {sub.count.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

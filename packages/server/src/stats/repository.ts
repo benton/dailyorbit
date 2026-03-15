@@ -4,7 +4,7 @@ import type {
   ApplicantNode,
   AttachmentStats,
   DatasetStats,
-  MonthlyFilingVolume,
+  YearlyFilingVolume,
   SubsystemCount,
 } from './types.ts';
 
@@ -134,12 +134,12 @@ export async function getApplicantFilings(
   }));
 }
 
-export async function getMonthlyFilingVolume(
+export async function getYearlyFilingVolume(
   conn: DuckDBConnection,
-): Promise<MonthlyFilingVolume[]> {
+): Promise<YearlyFilingVolume[]> {
   const result = await conn.runAndReadAll(
     `SELECT
-       strftime(date_trunc('month', date_filed), '%Y-%m') AS month,
+       strftime(date_trunc('year', date_filed), '%Y') AS year,
        subsystem_code,
        count(*)::INTEGER AS count
      FROM filing
@@ -148,7 +148,7 @@ export async function getMonthlyFilingVolume(
      ORDER BY 1, 2`,
   );
   return result.getRowObjectsJS().map((r) => ({
-    month: String(r.month),
+    year: String(r.year),
     subsystem_code: String(r.subsystem_code),
     count: Number(r.count),
   }));

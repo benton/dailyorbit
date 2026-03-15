@@ -23,4 +23,17 @@ declare module '@cosmograph/react' {
   export const Cosmograph: MemoExoticComponent<
     ForwardRefExoticComponent<CosmographProps & RefAttributes<CosmographRef>>
   >;
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  export const vg: {
+    barY(data: Array<unknown>, options: any): any;
+    colorLegend(show: boolean): any;
+    height(h: number): any;
+    plot(...args: Array<any>): HTMLElement;
+    width(w: number): any;
+    xLabel(label: string): any;
+    xTickRotate(angle: number): any;
+    yGrid(show: boolean): any;
+    yLabel(label: string): any;
+  };
 }

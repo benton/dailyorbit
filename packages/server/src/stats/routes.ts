@@ -4,7 +4,7 @@ import { getDb, getDbPath } from '../lib/db.ts';
 import {
   getApplicantFilings,
   getDatasetStats,
-  getMonthlyFilingVolume,
+  getYearlyFilingVolume,
   getTopApplicants,
 } from './repository.ts';
 import { trackConnection } from '../lib/graceful-shutdown.ts';
@@ -43,7 +43,7 @@ statsRoutes.get('/filing-volume', async (c) => {
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   trackConnection(conn);
   try {
-    const volume = await getMonthlyFilingVolume(conn);
+    const volume = await getYearlyFilingVolume(conn);
     return c.json(volume);
   } finally {
     conn.closeSync();

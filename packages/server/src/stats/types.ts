@@ -33,8 +33,8 @@ export type ApplicantFiling = {
   status_code: string | null;
 };
 
-export type MonthlyFilingVolume = {
-  month: string; // 'YYYY-MM'
+export type YearlyFilingVolume = {
+  year: string; // 'YYYY'
   subsystem_code: string;
   count: number;
 };

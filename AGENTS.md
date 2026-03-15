@@ -28,6 +28,14 @@ For specific TypeScript and React best practices (only as a reference), see:
 
 ---
 
+## Data Visualizations
+
+This app generates many data graphs and visualizations based on data aggregated in its
+**When creating visualizations in this app, ALWAYS Use the Cosmograph / Mosaic library,
+and NOT custom calculations in JS / CSS hacks**
+
+---
+
 ### 0 — Purpose
 
 These rules ensure maintainability, safety, and developer velocity.

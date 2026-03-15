@@ -7,7 +7,7 @@ import {
   getDbSizeBytes,
   getFilingCount,
   getFilingsBySubsystem,
-  getMonthlyFilingVolume,
+  getYearlyFilingVolume,
   getTopApplicants,
 } from './repository.ts';
 
@@ -247,25 +247,25 @@ describe('stats repository', () => {
     });
   });
 
-  describe('getMonthlyFilingVolume', () => {
+  describe('getYearlyFilingVolume', () => {
     it('returns empty array for an empty table', async () => {
-      const result = await getMonthlyFilingVolume(conn);
+      const result = await getYearlyFilingVolume(conn);
       expect(result).toEqual([]);
     });
 
-    it('groups filings by month and subsystem, ordered by month then subsystem', async () => {
+    it('groups filings by year and subsystem, ordered by year then subsystem', async () => {
       await conn.run(`INSERT INTO filing VALUES
         (1, 'SAT-LOA-20240101-00001', 'SAT', 'LOA', '2024-01-15', NULL, NULL),
-        (2, 'SAT-MOD-20240120-00002', 'SAT', 'MOD', '2024-01-20', NULL, NULL),
+        (2, 'SAT-MOD-20240120-00002', 'SAT', 'MOD', '2024-06-20', NULL, NULL),
         (3, 'SES-STA-20240115-00003', 'SES', 'STA', '2024-01-15', NULL, NULL),
-        (4, 'SAT-STA-20240215-00004', 'SAT', 'STA', '2024-02-15', NULL, NULL),
-        (5, 'SES-REG-20240315-00005', 'SES', 'REG', '2024-03-15', NULL, NULL)`);
-      const result = await getMonthlyFilingVolume(conn);
+        (4, 'SAT-STA-20250215-00004', 'SAT', 'STA', '2025-02-15', NULL, NULL),
+        (5, 'SES-REG-20250315-00005', 'SES', 'REG', '2025-03-15', NULL, NULL)`);
+      const result = await getYearlyFilingVolume(conn);
       expect(result).toEqual([
-        { month: '2024-01', subsystem_code: 'SAT', count: 2 },
-        { month: '2024-01', subsystem_code: 'SES', count: 1 },
-        { month: '2024-02', subsystem_code: 'SAT', count: 1 },
-        { month: '2024-03', subsystem_code: 'SES', count: 1 },
+        { year: '2024', subsystem_code: 'SAT', count: 2 },
+        { year: '2024', subsystem_code: 'SES', count: 1 },
+        { year: '2025', subsystem_code: 'SAT', count: 1 },
+        { year: '2025', subsystem_code: 'SES', count: 1 },
       ]);
     });
 
@@ -273,9 +273,9 @@ describe('stats repository', () => {
       await conn.run(`INSERT INTO filing VALUES
         (1, 'SAT-LOA-20240101-00001', 'SAT', 'LOA', '2024-01-01', NULL, NULL),
         (2, 'SAT-MOD-20240201-00002', 'SAT', 'MOD', NULL, NULL, NULL)`);
-      const result = await getMonthlyFilingVolume(conn);
+      const result = await getYearlyFilingVolume(conn);
       expect(result).toEqual([
-        { month: '2024-01', subsystem_code: 'SAT', count: 1 },
+        { year: '2024', subsystem_code: 'SAT', count: 1 },
       ]);
     });
   });
