@@ -57,3 +57,41 @@ export function getSubsystemLabel(code: string): string {
 export function getSubsystemBg(code: string): string {
   return (SUBSYSTEM_MAP[code] ?? FALLBACK).bg;
 }
+
+/** Subsystem options formatted for multi-select components. */
+export const SUBSYSTEM_OPTIONS: ReadonlyArray<{ code: string; label: string }> =
+  SUBSYSTEM_CODES.map((code: string) => ({ code, label: getSubsystemLabel(code) }));
+
+/** Application type codes from IBFS file number format (section 1.1.2 of data model). */
+export const APP_TYPE_CODES: ReadonlyArray<{ code: string; label: string }> = [
+  { code: '214', label: 'Section 214 Authority' },
+  { code: 'AMD', label: 'Amendment' },
+  { code: 'A/O', label: 'Authority to Operate' },
+  { code: 'ASG', label: 'Assignment of License' },
+  { code: 'C/P', label: 'Construction Permit' },
+  { code: 'DRZ', label: 'Declaratory Ruling Zoning' },
+  { code: 'EXT', label: 'Extension of Time' },
+  { code: 'ISP', label: 'Intl Special Project' },
+  { code: 'ITC', label: 'Intl Telecommunications' },
+  { code: 'L/A', label: 'Launch Authority' },
+  { code: 'LFS', label: 'Non-US Satellite Access' },
+  { code: 'LIC', label: 'License to Operate' },
+  { code: 'LOA', label: 'Launch and Operate' },
+  { code: 'LOI', label: 'Letter of Intent' },
+  { code: 'LPN', label: 'Landing Points Notification' },
+  { code: 'MSC', label: 'Miscellaneous' },
+  { code: 'MOD', label: 'Modification' },
+  { code: 'NDS', label: 'Non-Dominant Status' },
+  { code: 'NEW', label: 'New Application' },
+  { code: 'NOT', label: 'Notification' },
+  { code: 'PDR', label: 'Petition for Declaratory Ruling' },
+  { code: 'PPL', label: 'Petition for Permitted List' },
+  { code: 'REG', label: 'Registration' },
+  { code: 'RPL', label: 'Replacement Satellite' },
+  { code: 'RWL', label: 'Renewal' },
+  { code: 'STA', label: 'Special Temporary Authority' },
+  { code: 'TOA', label: 'Temp Operating Authority' },
+  { code: 'T/C', label: 'Transfer of Control' },
+  { code: 'WAV', label: 'Waiver Request' },
+  { code: 'WVZ', label: 'Waiver of Zoning' },
+];
