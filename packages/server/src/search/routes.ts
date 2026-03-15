@@ -71,6 +71,7 @@ searchRoutes.get('/satellites', async (c) => {
   if (q.itu_name != null) filters.itu_name = q.itu_name;
   if (q.orbit_location != null) filters.orbit_location = q.orbit_location;
   if (q.active != null) filters.active = q.active === 'true';
+  if (q.company != null) filters.company = q.company;
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();
@@ -91,6 +92,7 @@ searchRoutes.get('/earth-stations', async (c) => {
   if (q.applicant != null) filters.applicant = q.applicant;
   if (q.state != null) filters.state = q.state;
   if (q.city != null) filters.city = q.city;
+  if (q.company != null) filters.company = q.company;
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();

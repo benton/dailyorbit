@@ -29,6 +29,7 @@ export type SatelliteSearchResult = {
   itu_name: string | null;
   orbit_location: string | null;
   inactive_date: string | null;
+  company_name: string | null;
 };
 
 /** Filters for satellite search */
@@ -37,6 +38,7 @@ export type SatelliteSearchFilters = {
   itu_name?: string;
   orbit_location?: string;
   active?: boolean;
+  company?: string;
 };
 
 /** Result row from earth station search */
@@ -45,6 +47,7 @@ export type EarthStationSearchResult = {
   address_attention: string | null;
   filing_count: number;
   most_recent_filing: string | null;
+  company_name: string | null;
 };
 
 /** Filters for earth station search */
@@ -53,6 +56,7 @@ export type EarthStationSearchFilters = {
   applicant?: string;
   state?: string;
   city?: string;
+  company?: string;
 };
 
 /** Whitelist of allowed entity/field combos for autocomplete */

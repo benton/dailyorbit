@@ -28,6 +28,7 @@ type SatelliteSearchResult = {
   itu_name: string | null;
   orbit_location: string | null;
   inactive_date: string | null;
+  company_name: string | null;
 };
 
 type EarthStationSearchResult = {
@@ -35,6 +36,7 @@ type EarthStationSearchResult = {
   address_attention: string | null;
   filing_count: number;
   most_recent_filing: string | null;
+  company_name: string | null;
 };
 
 type SearchTab = 'filings' | 'satellites' | 'earth-stations';
@@ -445,6 +447,12 @@ const satelliteColumns: Array<ColumnDef<SatelliteSearchResult, unknown>> = [
     size: 200,
   },
   {
+    accessorKey: 'company_name',
+    header: 'Company',
+    size: 180,
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
+  },
+  {
     accessorKey: 'orbit_location',
     header: 'Orbital Position',
     size: 150,
@@ -469,7 +477,13 @@ const earthStationColumns: Array<ColumnDef<EarthStationSearchResult, unknown>> =
   {
     accessorKey: 'address_attention',
     header: 'Applicant',
-    size: 250,
+    size: 200,
+  },
+  {
+    accessorKey: 'company_name',
+    header: 'Company',
+    size: 180,
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
   },
   {
     accessorKey: 'filing_count',
@@ -520,10 +534,11 @@ type SatelliteFilters = {
   itu_name: string;
   orbit_location: string;
   active: 'any' | 'true' | 'false';
+  company: string;
 };
 
 function emptySatelliteFilters(): SatelliteFilters {
-  return { us_name: '', itu_name: '', orbit_location: '', active: 'any' };
+  return { us_name: '', itu_name: '', orbit_location: '', active: 'any', company: '' };
 }
 
 type EarthStationFilters = {
@@ -531,10 +546,11 @@ type EarthStationFilters = {
   applicant: string;
   state: string[];
   city: string;
+  company: string;
 };
 
 function emptyEarthStationFilters(): EarthStationFilters {
-  return { callsign: '', applicant: '', state: [], city: '' };
+  return { callsign: '', applicant: '', state: [], city: '', company: '' };
 }
 
 // ── Filing filter form ───────────────────────────────────────────────
@@ -662,6 +678,13 @@ function SatelliteFilterForm({
         value={filters.orbit_location}
         onChange={(v: string) => update('orbit_location', v)}
       />
+      <AutocompleteInput
+        label="Company"
+        entity="companies"
+        field="name"
+        value={filters.company}
+        onChange={(v: string) => update('company', v)}
+      />
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Status</Label>
         <div className="flex h-9 items-center gap-4">
@@ -730,6 +753,13 @@ function EarthStationFilterForm({
         value={filters.city}
         onChange={(v: string) => update('city', v)}
       />
+      <AutocompleteInput
+        label="Company"
+        entity="companies"
+        field="name"
+        value={filters.company}
+        onChange={(v: string) => update('company', v)}
+      />
     </div>
   );
 }
@@ -772,6 +802,8 @@ function buildSatelliteQueryString(
   if (filters.orbit_location.trim() !== '')
     parts.push(`orbit_location=${encodeURIComponent(filters.orbit_location.trim())}`);
   if (filters.active !== 'any') parts.push(`active=${filters.active}`);
+  if (filters.company.trim() !== '')
+    parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
   return parts.join('&');
 }
 
@@ -788,6 +820,8 @@ function buildEarthStationQueryString(
     parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
   if (filters.state.length > 0) parts.push(`state=${filters.state.join(',')}`);
   if (filters.city.trim() !== '') parts.push(`city=${encodeURIComponent(filters.city.trim())}`);
+  if (filters.company.trim() !== '')
+    parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
   return parts.join('&');
 }
 

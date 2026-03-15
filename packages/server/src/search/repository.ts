@@ -166,6 +166,7 @@ const SATELLITE_SORTABLE_COLUMNS: ReadonlySet<string> = new Set([
   'itu_name',
   'orbit_location',
   'inactive_date',
+  'company_name',
 ]);
 
 /**
@@ -181,35 +182,54 @@ export async function searchSatellites(
   let paramIndex: number = 1;
 
   if (filters.us_name != null && filters.us_name.trim() !== '') {
-    conditions.push(`us_name ILIKE $${paramIndex}`);
+    conditions.push(`s.us_name ILIKE $${paramIndex}`);
     params.push(`%${filters.us_name.trim()}%`);
     paramIndex++;
   }
 
   if (filters.itu_name != null && filters.itu_name.trim() !== '') {
-    conditions.push(`itu_name ILIKE $${paramIndex}`);
+    conditions.push(`s.itu_name ILIKE $${paramIndex}`);
     params.push(`%${filters.itu_name.trim()}%`);
     paramIndex++;
   }
 
   if (filters.orbit_location != null && filters.orbit_location.trim() !== '') {
-    conditions.push(`CAST(orbit_location AS VARCHAR) ILIKE $${paramIndex}`);
+    conditions.push(`CAST(s.orbit_location AS VARCHAR) ILIKE $${paramIndex}`);
     params.push(`%${filters.orbit_location.trim()}%`);
     paramIndex++;
   }
 
   if (filters.active != null) {
     if (filters.active) {
-      conditions.push(`inactive_date IS NULL`);
+      conditions.push(`s.inactive_date IS NULL`);
     } else {
-      conditions.push(`inactive_date IS NOT NULL`);
+      conditions.push(`s.inactive_date IS NOT NULL`);
     }
+  }
+
+  if (filters.company != null && filters.company.trim() !== '') {
+    conditions.push(
+      `s.us_name IN (
+        SELECT f2.callsign FROM filing f2
+        JOIN company co ON co.id = f2.company_id
+        WHERE co.name ILIKE $${paramIndex}
+           OR co.id IN (SELECT c2.id FROM company c2 WHERE c2.parent_company_id IN (SELECT c3.id FROM company c3 WHERE c3.name ILIKE $${paramIndex}))
+      )`,
+    );
+    params.push(`%${filters.company.trim()}%`);
+    paramIndex++;
   }
 
   const whereClause: string =
     conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
 
-  const baseSql: string = `SELECT space_station_key, us_name, itu_name, orbit_location, inactive_date FROM space_station${whereClause}`;
+  const baseSql: string = `SELECT s.space_station_key, s.us_name, s.itu_name, s.orbit_location, s.inactive_date,
+    (SELECT co.name FROM filing f2
+     JOIN company co ON co.id = f2.company_id
+     WHERE f2.callsign = s.us_name AND f2.company_id IS NOT NULL
+     GROUP BY co.name ORDER BY count(*) DESC LIMIT 1
+    ) AS company_name
+    FROM space_station s${whereClause}`;
 
   const {
     sql,
@@ -247,6 +267,7 @@ function rowToSatelliteResult(
     orbit_location:
       row.orbit_location != null ? String(row.orbit_location) : null,
     inactive_date: row.inactive_date != null ? String(row.inactive_date) : null,
+    company_name: row.company_name != null ? String(row.company_name) : null,
   };
 }
 
@@ -259,6 +280,7 @@ const EARTH_STATION_SORTABLE_COLUMNS: ReadonlySet<string> = new Set([
   'address_attention',
   'filing_count',
   'most_recent_filing',
+  'company_name',
 ]);
 
 /**
@@ -307,9 +329,29 @@ export async function searchEarthStations(
     paramIndex++;
   }
 
+  if (filters.company != null && filters.company.trim() !== '') {
+    conditions.push(
+      `f.company_id IN (
+        SELECT c.id FROM company c
+        WHERE c.name ILIKE $${paramIndex}
+        UNION
+        SELECT c.id FROM company c
+        WHERE c.parent_company_id IN (SELECT c2.id FROM company c2 WHERE c2.name ILIKE $${paramIndex})
+      )`,
+    );
+    params.push(`%${filters.company.trim()}%`);
+    paramIndex++;
+  }
+
   const whereClause: string = ` WHERE ${conditions.join(' AND ')}`;
 
-  const baseSql: string = `SELECT f.callsign, MAX(f.address_attention) AS address_attention, COUNT(*) AS filing_count, MAX(f.date_filed) AS most_recent_filing FROM filing f${joinClause}${whereClause} GROUP BY f.callsign`;
+  const baseSql: string = `SELECT f.callsign, MAX(f.address_attention) AS address_attention, COUNT(*) AS filing_count, MAX(f.date_filed) AS most_recent_filing,
+    (SELECT co.name FROM filing f2
+     JOIN company co ON co.id = f2.company_id
+     WHERE f2.callsign = f.callsign AND f2.subsystem_code = 'SES' AND f2.company_id IS NOT NULL
+     GROUP BY co.name ORDER BY count(*) DESC LIMIT 1
+    ) AS company_name
+    FROM filing f${joinClause}${whereClause} GROUP BY f.callsign`;
 
   const {
     sql,
@@ -347,6 +389,7 @@ function rowToEarthStationResult(
     filing_count: Number(row.filing_count),
     most_recent_filing:
       row.most_recent_filing != null ? String(row.most_recent_filing) : null,
+    company_name: row.company_name != null ? String(row.company_name) : null,
   };
 }
 

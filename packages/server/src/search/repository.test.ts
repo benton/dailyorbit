@@ -11,6 +11,14 @@ import {
 // Schema setup
 // ---------------------------------------------------------------------------
 
+const CREATE_COMPANY_TABLE: string = `
+  CREATE TABLE company (
+    id VARCHAR NOT NULL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    parent_company_id VARCHAR
+  )
+`;
+
 const CREATE_FILING_TABLE: string = `
   CREATE TABLE filing (
     filing_key INTEGER NOT NULL PRIMARY KEY,
@@ -22,7 +30,8 @@ const CREATE_FILING_TABLE: string = `
     date_filed TIMESTAMP,
     address_attention VARCHAR,
     applicant_city VARCHAR,
-    applicant_state VARCHAR
+    applicant_state VARCHAR,
+    company_id VARCHAR
   )
 `;
 
@@ -50,24 +59,34 @@ const CREATE_EARTH_STATION_STA_TABLE: string = `
 // Seed data
 // ---------------------------------------------------------------------------
 
+async function seedCompanies(conn: DuckDBConnection): Promise<void> {
+  await conn.run(`
+    INSERT INTO company VALUES
+      ('c1', 'SpaceX', NULL),
+      ('c2', 'OneWeb', NULL),
+      ('c3', 'Viasat', NULL),
+      ('c4', 'Hughes Network Systems', NULL)
+  `);
+}
+
 async function seedFilings(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
     INSERT INTO filing VALUES
-      (1, 'SAT-LOA-20250101-00001', 'S1001', 'SAT', 'LOA', 'P', '2025-01-01', 'SpaceX Inc', 'Hawthorne', 'CA'),
-      (2, 'SAT-MOD-20250215-00002', 'S1002', 'SAT', 'MOD', 'G', '2025-02-15', 'OneWeb Ltd', 'London', 'VA'),
-      (3, 'SES-LIC-20250301-00003', 'E2001', 'SES', 'LIC', 'P', '2025-03-01', 'Viasat Inc', 'Carlsbad', 'CA'),
-      (4, 'SES-STA-20250401-00004', 'E2001', 'SES', 'STA', 'G', '2025-04-01', 'Viasat Inc', 'Carlsbad', 'CA'),
-      (5, 'SES-LIC-20250501-00005', 'E3001', 'SES', 'LIC', 'P', '2025-05-01', 'Hughes Network', 'Germantown', 'MD'),
-      (6, 'ITC-214-20250601-00006', NULL, 'ITC', '214', 'P', '2025-06-01', 'AT&T', 'Dallas', 'TX')
+      (1, 'SAT-LOA-20250101-00001', 'S1001', 'SAT', 'LOA', 'P', '2025-01-01', 'SpaceX Inc', 'Hawthorne', 'CA', 'c1'),
+      (2, 'SAT-MOD-20250215-00002', 'S1002', 'SAT', 'MOD', 'G', '2025-02-15', 'OneWeb Ltd', 'London', 'VA', 'c2'),
+      (3, 'SES-LIC-20250301-00003', 'E2001', 'SES', 'LIC', 'P', '2025-03-01', 'Viasat Inc', 'Carlsbad', 'CA', 'c3'),
+      (4, 'SES-STA-20250401-00004', 'E2001', 'SES', 'STA', 'G', '2025-04-01', 'Viasat Inc', 'Carlsbad', 'CA', 'c3'),
+      (5, 'SES-LIC-20250501-00005', 'E3001', 'SES', 'LIC', 'P', '2025-05-01', 'Hughes Network', 'Germantown', 'MD', 'c4'),
+      (6, 'ITC-214-20250601-00006', NULL, 'ITC', '214', 'P', '2025-06-01', 'AT&T', 'Dallas', 'TX', NULL)
   `);
 }
 
 async function seedSpaceStations(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
     INSERT INTO space_station VALUES
-      (100, 'SPACEX-1', 'SX1-ITU', '97.0W', 'SpaceX satellite', NULL),
-      (101, 'SPACEX-2', 'SX2-ITU', '99.0W', 'SpaceX satellite 2', NULL),
-      (102, 'ONEWEB-1', 'OW1-ITU', '0.0E', 'OneWeb satellite', '2024-06-01'),
+      (100, 'S1001', 'SX1-ITU', '97.0W', 'SpaceX satellite', NULL),
+      (101, 'S1002', 'SX2-ITU', '99.0W', 'OneWeb satellite', NULL),
+      (102, 'ONEWEB-1', 'OW1-ITU', '0.0E', 'OneWeb satellite old', '2024-06-01'),
       (103, 'VIASAT-KA', NULL, '70.0W', 'Viasat Ka-band', NULL)
   `);
 }
@@ -91,9 +110,11 @@ let conn: DuckDBConnection;
 beforeEach(async () => {
   db = await DuckDBInstance.create(':memory:');
   conn = await DuckDBConnection.create(db);
+  await conn.run(CREATE_COMPANY_TABLE);
   await conn.run(CREATE_FILING_TABLE);
   await conn.run(CREATE_SPACE_STATION_TABLE);
   await conn.run(CREATE_EARTH_STATION_STA_TABLE);
+  await seedCompanies(conn);
   await seedFilings(conn);
   await seedSpaceStations(conn);
   await seedEarthStationSta(conn);
@@ -250,11 +271,11 @@ describe('searchSatellites', () => {
   it('filters by us_name ILIKE', async () => {
     const result = await searchSatellites(
       conn,
-      { us_name: 'SPACEX' },
+      { us_name: 'S100' },
       { page: 1, pageSize: 25 },
     );
     expect(result.totalRows).toEqual(2);
-    expect(result.data.every((r) => r.us_name.includes('SPACEX'))).toEqual(
+    expect(result.data.every((r) => r.us_name.startsWith('S100'))).toEqual(
       true,
     );
   });
@@ -276,7 +297,7 @@ describe('searchSatellites', () => {
       { page: 1, pageSize: 25 },
     );
     expect(result.totalRows).toEqual(1);
-    expect(result.data[0]!.us_name).toEqual('SPACEX-1');
+    expect(result.data[0]!.us_name).toEqual('S1001');
   });
 
   it('filters active satellites (inactive_date IS NULL)', async () => {
@@ -399,9 +420,9 @@ describe('autocomplete', () => {
   });
 
   it('returns distinct satellite us_name values', async () => {
-    const result = await autocomplete(conn, 'satellites', 'us_name', 'SPACE');
-    expect(result).toContain('SPACEX-1');
-    expect(result).toContain('SPACEX-2');
+    const result = await autocomplete(conn, 'satellites', 'us_name', 'S100');
+    expect(result).toContain('S1001');
+    expect(result).toContain('S1002');
     expect(result.length).toEqual(2);
   });
 
