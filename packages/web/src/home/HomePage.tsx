@@ -106,7 +106,7 @@ export default function HomePage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          FCC IBFS Explorer
+          The Daily Orbit
         </h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Satellite communications filing data at a glance.
