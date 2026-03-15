@@ -16,7 +16,7 @@ export const serveHtmlCommand = defineCommand({
     },
   },
   run({ args }) {
-    const webDir: string = resolve(import.meta.dirname, '../../../../web');
+    const webDir: string = resolve(process.cwd(), 'packages/web');
     const vite: string = resolve(webDir, 'node_modules/.bin/vite');
     const port: string = args.port;
 

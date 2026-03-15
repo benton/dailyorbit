@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { defineCommand } from 'citty';
 import { resolveFromRoot } from '../shared/context.ts';
 
@@ -41,8 +40,9 @@ export const serveApiCommand = defineCommand({
   async run({ args }) {
     if (args.watch) {
       const { spawn } = await import('node:child_process');
-      const thisDir: string = dirname(fileURLToPath(import.meta.url));
-      const binPath: string = resolve(thisDir, '../../bin.ts');
+      // Use the currently-running script so the path is correct from both
+      // source (src/bin.ts) and bundled (dist/bin.js) entry points.
+      const binPath: string = resolve(process.argv[1]!);
       const childArgs: string[] = [
         '--no-warnings',
         '--watch',
