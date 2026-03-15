@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { vg } from '@cosmograph/react';
 import { apiFetch } from '../lib/api.ts';
-import { SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
+import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
 
 type YearlyFilingVolume = {
   count: number;
@@ -13,6 +13,7 @@ export default function FilingVolume(): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCodes, setActiveCodes] = useState<Array<string>>([]);
 
   useEffect(() => {
     let cancelled: boolean = false;
@@ -38,7 +39,6 @@ export default function FilingVolume(): React.ReactElement {
             },
           ),
           vg.colorDomain(SUBSYSTEM_CODES),
-          vg.colorLegend(true),
           vg.colorRange(SUBSYSTEM_COLORS),
           vg.height(400),
           vg.width(800),
@@ -50,10 +50,10 @@ export default function FilingVolume(): React.ReactElement {
         );
 
         if (!cancelled && containerRef.current != null) {
-          // Stack legend below the chart instead of beside it
-          chart.style.display = 'flex';
-          chart.style.flexDirection = 'column';
           containerRef.current.replaceChildren(chart);
+          const codes: Array<string> = [...new Set(data.map((d: YearlyFilingVolume) => d.subsystem_code))];
+          codes.sort();
+          setActiveCodes(codes);
           setLoading(false);
         }
       } catch (error) {
@@ -91,6 +91,24 @@ export default function FilingVolume(): React.ReactElement {
           <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
         )}
         <div ref={containerRef} />
+        {activeCodes.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+            {activeCodes.map((code: string) => {
+              const info = getSubsystem(code);
+              return (
+                <div className="flex items-center gap-1.5" key={code}>
+                  <span
+                    className="inline-block h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: info.hex }}
+                  />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                    <span className="font-semibold">{code}</span> {info.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );
