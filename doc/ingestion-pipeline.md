@@ -4,7 +4,7 @@
 
 ## Overview
 
-Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
+Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF attachments, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
 
 All pipeline stages are **idempotent** and designed to run nightly.
 
@@ -30,6 +30,7 @@ flowchart TD
     subgraph attachments["Stage 2 — Attachment Pipeline"]
         ATT_DISCOVER["2a. Attachment Discovery\n./daily-orbit attachments discover\nScrape filing pages → extract URLs"]
         ATT_DOWNLOAD["2b. Attachment Download\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
+        ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF → markdown via pdf-oxide-wasm"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -60,6 +61,8 @@ flowchart TD
     ATT_DISCOVER --> DB
     ATT_DOWNLOAD --> DB
     ATT_DOWNLOAD --> DISK
+    DISK --> ATT_EXTRACT
+    ATT_EXTRACT --> DB
 
     SEED --> DB
     DB --> ATTRIBUTE
@@ -172,6 +175,27 @@ flowchart TD
 
 **Combined command:** `make attachments` runs discover + download in one pass.
 
+### 2c. Text Extraction
+
+| | |
+|---|---|
+| **Command** | `make attachments-extract` |
+| **CLI** | `./daily-orbit attachments extract [OPTIONS]` |
+| **Source** | Downloaded PDF files in `data/attachments/` |
+| **Writes to** | `attachment` table: `full_text`, `text_length`, `extract_status` |
+
+**Flow:**
+
+1. Query attachments where `download_status = 'downloaded'`, `content_type = 'application/pdf'`, and `extract_status = 'pending'`
+2. For each PDF, read bytes from disk and extract per-page markdown via `pdf-oxide-wasm`
+3. Classify result:
+   - **extracted** — ≥ 50 non-whitespace chars → store `full_text` + `text_length`
+   - **skipped_no_text** — < 50 chars (scanned/image-only PDF) → mark skipped
+   - **failed** — parse error or file not found → mark failed
+4. Progress bar shown on stderr
+
+**Key options:** `--limit`, `--retry-failed`, `--verbose`
+
 ---
 
 ## Stage 3 — Company Attribution
@@ -271,6 +295,9 @@ make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
 # 2. Discover and download attachments for new filings
 make attachments
 
+# 2c. Extract text from newly downloaded PDFs
+make attachments-extract
+
 # 3. Ensure company seed data is current (no-ops if unchanged)
 make companies-seed
 
@@ -312,6 +339,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | ICFS Ingest | Per-filing error tracking, continues others | Re-run with `--file-numbers` for specific failures |
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
 | Attachment Download | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
+| Text Extraction | Marks individual attachments as `'failed'` or `'skipped_no_text'` | `--retry-failed` retries failed; skipped PDFs stay skipped |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
 | External Enrichment | API failures are non-fatal, per-company | Re-run; only retries companies missing data |
