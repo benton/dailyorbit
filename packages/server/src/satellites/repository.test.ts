@@ -31,8 +31,7 @@ const CREATE_FILING_TABLE: string = `
     date_grant TIMESTAMP,
     address_attention VARCHAR,
     callsign VARCHAR,
-    description VARCHAR,
-    space_station_key INTEGER
+    description VARCHAR
   )
 `;
 
@@ -45,15 +44,15 @@ async function seedSpaceStations(conn: DuckDBConnection): Promise<void> {
   `);
 }
 
-/** Insert sample filing rows linked to space stations */
+/** Insert sample filing rows linked to space stations via callsign → us_name */
 async function seedFilings(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
     INSERT INTO filing VALUES
-      (1, 'SAT-LOA-20200101-00001', 'SAT', 'LOA', 'Grant', '2020-01-01', '2020-02-01', 'Acme Corp', 'S100', 'Launch auth', 100),
-      (2, 'SAT-MOD-20200601-00002', 'SAT', 'MOD', 'Pend', '2020-06-01', NULL, 'Acme Corp', 'S100', 'Modification', 100),
-      (3, 'SAT-STA-20210301-00003', 'SAT', 'STA', 'Grant', '2021-03-01', '2021-04-01', 'Beta Inc', 'S100', 'STA request', 100),
-      (4, 'SES-NEW-20200501-00004', 'SES', 'NEW', 'Grant', '2020-05-01', '2020-06-01', 'Gamma LLC', 'E200', 'Earth station', 200),
-      (5, 'SAT-LOA-20220101-00005', 'SAT', 'LOA', 'Grant', '2022-01-01', '2022-02-01', 'Delta Co', 'S300', 'Unlinked filing', NULL)
+      (1, 'SAT-LOA-20200101-00001', 'SAT', 'LOA', 'Grant', '2020-01-01', '2020-02-01', 'Acme Corp', 'SATMEX-5', 'Launch auth'),
+      (2, 'SAT-MOD-20200601-00002', 'SAT', 'MOD', 'Pend', '2020-06-01', NULL, 'Acme Corp', 'SATMEX-5', 'Modification'),
+      (3, 'SAT-STA-20210301-00003', 'SAT', 'STA', 'Grant', '2021-03-01', '2021-04-01', 'Beta Inc', 'SATMEX-5', 'STA request'),
+      (4, 'SES-NEW-20200501-00004', 'SES', 'NEW', 'Grant', '2020-05-01', '2020-06-01', 'Gamma LLC', 'GALAXY-3C', 'Earth station'),
+      (5, 'SAT-LOA-20220101-00005', 'SAT', 'LOA', 'Grant', '2022-01-01', '2022-02-01', 'Delta Co', 'UNLINKED', 'Unlinked filing')
   `);
 }
 
@@ -116,7 +115,7 @@ describe('getSatelliteFilings', () => {
   });
 
   it('returns only filings linked to the given satellite', async () => {
-    const result = await getSatelliteFilings(conn, 100, {});
+    const result = await getSatelliteFilings(conn, 'SATMEX-5', {});
     expect(result.totalRows).toEqual(3);
     const fileNumbers: string[] = result.data.map((f) => f.file_number);
     expect(fileNumbers).toContain('SAT-LOA-20200101-00001');
@@ -131,7 +130,7 @@ describe('getSatelliteFilings', () => {
     await conn.run(
       `INSERT INTO space_station VALUES (300, 'EMPTY-SAT', NULL, NULL, NULL, NULL)`,
     );
-    const result = await getSatelliteFilings(conn, 300, {});
+    const result = await getSatelliteFilings(conn, 'EMPTY-SAT', {});
     expect(result.data).toEqual([]);
     expect(result.totalRows).toEqual(0);
     expect(result.totalPages).toEqual(1);
@@ -139,14 +138,14 @@ describe('getSatelliteFilings', () => {
 
   it('paginates results correctly', async () => {
     const request: PaginatedRequest = { page: 1, pageSize: 2, order: 'asc' };
-    const page1 = await getSatelliteFilings(conn, 100, request);
+    const page1 = await getSatelliteFilings(conn, 'SATMEX-5', request);
     expect(page1.data.length).toEqual(2);
     expect(page1.totalRows).toEqual(3);
     expect(page1.totalPages).toEqual(2);
     expect(page1.page).toEqual(1);
     expect(page1.pageSize).toEqual(2);
 
-    const page2 = await getSatelliteFilings(conn, 100, {
+    const page2 = await getSatelliteFilings(conn, 'SATMEX-5', {
       page: 2,
       pageSize: 2,
       order: 'asc',
@@ -157,7 +156,7 @@ describe('getSatelliteFilings', () => {
 
   it('sorts by the requested column in descending order', async () => {
     const request: PaginatedRequest = { sort: 'date_filed', order: 'desc' };
-    const result = await getSatelliteFilings(conn, 100, request);
+    const result = await getSatelliteFilings(conn, 'SATMEX-5', request);
     const fileNumbers: string[] = result.data.map((f) => f.file_number);
     // Dates: filing 3 = 2021-03-01, filing 2 = 2020-06-01, filing 1 = 2020-01-01
     expect(fileNumbers).toEqual([
@@ -170,12 +169,12 @@ describe('getSatelliteFilings', () => {
   it('falls back to default sort for invalid sort column', async () => {
     const request: PaginatedRequest = { sort: 'DROP TABLE; --', order: 'asc' };
     // Should not throw, just falls back to date_filed
-    const result = await getSatelliteFilings(conn, 100, request);
+    const result = await getSatelliteFilings(conn, 'SATMEX-5', request);
     expect(result.data.length).toEqual(3);
   });
 
   it('maps filing fields correctly', async () => {
-    const result = await getSatelliteFilings(conn, 200, {});
+    const result = await getSatelliteFilings(conn, 'GALAXY-3C', {});
     expect(result.data.length).toEqual(1);
     const filing = result.data[0]!;
     expect(filing.filing_key).toEqual(4);
@@ -184,7 +183,7 @@ describe('getSatelliteFilings', () => {
     expect(filing.app_type_code).toEqual('NEW');
     expect(filing.status_code).toEqual('Grant');
     expect(filing.address_attention).toEqual('Gamma LLC');
-    expect(filing.callsign).toEqual('E200');
+    expect(filing.callsign).toEqual('GALAXY-3C');
     expect(filing.description).toEqual('Earth station');
   });
 });
@@ -207,7 +206,7 @@ describe('getSatelliteStats', () => {
   });
 
   it('returns correct stats for a satellite with multiple filings', async () => {
-    const stats = await getSatelliteStats(conn, 100);
+    const stats = await getSatelliteStats(conn, 'SATMEX-5');
     expect(stats.totalFilings).toEqual(3);
     expect(stats.distinctApplicantCount).toEqual(2); // Acme Corp and Beta Inc
     // Most recent filing date should be 2021-03-01
@@ -216,7 +215,7 @@ describe('getSatelliteStats', () => {
   });
 
   it('returns correct stats for a satellite with one filing', async () => {
-    const stats = await getSatelliteStats(conn, 200);
+    const stats = await getSatelliteStats(conn, 'GALAXY-3C');
     expect(stats.totalFilings).toEqual(1);
     expect(stats.distinctApplicantCount).toEqual(1);
     expect(stats.mostRecentFilingDate).not.toBeNull();
@@ -226,7 +225,7 @@ describe('getSatelliteStats', () => {
     await conn.run(
       `INSERT INTO space_station VALUES (300, 'EMPTY-SAT', NULL, NULL, NULL, NULL)`,
     );
-    const stats = await getSatelliteStats(conn, 300);
+    const stats = await getSatelliteStats(conn, 'EMPTY-SAT');
     expect(stats.totalFilings).toEqual(0);
     expect(stats.mostRecentFilingDate).toBeNull();
     expect(stats.distinctApplicantCount).toEqual(0);

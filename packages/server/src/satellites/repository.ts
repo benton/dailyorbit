@@ -48,18 +48,18 @@ export async function getSatelliteById(
 }
 
 /**
- * Fetch paginated filings associated with a space station.
+ * Fetch paginated filings associated with a space station (via callsign → us_name).
  */
 export async function getSatelliteFilings(
   conn: DuckDBConnection,
-  spaceStationKey: number,
+  usName: string,
   request: PaginatedRequest,
 ): Promise<PaginatedResponse<SatelliteFiling>> {
   const baseSql: string = `SELECT filing_key, file_number, subsystem_code, app_type_code,
        status_code, date_filed, date_grant, address_attention, callsign, description
      FROM filing
-     WHERE space_station_key = $1`;
-  const baseParams: DuckDBValue[] = [spaceStationKey] as DuckDBValue[];
+     WHERE callsign = $1`;
+  const baseParams: DuckDBValue[] = [usName] as DuckDBValue[];
 
   const pq = buildPaginatedQuery(
     baseSql,
@@ -98,7 +98,7 @@ export async function getSatelliteFilings(
  */
 export async function getSatelliteStats(
   conn: DuckDBConnection,
-  spaceStationKey: number,
+  usName: string,
 ): Promise<SatelliteStats> {
   const result = await conn.runAndReadAll(
     `SELECT
@@ -106,8 +106,8 @@ export async function getSatelliteStats(
        MAX(date_filed) AS most_recent_filing_date,
        COUNT(DISTINCT address_attention) AS distinct_applicant_count
      FROM filing
-     WHERE space_station_key = $1`,
-    [spaceStationKey] as DuckDBValue[],
+     WHERE callsign = $1`,
+    [usName] as DuckDBValue[],
   );
 
   const row = result.getRowObjectsJS()[0]!;

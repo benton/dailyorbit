@@ -41,9 +41,10 @@ satelliteRoutes.get('/:id', async (c) => {
       order: (c.req.query('order') ?? 'desc') as SortOrder,
     };
 
+    const usName: string = satellite.us_name;
     const [filings, stats] = await Promise.all([
-      getSatelliteFilings(conn, id, paginationRequest),
-      getSatelliteStats(conn, id),
+      getSatelliteFilings(conn, usName, paginationRequest),
+      getSatelliteStats(conn, usName),
     ]);
 
     return c.json({ satellite, filings, stats });

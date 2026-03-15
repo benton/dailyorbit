@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { resolveFromRoot } from '../shared/context.ts';
 
@@ -30,8 +30,36 @@ export const serveApiCommand = defineCommand({
       description: 'Port to listen on',
       default: '9000',
     },
+    watch: {
+      type: 'boolean',
+      alias: 'w',
+      description: 'Restart server on file changes (uses node --watch)',
+      default: false,
+    },
   },
   async run({ args }) {
+    if (args.watch) {
+      const { spawn } = await import('node:child_process');
+      const binPath: string = resolve(process.cwd(), 'packages/server/src/bin.ts');
+      const childArgs: string[] = [
+        '--no-warnings',
+        '--watch',
+        binPath,
+        'serve',
+        'api',
+        args.database,
+        args.keyFile,
+        '--port',
+        String(args.port),
+      ];
+      const child = spawn(process.execPath, childArgs, {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      });
+      child.on('exit', (code: number | null) => process.exit(code ?? 0));
+      return;
+    }
+
     const dbPath: string = resolveFromRoot(args.database);
     const keyPath: string = resolveFromRoot(args.keyFile);
     const port: number = Number(args.port);
