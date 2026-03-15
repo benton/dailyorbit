@@ -493,6 +493,7 @@ type FilingFilters = {
   file_number: string;
   callsign: string;
   applicant: string;
+  company: string;
   subsystem_code: string[];
   app_type_code: string[];
   status_code: string[];
@@ -505,6 +506,7 @@ function emptyFilingFilters(): FilingFilters {
     file_number: '',
     callsign: '',
     applicant: '',
+    company: '',
     subsystem_code: [],
     app_type_code: [],
     status_code: [],
@@ -574,6 +576,13 @@ function FilingFilterForm({
         field="address_attention"
         value={filters.applicant}
         onChange={(v: string) => update('applicant', v)}
+      />
+      <AutocompleteInput
+        label="Company"
+        entity="companies"
+        field="name"
+        value={filters.company}
+        onChange={(v: string) => update('company', v)}
       />
       <MultiSelect
         label="Subsystem"
@@ -737,6 +746,8 @@ function buildFilingQueryString(filters: FilingFilters, params: DataTableFetchPa
     parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
   if (filters.applicant.trim() !== '')
     parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
+  if (filters.company.trim() !== '')
+    parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
   if (filters.subsystem_code.length > 0)
     parts.push(`subsystem_code=${filters.subsystem_code.join(',')}`);
   if (filters.app_type_code.length > 0)

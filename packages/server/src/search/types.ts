@@ -14,6 +14,7 @@ export type FilingSearchFilters = {
   file_number?: string;
   callsign?: string;
   applicant?: string;
+  company?: string;
   subsystem_code?: string[];
   app_type_code?: string[];
   status_code?: string[];
@@ -66,6 +67,7 @@ export const AUTOCOMPLETE_WHITELIST: Record<string, ReadonlySet<string>> = {
   ]),
   satellites: new Set(['us_name', 'itu_name', 'orbit_location']),
   'earth-stations': new Set(['callsign', 'address_attention', 'state', 'city']),
+  companies: new Set(['name']),
 };
 
 /**
@@ -103,6 +105,12 @@ export const AUTOCOMPLETE_ENTITY_CONFIG: Record<
       address_attention: 'address_attention',
       state: 'e.state_code',
       city: 'e.city',
+    },
+  },
+  companies: {
+    table: 'company',
+    columnMap: {
+      name: 'name',
     },
   },
 };

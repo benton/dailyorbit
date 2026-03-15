@@ -126,16 +126,19 @@ export async function enrichCompany(
  */
 export async function enrichAllCompanies(
   conn: DuckDBConnection,
+  onProgress?: (processed: number, total: number) => void,
 ): Promise<EnrichmentSummary> {
   const reader = await conn.runAndReadAll(
     `SELECT id FROM company WHERE gleif_lei IS NULL OR wikidata_id IS NULL ORDER BY id`,
   );
 
+  const rows = reader.getRowObjectsJS();
+  const total: number = rows.length;
   let enriched: number = 0;
   let skipped: number = 0;
   let errors: number = 0;
 
-  for (const row of reader.getRowObjectsJS()) {
+  for (const row of rows) {
     const companyId: number = Number(row.id);
     try {
       const result: EnrichmentResult = await enrichCompany(conn, companyId);
@@ -146,6 +149,10 @@ export async function enrichAllCompanies(
       }
     } catch {
       errors++;
+    }
+
+    if (onProgress != null) {
+      onProgress(enriched + skipped + errors, total);
     }
   }
 

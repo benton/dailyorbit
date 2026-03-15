@@ -1,20 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 
 type CompanyListItem = {
   id: number;
   name: string;
   parentName: string | null;
   filingCount: number;
-};
-
-type PaginatedCompanies = {
-  data: CompanyListItem[];
-  page: number;
-  pageSize: number;
-  totalRows: number;
-  totalPages: number;
 };
 
 type AttributionStats = {
@@ -26,60 +20,83 @@ type AttributionStats = {
 };
 
 export default function Companies() {
-  const [companies, setCompanies] = useState<PaginatedCompanies | null>(null);
+  const navigate = useNavigate();
   const [stats, setStats] = useState<AttributionStats | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [companiesData, statsData] = await Promise.all([
-        apiFetch<PaginatedCompanies>('/api/companies?pageSize=100&sort=name&order=asc'),
-        apiFetch<AttributionStats>('/api/admin/companies/attribution'),
-      ]);
-      setCompanies(companiesData);
-      setStats(statsData);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    apiFetch<AttributionStats>('/api/admin/companies/attribution')
+      .then(setStats)
+      .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
-
-  const runAction = useCallback(
-    async (endpoint: string, label: string) => {
-      setActionLoading(true);
-      setActionMessage(null);
-      try {
-        const result = await apiFetch<Record<string, unknown>>(endpoint, {
-          method: 'POST',
-        });
-        setActionMessage(`${label}: ${JSON.stringify(result)}`);
-        void fetchData();
-      } catch (err: unknown) {
-        setActionMessage(
-          `${label} failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        );
-      } finally {
-        setActionLoading(false);
-      }
+  const fetchData = useCallback(
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<CompanyListItem>> => {
+      const query: string = new URLSearchParams({
+        page: String(params.page),
+        pageSize: String(params.pageSize),
+        ...(params.sort != null ? { sort: params.sort } : {}),
+        ...(params.order != null ? { order: params.order } : {}),
+      }).toString();
+      return apiFetch<PaginatedResponse<CompanyListItem>>(`/api/companies?${query}`);
     },
-    [fetchData],
+    [],
   );
 
-  if (loading) {
-    return <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading...</p>;
-  }
+  const columns: Array<ColumnDef<CompanyListItem, unknown>> = useMemo(
+    (): Array<ColumnDef<CompanyListItem, unknown>> => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        size: 300,
+        cell: ({ row }) => (
+          <Link
+            to={`/companies/${row.original.id}`}
+            className="text-blue-600 hover:underline dark:text-blue-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {row.original.name}
+          </Link>
+        ),
+      },
+      {
+        accessorKey: 'parentName',
+        header: 'Parent',
+        size: 250,
+        cell: ({ getValue }) => (getValue() as string | null) ?? '',
+      },
+      {
+        accessorKey: 'filingCount',
+        header: 'Filings',
+        size: 100,
+        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
+      },
+    ],
+    [],
+  );
 
-  if (error != null) {
-    return <p className="text-sm text-red-600 dark:text-red-400">{error}</p>;
-  }
+  const handleRowClick = useCallback(
+    (row: CompanyListItem) => {
+      void navigate(`/companies/${row.id}`);
+    },
+    [navigate],
+  );
+
+  const runAction = useCallback(async (endpoint: string, label: string) => {
+    setActionLoading(true);
+    setActionMessage(null);
+    try {
+      const result = await apiFetch<Record<string, unknown>>(endpoint, {
+        method: 'POST',
+      });
+      setActionMessage(`${label}: ${JSON.stringify(result)}`);
+    } catch (err: unknown) {
+      setActionMessage(`${label} failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setActionLoading(false);
+    }
+  }, []);
 
   return (
     <>
@@ -164,54 +181,14 @@ export default function Companies() {
       )}
 
       {/* Companies table */}
-      {companies != null && companies.data.length > 0 && (
-        <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                  Name
-                </th>
-                <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                  Parent
-                </th>
-                <th className="px-4 py-2 text-right font-medium text-neutral-500 dark:text-neutral-400">
-                  Filings
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {companies.data.map((company: CompanyListItem) => (
-                <tr
-                  key={company.id}
-                  className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
-                >
-                  <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
-                    <Link
-                      to={`/companies/${company.id}`}
-                      className="text-blue-600 hover:underline dark:text-blue-400"
-                    >
-                      {company.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
-                    {company.parentName ?? ''}
-                  </td>
-                  <td className="px-4 py-2 text-right text-neutral-500 dark:text-neutral-400">
-                    {company.filingCount.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {companies != null && companies.data.length === 0 && (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          No companies found. Click "Seed Companies" to load satellite industry data.
-        </p>
-      )}
+      <DataTable<CompanyListItem>
+        columns={columns}
+        fetchData={fetchData}
+        defaultSort="name"
+        defaultOrder="asc"
+        defaultPageSize={25}
+        onRowClick={handleRowClick}
+      />
     </>
   );
 }

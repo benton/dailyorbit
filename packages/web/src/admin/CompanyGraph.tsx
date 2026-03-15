@@ -1,6 +1,7 @@
 import { Cosmograph } from '@cosmograph/react';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
+import CosmographWrapper from '../ui/CosmographWrapper.tsx';
 
 type CompanyListItem = {
   id: number;
@@ -45,7 +46,7 @@ function transformData(companies: CompanyListItem[]): {
         id: `company-${company.id}`,
         idx: i,
         label: company.name,
-        size: Math.max(1, Math.log2(company.filingCount + 1) * 3),
+        size: Math.max(3, Math.sqrt(company.filingCount) * 2),
         type: company.parentName != null ? 'subsidiary' : 'parent',
       };
     },
@@ -54,7 +55,6 @@ function transformData(companies: CompanyListItem[]): {
   const links: Array<GraphLink> = [];
   for (const company of companies) {
     if (company.parentName != null) {
-      // Find parent by name match
       const parentCompany: CompanyListItem | undefined = companies.find(
         (c) => c.name === company.parentName,
       );
@@ -122,21 +122,38 @@ export default function CompanyGraph(): React.ReactElement {
         Visualizes parent-subsidiary relationships between satellite companies. Node size reflects
         filing count.
       </p>
-      <div className="h-[600px] w-full rounded border border-neutral-300 dark:border-neutral-700">
-        <Cosmograph
-          links={links}
-          linkSourceBy="source"
-          linkSourceIndexBy="sourceIdx"
-          linkTargetBy="target"
-          linkTargetIndexBy="targetIdx"
-          pointColorBy="type"
-          pointIdBy="id"
-          pointIndexBy="idx"
-          pointLabelBy="label"
-          points={points}
-          pointSizeBy="size"
-        />
-      </div>
+      <CosmographWrapper>
+        <div className="h-[calc(100vh-200px)] w-full">
+          <Cosmograph
+            links={links}
+            linkSourceBy="source"
+            linkSourceIndexBy="sourceIdx"
+            linkTargetBy="target"
+            linkTargetIndexBy="targetIdx"
+            linkWidth={3}
+            pointColorBy="type"
+            pointIdBy="id"
+            pointIndexBy="idx"
+            pointLabelBy="label"
+            points={points}
+            pointSizeBy="size"
+          />
+        </div>
+      </CosmographWrapper>
+      {/* Color legend */}
+      <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-3 w-3 rounded-full bg-[#6b7280]" />
+          <dt className="inline">Parent company</dt>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-3 w-3 rounded-full bg-[#3b82f6]" />
+          <dt className="inline">Subsidiary</dt>
+        </div>
+        <div className="flex items-center gap-2">
+          <dd>Node size = filing count</dd>
+        </div>
+      </dl>
     </div>
   );
 }

@@ -61,7 +61,13 @@ export const companiesCommand = defineCommand({
 
           const { runBatchAttribution } =
             await import('../../companies/attribution.ts');
-          const result = await runBatchAttribution(conn);
+          const result = await runBatchAttribution(conn, (processed, total) => {
+            const pct: string = ((processed / total) * 100).toFixed(1);
+            process.stdout.write(
+              `\rProcessing: ${String(processed)} / ${String(total)} (${pct}%)`,
+            );
+          });
+          process.stdout.write('\n');
 
           console.log('Attribution complete:');
           console.log(`  Filings attributed: ${String(result.attributed)}`);
@@ -134,7 +140,16 @@ export const companiesCommand = defineCommand({
 
           const { extractOwnershipEvents } =
             await import('../../companies/repository.ts');
-          const result = await extractOwnershipEvents(conn);
+          const result = await extractOwnershipEvents(
+            conn,
+            (processed, total) => {
+              const pct: string = ((processed / total) * 100).toFixed(1);
+              process.stdout.write(
+                `\rProcessing: ${String(processed)} / ${String(total)} (${pct}%)`,
+              );
+            },
+          );
+          process.stdout.write('\n');
 
           console.log('Ownership event extraction complete:');
           console.log(`  Events created: ${String(result.created)}`);
@@ -161,7 +176,16 @@ export const companiesCommand = defineCommand({
         try {
           const { enrichAllCompanies } =
             await import('../../enrichment/pipeline.ts');
-          const result = await enrichAllCompanies(conn);
+          const result = await enrichAllCompanies(
+            conn,
+            (processed: number, total: number) => {
+              const pct: string = ((processed / total) * 100).toFixed(1);
+              process.stdout.write(
+                `\rEnriching: ${String(processed)} / ${String(total)} (${pct}%)`,
+              );
+            },
+          );
+          process.stdout.write('\n');
 
           console.log('Enrichment complete:');
           console.log(`  Companies enriched: ${String(result.enriched)}`);

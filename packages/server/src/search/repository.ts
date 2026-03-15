@@ -59,6 +59,20 @@ export async function searchFilings(
     paramIndex++;
   }
 
+  if (filters.company != null && filters.company.trim() !== '') {
+    conditions.push(
+      `company_id IN (
+        SELECT c.id FROM company c
+        WHERE c.name ILIKE $${paramIndex}
+        UNION
+        SELECT c.id FROM company c
+        WHERE c.parent_company_id IN (SELECT c2.id FROM company c2 WHERE c2.name ILIKE $${paramIndex})
+      )`,
+    );
+    params.push(`%${filters.company.trim()}%`);
+    paramIndex++;
+  }
+
   if (filters.subsystem_code != null && filters.subsystem_code.length > 0) {
     const placeholders: string = filters.subsystem_code
       .map(() => `$${paramIndex++}`)

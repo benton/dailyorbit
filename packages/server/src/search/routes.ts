@@ -42,6 +42,7 @@ searchRoutes.get('/filings', async (c) => {
   if (q.file_number != null) filters.file_number = q.file_number;
   if (q.callsign != null) filters.callsign = q.callsign;
   if (q.applicant != null) filters.applicant = q.applicant;
+  if (q.company != null) filters.company = q.company;
   const subsystems = parseList(q.subsystem_code);
   if (subsystems != null) filters.subsystem_code = subsystems;
   const appTypes = parseList(q.app_type_code);

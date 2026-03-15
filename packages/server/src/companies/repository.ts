@@ -486,6 +486,73 @@ export async function getCompanyFilings(
   return buildPaginatedResponse(data, totalRows, pagination);
 }
 
+// ── Company-filing graph ────────────────────────────────────────────
+
+export type CompanyGraphNode = {
+  id: number;
+  name: string;
+  filingCount: number;
+};
+
+export type CompanyGraphFiling = {
+  fileNumber: string;
+  companyId: number;
+  subsystemCode: string;
+  appTypeCode: string;
+};
+
+export type CompanyFilingGraphResponse = {
+  companies: CompanyGraphNode[];
+  filings: CompanyGraphFiling[];
+};
+
+export async function getCompanyFilingGraph(
+  conn: DuckDBConnection,
+  limit: number = 20,
+): Promise<CompanyFilingGraphResponse> {
+  // Top companies by filing count
+  const companyReader = await conn.runAndReadAll(
+    `SELECT c.id, c.name,
+            (SELECT count(*) FROM filing f WHERE f.company_id = c.id)::INTEGER AS filing_count
+     FROM company c
+     WHERE (SELECT count(*) FROM filing f WHERE f.company_id = c.id) > 0
+     ORDER BY filing_count DESC
+     LIMIT $1`,
+    [limit] as DuckDBValue[],
+  );
+  const companies: CompanyGraphNode[] = companyReader
+    .getRowObjectsJS()
+    .map((r) => ({
+      id: Number(r.id),
+      name: String(r.name),
+      filingCount: Number(r.filing_count ?? 0),
+    }));
+
+  const companyIds: number[] = companies.map((c) => c.id);
+  if (companyIds.length === 0) {
+    return { companies: [], filings: [] };
+  }
+
+  // Filings attributed to those companies
+  const idList: string = companyIds.join(',');
+  const filingReader = await conn.runAndReadAll(
+    `SELECT f.file_number, f.company_id::INTEGER AS company_id,
+            f.subsystem_code, f.app_type_code
+     FROM filing f
+     WHERE f.company_id IN (${idList})`,
+  );
+  const filings: CompanyGraphFiling[] = filingReader
+    .getRowObjectsJS()
+    .map((r) => ({
+      fileNumber: String(r.file_number),
+      companyId: Number(r.company_id),
+      subsystemCode: String(r.subsystem_code ?? ''),
+      appTypeCode: String(r.app_type_code ?? ''),
+    }));
+
+  return { companies, filings };
+}
+
 // ── Ownership events ────────────────────────────────────────────────
 
 export async function createOwnershipEvent(
@@ -538,6 +605,7 @@ export async function getOwnershipEventsForCompany(
 
 export async function extractOwnershipEvents(
   conn: DuckDBConnection,
+  onProgress?: (processed: number, total: number) => void,
 ): Promise<{ created: number; skipped: number }> {
   // Find T/C and ASG filings that don't already have ownership events
   const reader = await conn.runAndReadAll(
@@ -549,10 +617,12 @@ export async function extractOwnershipEvents(
        AND f.file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
   );
 
+  const rows = reader.getRowObjectsJS();
+  const total: number = rows.length;
   let created: number = 0;
   let skipped: number = 0;
 
-  for (const row of reader.getRowObjectsJS()) {
+  for (const row of rows) {
     const fileNumber: string = String(row.file_number);
     const appType: string = String(row.app_type_code);
     const transferorName: string | null =
@@ -573,6 +643,10 @@ export async function extractOwnershipEvents(
     // Only create event if at least one party is identified
     if (transferorCompany == null && transfereeCompany == null) {
       skipped++;
+      const processed: number = created + skipped;
+      if (onProgress != null && processed % 500 === 0) {
+        onProgress(processed, total);
+      }
       continue;
     }
 
@@ -608,6 +682,11 @@ export async function extractOwnershipEvents(
         row.brief_description != null ? String(row.brief_description) : null,
     });
     created++;
+
+    const processed: number = created + skipped;
+    if (onProgress != null && processed % 500 === 0) {
+      onProgress(processed, total);
+    }
   }
 
   return { created, skipped };
