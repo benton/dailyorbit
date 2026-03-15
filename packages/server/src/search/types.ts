@@ -7,6 +7,7 @@ export type FilingSearchResult = {
   app_type_code: string;
   status_code: string | null;
   date_filed: string | null;
+  company_name: string | null;
 };
 
 /** Filters for filing search */

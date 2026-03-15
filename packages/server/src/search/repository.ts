@@ -27,6 +27,7 @@ const FILING_SORTABLE_COLUMNS: ReadonlySet<string> = new Set([
   'app_type_code',
   'status_code',
   'date_filed',
+  'company_name',
 ]);
 
 /**
@@ -42,26 +43,26 @@ export async function searchFilings(
   let paramIndex: number = 1;
 
   if (filters.file_number != null && filters.file_number.trim() !== '') {
-    conditions.push(`file_number ILIKE $${paramIndex}`);
+    conditions.push(`f.file_number ILIKE $${paramIndex}`);
     params.push(`%${filters.file_number.trim()}%`);
     paramIndex++;
   }
 
   if (filters.callsign != null && filters.callsign.trim() !== '') {
-    conditions.push(`callsign ILIKE $${paramIndex}`);
+    conditions.push(`f.callsign ILIKE $${paramIndex}`);
     params.push(`%${filters.callsign.trim()}%`);
     paramIndex++;
   }
 
   if (filters.applicant != null && filters.applicant.trim() !== '') {
-    conditions.push(`address_attention ILIKE $${paramIndex}`);
+    conditions.push(`f.address_attention ILIKE $${paramIndex}`);
     params.push(`%${filters.applicant.trim()}%`);
     paramIndex++;
   }
 
   if (filters.company != null && filters.company.trim() !== '') {
     conditions.push(
-      `company_id IN (
+      `f.company_id IN (
         SELECT c.id FROM company c
         WHERE c.name ILIKE $${paramIndex}
         UNION
@@ -77,7 +78,7 @@ export async function searchFilings(
     const placeholders: string = filters.subsystem_code
       .map(() => `$${paramIndex++}`)
       .join(', ');
-    conditions.push(`subsystem_code IN (${placeholders})`);
+    conditions.push(`f.subsystem_code IN (${placeholders})`);
     params.push(...(filters.subsystem_code as DuckDBValue[]));
   }
 
@@ -85,7 +86,7 @@ export async function searchFilings(
     const placeholders: string = filters.app_type_code
       .map(() => `$${paramIndex++}`)
       .join(', ');
-    conditions.push(`app_type_code IN (${placeholders})`);
+    conditions.push(`f.app_type_code IN (${placeholders})`);
     params.push(...(filters.app_type_code as DuckDBValue[]));
   }
 
@@ -93,7 +94,7 @@ export async function searchFilings(
     const placeholders: string = filters.status_code
       .map(() => `$${paramIndex++}`)
       .join(', ');
-    conditions.push(`status_code IN (${placeholders})`);
+    conditions.push(`f.status_code IN (${placeholders})`);
     params.push(...(filters.status_code as DuckDBValue[]));
   }
 
@@ -101,13 +102,13 @@ export async function searchFilings(
     filters.date_filed_from != null &&
     filters.date_filed_from.trim() !== ''
   ) {
-    conditions.push(`date_filed >= $${paramIndex}`);
+    conditions.push(`f.date_filed >= $${paramIndex}`);
     params.push(filters.date_filed_from.trim());
     paramIndex++;
   }
 
   if (filters.date_filed_to != null && filters.date_filed_to.trim() !== '') {
-    conditions.push(`date_filed <= $${paramIndex}`);
+    conditions.push(`f.date_filed <= $${paramIndex}`);
     params.push(filters.date_filed_to.trim());
     paramIndex++;
   }
@@ -115,7 +116,9 @@ export async function searchFilings(
   const whereClause: string =
     conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
 
-  const baseSql: string = `SELECT file_number, callsign, address_attention, subsystem_code, app_type_code, status_code, date_filed FROM filing${whereClause}`;
+  const baseSql: string = `SELECT f.file_number, f.callsign, f.address_attention, f.subsystem_code, f.app_type_code, f.status_code, f.date_filed,
+    (SELECT co.name FROM company co WHERE co.id = f.company_id) AS company_name
+    FROM filing f${whereClause}`;
 
   const {
     sql,
@@ -153,6 +156,7 @@ function rowToFilingResult(row: Record<string, unknown>): FilingSearchResult {
     app_type_code: String(row.app_type_code ?? ''),
     status_code: row.status_code != null ? String(row.status_code) : null,
     date_filed: row.date_filed != null ? String(row.date_filed) : null,
+    company_name: row.company_name != null ? String(row.company_name) : null,
   };
 }
 

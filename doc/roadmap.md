@@ -27,7 +27,7 @@
 
 - v2.0.0 [ ] Generate Newspaper layout home page
 - v2.0.1 [ ] Article idea: News summary ("3 miles Up");
-- v2.0.2 [ ] Article idea: Rotating Editorials from different "Editors" (e.g. Claude Antrhos, Gemini Baker, Rufus Bedrock);
+- v2.0.2 [ ] Article idea: "Over the Horizon" - Rotating Editorials from different "Editors" (e.g. Claude Antrhos, Gemini Baker, Rufus Bedrock);
 - v2.0.3 [ ] Article idea: "Ask the Editor" - Premium Q&A feature (with user consent, share output anonymously next day in "Letters to the Editor")
 - v2.0.4 [ ] Article idea: Wordcloud-based crossword puzze?
 - v2.1.x [ ] More data - Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss

@@ -20,6 +20,7 @@ type FilingSearchResult = {
   app_type_code: string;
   status_code: string | null;
   date_filed: string | null;
+  company_name: string | null;
 };
 
 type SatelliteSearchResult = {
@@ -412,7 +413,13 @@ const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   {
     accessorKey: 'address_attention',
     header: 'Applicant',
-    size: 200,
+    size: 180,
+  },
+  {
+    accessorKey: 'company_name',
+    header: 'Company',
+    size: 180,
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
   },
   {
     accessorKey: 'callsign',

@@ -9,7 +9,6 @@ import {
   extractOwnershipEvents,
   getAttributionStats,
   getCompanyDetail,
-
   getCompanyFilings,
   listCompanies,
   removeAlias,
