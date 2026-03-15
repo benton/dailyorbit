@@ -23,7 +23,8 @@
     "citty": "^0.2.1",
     "consola": "^3.4.2",
     "hono": "^4.7.11",
-    "node-html-parser": "^7.1.0"
+    "node-html-parser": "^7.1.0",
+    "pdf-oxide-wasm": "^0.3.17"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

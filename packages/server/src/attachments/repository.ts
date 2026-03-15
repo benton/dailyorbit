@@ -26,7 +26,8 @@ const CREATE_TABLE_SQL: string = `
     downloaded_at TIMESTAMP,
     full_text TEXT,
     text_length INTEGER,
-    summary TEXT
+    summary TEXT,
+    extract_status VARCHAR NOT NULL DEFAULT 'pending'
   )`;
 
 const MIGRATE_COLUMNS_SQL: string[] = [
@@ -35,6 +36,7 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_length INTEGER`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summary TEXT`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'attachment'`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS extract_status VARCHAR DEFAULT 'pending'`,
 ];
 
 async function migratePrimaryKeyConstraint(
@@ -338,6 +340,87 @@ export async function createDiscoveryLogTable(
  * Records in the attachment_discovery table so the pipeline knows
  * which filings have already been checked.
  */
+export type PendingExtractionRow = {
+  attachmentKey: number;
+  localPath: string;
+  contentType: string;
+};
+
+export type ExtractionQueryOptions = {
+  retryFailed?: boolean;
+  limit?: number;
+};
+
+export async function getPendingExtractions(
+  conn: DuckDBConnection,
+  options: ExtractionQueryOptions = {},
+): Promise<PendingExtractionRow[]> {
+  const statusCondition: string = options.retryFailed
+    ? `extract_status IN ('pending', 'failed')`
+    : `extract_status = 'pending'`;
+
+  const limitClause: string =
+    options.limit != null ? `LIMIT ${String(options.limit)}` : '';
+
+  const sql: string = `
+    SELECT attachment_key, local_path, content_type
+    FROM attachment
+    WHERE download_status = 'downloaded'
+      AND content_type = 'application/pdf'
+      AND local_path IS NOT NULL
+      AND ${statusCondition}
+    ORDER BY attachment_key
+    ${limitClause}`;
+
+  const reader = await conn.runAndReadAll(sql);
+  return reader.getRowObjectsJS().map((r) => ({
+    attachmentKey: Number(r.attachment_key),
+    localPath: String(r.local_path),
+    contentType: String(r.content_type),
+  }));
+}
+
+export async function markExtracted(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+  fullText: string,
+  textLength: number,
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment
+      SET full_text = $1,
+          text_length = $2,
+          extract_status = 'extracted'
+      WHERE attachment_key = $3`,
+    [fullText, textLength, attachmentKey] as DuckDBValue[],
+  );
+}
+
+export async function markExtractionSkipped(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+  reason: 'skipped_no_text' | 'skipped_not_pdf',
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment
+      SET extract_status = $1
+      WHERE attachment_key = $2`,
+    [reason, attachmentKey] as DuckDBValue[],
+  );
+}
+
+export async function markExtractionFailed(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment
+      SET extract_status = 'failed'
+      WHERE attachment_key = $1`,
+    [attachmentKey] as DuckDBValue[],
+  );
+}
+
 export async function markFilingsDiscovered(
   conn: DuckDBConnection,
   filingKeys: number[],

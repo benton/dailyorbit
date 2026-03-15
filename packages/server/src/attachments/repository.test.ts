@@ -7,7 +7,11 @@ import {
   createDiscoveryLogTable,
   getFilingsForScope,
   getPendingDownloads,
+  getPendingExtractions,
   markDownloaded,
+  markExtracted,
+  markExtractionFailed,
+  markExtractionSkipped,
   markFailed,
   markFilingsDiscovered,
   upsertAttachments,
@@ -342,6 +346,119 @@ describe('attachment repository', () => {
     it('is a no-op for empty array', async () => {
       await createDiscoveryLogTable(conn);
       await markFilingsDiscovered(conn, []);
+    });
+  });
+
+  describe('getPendingExtractions', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, content_type, local_path, extract_status)
+         VALUES
+          (100, 1, 'SAT-STA-20230614-00142', 'Narrative', 'https://example.com/100.pdf',
+           'downloaded', 'application/pdf', '/tmp/100.pdf', 'pending'),
+          (101, 1, 'SAT-STA-20230614-00142', 'Tech Report', 'https://example.com/101.pdf',
+           'downloaded', 'application/pdf', '/tmp/101.pdf', 'extracted'),
+          (102, 1, 'SAT-STA-20230614-00142', 'Photo', 'https://example.com/102.html',
+           'downloaded', 'text/html', '/tmp/102.html', 'pending'),
+          (103, 1, 'SAT-STA-20230614-00142', 'Pending DL', 'https://example.com/103.pdf',
+           'pending', 'application/pdf', NULL, 'pending')`,
+      );
+    });
+
+    it('returns only downloaded PDFs with pending extract_status', async () => {
+      const rows = await getPendingExtractions(conn);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.attachmentKey).toEqual(100);
+    });
+
+    it('includes failed extractions when retryFailed is true', async () => {
+      await conn.run(
+        `UPDATE attachment SET extract_status = 'failed' WHERE attachment_key = 100`,
+      );
+      const rows = await getPendingExtractions(conn, { retryFailed: true });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.attachmentKey).toEqual(100);
+    });
+
+    it('respects limit parameter', async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, content_type, local_path, extract_status)
+         VALUES (104, 1, 'SAT-STA-20230614-00142', 'Another', 'https://example.com/104.pdf',
+           'downloaded', 'application/pdf', '/tmp/104.pdf', 'pending')`,
+      );
+      const rows = await getPendingExtractions(conn, { limit: 1 });
+      expect(rows).toHaveLength(1);
+    });
+  });
+
+  describe('markExtracted', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, local_path, extract_status)
+         VALUES (200, 1, 'SAT-STA-20230614-00142', 'Doc', 'https://example.com/200.pdf',
+           'downloaded', '/tmp/200.pdf', 'pending')`,
+      );
+    });
+
+    it('updates full_text, text_length, and extract_status', async () => {
+      await markExtracted(conn, 200, '# Heading\n\nSome text.', 20);
+      const reader = await conn.runAndReadAll(
+        `SELECT full_text, text_length, extract_status FROM attachment WHERE attachment_key = 200`,
+      );
+      const row = reader.getRowObjectsJS()[0]!;
+      expect(String(row.full_text)).toEqual('# Heading\n\nSome text.');
+      expect(Number(row.text_length)).toEqual(20);
+      expect(String(row.extract_status)).toEqual('extracted');
+    });
+  });
+
+  describe('markExtractionSkipped', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, local_path, extract_status)
+         VALUES (201, 1, 'SAT-STA-20230614-00142', 'Scan', 'https://example.com/201.pdf',
+           'downloaded', '/tmp/201.pdf', 'pending')`,
+      );
+    });
+
+    it('sets extract_status to skipped_no_text', async () => {
+      await markExtractionSkipped(conn, 201, 'skipped_no_text');
+      const reader = await conn.runAndReadAll(
+        `SELECT extract_status FROM attachment WHERE attachment_key = 201`,
+      );
+      expect(String(reader.getRowObjectsJS()[0]!.extract_status)).toEqual(
+        'skipped_no_text',
+      );
+    });
+  });
+
+  describe('markExtractionFailed', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, local_path, extract_status)
+         VALUES (202, 1, 'SAT-STA-20230614-00142', 'Bad', 'https://example.com/202.pdf',
+           'downloaded', '/tmp/202.pdf', 'pending')`,
+      );
+    });
+
+    it('sets extract_status to failed', async () => {
+      await markExtractionFailed(conn, 202);
+      const reader = await conn.runAndReadAll(
+        `SELECT extract_status FROM attachment WHERE attachment_key = 202`,
+      );
+      expect(String(reader.getRowObjectsJS()[0]!.extract_status)).toEqual(
+        'failed',
+      );
     });
   });
 

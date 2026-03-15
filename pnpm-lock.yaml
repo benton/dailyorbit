@@ -35,6 +35,9 @@ importers:
       node-html-parser:
         specifier: ^7.1.0
         version: 7.1.0
+      pdf-oxide-wasm:
+        specifier: ^0.3.17
+        version: 0.3.17
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -2868,6 +2871,10 @@ packages:
 
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
+
+  pdf-oxide-wasm@0.3.17:
+    resolution: {integrity: sha512-eyRurtCNigC6BeyiaonDyXWMgqt6om+eMkxtit9YHHQjPj5fNn+YbDFEC+2F5/3LiXD1p9uTHRHa41WyoCNAVg==}
+    engines: {node: '>=18'}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -5924,6 +5931,8 @@ snapshots:
   path-key@3.1.1: {}
 
   pathe@2.0.3: {}
+
+  pdf-oxide-wasm@0.3.17: {}
 
   picocolors@1.1.1: {}
 
