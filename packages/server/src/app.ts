@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { configRoutes } from './config/routes.ts';
+import { earthStationRoutes } from './earth-stations/routes.ts';
+import { filingRoutes } from './filings/routes.ts';
 import { getAuth } from './lib/auth.ts';
 import { getConfigService } from './lib/config.ts';
+import { satelliteRoutes } from './satellites/routes.ts';
+import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
 
 const app = new Hono();
 
@@ -20,5 +24,10 @@ app.get('/', (c) => c.json({ status: 'ok' }));
 app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw));
 
 app.route('/api/admin/config', configRoutes);
+app.route('/api/filings', filingRoutes);
+app.route('/api/satellites', satelliteRoutes);
+app.route('/api/earth-stations', earthStationRoutes);
+app.route('/api/search', searchRoutes);
+app.route('/api/autocomplete', autocompleteRoutes);
 
 export default app;

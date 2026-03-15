@@ -5,6 +5,11 @@ import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router'
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
 import AvailableLanguages from './AvailableLanguages.tsx';
+import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
+import FilingDetail from './filings/FilingDetail.tsx';
+import SatelliteDetail from './satellites/SatelliteDetail.tsx';
+import SearchPage from './search/SearchPage.tsx';
+import PublicLayout from './ui/PublicLayout.tsx';
 import AuthClient from './user/AuthClient.tsx';
 import SignIn from './user/SignIn.tsx';
 
@@ -135,8 +140,14 @@ const About = () => (
 export default function App() {
   return (
     <Routes>
-      <Route element={<Home />} path="/" />
-      <Route element={<About />} path="/about" />
+      <Route element={<PublicLayout />}>
+        <Route element={<Home />} path="/" />
+        <Route element={<About />} path="/about" />
+        <Route element={<SearchPage />} path="/search" />
+        <Route element={<FilingDetail />} path="/filings/:fileNumber" />
+        <Route element={<SatelliteDetail />} path="/satellites/:id" />
+        <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
+      </Route>
       <Route element={<AdminLayout />} path="/admin">
         <Route element={<ConfigEditor />} index />
       </Route>
