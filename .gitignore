@@ -16,8 +16,11 @@ doc/*.pdf
 *.env
 !*.env.example
 .worktrees/
+.claude/worktrees/
+scripts/
 settings.local.json
 tmp/
 packages/*/scripts/
 .playwright-mcp
 .mcp.json
+*.log

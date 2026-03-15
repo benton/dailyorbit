@@ -6,8 +6,8 @@
 - v0.1.5 [x] Attachment discovery and download
 - v0.1.6 [x] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
 - v0.1.7 [x] Show basic data set information and explore visualization library
-- v0.2.0 [ ] Enriched data model: Applicant (Company?): Related filings
-- v0.3.0 [ ] Basic Entity viewing and search
+- v0.2.0 [x] Basic Entity viewing and search
+- v0.3.0 [ ] Enriched data model: Applicant (Company?): Related filings
 - v0.4.0 [ ] Attachment processing and text extraction
 - v0.5.0 [ ] Advanced viewing and search form: full-text, timelines, relationships
 - v0.6.0 [ ] User authentication and profile

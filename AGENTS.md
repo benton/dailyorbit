@@ -129,3 +129,4 @@ console.log('This processes instantly restarts when a file changes.');
 
 - **GH-1 (MUST**) Use Conventional Commits format when writing commit messages: https://www.conventionalcommits.org/en/v1.0.0
 - **GH-2 (MUST NOT**) Refer to Claude or Anthropic in commit messages.
+- **GH-3 (MUST NOT)** Use git worktrees when dev servers (Vite, API) are running and you need live browser testing, or when multiple agents need to coordinate on shared files. Work directly on a feature branch in the main repo instead.

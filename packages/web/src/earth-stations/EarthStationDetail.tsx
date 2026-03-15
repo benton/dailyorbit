@@ -220,7 +220,7 @@ export default function EarthStationDetail() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {info.callsign}
+              Earth Station {info.callsign}
             </h1>
             <Badge variant={active ? 'default' : 'secondary'}>
               {active ? 'Active' : 'Inactive'}
