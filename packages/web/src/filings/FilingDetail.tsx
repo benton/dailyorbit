@@ -60,6 +60,8 @@ type FilingDetail = {
   streamlined: string | null;
   environmentalImpact: string | null;
   natureOfService: string | null;
+  companyId: number | null;
+  companyName: string | null;
   transferorName: string | null;
   transfereeName: string | null;
   attachments: FilingAttachment[];
@@ -197,6 +199,17 @@ export default function FilingDetailPage() {
                 className="text-blue-600 hover:underline dark:text-blue-400"
               >
                 {filing.applicantName}
+              </Link>
+            </span>
+          )}
+          {filing.companyId != null && filing.companyName != null && (
+            <span>
+              Company:{' '}
+              <Link
+                to={`/companies/${filing.companyId}`}
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                {filing.companyName}
               </Link>
             </span>
           )}

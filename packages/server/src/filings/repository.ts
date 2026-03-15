@@ -44,6 +44,8 @@ export async function getFilingByFileNumber(
        f.transferor_name,
        f.transferee_name,
        f.icfs_last_fetched_at,
+       f.company_id,
+       co.name AS company_name,
        sc.status_text,
        sub.description AS subsystem_label,
        atc.application_type AS app_type_label
@@ -51,6 +53,7 @@ export async function getFilingByFileNumber(
      LEFT JOIN status_code sc ON sc.status_code = f.status_code
      LEFT JOIN subsystem_code sub ON sub.subsystem_code = f.subsystem_code
      LEFT JOIN app_type_code atc ON atc.app_type_code = f.app_type_code
+     LEFT JOIN company co ON co.id = f.company_id
      WHERE f.file_number = $1`,
     [fileNumber] as DuckDBValue[],
   );
@@ -125,6 +128,8 @@ export async function getFilingByFileNumber(
       row.transferor_name != null ? String(row.transferor_name) : null,
     transfereeName:
       row.transferee_name != null ? String(row.transferee_name) : null,
+    companyId: row.company_id != null ? Number(row.company_id) : null,
+    companyName: row.company_name != null ? String(row.company_name) : null,
     attachments,
     petitions,
     relatedSpaceStation,

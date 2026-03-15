@@ -1,6 +1,7 @@
 import { DuckDBConnection } from '@duckdb/node-api';
 import type { DuckDBInstance } from '@duckdb/node-api';
 import { trackConnection } from './graceful-shutdown.ts';
+import { ensureCompanyTables, ensureCompanyFk } from '../companies/schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -17,6 +18,9 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
       encrypted BOOLEAN NOT NULL DEFAULT FALSE
     )
   `);
+
+  await ensureCompanyTables(conn);
+  await ensureCompanyFk(conn);
 
   conn.closeSync();
 }

@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { attachmentsCommand } from './attachments/index.ts';
+import { companiesCommand } from './companies/index.ts';
 import { configCommand } from './config/index.ts';
 import { dbCommand } from './db/index.ts';
 import { ingestCommand } from './ingest/index.ts';
@@ -12,6 +13,7 @@ export const main = defineCommand({
   },
   subCommands: {
     attachments: attachmentsCommand,
+    companies: companiesCommand,
     config: configCommand,
     db: dbCommand,
     ingest: ingestCommand,

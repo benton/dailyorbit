@@ -1,5 +1,6 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import type { IcfsFilingDetail, IcfsServiceType } from './types.ts';
+import { attributeFiling } from '../companies/attribution.ts';
 
 /** Parse subsystem code from a file number like "SAT-LOA-20250221-00050" */
 export function parseSubsystem(fileNumber: string): string {
@@ -247,6 +248,19 @@ export async function upsertIcfsFiling(
         serviceTypesJson,
       ] as DuckDBValue[],
     );
+  }
+
+  // Attempt to attribute the filing to a company
+  const companyId: number | null = await attributeFiling(
+    conn,
+    s.applicantName,
+    s.applicantFrn,
+  );
+  if (companyId != null) {
+    await conn.run(`UPDATE filing SET company_id = $1 WHERE file_number = $2`, [
+      companyId,
+      fileNumber,
+    ] as DuckDBValue[]);
   }
 }
 

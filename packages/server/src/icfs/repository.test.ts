@@ -139,6 +139,10 @@ describe('upsertIcfsFiling', () => {
     conn = await DuckDBConnection.create(db);
     await conn.run(CREATE_FILING_TABLE);
     await ensureIcfsColumns(conn);
+    const { ensureCompanyTables, ensureCompanyFk } =
+      await import('../companies/schema.ts');
+    await ensureCompanyTables(conn);
+    await ensureCompanyFk(conn);
   });
 
   afterEach(() => {

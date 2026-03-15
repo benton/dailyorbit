@@ -30,7 +30,8 @@ const SETUP_SQL: string = `
     nature_of_service VARCHAR,
     transferor_name VARCHAR,
     transferee_name VARCHAR,
-    icfs_last_fetched_at TIMESTAMP
+    icfs_last_fetched_at TIMESTAMP,
+    company_id INTEGER
   );
 
   CREATE TABLE status_code (
@@ -75,6 +76,22 @@ const SETUP_SQL: string = `
     orbit_location DOUBLE,
     "verbose" VARCHAR,
     inactive_date TIMESTAMP
+  );
+
+  CREATE TABLE company (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    parent_company_id INTEGER,
+    stock_ticker VARCHAR,
+    stock_exchange VARCHAR,
+    industry VARCHAR,
+    logo_url VARCHAR,
+    website VARCHAR,
+    description VARCHAR,
+    gleif_lei VARCHAR,
+    wikidata_id VARCHAR,
+    created_at TIMESTAMP DEFAULT current_timestamp,
+    updated_at TIMESTAMP DEFAULT current_timestamp
   );
 `;
 

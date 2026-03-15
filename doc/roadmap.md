@@ -7,29 +7,35 @@
 - v0.1.6 [x] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
 - v0.1.7 [x] Show basic data set information and explore visualization library
 - v0.2.0 [x] Basic Entity viewing and search
-- v0.3.0 [ ] Enriched data model: Applicant (Company?), timelines, relationships
-- v0.4.0 [ ] Attachment processing and text extraction
-- v0.5.0 [ ] Advanced viewing and search form: full-text, date range, frequency bands, orbits, relationships
+- v0.3.0 [x] Company entity, attribution & ownership tracking
+- v0.3.5 [ ] Enriched data model: Comment atttachments, timelines
+- v0.4.0 [ ] Attachment processing: text (markdown?) extraction
+- v0.5.0 [ ] Anonymous home page
 - v0.6.0 [ ] User authentication and profile
-- v0.7.0 [ ] User preferences and viewing history
+- v0.7.0 [ ] User home page, preferences, and viewing history
 - v0.8.0 [ ] Admin ingest control UI (maybe)
+- v0.9.0 [ ] Remove legavy IBFS code and references
 
-## Medium Term
+## Medium Term - LLM-driven features
 
-- v1.0.0 [ ] entity deduping, advanced analytics
-- v1.1.0 [ ] more data dashboards
-- v1.2.0 [ ] Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss
-- v1.3.0 [ ] Vector-DB search?
+- v1.0.0 [ ] Summarizations: per App, Comment, and Timeline. check out [Flock][4]
+- v1.1.0 [ ] Vector-DB search?
+- v1.2.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering
+-
 
-## Medium Term: LLM-driven features
+## Medium Term: The Daily Orbit Newspaper
 
-- v2.0.0 [ ] Summarizations: per App, Comment, and Timeline. check out [Flock][4]
-- v3.0.0 [ ] RAG and interrogation mode: LLM-powered question answering
+- v2.0.0 [ ] Generate Newspaper layout home page
+- v2.0.1 [ ] Article idea: News summary ("3 miles Up");
+- v2.0.2 [ ] Article idea: Rotating Editorials from different "Editors" (e.g. Claude Antrhos, Gemini Baker, Rufus Bedrock);
+- v2.0.3 [ ] Article idea: "Ask the Editor" - Premium Q&A feature (with user consent, share output anonymously next day in "Letters to the Editor")
+- v2.0.4 [ ] Article idea: Wordcloud-based crossword puzze?
+- v2.1.x [ ] More data - Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss
 
 ## Long Term: Marketing / styling features
 
-- v4.0.x [ ] The Daily Orbit newspaper as home page
-- v4.1.x [ ] Syndication from other LoE-satellite-related news sources
+- v3.0.x [ ] Demo slideshow; focus on business motivation; ingestion pipeline with enrichment;
+- v3.0.x [ ] Syndication from other LoE-satellite-related news sources
 
 ## Off the Wall Ideas
 

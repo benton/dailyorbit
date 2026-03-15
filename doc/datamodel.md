@@ -158,3 +158,82 @@ Represents a binary file submitted as part of an Application or Comment.
 ## 5. Application Event
 
 ---
+
+## 6. Company
+
+Represents a real-world corporate entity that files applications with the FCC. A single Company may appear under many different applicant name strings in the filing dataset (see [Attribution Strategy](attribution-strategy.md) for details on how filings are attributed to Companies).
+
+Fields:
+
+- ID (UUID, primary key)
+- Name (canonical display name, e.g., "Hughes Network Systems")
+- Parent Company ID (optional foreign key to Company, for hierarchical corporate structures)
+- LEI (optional, 20-character Legal Entity Identifier from the GLEIF registry)
+- Wikidata QID (optional, e.g., "Q184581")
+- Description (optional, brief description of the company and its role in the industry)
+- Created At
+- Updated At
+
+### 6.1. Company Hierarchy
+
+Companies may form parent-subsidiary trees. The `parent_company_id` field points to the immediate parent Company. The hierarchy is temporal: the current parent is stored on the Company record, while historical parent relationships are tracked through OwnershipEvent records (see section 8).
+
+Examples:
+- Hughes Network Systems -> EchoStar Corporation
+- SES Americom -> SES S.A.
+- O3b Limited -> SES S.A.
+
+---
+
+## 7. CompanyAlias
+
+Maps an applicant name string (as it appears in FCC filings) to a Company entity. Each alias belongs to exactly one Company. A Company may have many aliases.
+
+Fields:
+
+- ID (UUID, primary key)
+- Company ID (foreign key to Company)
+- Alias (the applicant name string as it appears in filing data, e.g., "HUGHES NETWORK SYSTEMS, LLC")
+- Source (how the alias was created: 'manual', 'frn_cluster', 'gleif', 'wikidata')
+- Created At
+
+### 7.1. Alias Uniqueness
+
+Each alias string maps to exactly one Company. If the same legal name string has been used by genuinely different entities at different times, the conflict must be resolved manually (e.g., by qualifying the alias with additional context or choosing the most frequent association).
+
+### 7.2. FRN-Derived Aliases
+
+When FRN clustering (Tier 3 of the attribution algorithm) identifies a new name variant, the system may automatically create a CompanyAlias record with source = 'frn_cluster'. These aliases are flagged for admin review.
+
+---
+
+## 8. OwnershipEvent
+
+Represents a point-in-time change in the ownership or control of a Company. OwnershipEvents are derived from FCC Transfer of Control (T/C) and Assignment (ASG) filings, GLEIF parent relationship records, Wikidata corporate parentage data, or manual admin entry. See [M&A Tracking Strategy](ma-tracking-strategy.md) for the full detection and enrichment workflow.
+
+Fields:
+
+- ID (UUID, primary key)
+- Acquirer Company ID (foreign key to Company, the entity gaining control)
+- Target Company ID (foreign key to Company, the entity being acquired or transferred)
+- Event Type (one of: 'acquisition', 'divestiture', 'merger', 'transfer_of_control', 'assignment')
+- Effective Date (the date the ownership change took effect)
+- Source Type (one of: 'fcc_filing', 'gleif', 'wikidata', 'manual')
+- Source Reference (the filing number, LEI, Wikidata QID, or admin note that supports this record)
+- Notes (optional, free-text context about the event)
+- Created At
+
+### 8.1. Temporal Queries
+
+The OwnershipEvent table enables point-in-time hierarchy reconstruction. To determine who owned a given Company on a specific date, query the most recent OwnershipEvent for that target Company with an effective date on or before the query date. The acquirer in that event is the Company's parent at that point in time.
+
+### 8.2. Source Priority
+
+When multiple sources report conflicting ownership for the same target and time period, the following priority order applies:
+
+1. FCC filing (regulatory record of record)
+2. GLEIF (audited financial registry)
+3. Wikidata (community-maintained structured data)
+4. Manual entry (admin-supplied, reviewed)
+
+---

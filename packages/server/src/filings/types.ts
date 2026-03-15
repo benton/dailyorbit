@@ -59,6 +59,8 @@ export type FilingDetail = {
   natureOfService: string | null;
   transferorName: string | null;
   transfereeName: string | null;
+  companyId: number | null;
+  companyName: string | null;
   attachments: FilingAttachment[];
   petitions: FilingPetition[];
   relatedSpaceStation: RelatedSpaceStation | null;
