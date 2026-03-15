@@ -163,24 +163,27 @@ async function fetchAttachments(
   }));
 }
 
-/** Fetch all petitions/comments for a given filing key */
+/** Fetch all petitions/comments for a given filing key from the pleading table */
 async function fetchPetitions(
   conn: DuckDBConnection,
   filingKey: number,
 ): Promise<FilingPetition[]> {
   const result = await conn.runAndReadAll(
-    `SELECT filing_key, filed_by, date_filed, description
-     FROM petition_to_deny
+    `SELECT filing_key, filer_name, created_on, pleading_type, pleading_number
+     FROM pleading
      WHERE filing_key = $1
-     ORDER BY date_filed`,
+     ORDER BY created_on`,
     [filingKey] as DuckDBValue[],
   );
 
   return result.getRowObjectsJS().map((r) => ({
     filingKey: Number(r.filing_key),
-    partyName: r.filed_by != null ? String(r.filed_by) : null,
-    dateFiled: r.date_filed != null ? String(r.date_filed) : null,
-    description: r.description != null ? String(r.description) : null,
+    partyName: r.filer_name != null ? String(r.filer_name) : null,
+    dateFiled: r.created_on != null ? String(r.created_on) : null,
+    description: null,
+    pleadingType: r.pleading_type != null ? String(r.pleading_type) : null,
+    pleadingNumber:
+      r.pleading_number != null ? String(r.pleading_number) : null,
   }));
 }
 

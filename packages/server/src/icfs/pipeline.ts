@@ -1,8 +1,20 @@
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { processQueue } from '../attachments/queue.ts';
+import {
+  createAttachmentTable,
+  upsertAttachments,
+} from '../attachments/repository.ts';
+import type { FileNumber } from '../lib/file-number.ts';
 import { getFilingDetail } from './client.ts';
 import { buildDiscoveryQueries, discoverNewFilings } from './discovery.ts';
-import { upsertIcfsFiling } from './repository.ts';
+import {
+  createPleadingTable,
+  icfsAttachmentsToMetadata,
+  icfsPleadingsToRows,
+  migrateLegacyPetitions,
+  upsertIcfsFiling,
+  upsertPleadings,
+} from './repository.ts';
 import { ensureIcfsColumns } from './schema.ts';
 import type { IcfsFilingDetail, IcfsSearchResult } from './types.ts';
 
@@ -60,6 +72,9 @@ export async function runIcfsIngest(
     // 1. Ensure schema is ready
     log('Ensuring ICFS schema columns...');
     await ensureIcfsColumns(conn);
+    await createAttachmentTable(conn);
+    await createPleadingTable(conn);
+    await migrateLegacyPetitions(conn);
 
     // 2. Discover file numbers or use provided list
     let fileNumbers: string[];
@@ -138,6 +153,38 @@ export async function runIcfsIngest(
 
       try {
         await upsertIcfsFiling(conn, detail);
+
+        // Persist attachment + pleading metadata from the same API response
+        const hasAttachments: boolean = detail.attachments.length > 0;
+        const hasPleadings: boolean = detail.pleadings.length > 0;
+        if ((hasAttachments || hasPleadings) && detail.summary != null) {
+          const keyResult = await conn.runAndReadAll(
+            `SELECT filing_key FROM filing WHERE file_number = $1`,
+            [fileNumber],
+          );
+          const filingKey: number = Number(
+            keyResult.getRowObjectsJS()[0]!.filing_key,
+          );
+
+          if (hasAttachments) {
+            const attMeta = icfsAttachmentsToMetadata(
+              detail.attachments,
+              filingKey,
+              fileNumber as FileNumber,
+            );
+            await upsertAttachments(conn, attMeta);
+          }
+
+          if (hasPleadings) {
+            const pleadingRows = icfsPleadingsToRows(
+              detail.pleadings,
+              filingKey,
+              fileNumber as FileNumber,
+            );
+            await upsertPleadings(conn, pleadingRows);
+          }
+        }
+
         ingested++;
       } catch (err: unknown) {
         failed++;

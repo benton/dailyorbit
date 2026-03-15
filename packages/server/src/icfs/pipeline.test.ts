@@ -78,6 +78,37 @@ describeIf('ICFS pipeline (live API)', () => {
     expect(progress.some((m) => m.includes('Ingested'))).toEqual(true);
   });
 
+  it('persists attachment metadata from ICFS detail response', async () => {
+    const result: IcfsIngestResult = await runIcfsIngest({
+      dbInstance: db,
+      dateFrom: '2025-02',
+      dateTo: '2025-02',
+      fileNumbers: ['SAT-LOA-20250221-00050'],
+      delayMs: 0,
+    });
+
+    expect(result.filingsIngested).toEqual(1);
+
+    // Verify attachment rows were created
+    const conn: DuckDBConnection = await db.connect();
+    try {
+      const reader = await conn.runAndReadAll(
+        `SELECT attachment_key, filing_key, file_number, source, attachment_name, download_url
+         FROM attachment WHERE file_number = 'SAT-LOA-20250221-00050'`,
+      );
+      const rows = reader.getRowObjectsJS();
+      // This filing should have at least one attachment
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(Number(row.attachment_key)).toBeGreaterThan(0);
+        expect(row.source).toEqual('attachment');
+        expect(String(row.download_url)).toBeTruthy();
+      }
+    } finally {
+      conn.closeSync();
+    }
+  });
+
   it('handles not-found filings gracefully', async () => {
     const result: IcfsIngestResult = await runIcfsIngest({
       dbInstance: db,

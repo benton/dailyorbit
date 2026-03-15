@@ -16,6 +16,8 @@ export type FilingPetition = {
   partyName: string | null;
   dateFiled: string | null;
   description: string | null;
+  pleadingType: string | null;
+  pleadingNumber: string | null;
 };
 
 /** Related space station link (for SAT filings) */

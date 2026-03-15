@@ -1,13 +1,26 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  createPleadingTable,
+  icfsAttachmentsToMetadata,
+  icfsPleadingsToRows,
+  migrateLegacyPetitions,
   parseAppType,
   parseLegacyFilingKey,
   parseSubsystem,
+  sysIdToInt,
   upsertIcfsFiling,
+  upsertPleadings,
 } from './repository.ts';
+import type { PleadingRow } from './repository.ts';
 import { ensureIcfsColumns } from './schema.ts';
-import type { IcfsFilingDetail, IcfsFilingSummary } from './types.ts';
+import type { FileNumber } from '../lib/file-number.ts';
+import type {
+  IcfsAttachment,
+  IcfsFilingDetail,
+  IcfsFilingSummary,
+  IcfsPleading,
+} from './types.ts';
 
 /** Minimal filing table matching the IBFS schema core columns */
 const CREATE_FILING_TABLE: string = `
@@ -271,5 +284,419 @@ describe('upsertIcfsFiling', () => {
       `SELECT COUNT(*) AS cnt FROM filing`,
     );
     expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(0);
+  });
+});
+
+describe('sysIdToInt', () => {
+  it('produces a deterministic positive 32-bit integer', () => {
+    const result: number = sysIdToInt('abc123def456', 0);
+    expect(result).toEqual(sysIdToInt('abc123def456', 0));
+    expect(result).toBeGreaterThan(0);
+    expect(result).toBeLessThanOrEqual(0xffffffff);
+  });
+
+  it('produces different values for different suffixes', () => {
+    const a: number = sysIdToInt('same-sys-id', 0);
+    const b: number = sysIdToInt('same-sys-id', 1);
+    expect(a).not.toEqual(b);
+  });
+
+  it('produces different values for different sysIds', () => {
+    const a: number = sysIdToInt('id-aaa', 0);
+    const b: number = sysIdToInt('id-bbb', 0);
+    expect(a).not.toEqual(b);
+  });
+});
+
+describe('icfsAttachmentsToMetadata', () => {
+  const FILE_NUMBER: FileNumber = 'SAT-LOA-20250221-00050' as FileNumber;
+  const FILING_KEY: number = 520666;
+
+  it('returns empty array for empty attachments', () => {
+    expect(icfsAttachmentsToMetadata([], FILING_KEY, FILE_NUMBER)).toEqual([]);
+  });
+
+  it('creates one row per link', () => {
+    const attachments: IcfsAttachment[] = [
+      {
+        sysId: 'att-sys-001',
+        documentName: 'Application Filing',
+        attachmentType: 'html_and_pdf',
+        links: [
+          { displayValue: 'PDF', url: 'https://example.com/doc.pdf' },
+          { displayValue: 'HTML', url: 'https://example.com/doc.html' },
+        ],
+      },
+    ];
+    const result = icfsAttachmentsToMetadata(
+      attachments,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      attachmentKey: sysIdToInt('att-sys-001', 0),
+      filingKey: FILING_KEY,
+      fileNumber: FILE_NUMBER,
+      source: 'attachment',
+      attachmentName: 'Application Filing',
+      description: 'PDF',
+      downloadUrl: 'https://example.com/doc.pdf',
+    });
+    expect(result[1]).toEqual({
+      attachmentKey: sysIdToInt('att-sys-001', 1),
+      filingKey: FILING_KEY,
+      fileNumber: FILE_NUMBER,
+      source: 'attachment',
+      attachmentName: 'Application Filing',
+      description: 'HTML',
+      downloadUrl: 'https://example.com/doc.html',
+    });
+  });
+
+  it('handles multiple attachments with multiple links', () => {
+    const attachments: IcfsAttachment[] = [
+      {
+        sysId: 'att-001',
+        documentName: 'Doc A',
+        attachmentType: 'pdf',
+        links: [{ displayValue: 'PDF', url: 'https://example.com/a.pdf' }],
+      },
+      {
+        sysId: 'att-002',
+        documentName: 'Doc B',
+        attachmentType: 'html_and_pdf',
+        links: [
+          { displayValue: 'PDF', url: 'https://example.com/b.pdf' },
+          { displayValue: 'HTML', url: 'https://example.com/b.html' },
+        ],
+      },
+    ];
+    const result = icfsAttachmentsToMetadata(
+      attachments,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(result).toHaveLength(3);
+    expect(result.map((r) => r.attachmentName)).toEqual([
+      'Doc A',
+      'Doc B',
+      'Doc B',
+    ]);
+  });
+
+  it('produces unique attachment keys across all links', () => {
+    const attachments: IcfsAttachment[] = [
+      {
+        sysId: 'att-001',
+        documentName: 'Doc A',
+        attachmentType: 'html_and_pdf',
+        links: [
+          { displayValue: 'PDF', url: 'https://example.com/a.pdf' },
+          { displayValue: 'HTML', url: 'https://example.com/a.html' },
+        ],
+      },
+      {
+        sysId: 'att-002',
+        documentName: 'Doc B',
+        attachmentType: 'pdf',
+        links: [{ displayValue: 'PDF', url: 'https://example.com/b.pdf' }],
+      },
+    ];
+    const result = icfsAttachmentsToMetadata(
+      attachments,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    const keys: number[] = result.map((r) => r.attachmentKey);
+    expect(new Set(keys).size).toEqual(keys.length);
+  });
+
+  it('is idempotent — same input produces same keys', () => {
+    const attachments: IcfsAttachment[] = [
+      {
+        sysId: 'att-stable',
+        documentName: 'Stable Doc',
+        attachmentType: 'pdf',
+        links: [{ displayValue: 'PDF', url: 'https://example.com/s.pdf' }],
+      },
+    ];
+    const run1 = icfsAttachmentsToMetadata(
+      attachments,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    const run2 = icfsAttachmentsToMetadata(
+      attachments,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(run1).toEqual(run2);
+  });
+});
+
+describe('icfsPleadingsToRows', () => {
+  const FILE_NUMBER: FileNumber = 'SAT-LOA-20250221-00050' as FileNumber;
+  const FILING_KEY: number = 520666;
+
+  it('returns empty array for empty pleadings', () => {
+    expect(icfsPleadingsToRows([], FILING_KEY, FILE_NUMBER)).toEqual([]);
+  });
+
+  it('maps pleading fields to row columns', () => {
+    const pleadings: IcfsPleading[] = [
+      {
+        number: 'PC0106846',
+        sysId: '14f75dbe97393e108031b22de053afb5',
+        pleadingType: 'LETTER',
+        filerName: 'Nate Woodford',
+        createdOn: '2025-12-17 07:23:47',
+        exhibitAttachmentHtml: '<a href="...">exhibit</a>',
+      },
+    ];
+    const rows: PleadingRow[] = icfsPleadingsToRows(
+      pleadings,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual({
+      pleadingKey: sysIdToInt('14f75dbe97393e108031b22de053afb5', 0),
+      filingKey: FILING_KEY,
+      fileNumber: FILE_NUMBER,
+      icfsSysId: '14f75dbe97393e108031b22de053afb5',
+      pleadingNumber: 'PC0106846',
+      pleadingType: 'LETTER',
+      filerName: 'Nate Woodford',
+      createdOn: '2025-12-17 07:23:47',
+      exhibitAttachmentHtml: '<a href="...">exhibit</a>',
+    });
+  });
+
+  it('produces deterministic keys — idempotent', () => {
+    const pleadings: IcfsPleading[] = [
+      {
+        number: 'PC001',
+        sysId: 'sys-stable',
+        pleadingType: 'COMMENT',
+        filerName: 'Test Filer',
+        createdOn: '2025-01-01',
+        exhibitAttachmentHtml: '',
+      },
+    ];
+    const run1: PleadingRow[] = icfsPleadingsToRows(
+      pleadings,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    const run2: PleadingRow[] = icfsPleadingsToRows(
+      pleadings,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(run1).toEqual(run2);
+  });
+
+  it('produces unique keys for different pleadings', () => {
+    const pleadings: IcfsPleading[] = [
+      {
+        number: 'PC001',
+        sysId: 'sys-aaa',
+        pleadingType: 'COMMENT',
+        filerName: 'Filer A',
+        createdOn: '2025-01-01',
+        exhibitAttachmentHtml: '',
+      },
+      {
+        number: 'PC002',
+        sysId: 'sys-bbb',
+        pleadingType: 'LETTER',
+        filerName: 'Filer B',
+        createdOn: '2025-01-02',
+        exhibitAttachmentHtml: '',
+      },
+    ];
+    const rows: PleadingRow[] = icfsPleadingsToRows(
+      pleadings,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    const keys: number[] = rows.map((r: PleadingRow) => r.pleadingKey);
+    expect(new Set(keys).size).toEqual(keys.length);
+  });
+
+  it('normalizes empty createdOn and exhibitAttachmentHtml to null', () => {
+    const pleadings: IcfsPleading[] = [
+      {
+        number: 'PC001',
+        sysId: 'sys-null-test',
+        pleadingType: 'PETITION',
+        filerName: 'Filer',
+        createdOn: '',
+        exhibitAttachmentHtml: '',
+      },
+    ];
+    const rows: PleadingRow[] = icfsPleadingsToRows(
+      pleadings,
+      FILING_KEY,
+      FILE_NUMBER,
+    );
+    expect(rows[0]!.createdOn).toBeNull();
+    expect(rows[0]!.exhibitAttachmentHtml).toBeNull();
+  });
+});
+
+describe('upsertPleadings', () => {
+  let db: DuckDBInstance;
+  let conn: DuckDBConnection;
+
+  beforeEach(async () => {
+    db = await DuckDBInstance.create(':memory:');
+    conn = await DuckDBConnection.create(db);
+    await createPleadingTable(conn);
+  });
+
+  afterEach(() => {
+    conn.closeSync();
+  });
+
+  const FILE_NUMBER: FileNumber = 'SAT-LOA-20250221-00050' as FileNumber;
+  const FILING_KEY: number = 520666;
+
+  function makeRow(overrides: Partial<PleadingRow> = {}): PleadingRow {
+    return {
+      pleadingKey: sysIdToInt('test-sys-id', 0),
+      filingKey: FILING_KEY,
+      fileNumber: FILE_NUMBER,
+      icfsSysId: 'test-sys-id',
+      pleadingNumber: 'PC001',
+      pleadingType: 'COMMENT',
+      filerName: 'Test Filer',
+      createdOn: '2025-06-15 10:00:00',
+      exhibitAttachmentHtml: null,
+      ...overrides,
+    };
+  }
+
+  it('inserts new pleading rows', async () => {
+    const rows: PleadingRow[] = [makeRow()];
+    const result = await upsertPleadings(conn, rows);
+    expect(result).toEqual({ inserted: 1, existing: 0 });
+
+    const reader = await conn.runAndReadAll(`SELECT * FROM pleading`);
+    const dbRows = reader.getRowObjectsJS();
+    expect(dbRows).toHaveLength(1);
+    expect(String(dbRows[0]!.filer_name)).toEqual('Test Filer');
+    expect(String(dbRows[0]!.pleading_type)).toEqual('COMMENT');
+  });
+
+  it('deduplicates on re-insert by pleading_key', async () => {
+    const rows: PleadingRow[] = [makeRow()];
+    await upsertPleadings(conn, rows);
+    const result = await upsertPleadings(conn, rows);
+    expect(result).toEqual({ inserted: 0, existing: 1 });
+
+    const reader = await conn.runAndReadAll(
+      `SELECT COUNT(*) AS cnt FROM pleading`,
+    );
+    expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(1);
+  });
+
+  it('inserts multiple distinct rows', async () => {
+    const rows: PleadingRow[] = [
+      makeRow({
+        pleadingKey: sysIdToInt('sys-1', 0),
+        icfsSysId: 'sys-1',
+        pleadingNumber: 'PC001',
+      }),
+      makeRow({
+        pleadingKey: sysIdToInt('sys-2', 0),
+        icfsSysId: 'sys-2',
+        pleadingNumber: 'PC002',
+      }),
+    ];
+    const result = await upsertPleadings(conn, rows);
+    expect(result).toEqual({ inserted: 2, existing: 0 });
+  });
+});
+
+describe('migrateLegacyPetitions', () => {
+  let db: DuckDBInstance;
+  let conn: DuckDBConnection;
+
+  beforeEach(async () => {
+    db = await DuckDBInstance.create(':memory:');
+    conn = await DuckDBConnection.create(db);
+    await conn.run(CREATE_FILING_TABLE);
+    await createPleadingTable(conn);
+  });
+
+  afterEach(() => {
+    conn.closeSync();
+  });
+
+  it('returns 0 when petition_to_deny table does not exist', async () => {
+    const count: number = await migrateLegacyPetitions(conn);
+    expect(count).toEqual(0);
+  });
+
+  it('migrates legacy rows into pleading table', async () => {
+    // Create legacy table and insert test data
+    await conn.run(`
+      CREATE TABLE petition_to_deny (
+        filing_key INTEGER NOT NULL,
+        filed_by VARCHAR,
+        date_filed TIMESTAMP,
+        description VARCHAR
+      )
+    `);
+    // Insert a filing so we can resolve the file_number
+    await conn.run(
+      `INSERT INTO filing (filing_key, file_number, subsystem_code, app_type_code)
+       VALUES (100, 'SAT-LOA-20200101-00001', 'SAT', 'LOA')`,
+    );
+    await conn.run(
+      `INSERT INTO petition_to_deny (filing_key, filed_by, date_filed, description)
+       VALUES (100, 'Jane Doe', '2020-03-15', 'Opposition to grant')`,
+    );
+
+    const count: number = await migrateLegacyPetitions(conn);
+    expect(count).toEqual(1);
+
+    const reader = await conn.runAndReadAll(`SELECT * FROM pleading`);
+    const rows = reader.getRowObjectsJS();
+    expect(rows).toHaveLength(1);
+    expect(String(rows[0]!.filer_name)).toEqual('Jane Doe');
+    expect(String(rows[0]!.pleading_type)).toEqual('PETITION');
+    expect(String(rows[0]!.icfs_sys_id)).toEqual('ibfs-legacy');
+    expect(String(rows[0]!.file_number)).toEqual('SAT-LOA-20200101-00001');
+  });
+
+  it('is idempotent — does not duplicate on re-run', async () => {
+    await conn.run(`
+      CREATE TABLE petition_to_deny (
+        filing_key INTEGER NOT NULL,
+        filed_by VARCHAR,
+        date_filed TIMESTAMP,
+        description VARCHAR
+      )
+    `);
+    await conn.run(
+      `INSERT INTO filing (filing_key, file_number, subsystem_code, app_type_code)
+       VALUES (100, 'SAT-LOA-20200101-00001', 'SAT', 'LOA')`,
+    );
+    await conn.run(
+      `INSERT INTO petition_to_deny (filing_key, filed_by, date_filed, description)
+       VALUES (100, 'Jane Doe', '2020-03-15', 'Opposition')`,
+    );
+
+    await migrateLegacyPetitions(conn);
+    const secondRun: number = await migrateLegacyPetitions(conn);
+    expect(secondRun).toEqual(0);
+
+    const reader = await conn.runAndReadAll(
+      `SELECT COUNT(*) AS cnt FROM pleading`,
+    );
+    expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(1);
   });
 });

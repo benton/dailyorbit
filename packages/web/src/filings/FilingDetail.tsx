@@ -22,6 +22,8 @@ type FilingPetition = {
   partyName: string | null;
   dateFiled: string | null;
   description: string | null;
+  pleadingType: string | null;
+  pleadingNumber: string | null;
 };
 
 type RelatedSpaceStation = {
@@ -92,6 +94,24 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
       <dt className="text-neutral-500 dark:text-neutral-400">{label}</dt>
       <dd className="font-medium text-neutral-900 dark:text-neutral-100">{value}</dd>
     </div>
+  );
+}
+
+const PLEADING_TYPE_STYLES: Record<string, string> = {
+  LETTER: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  PETITION: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+  COMMENT: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
+};
+
+function PleadingTypeBadge({ type }: { type: string | null }) {
+  if (type == null || type === '') return null;
+  const style: string =
+    PLEADING_TYPE_STYLES[type] ??
+    'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300';
+  return (
+    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>
+      {type}
+    </span>
   );
 }
 
@@ -376,10 +396,13 @@ export default function FilingDetailPage() {
                   <thead>
                     <tr className="border-b border-neutral-200 dark:border-neutral-700">
                       <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                        Party
+                        Type
                       </th>
                       <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                        Description
+                        Number
+                      </th>
+                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                        Party
                       </th>
                       <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
                         Date Filed
@@ -392,11 +415,14 @@ export default function FilingDetailPage() {
                         key={`${pet.filingKey}-${idx}`}
                         className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
                       >
+                        <td className="px-4 py-2">
+                          <PleadingTypeBadge type={pet.pleadingType} />
+                        </td>
+                        <td className="px-4 py-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                          {pet.pleadingNumber ?? ''}
+                        </td>
                         <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
                           {pet.partyName ?? 'Unknown'}
-                        </td>
-                        <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
-                          {pet.description ?? ''}
                         </td>
                         <td className="px-4 py-2 text-neutral-500 dark:text-neutral-400">
                           {formatDate(pet.dateFiled)}

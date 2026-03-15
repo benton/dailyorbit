@@ -1,6 +1,25 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
-import type { IcfsFilingDetail, IcfsServiceType } from './types.ts';
+import type { AttachmentMetadata } from '../attachments/types.ts';
 import { attributeFiling } from '../companies/attribution.ts';
+import type { FileNumber } from '../lib/file-number.ts';
+import type {
+  IcfsAttachment,
+  IcfsFilingDetail,
+  IcfsPleading,
+  IcfsServiceType,
+} from './types.ts';
+
+export type PleadingRow = {
+  pleadingKey: number;
+  filingKey: number;
+  fileNumber: FileNumber;
+  icfsSysId: string;
+  pleadingNumber: string;
+  pleadingType: string;
+  filerName: string;
+  createdOn: string | null;
+  exhibitAttachmentHtml: string | null;
+};
 
 /** Parse subsystem code from a file number like "SAT-LOA-20250221-00050" */
 export function parseSubsystem(fileNumber: string): string {
@@ -277,4 +296,196 @@ function generateSyntheticKey(fileNumber: string): number {
   }
   // Ensure negative and non-zero
   return hash > 0 ? -hash : hash === 0 ? -1 : hash;
+}
+
+/** Deterministic hash of ICFS sysId + link index to a positive 32-bit int for attachment_key. */
+export function sysIdToInt(sysId: string, suffix: number): number {
+  let hash: number = 2166136261;
+  const input: string = `${sysId}:${String(suffix)}`;
+  for (let i: number = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+const CREATE_PLEADING_TABLE_SQL: string = `
+  CREATE TABLE IF NOT EXISTS pleading (
+    pleading_key INTEGER NOT NULL,
+    filing_key INTEGER NOT NULL,
+    file_number VARCHAR NOT NULL,
+    icfs_sys_id VARCHAR NOT NULL,
+    pleading_number VARCHAR NOT NULL,
+    pleading_type VARCHAR NOT NULL,
+    filer_name VARCHAR NOT NULL,
+    created_on TIMESTAMP,
+    exhibit_attachment_html VARCHAR,
+    ingested_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+  )
+`;
+
+export async function createPleadingTable(
+  conn: DuckDBConnection,
+): Promise<void> {
+  await conn.run(CREATE_PLEADING_TABLE_SQL);
+}
+
+/** Map ICFS pleadings to DB rows using sysIdToInt for deterministic keys. */
+export function icfsPleadingsToRows(
+  pleadings: IcfsPleading[],
+  filingKey: number,
+  fileNumber: FileNumber,
+): PleadingRow[] {
+  return pleadings.map(
+    (p: IcfsPleading): PleadingRow => ({
+      pleadingKey: sysIdToInt(p.sysId, 0),
+      filingKey,
+      fileNumber,
+      icfsSysId: p.sysId,
+      pleadingNumber: p.number,
+      pleadingType: p.pleadingType,
+      filerName: p.filerName,
+      createdOn: p.createdOn || null,
+      exhibitAttachmentHtml: p.exhibitAttachmentHtml || null,
+    }),
+  );
+}
+
+/** Insert pleading rows if they don't already exist (keyed by pleading_key). */
+export async function upsertPleadings(
+  conn: DuckDBConnection,
+  rows: PleadingRow[],
+): Promise<{ inserted: number; existing: number }> {
+  let inserted: number = 0;
+  let existing: number = 0;
+
+  for (const row of rows) {
+    const check = await conn.runAndReadAll(
+      `SELECT COUNT(*) AS cnt FROM pleading WHERE pleading_key = $1`,
+      [row.pleadingKey] as DuckDBValue[],
+    );
+    const exists: boolean = Number(check.getRowObjectsJS()[0]!.cnt) > 0;
+
+    if (exists) {
+      existing++;
+    } else {
+      await conn.run(
+        `INSERT INTO pleading
+          (pleading_key, filing_key, file_number, icfs_sys_id,
+           pleading_number, pleading_type, filer_name, created_on,
+           exhibit_attachment_html)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          row.pleadingKey,
+          row.filingKey,
+          row.fileNumber,
+          row.icfsSysId,
+          row.pleadingNumber,
+          row.pleadingType,
+          row.filerName,
+          row.createdOn,
+          row.exhibitAttachmentHtml,
+        ] as DuckDBValue[],
+      );
+      inserted++;
+    }
+  }
+
+  return { inserted, existing };
+}
+
+/** Convert ICFS attachments to AttachmentMetadata rows (one per download link). */
+export function icfsAttachmentsToMetadata(
+  attachments: IcfsAttachment[],
+  filingKey: number,
+  fileNumber: FileNumber,
+): AttachmentMetadata[] {
+  const result: AttachmentMetadata[] = [];
+  for (const att of attachments) {
+    for (let i: number = 0; i < att.links.length; i++) {
+      const link: { displayValue: string; url: string } = att.links[i]!;
+      result.push({
+        attachmentKey: sysIdToInt(att.sysId, i),
+        filingKey,
+        fileNumber,
+        source: 'attachment',
+        attachmentName: att.documentName,
+        description: link.displayValue,
+        downloadUrl: link.url,
+      });
+    }
+  }
+  return result;
+}
+
+/**
+ * One-time migration: copy the 24 legacy `petition_to_deny` rows into the
+ * `pleading` table with synthetic values. Idempotent — skips if rows
+ * already migrated. After this runs, `petition_to_deny` is no longer queried.
+ */
+export async function migrateLegacyPetitions(
+  conn: DuckDBConnection,
+): Promise<number> {
+  // Check if petition_to_deny table exists
+  const tableCheck = await conn.runAndReadAll(
+    `SELECT COUNT(*) AS cnt FROM information_schema.tables
+     WHERE table_name = 'petition_to_deny'`,
+  );
+  if (Number(tableCheck.getRowObjectsJS()[0]!.cnt) === 0) return 0;
+
+  // Migrate rows not yet in pleading
+  const rows = await conn.runAndReadAll(
+    `SELECT filing_key, filed_by, CAST(date_filed AS VARCHAR) AS date_filed, description
+     FROM petition_to_deny`,
+  );
+  const legacyRows = rows.getRowObjectsJS();
+
+  let migrated: number = 0;
+  for (const r of legacyRows) {
+    const filingKey: number = Number(r.filing_key);
+    const filedBy: string = r.filed_by != null ? String(r.filed_by) : '';
+    const dateFiled: string | null =
+      r.date_filed != null ? String(r.date_filed) : null;
+
+    // Deterministic key from filing_key + filed_by + date_filed
+    const keyInput: string = `${String(filingKey)}:${filedBy}:${dateFiled ?? ''}`;
+    const pleadingKey: number = sysIdToInt(keyInput, 0);
+
+    const check = await conn.runAndReadAll(
+      `SELECT COUNT(*) AS cnt FROM pleading WHERE pleading_key = $1`,
+      [pleadingKey] as DuckDBValue[],
+    );
+    if (Number(check.getRowObjectsJS()[0]!.cnt) > 0) continue;
+
+    // Look up file_number from filing table
+    const fnResult = await conn.runAndReadAll(
+      `SELECT file_number FROM filing WHERE filing_key = $1`,
+      [filingKey] as DuckDBValue[],
+    );
+    const fnRows = fnResult.getRowObjectsJS();
+    const fileNumber: string =
+      fnRows.length > 0 ? String(fnRows[0]!.file_number) : '';
+
+    await conn.run(
+      `INSERT INTO pleading
+        (pleading_key, filing_key, file_number, icfs_sys_id,
+         pleading_number, pleading_type, filer_name, created_on,
+         exhibit_attachment_html)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        pleadingKey,
+        filingKey,
+        fileNumber,
+        'ibfs-legacy',
+        '',
+        'PETITION',
+        filedBy,
+        dateFiled,
+        null,
+      ] as DuckDBValue[],
+    );
+    migrated++;
+  }
+
+  return migrated;
 }
