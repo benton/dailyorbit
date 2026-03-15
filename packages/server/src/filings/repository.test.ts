@@ -18,7 +18,6 @@ const SETUP_SQL: string = `
     date_signed TIMESTAMP,
     date_grant TIMESTAMP,
     date_begin TIMESTAMP,
-    date_end TIMESTAMP,
     date_expire TIMESTAMP,
     last_action VARCHAR,
     last_action_date TIMESTAMP,
@@ -30,8 +29,7 @@ const SETUP_SQL: string = `
     environmental_impact VARCHAR,
     nature_of_service VARCHAR,
     transferor_name VARCHAR,
-    transferee_name VARCHAR,
-    space_station_key INTEGER
+    transferee_name VARCHAR
   );
 
   CREATE TABLE status_code (
@@ -46,7 +44,7 @@ const SETUP_SQL: string = `
 
   CREATE TABLE app_type_code (
     app_type_code VARCHAR NOT NULL PRIMARY KEY,
-    description VARCHAR
+    application_type VARCHAR
   );
 
   CREATE TABLE attachment (
@@ -64,7 +62,7 @@ const SETUP_SQL: string = `
 
   CREATE TABLE petition_to_deny (
     filing_key INTEGER NOT NULL,
-    party_name VARCHAR,
+    filed_by VARCHAR,
     date_filed TIMESTAMP,
     description VARCHAR
   );
@@ -85,17 +83,17 @@ const SEED_LOOKUPS_SQL: string = `
   INSERT INTO status_code (status_code, status_text) VALUES ('P', 'Pending');
   INSERT INTO subsystem_code (subsystem_code, description) VALUES ('SAT', 'Satellite Space Station');
   INSERT INTO subsystem_code (subsystem_code, description) VALUES ('SES', 'Satellite Earth Station');
-  INSERT INTO app_type_code (app_type_code, description) VALUES ('LOA', 'Launch and Operate Authority');
-  INSERT INTO app_type_code (app_type_code, description) VALUES ('REG', 'Registration');
+  INSERT INTO app_type_code (app_type_code, application_type) VALUES ('LOA', 'Launch and Operate Authority');
+  INSERT INTO app_type_code (app_type_code, application_type) VALUES ('REG', 'Registration');
 `;
 
 const SAT_FILING_SQL: string = `
   INSERT INTO filing (filing_key, file_number, subsystem_code, app_type_code,
     status_code, callsign, address_attention, applicant_frn, date_filed,
-    brief_description, da_number, space_station_key)
+    brief_description, da_number)
   VALUES (100, 'SAT-LOA-20250221-00050', 'SAT', 'LOA',
-    'G', 'S3224', 'ICEYE US, Inc.', '0030543268', '2025-02-21',
-    'ICEYE seeks authority to launch and operate', '25-346', 500)
+    'G', 'ICEYE-X1', 'ICEYE US, Inc.', '0030543268', '2025-02-21',
+    'ICEYE seeks authority to launch and operate', '25-346')
 `;
 
 const SES_FILING_SQL: string = `
@@ -188,7 +186,7 @@ describe('getFilingByFileNumber', () => {
     await conn.run(SAT_FILING_SQL);
     await conn.run(SPACE_STATION_SQL);
     await conn.run(`
-      INSERT INTO petition_to_deny (filing_key, party_name, date_filed, description)
+      INSERT INTO petition_to_deny (filing_key, filed_by, date_filed, description)
       VALUES
         (100, 'Competing Corp.', '2025-03-15', 'Opposition to grant'),
         (100, 'Industry Alliance', '2025-03-20', 'Comments supporting application')
@@ -279,8 +277,8 @@ describe('getFilingByFileNumber', () => {
       'SAT-LOA-20250221-00050',
     );
 
-    // SAT filing has callsign S3224 but should NOT set relatedEarthStationCallsign
-    expect(result!.callsign).toEqual('S3224');
+    // SAT filing has callsign ICEYE-X1 but should NOT set relatedEarthStationCallsign
+    expect(result!.callsign).toEqual('ICEYE-X1');
     expect(result!.relatedEarthStationCallsign).toBeNull();
   });
 });

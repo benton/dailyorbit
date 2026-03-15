@@ -7,9 +7,7 @@ function NavLink({ to, label }: { to: string; label: string }) {
 
   return (
     <Link
-      className={
-        `text-sm hover:text-neutral-900 dark:hover:text-neutral-100 ${isActive ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`
-      }
+      className={`text-sm hover:text-neutral-900 dark:hover:text-neutral-100 ${isActive ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}
       to={to}
     >
       {label}

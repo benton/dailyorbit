@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { vg } from '@cosmograph/react';
+import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
 
@@ -29,15 +29,12 @@ export default function FilingVolume(): React.ReactElement {
 
         // Pass API data directly to vgplot marks (no DuckDB coordinator needed)
         const chart = vg.plot(
-          vg.barY(
-            data,
-            {
-              fill: 'subsystem_code',
-              tip: true,
-              x: 'year',
-              y: 'count',
-            },
-          ),
+          vg.barY(data, {
+            fill: 'subsystem_code',
+            tip: true,
+            x: 'year',
+            y: 'count',
+          }),
           vg.colorDomain(SUBSYSTEM_CODES),
           vg.colorRange(SUBSYSTEM_COLORS),
           vg.height(400),
@@ -51,7 +48,9 @@ export default function FilingVolume(): React.ReactElement {
 
         if (!cancelled && containerRef.current != null) {
           containerRef.current.replaceChildren(chart);
-          const codes: Array<string> = [...new Set(data.map((d: YearlyFilingVolume) => d.subsystem_code))];
+          const codes: Array<string> = [
+            ...new Set(data.map((d: YearlyFilingVolume) => d.subsystem_code)),
+          ];
           codes.sort();
           setActiveCodes(codes);
           setLoading(false);
@@ -87,9 +86,7 @@ export default function FilingVolume(): React.ReactElement {
       </div>
 
       <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        {loading && (
-          <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
-        )}
+        {loading && <p className="text-sm text-neutral-500">Loading filing volume chart...</p>}
         <div ref={containerRef} />
         {activeCodes.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">

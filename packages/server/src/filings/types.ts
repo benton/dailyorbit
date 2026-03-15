@@ -43,7 +43,6 @@ export type FilingDetail = {
   dateSigned: string | null;
   dateGrant: string | null;
   dateBegin: string | null;
-  dateEnd: string | null;
   dateExpire: string | null;
   lastAction: string | null;
   lastActionDate: string | null;

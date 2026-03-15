@@ -47,7 +47,6 @@ type FilingDetail = {
   dateSigned: string | null;
   dateGrant: string | null;
   dateBegin: string | null;
-  dateEnd: string | null;
   dateExpire: string | null;
   lastAction: string | null;
   lastActionDate: string | null;
@@ -411,7 +410,6 @@ export default function FilingDetailPage() {
               <DetailRow label="Date Granted" value={formatDate(filing.dateGrant)} />
               <DetailRow label="Effective Date" value={formatDate(filing.dateBegin)} />
               <DetailRow label="Expiration Date" value={formatDate(filing.dateExpire)} />
-              <DetailRow label="End Date" value={formatDate(filing.dateEnd)} />
               {filing.lastAction != null && (
                 <div>
                   <dt className="text-neutral-500 dark:text-neutral-400">Last Action</dt>

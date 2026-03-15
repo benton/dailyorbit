@@ -30,7 +30,6 @@ export async function getFilingByFileNumber(
        f.date_signed,
        f.date_grant,
        f.date_begin,
-       f.date_end,
        f.date_expire,
        f.last_action,
        f.last_action_date,
@@ -43,10 +42,9 @@ export async function getFilingByFileNumber(
        f.nature_of_service,
        f.transferor_name,
        f.transferee_name,
-       f.space_station_key,
        sc.status_text,
        sub.description AS subsystem_label,
-       atc.description AS app_type_label
+       atc.application_type AS app_type_label
      FROM filing f
      LEFT JOIN status_code sc ON sc.status_code = f.status_code
      LEFT JOIN subsystem_code sub ON sub.subsystem_code = f.subsystem_code
@@ -62,6 +60,9 @@ export async function getFilingByFileNumber(
   const filingKey: number = Number(row.filing_key);
   const subsystemCode: string = String(row.subsystem_code ?? '');
 
+  const callsign: string | null =
+    row.callsign != null ? String(row.callsign).trim() : null;
+
   const attachments: FilingAttachment[] = await fetchAttachments(
     conn,
     filingKey,
@@ -69,15 +70,9 @@ export async function getFilingByFileNumber(
   const petitions: FilingPetition[] = await fetchPetitions(conn, filingKey);
 
   let relatedSpaceStation: RelatedSpaceStation | null = null;
-  if (subsystemCode === 'SAT' && row.space_station_key != null) {
-    relatedSpaceStation = await fetchSpaceStation(
-      conn,
-      Number(row.space_station_key),
-    );
+  if (subsystemCode === 'SAT' && callsign != null && callsign !== '') {
+    relatedSpaceStation = await fetchSpaceStationByCallsign(conn, callsign);
   }
-
-  const callsign: string | null =
-    row.callsign != null ? String(row.callsign).trim() : null;
 
   const relatedEarthStationCallsign: string | null =
     subsystemCode === 'SES' && callsign != null && callsign !== ''
@@ -103,7 +98,6 @@ export async function getFilingByFileNumber(
     dateSigned: row.date_signed != null ? String(row.date_signed) : null,
     dateGrant: row.date_grant != null ? String(row.date_grant) : null,
     dateBegin: row.date_begin != null ? String(row.date_begin) : null,
-    dateEnd: row.date_end != null ? String(row.date_end) : null,
     dateExpire: row.date_expire != null ? String(row.date_expire) : null,
     lastAction: row.last_action != null ? String(row.last_action) : null,
     lastActionDate:
@@ -164,7 +158,7 @@ async function fetchPetitions(
   filingKey: number,
 ): Promise<FilingPetition[]> {
   const result = await conn.runAndReadAll(
-    `SELECT filing_key, party_name, date_filed, description
+    `SELECT filing_key, filed_by, date_filed, description
      FROM petition_to_deny
      WHERE filing_key = $1
      ORDER BY date_filed`,
@@ -173,22 +167,23 @@ async function fetchPetitions(
 
   return result.getRowObjectsJS().map((r) => ({
     filingKey: Number(r.filing_key),
-    partyName: r.party_name != null ? String(r.party_name) : null,
+    partyName: r.filed_by != null ? String(r.filed_by) : null,
     dateFiled: r.date_filed != null ? String(r.date_filed) : null,
     description: r.description != null ? String(r.description) : null,
   }));
 }
 
-/** Fetch a space station by its primary key */
-async function fetchSpaceStation(
+/** Fetch a space station by callsign (matches us_name) */
+async function fetchSpaceStationByCallsign(
   conn: DuckDBConnection,
-  spaceStationKey: number,
+  callsign: string,
 ): Promise<RelatedSpaceStation | null> {
   const result = await conn.runAndReadAll(
     `SELECT space_station_key, us_name, itu_name, orbit_location
      FROM space_station
-     WHERE space_station_key = $1`,
-    [spaceStationKey] as DuckDBValue[],
+     WHERE us_name = $1
+     LIMIT 1`,
+    [callsign] as DuckDBValue[],
   );
 
   const rows = result.getRowObjectsJS();
