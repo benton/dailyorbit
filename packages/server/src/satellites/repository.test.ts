@@ -74,12 +74,12 @@ describe('getSatelliteById', () => {
   it('returns the space station for a valid key', async () => {
     const result = await getSatelliteById(conn, 100);
     expect(result).toEqual({
-      space_station_key: 100,
-      us_name: 'SATMEX-5',
-      itu_name: 'SOLIDARIDAD-2',
-      orbit_location: '116.8W',
+      spaceStationKey: 100,
+      usName: 'SATMEX-5',
+      ituName: 'SOLIDARIDAD-2',
+      orbitLocation: '116.8W',
       verbose: 'Satmex satellite at 116.8W',
-      inactive_date: null,
+      inactiveDate: null,
     });
   });
 
@@ -91,9 +91,9 @@ describe('getSatelliteById', () => {
   it('handles nullable fields correctly', async () => {
     const result = await getSatelliteById(conn, 200);
     expect(result).not.toBeNull();
-    expect(result!.itu_name).toBeNull();
+    expect(result!.ituName).toBeNull();
     expect(result!.verbose).toBeNull();
-    expect(result!.inactive_date).not.toBeNull();
+    expect(result!.inactiveDate).not.toBeNull();
   });
 });
 
@@ -117,7 +117,7 @@ describe('getSatelliteFilings', () => {
   it('returns only filings linked to the given satellite', async () => {
     const result = await getSatelliteFilings(conn, 'SATMEX-5', {});
     expect(result.totalRows).toEqual(3);
-    const fileNumbers: string[] = result.data.map((f) => f.file_number);
+    const fileNumbers: string[] = result.data.map((f) => f.fileNumber);
     expect(fileNumbers).toContain('SAT-LOA-20200101-00001');
     expect(fileNumbers).toContain('SAT-MOD-20200601-00002');
     expect(fileNumbers).toContain('SAT-STA-20210301-00003');
@@ -157,7 +157,7 @@ describe('getSatelliteFilings', () => {
   it('sorts by the requested column in descending order', async () => {
     const request: PaginatedRequest = { sort: 'date_filed', order: 'desc' };
     const result = await getSatelliteFilings(conn, 'SATMEX-5', request);
-    const fileNumbers: string[] = result.data.map((f) => f.file_number);
+    const fileNumbers: string[] = result.data.map((f) => f.fileNumber);
     // Dates: filing 3 = 2021-03-01, filing 2 = 2020-06-01, filing 1 = 2020-01-01
     expect(fileNumbers).toEqual([
       'SAT-STA-20210301-00003',
@@ -177,12 +177,12 @@ describe('getSatelliteFilings', () => {
     const result = await getSatelliteFilings(conn, 'GALAXY-3C', {});
     expect(result.data.length).toEqual(1);
     const filing = result.data[0]!;
-    expect(filing.filing_key).toEqual(4);
-    expect(filing.file_number).toEqual('SES-NEW-20200501-00004');
-    expect(filing.subsystem_code).toEqual('SES');
-    expect(filing.app_type_code).toEqual('NEW');
-    expect(filing.status_code).toEqual('Grant');
-    expect(filing.address_attention).toEqual('Gamma LLC');
+    expect(filing.filingKey).toEqual(4);
+    expect(filing.fileNumber).toEqual('SES-NEW-20200501-00004');
+    expect(filing.subsystemCode).toEqual('SES');
+    expect(filing.appTypeCode).toEqual('NEW');
+    expect(filing.statusCode).toEqual('Grant');
+    expect(filing.addressAttention).toEqual('Gamma LLC');
     expect(filing.callsign).toEqual('GALAXY-3C');
     expect(filing.description).toEqual('Earth station');
   });

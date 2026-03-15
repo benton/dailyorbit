@@ -8,23 +8,23 @@ import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '..
 // ── Types mirroring server-side models ──────────────────────────────
 
 type SpaceStation = {
-  space_station_key: number;
-  us_name: string;
-  itu_name: string | null;
-  orbit_location: string | null;
+  spaceStationKey: number;
+  usName: string;
+  ituName: string | null;
+  orbitLocation: string | null;
   verbose: string | null;
-  inactive_date: string | null;
+  inactiveDate: string | null;
 };
 
 type SatelliteFiling = {
-  filing_key: number;
-  file_number: string;
-  subsystem_code: string;
-  app_type_code: string;
-  status_code: string | null;
-  date_filed: string | null;
-  date_grant: string | null;
-  address_attention: string | null;
+  filingKey: number;
+  fileNumber: string;
+  subsystemCode: string;
+  appTypeCode: string;
+  statusCode: string | null;
+  dateFiled: string | null;
+  dateGrant: string | null;
+  addressAttention: string | null;
   callsign: string | null;
   description: string | null;
 };
@@ -45,30 +45,30 @@ type SatelliteDetailResponse = {
 
 const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
   {
-    accessorKey: 'file_number',
+    accessorKey: 'fileNumber',
     header: 'File Number',
     size: 240,
     cell: ({ row }) => (
       <Link
-        to={`/filings/${row.original.file_number}`}
+        to={`/filings/${row.original.fileNumber}`}
         className="text-blue-600 hover:underline dark:text-blue-400"
       >
-        {row.original.file_number}
+        {row.original.fileNumber}
       </Link>
     ),
   },
   {
-    accessorKey: 'app_type_code',
+    accessorKey: 'appTypeCode',
     header: 'App Type',
     size: 80,
   },
   {
-    accessorKey: 'address_attention',
+    accessorKey: 'addressAttention',
     header: 'Applicant',
     size: 200,
   },
   {
-    accessorKey: 'date_filed',
+    accessorKey: 'dateFiled',
     header: 'Date Filed',
     size: 120,
     cell: ({ getValue }) => {
@@ -77,7 +77,7 @@ const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
     },
   },
   {
-    accessorKey: 'status_code',
+    accessorKey: 'statusCode',
     header: 'Status',
     size: 100,
   },
@@ -131,13 +131,13 @@ export default function SatelliteDetail() {
   );
 
   const isActive: boolean = useMemo(
-    () => satellite?.inactive_date == null,
-    [satellite?.inactive_date],
+    () => satellite?.inactiveDate == null,
+    [satellite?.inactiveDate],
   );
 
   const hasItuName: boolean = useMemo(
-    () => satellite?.itu_name != null && satellite.itu_name !== satellite.us_name,
-    [satellite?.itu_name, satellite?.us_name],
+    () => satellite?.ituName != null && satellite.ituName !== satellite.usName,
+    [satellite?.ituName, satellite?.usName],
   );
 
   if (loading) {
@@ -162,7 +162,7 @@ export default function SatelliteDetail() {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            {satellite.us_name}
+            {satellite.usName}
           </h1>
           <Badge variant={isActive ? 'default' : 'destructive'}>
             {isActive ? 'Active' : 'Inactive'}
@@ -170,12 +170,12 @@ export default function SatelliteDetail() {
         </div>
         {hasItuName && (
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            ITU Name: {satellite.itu_name}
+            ITU Name: {satellite.ituName}
           </p>
         )}
-        {satellite.orbit_location != null && (
+        {satellite.orbitLocation != null && (
           <p className="text-lg font-medium text-neutral-700 dark:text-neutral-300">
-            Orbital Position: {satellite.orbit_location}
+            Orbital Position: {satellite.orbitLocation}
           </p>
         )}
       </div>
@@ -220,22 +220,22 @@ export default function SatelliteDetail() {
               <div>
                 <dt className="text-neutral-500 dark:text-neutral-400">US Name</dt>
                 <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                  {satellite.us_name}
+                  {satellite.usName}
                 </dd>
               </div>
-              {satellite.itu_name != null && (
+              {satellite.ituName != null && (
                 <div>
                   <dt className="text-neutral-500 dark:text-neutral-400">ITU Name</dt>
                   <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {satellite.itu_name}
+                    {satellite.ituName}
                   </dd>
                 </div>
               )}
-              {satellite.orbit_location != null && (
+              {satellite.orbitLocation != null && (
                 <div>
                   <dt className="text-neutral-500 dark:text-neutral-400">Orbital Position</dt>
                   <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {satellite.orbit_location}
+                    {satellite.orbitLocation}
                   </dd>
                 </div>
               )}
@@ -245,9 +245,9 @@ export default function SatelliteDetail() {
                   <Badge variant={isActive ? 'default' : 'destructive'} className="mt-1">
                     {isActive ? 'Active' : 'Inactive'}
                   </Badge>
-                  {satellite.inactive_date != null && (
+                  {satellite.inactiveDate != null && (
                     <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                      since {new Date(satellite.inactive_date).toLocaleDateString()}
+                      since {new Date(satellite.inactiveDate).toLocaleDateString()}
                     </span>
                   )}
                 </dd>
@@ -255,7 +255,7 @@ export default function SatelliteDetail() {
               <div>
                 <dt className="text-neutral-500 dark:text-neutral-400">ID</dt>
                 <dd className="font-mono text-neutral-900 dark:text-neutral-100">
-                  {satellite.space_station_key}
+                  {satellite.spaceStationKey}
                 </dd>
               </div>
             </dl>

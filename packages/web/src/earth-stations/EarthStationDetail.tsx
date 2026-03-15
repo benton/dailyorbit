@@ -6,88 +6,80 @@ import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types matching server-side models (camelCase) ────────────────────────────
 
 type EarthStationInfo = {
   callsign: string;
-  applicant_name: string;
-  city: string;
-  state: string;
-  lat_deg: number;
-  lat_min: number;
-  lat_sec: number;
-  lat_hemi: string;
-  long_deg: number;
-  long_min: number;
-  long_sec: number;
-  long_hemi: string;
-  most_recent_status: string;
+  applicantName: string | null;
+  applicantCity: string | null;
+  applicantState: string | null;
+  applicantCountry: string | null;
+  mostRecentFileNumber: string;
+  mostRecentDateFiled: string | null;
+  mostRecentStatus: string | null;
 };
 
-type FilingRow = {
-  file_number: string;
-  app_type_code: string;
-  address_attention: string;
-  date_filed: string;
-  status_code: string;
+type EarthStationFiling = {
+  filingKey: number;
+  fileNumber: string;
+  appTypeCode: string;
+  statusCode: string | null;
+  dateFiled: string | null;
+  dateGrant: string | null;
+  dateExpire: string | null;
+  description: string | null;
 };
 
-type Frequency = {
-  polarization_code: string;
-  frequency_lower: number;
-  frequency_upper: number;
-  trans_mode: string;
-  eirp: number;
-  eirp_density: number;
-  emission: string;
+type AntennaFrequency = {
+  frequencyKey: number;
+  polarizationCode: string | null;
+  eirp: number | null;
+  eirpDensity: number | null;
+  emission: string | null;
+  frequencyLower: string | null;
+  frequencyUpper: string | null;
+  transMode: string | null;
+  modulation: string | null;
 };
 
-type Antenna = {
-  antenna_key: string;
-  antenna_id: string;
-  diameter: number;
-  manufacturer: string;
-  model: string;
-  max_input_power: number;
-  max_output_eirp: number;
-  frequencies: Array<Frequency>;
+type EarthStationAntenna = {
+  antennaKey: number;
+  antennaId: string;
+  siteKey: number;
+  diameter: number | null;
+  manufacturer: string | null;
+  model: string | null;
+  maxInputPower: number | null;
+  maxOutputEirp: number | null;
+  frequencies: AntennaFrequency[];
 };
 
 type EarthStationStats = {
-  filing_count: number;
-  most_recent_filing: string;
-  antenna_count: number;
+  totalFilingCount: number;
+  mostRecentFilingDate: string | null;
+  antennaCount: number;
 };
 
 type EarthStationResponse = {
   info: EarthStationInfo;
-  filings: PaginatedResponse<FilingRow>;
-  antennas: Array<Antenna>;
+  filings: PaginatedResponse<EarthStationFiling>;
+  antennas: EarthStationAntenna[];
   stats: EarthStationStats;
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Format DMS coordinates into a human-readable string like 39d33'01"N */
-function formatCoordinate(deg: number, min: number, sec: number, hemi: string): string {
-  const secStr: string = String(Math.round(sec)).padStart(2, '0');
-  const minStr: string = String(min).padStart(2, '0');
-  return `${deg}\u00B0${minStr}\u2032${secStr}\u2033${hemi}`;
-}
-
-function formatLatLon(info: EarthStationInfo): string {
-  const lat: string = formatCoordinate(info.lat_deg, info.lat_min, info.lat_sec, info.lat_hemi);
-  const lon: string = formatCoordinate(info.long_deg, info.long_min, info.long_sec, info.long_hemi);
-  return `${lat}, ${lon}`;
-}
-
 /** Determine whether a station status is "active" for badge display */
-function isActiveStatus(status: string): boolean {
+function isActiveStatus(status: string | null): boolean {
+  if (status == null) return false;
   const normalized: string = status.toLowerCase();
   return normalized.includes('grant') || normalized.includes('active') || normalized === 'g';
 }
 
-function formatFrequency(mhz: number): string {
+function formatFrequency(value: string | null): string {
+  if (value == null) return '';
+  const mhz: number = Number(value);
+  if (Number.isNaN(mhz)) return value;
   if (mhz >= 1000) {
     return `${(mhz / 1000).toFixed(3)} GHz`;
   }
@@ -96,32 +88,32 @@ function formatFrequency(mhz: number): string {
 
 // ── Filing Columns ───────────────────────────────────────────────────────────
 
-const filingColumns: Array<ColumnDef<FilingRow, unknown>> = [
+const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
   {
-    accessorKey: 'file_number',
+    accessorKey: 'fileNumber',
     header: 'File Number',
     size: 240,
     cell: ({ row }) => (
       <Link
-        to={`/filings/${row.original.file_number}`}
+        to={`/filings/${row.original.fileNumber}`}
         className="text-blue-600 hover:underline dark:text-blue-400"
       >
-        {row.original.file_number}
+        {row.original.fileNumber}
       </Link>
     ),
   },
   {
-    accessorKey: 'app_type_code',
+    accessorKey: 'appTypeCode',
     header: 'Type',
     size: 80,
   },
   {
-    accessorKey: 'date_filed',
+    accessorKey: 'dateFiled',
     header: 'Date Filed',
     size: 120,
     cell: ({ row }) => {
-      const raw: string = row.original.date_filed;
-      if (!raw) return '';
+      const raw: string | null = row.original.dateFiled;
+      if (raw == null) return '';
       return new Date(raw).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -130,13 +122,13 @@ const filingColumns: Array<ColumnDef<FilingRow, unknown>> = [
     },
   },
   {
-    accessorKey: 'status_code',
+    accessorKey: 'statusCode',
     header: 'Status',
     size: 100,
   },
   {
-    accessorKey: 'address_attention',
-    header: 'Attention',
+    accessorKey: 'description',
+    header: 'Description',
     size: 200,
   },
 ];
@@ -147,7 +139,7 @@ export default function EarthStationDetail() {
   const { callsign } = useParams<{ callsign: string }>();
 
   const [info, setInfo] = useState<EarthStationInfo | null>(null);
-  const [antennas, setAntennas] = useState<Array<Antenna>>([]);
+  const [antennas, setAntennas] = useState<EarthStationAntenna[]>([]);
   const [stats, setStats] = useState<EarthStationStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +173,7 @@ export default function EarthStationDetail() {
 
   // Fetch function for DataTable (server-side pagination)
   const fetchFilings = useCallback(
-    async (params: DataTableFetchParams): Promise<PaginatedResponse<FilingRow>> => {
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<EarthStationFiling>> => {
       if (callsign == null) {
         return { data: [], page: 1, pageSize: params.pageSize, totalRows: 0, totalPages: 0 };
       }
@@ -201,7 +193,7 @@ export default function EarthStationDetail() {
   );
 
   // Memoize columns to avoid unnecessary re-renders
-  const columns: Array<ColumnDef<FilingRow, unknown>> = useMemo(() => filingColumns, []);
+  const columns: Array<ColumnDef<EarthStationFiling, unknown>> = useMemo(() => filingColumns, []);
 
   if (loading) {
     return (
@@ -219,7 +211,7 @@ export default function EarthStationDetail() {
     );
   }
 
-  const active: boolean = isActiveStatus(info.most_recent_status);
+  const active: boolean = isActiveStatus(info.mostRecentStatus);
 
   return (
     <div className="space-y-6">
@@ -235,7 +227,7 @@ export default function EarthStationDetail() {
             </Badge>
           </div>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {info.applicant_name}
+            {info.applicantName ?? 'Unknown applicant'}
           </p>
         </div>
       </div>
@@ -270,8 +262,8 @@ export default function EarthStationDetail() {
               </p>
             ) : (
               <div className="space-y-4">
-                {antennas.map((antenna: Antenna) => (
-                  <AntennaCard key={antenna.antenna_key} antenna={antenna} />
+                {antennas.map((antenna: EarthStationAntenna) => (
+                  <AntennaCard key={antenna.antennaKey} antenna={antenna} />
                 ))}
               </div>
             )}
@@ -292,22 +284,21 @@ export default function EarthStationDetail() {
                   {info.callsign}
                 </dd>
               </div>
-              <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">Location</dt>
-                <dd className="text-neutral-900 dark:text-neutral-100">
-                  {info.city}, {info.state}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">Coordinates</dt>
-                <dd className="font-mono text-neutral-900 dark:text-neutral-100">
-                  {formatLatLon(info)}
-                </dd>
-              </div>
+              {(info.applicantCity != null || info.applicantState != null) && (
+                <div>
+                  <dt className="text-neutral-500 dark:text-neutral-400">Location</dt>
+                  <dd className="text-neutral-900 dark:text-neutral-100">
+                    {[info.applicantCity, info.applicantState].filter(Boolean).join(', ')}
+                    {info.applicantCountry != null && info.applicantCountry !== 'US' && (
+                      <span className="ml-1 text-neutral-500">({info.applicantCountry})</span>
+                    )}
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
                 <dd className="text-neutral-900 dark:text-neutral-100">
-                  {info.most_recent_status}
+                  {info.mostRecentStatus ?? 'Unknown'}
                 </dd>
               </div>
             </dl>
@@ -323,20 +314,20 @@ export default function EarthStationDetail() {
                 <div className="flex items-center justify-between">
                   <dt className="text-neutral-500 dark:text-neutral-400">Total Filings</dt>
                   <dd className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    {stats.filing_count}
+                    {stats.totalFilingCount}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-neutral-500 dark:text-neutral-400">Antennas</dt>
                   <dd className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    {stats.antenna_count}
+                    {stats.antennaCount}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-neutral-500 dark:text-neutral-400">Most Recent Filing</dt>
                   <dd className="text-neutral-900 dark:text-neutral-100">
-                    {stats.most_recent_filing
-                      ? new Date(stats.most_recent_filing).toLocaleDateString('en-US', {
+                    {stats.mostRecentFilingDate != null
+                      ? new Date(stats.mostRecentFilingDate).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -355,23 +346,29 @@ export default function EarthStationDetail() {
 
 // ── Antenna Card ─────────────────────────────────────────────────────────────
 
-function AntennaCard({ antenna }: { antenna: Antenna }) {
+function AntennaCard({ antenna }: { antenna: EarthStationAntenna }) {
   return (
     <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       {/* Antenna header */}
       <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-            {antenna.manufacturer} {antenna.model}
+            {[antenna.manufacturer, antenna.model].filter(Boolean).join(' ') || 'Unknown Antenna'}
           </h4>
           <span className="text-xs text-neutral-500 dark:text-neutral-400">
-            ID: {antenna.antenna_id}
+            ID: {antenna.antennaId}
           </span>
         </div>
         <div className="mt-1 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
-          {antenna.diameter > 0 && <span>Diameter: {antenna.diameter}m</span>}
-          {antenna.max_input_power > 0 && <span>Max Input Power: {antenna.max_input_power} W</span>}
-          {antenna.max_output_eirp > 0 && <span>Max EIRP: {antenna.max_output_eirp} dBW</span>}
+          {antenna.diameter != null && antenna.diameter > 0 && (
+            <span>Diameter: {antenna.diameter}m</span>
+          )}
+          {antenna.maxInputPower != null && antenna.maxInputPower > 0 && (
+            <span>Max Input Power: {antenna.maxInputPower} W</span>
+          )}
+          {antenna.maxOutputEirp != null && antenna.maxOutputEirp > 0 && (
+            <span>Max EIRP: {antenna.maxOutputEirp} dBW</span>
+          )}
         </div>
       </div>
 
@@ -391,23 +388,25 @@ function AntennaCard({ antenna }: { antenna: Antenna }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {antenna.frequencies.map((freq: Frequency, idx: number) => (
-                <TableRow key={idx}>
+              {antenna.frequencies.map((freq: AntennaFrequency) => (
+                <TableRow key={freq.frequencyKey}>
                   <TableCell className="font-mono text-xs">
-                    {formatFrequency(freq.frequency_lower)}
+                    {formatFrequency(freq.frequencyLower)}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {formatFrequency(freq.frequency_upper)}
+                    {formatFrequency(freq.frequencyUpper)}
                   </TableCell>
-                  <TableCell className="text-xs">{freq.polarization_code}</TableCell>
-                  <TableCell className="text-xs">{freq.trans_mode}</TableCell>
+                  <TableCell className="text-xs">{freq.polarizationCode ?? ''}</TableCell>
+                  <TableCell className="text-xs">{freq.transMode ?? ''}</TableCell>
                   <TableCell className="font-mono text-xs">
-                    {freq.eirp > 0 ? `${freq.eirp} dBW` : ''}
+                    {freq.eirp != null && freq.eirp > 0 ? `${freq.eirp} dBW` : ''}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {freq.eirp_density !== 0 ? `${freq.eirp_density} dBW/Hz` : ''}
+                    {freq.eirpDensity != null && freq.eirpDensity !== 0
+                      ? `${freq.eirpDensity} dBW/Hz`
+                      : ''}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{freq.emission}</TableCell>
+                  <TableCell className="font-mono text-xs">{freq.emission ?? ''}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

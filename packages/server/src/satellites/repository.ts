@@ -37,13 +37,13 @@ export async function getSatelliteById(
 
   const row = rows[0]!;
   return {
-    space_station_key: Number(row.space_station_key),
-    us_name: String(row.us_name),
-    itu_name: row.itu_name != null ? String(row.itu_name) : null,
-    orbit_location:
+    spaceStationKey: Number(row.space_station_key),
+    usName: String(row.us_name),
+    ituName: row.itu_name != null ? String(row.itu_name) : null,
+    orbitLocation:
       row.orbit_location != null ? String(row.orbit_location) : null,
     verbose: row.verbose != null ? String(row.verbose) : null,
-    inactive_date: row.inactive_date != null ? String(row.inactive_date) : null,
+    inactiveDate: row.inactive_date != null ? String(row.inactive_date) : null,
   };
 }
 
@@ -75,14 +75,14 @@ export async function getSatelliteFilings(
   ]);
 
   const data: SatelliteFiling[] = dataResult.getRowObjectsJS().map((row) => ({
-    filing_key: Number(row.filing_key),
-    file_number: String(row.file_number),
-    subsystem_code: String(row.subsystem_code),
-    app_type_code: String(row.app_type_code ?? ''),
-    status_code: row.status_code != null ? String(row.status_code) : null,
-    date_filed: row.date_filed != null ? String(row.date_filed) : null,
-    date_grant: row.date_grant != null ? String(row.date_grant) : null,
-    address_attention:
+    filingKey: Number(row.filing_key),
+    fileNumber: String(row.file_number),
+    subsystemCode: String(row.subsystem_code),
+    appTypeCode: String(row.app_type_code ?? ''),
+    statusCode: row.status_code != null ? String(row.status_code) : null,
+    dateFiled: row.date_filed != null ? String(row.date_filed) : null,
+    dateGrant: row.date_grant != null ? String(row.date_grant) : null,
+    addressAttention:
       row.address_attention != null ? String(row.address_attention) : null,
     callsign: row.callsign != null ? String(row.callsign) : null,
     description: row.description != null ? String(row.description) : null,
