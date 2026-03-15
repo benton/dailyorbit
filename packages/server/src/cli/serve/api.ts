@@ -33,7 +33,7 @@ export const serveApiCommand = defineCommand({
     watch: {
       type: 'boolean',
       alias: 'w',
-      description: 'Restart server on file changes (uses node --watch)',
+      description: 'Rebuild and restart on source changes',
       default: false,
     },
   },
@@ -43,6 +43,26 @@ export const serveApiCommand = defineCommand({
       // Use the currently-running script so the path is correct from both
       // source (src/bin.ts) and bundled (dist/bin.js) entry points.
       const binPath: string = resolve(process.argv[1]!);
+      const isBundle: boolean = binPath.includes('/dist/');
+
+      // When running from the compiled bundle, also run tsdown in watch mode
+      // so that source edits rebuild dist/ and trigger node's --watch restart.
+      let bundleWatcher: ReturnType<typeof spawn> | null = null;
+      if (isBundle) {
+        const serverRoot: string = resolve(dirname(binPath), '..');
+        bundleWatcher = spawn('npx', ['tsdown', '--watch', '--no-clean'], {
+          stdio: ['ignore', 'pipe', 'inherit'],
+          cwd: serverRoot,
+        });
+        // Prefix tsdown output so it's distinguishable from server logs
+        bundleWatcher.stdout?.on('data', (chunk: Buffer) => {
+          const line: string = chunk.toString().trim();
+          if (line !== '') {
+            console.log(`[tsdown] ${line}`);
+          }
+        });
+      }
+
       const childArgs: string[] = [
         '--no-warnings',
         '--watch',
@@ -58,7 +78,20 @@ export const serveApiCommand = defineCommand({
         stdio: 'inherit',
         cwd: process.cwd(),
       });
-      child.on('exit', (code: number | null) => process.exit(code ?? 0));
+
+      // Clean shutdown: Ctrl+C sends SIGINT to the process group, but
+      // handle it explicitly so both children are reliably terminated.
+      const cleanup = (): void => {
+        bundleWatcher?.kill();
+        child.kill();
+      };
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
+
+      child.on('exit', (code: number | null) => {
+        bundleWatcher?.kill();
+        process.exit(code ?? 0);
+      });
       return;
     }
 
