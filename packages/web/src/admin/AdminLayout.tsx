@@ -16,7 +16,28 @@ export default function AdminLayout() {
             className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
             to="/admin"
           >
+            Dashboard
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <Link
+            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            to="/admin/config"
+          >
             Config
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <Link
+            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            to="/admin/graph"
+          >
+            Graph
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <Link
+            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            to="/admin/volume"
+          >
+            Volume
           </Link>
           <div className="ml-auto">
             <Link

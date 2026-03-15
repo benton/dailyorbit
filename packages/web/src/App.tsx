@@ -1,12 +1,16 @@
 import Stack from '@nkzw/stack';
 import { useLocaleContext } from 'fbtee';
-import { AnchorHTMLAttributes, useTransition } from 'react';
+import { AnchorHTMLAttributes, lazy, Suspense, useTransition } from 'react';
 import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
+import Dashboard from './admin/Dashboard.tsx';
 import AvailableLanguages from './AvailableLanguages.tsx';
 import AuthClient from './user/AuthClient.tsx';
 import SignIn from './user/SignIn.tsx';
+
+const ApplicantGraph = lazy(() => import('./admin/ApplicantGraph.tsx'));
+const FilingVolume = lazy(() => import('./admin/FilingVolume.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
@@ -138,7 +142,24 @@ export default function App() {
       <Route element={<Home />} path="/" />
       <Route element={<About />} path="/about" />
       <Route element={<AdminLayout />} path="/admin">
-        <Route element={<ConfigEditor />} index />
+        <Route element={<Dashboard />} index />
+        <Route element={<ConfigEditor />} path="config" />
+        <Route
+          element={
+            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+              <ApplicantGraph />
+            </Suspense>
+          }
+          path="graph"
+        />
+        <Route
+          element={
+            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+              <FilingVolume />
+            </Suspense>
+          }
+          path="volume"
+        />
       </Route>
     </Routes>
   );

@@ -89,7 +89,8 @@ These rules ensure maintainability, safety, and developer velocity.
 
 ### 6 — Tooling
 
-- Use `pnpm dev` to run the development server
+- Use `./daily-orbit serve api` to run the API server - it should hot-reload changes
+- Use `./daily-orbit serve html` to run the VITE fontend server - it should hot-reload changes
 - Use `pnpm test` to run tests.
 - `pnpm build` for production builds.
 - Use [`npm-run-all2`](https://github.com/bcomnes/npm-run-all2) to parallelize local test runs.
