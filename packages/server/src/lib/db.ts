@@ -12,6 +12,14 @@ export function setDbPath(path: string): void {
   configuredPath = path;
 }
 
+/** Return the configured database path. Throws if not yet configured. */
+export function getDbPath(): string {
+  if (configuredPath == null) {
+    throw new Error('Database path not configured');
+  }
+  return configuredPath;
+}
+
 export async function getDb(): Promise<DuckDBInstance> {
   if (instance == null) {
     if (configuredPath == null) {

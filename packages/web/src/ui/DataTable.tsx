@@ -10,14 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { cn } from '../lib/cn.ts';
 import { Button } from './button.tsx';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './table.tsx';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table.tsx';
 
 /** Matches the server-side PaginatedResponse envelope */
 export type PaginatedResponse<T> = {
@@ -92,9 +85,11 @@ export function DataTable<TData>({
   const pageSizeParam: number = Number(searchParams.get(`${prefix}pageSize`)) || defaultPageSize;
   const sortParam: string | undefined = searchParams.get(`${prefix}sort`) ?? defaultSort;
   const orderParam: SortOrder =
-    searchParams.get(`${prefix}order`) === 'desc' ? 'desc' : (
-      searchParams.get(`${prefix}order`) === 'asc' ? 'asc' : defaultOrder
-    );
+    searchParams.get(`${prefix}order`) === 'desc'
+      ? 'desc'
+      : searchParams.get(`${prefix}order`) === 'asc'
+        ? 'asc'
+        : defaultOrder;
 
   // Data state
   const [data, setData] = useState<Array<TData>>([]);
@@ -169,9 +164,11 @@ export function DataTable<TData>({
     (columnId: string) => {
       const isCurrentSort: boolean = sortParam === columnId;
       const nextOrder: SortOrder =
-        isCurrentSort && orderParam === 'asc' ? 'desc' : (
-          isCurrentSort && orderParam === 'desc' ? 'asc' : 'asc'
-        );
+        isCurrentSort && orderParam === 'asc'
+          ? 'desc'
+          : isCurrentSort && orderParam === 'desc'
+            ? 'asc'
+            : 'asc';
       updateParams({ sort: columnId, order: nextOrder, page: '1' });
     },
     [sortParam, orderParam, updateParams],
@@ -211,17 +208,18 @@ export function DataTable<TData>({
     <div className={cn('space-y-4', className)}>
       {/* Table */}
       <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
-        <Table
-          style={{ width: table.getCenterTotalSize() }}
-          className="min-w-full"
-        >
+        <Table style={{ width: table.getCenterTotalSize() }} className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const canSort: boolean = header.column.getCanSort();
                   const isSorted: false | 'asc' | 'desc' =
-                    sortParam === header.column.id ? (orderParam === 'desc' ? 'desc' : 'asc') : false;
+                    sortParam === header.column.id
+                      ? orderParam === 'desc'
+                        ? 'desc'
+                        : 'asc'
+                      : false;
 
                   return (
                     <TableHead
@@ -233,14 +231,13 @@ export function DataTable<TData>({
                         <div
                           className={cn(
                             'flex items-center gap-1',
-                            canSort && 'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
+                            canSort &&
+                              'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
                           )}
                           onClick={canSort ? () => handleSort(header.column.id) : undefined}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
-                          {canSort && (
-                            <SortIndicator direction={isSorted} />
-                          )}
+                          {canSort && <SortIndicator direction={isSorted} />}
                         </div>
                       )}
                       {/* Column resize handle */}
@@ -374,10 +371,18 @@ export function DataTable<TData>({
 /** Sort direction indicator arrows */
 function SortIndicator({ direction }: { direction: false | 'asc' | 'desc' }) {
   if (direction === 'asc') {
-    return <span className="text-xs" aria-label="sorted ascending">{'\u25B2'}</span>;
+    return (
+      <span className="text-xs" aria-label="sorted ascending">
+        {'\u25B2'}
+      </span>
+    );
   }
   if (direction === 'desc') {
-    return <span className="text-xs" aria-label="sorted descending">{'\u25BC'}</span>;
+    return (
+      <span className="text-xs" aria-label="sorted descending">
+        {'\u25BC'}
+      </span>
+    );
   }
   return <span className="text-xs text-neutral-300 dark:text-neutral-600">{'\u25B2'}</span>;
 }

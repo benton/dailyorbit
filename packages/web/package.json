@@ -1,6 +1,6 @@
 {
   "name": "@daily-orbit/web",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "type": "module",
   "scripts": {
     "build": "vite build",
@@ -15,6 +15,7 @@
     "vitest:run": "vitest run"
   },
   "dependencies": {
+    "@cosmograph/react": "^2.2.1",
     "@nkzw/define-env": "^1.1.0",
     "@nkzw/stack": "^2.3.2",
     "@radix-ui/react-dialog": "^1.1.15",

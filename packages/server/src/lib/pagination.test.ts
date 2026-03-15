@@ -134,7 +134,9 @@ describe('buildPaginatedQuery', () => {
         ALLOWED_COLUMNS,
         'nonexistent_column',
       ),
-    ).toThrow('Default sort column "nonexistent_column" is not in the allowed columns set');
+    ).toThrow(
+      'Default sort column "nonexistent_column" is not in the allowed columns set',
+    );
   });
 
   it('does not mutate the original baseParams array', () => {
@@ -170,11 +172,10 @@ describe('buildPaginatedQuery', () => {
 
 describe('buildPaginatedResponse', () => {
   it('computes totalPages correctly', () => {
-    const response = buildPaginatedResponse(
-      [{ id: 1 }, { id: 2 }],
-      47,
-      { page: 1, pageSize: 10 },
-    );
+    const response = buildPaginatedResponse([{ id: 1 }, { id: 2 }], 47, {
+      page: 1,
+      pageSize: 10,
+    });
 
     expect(response).toEqual({
       data: [{ id: 1 }, { id: 2 }],
@@ -200,11 +201,10 @@ describe('buildPaginatedResponse', () => {
   });
 
   it('rounds totalPages up for partial last page', () => {
-    const response = buildPaginatedResponse(
-      [{ id: 1 }],
-      101,
-      { page: 11, pageSize: 10 },
-    );
+    const response = buildPaginatedResponse([{ id: 1 }], 101, {
+      page: 11,
+      pageSize: 10,
+    });
     expect(response.totalPages).toEqual(11);
   });
 });

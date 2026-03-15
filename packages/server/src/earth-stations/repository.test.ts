@@ -82,10 +82,20 @@ async function seedTestData(conn: DuckDBConnection): Promise<void> {
   await conn.run(
     `INSERT INTO filing VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
-      100, 'SES-LIC-20230101-00001', 'SES', 'LIC', 'E000001',
-      'G', '2023-01-01', '2023-06-01', '2038-06-01',
-      'Fixed earth station license', 'Acme Satellite Corp',
-      'Washington', 'DC', 'US',
+      100,
+      'SES-LIC-20230101-00001',
+      'SES',
+      'LIC',
+      'E000001',
+      'G',
+      '2023-01-01',
+      '2023-06-01',
+      '2038-06-01',
+      'Fixed earth station license',
+      'Acme Satellite Corp',
+      'Washington',
+      'DC',
+      'US',
     ] as DuckDBValue[],
   );
 
@@ -93,10 +103,20 @@ async function seedTestData(conn: DuckDBConnection): Promise<void> {
   await conn.run(
     `INSERT INTO filing VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
-      200, 'SES-MOD-20240601-00050', 'SES', 'MOD', 'E000001',
-      'P', '2024-06-01', null, null,
-      'Modification to add antenna', 'Acme Satellite Corp',
-      'Washington', 'DC', 'US',
+      200,
+      'SES-MOD-20240601-00050',
+      'SES',
+      'MOD',
+      'E000001',
+      'P',
+      '2024-06-01',
+      null,
+      null,
+      'Modification to add antenna',
+      'Acme Satellite Corp',
+      'Washington',
+      'DC',
+      'US',
     ] as DuckDBValue[],
   );
 
@@ -104,18 +124,32 @@ async function seedTestData(conn: DuckDBConnection): Promise<void> {
   await conn.run(
     `INSERT INTO filing VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
-      300, 'SAT-LOA-20240101-00010', 'SAT', 'LOA', 'E000001',
-      'G', '2024-01-01', '2024-03-01', '2039-03-01',
-      'Satellite launch and operate', 'Acme Satellite Corp',
-      'Washington', 'DC', 'US',
+      300,
+      'SAT-LOA-20240101-00010',
+      'SAT',
+      'LOA',
+      'E000001',
+      'G',
+      '2024-01-01',
+      '2024-03-01',
+      '2039-03-01',
+      'Satellite launch and operate',
+      'Acme Satellite Corp',
+      'Washington',
+      'DC',
+      'US',
     ] as DuckDBValue[],
   );
 
   // Site linked to filing 100
-  await conn.run(
-    `INSERT INTO site VALUES ($1, $2, $3, $4, $5, $6)`,
-    [10, 100, 'SITE-A', 'Main facility', 'Arlington', 'VA'] as DuckDBValue[],
-  );
+  await conn.run(`INSERT INTO site VALUES ($1, $2, $3, $4, $5, $6)`, [
+    10,
+    100,
+    'SITE-A',
+    'Main facility',
+    'Arlington',
+    'VA',
+  ] as DuckDBValue[]);
 
   // Antenna linked to site 10
   await conn.run(
@@ -127,15 +161,31 @@ async function seedTestData(conn: DuckDBConnection): Promise<void> {
   await conn.run(
     `INSERT INTO frequency VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
-      5000, 1000, 'L', 45.0, -12.5, '36M0G7W',
-      '29250.0000', '29500.0000', 'T', 'D',
+      5000,
+      1000,
+      'L',
+      45.0,
+      -12.5,
+      '36M0G7W',
+      '29250.0000',
+      '29500.0000',
+      'T',
+      'D',
     ] as DuckDBValue[],
   );
   await conn.run(
     `INSERT INTO frequency VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
-      5001, 1000, 'R', null, null, '36M0G7W',
-      '19700.0000', '19950.0000', 'R', 'D',
+      5001,
+      1000,
+      'R',
+      null,
+      null,
+      '36M0G7W',
+      '19700.0000',
+      '19950.0000',
+      'R',
+      'D',
     ] as DuckDBValue[],
   );
 }
@@ -231,9 +281,7 @@ describe('earth station repository', () => {
           pageSize: 1,
           order: 'asc',
         });
-      expect(page1.data[0]!.fileNumber).not.toEqual(
-        page2.data[0]!.fileNumber,
-      );
+      expect(page1.data[0]!.fileNumber).not.toEqual(page2.data[0]!.fileNumber);
       expect(page2.page).toEqual(2);
     });
 

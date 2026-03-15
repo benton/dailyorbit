@@ -254,7 +254,9 @@ describe('searchSatellites', () => {
       { page: 1, pageSize: 25 },
     );
     expect(result.totalRows).toEqual(2);
-    expect(result.data.every((r) => r.us_name.includes('SPACEX'))).toEqual(true);
+    expect(result.data.every((r) => r.us_name.includes('SPACEX'))).toEqual(
+      true,
+    );
   });
 
   it('filters by itu_name ILIKE', async () => {
@@ -315,7 +317,11 @@ describe('searchSatellites', () => {
 
 describe('searchEarthStations', () => {
   it('returns SES-subsystem filings grouped by callsign', async () => {
-    const result = await searchEarthStations(conn, {}, { page: 1, pageSize: 25 });
+    const result = await searchEarthStations(
+      conn,
+      {},
+      { page: 1, pageSize: 25 },
+    );
     // SES filings: E2001 (2 filings), E3001 (1 filing)
     expect(result.totalRows).toEqual(2);
     const viasat = result.data.find((r) => r.callsign === 'E2001');
@@ -364,7 +370,11 @@ describe('searchEarthStations', () => {
   });
 
   it('does not include non-SES filings', async () => {
-    const result = await searchEarthStations(conn, {}, { page: 1, pageSize: 25 });
+    const result = await searchEarthStations(
+      conn,
+      {},
+      { page: 1, pageSize: 25 },
+    );
     const callsigns: string[] = result.data.map((r) => r.callsign);
     // S1001 and S1002 are SAT filings, should not appear
     expect(callsigns).not.toContain('S1001');
@@ -427,7 +437,12 @@ describe('autocomplete', () => {
   });
 
   it('trims whitespace from query', async () => {
-    const result = await autocomplete(conn, 'filings', 'subsystem_code', '  SA  ');
+    const result = await autocomplete(
+      conn,
+      'filings',
+      'subsystem_code',
+      '  SA  ',
+    );
     expect(result).toEqual(['SAT']);
   });
 

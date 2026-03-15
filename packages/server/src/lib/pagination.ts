@@ -78,9 +78,8 @@ export function buildPaginatedQuery(
 ): PaginatedQueryResult {
   const { page, pageSize, sort, order } = normalizePaginatedRequest(request);
 
-  const sortColumn: string = sort != null && allowedColumns.has(sort)
-    ? sort
-    : defaultSort;
+  const sortColumn: string =
+    sort != null && allowedColumns.has(sort) ? sort : defaultSort;
 
   // Validate defaultSort is in the allowed set
   if (!allowedColumns.has(sortColumn)) {
@@ -93,8 +92,7 @@ export function buildPaginatedQuery(
 
   // Build the data query with ORDER BY + LIMIT + OFFSET
   // Column name is safe because it was validated against the whitelist
-  const sql: string =
-    `${baseSql} ORDER BY "${sortColumn}" ${order} LIMIT ${pageSize} OFFSET ${offset}`;
+  const sql: string = `${baseSql} ORDER BY "${sortColumn}" ${order} LIMIT ${pageSize} OFFSET ${offset}`;
 
   // Build the count query by wrapping the base SQL
   const countSql: string = `SELECT COUNT(*) AS total FROM (${baseSql}) AS _count`;

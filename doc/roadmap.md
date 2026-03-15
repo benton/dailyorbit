@@ -2,9 +2,10 @@
 
 ## Short Term
 
-- v0.1.0 [✅] Data modeling and download
-- v0.1.5 [✅] Attachment discovery and download
-- v0.1.6 [✅] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
+- v0.1.0 [x] Data modeling and download
+- v0.1.5 [x] Attachment discovery and download
+- v0.1.6 [x] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
+- v0.1.7 [x] Show basic data set information and explore visualization library
 - v0.2.0 [ ] Enriched data model: Applicant (Company?): Related filings
 - v0.3.0 [ ] Basic Entity viewing and search
 - v0.4.0 [ ] Attachment processing and text extraction

@@ -213,7 +213,7 @@ export default function SatelliteDetail() {
         <div className="space-y-6">
           {/* Satellite info card */}
           <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Satellite Info
             </h3>
             <dl className="space-y-3 text-sm">
@@ -264,7 +264,7 @@ export default function SatelliteDetail() {
           {/* Quick stats card */}
           {stats != null && (
             <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Quick Stats
               </h3>
               <dl className="space-y-3 text-sm">

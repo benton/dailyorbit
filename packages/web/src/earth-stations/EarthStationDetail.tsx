@@ -4,14 +4,7 @@ import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table.tsx';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,12 +77,7 @@ function formatCoordinate(deg: number, min: number, sec: number, hemi: string): 
 
 function formatLatLon(info: EarthStationInfo): string {
   const lat: string = formatCoordinate(info.lat_deg, info.lat_min, info.lat_sec, info.lat_hemi);
-  const lon: string = formatCoordinate(
-    info.long_deg,
-    info.long_min,
-    info.long_sec,
-    info.long_hemi,
-  );
+  const lon: string = formatCoordinate(info.long_deg, info.long_min, info.long_sec, info.long_hemi);
   return `${lat}, ${lon}`;
 }
 
@@ -218,9 +206,7 @@ export default function EarthStationDetail() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Loading earth station...
-        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading earth station...</p>
       </div>
     );
   }
@@ -296,7 +282,7 @@ export default function EarthStationDetail() {
         <div className="space-y-6">
           {/* Station Info Card */}
           <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Station Info
             </h3>
             <dl className="space-y-2 text-sm">
@@ -330,7 +316,7 @@ export default function EarthStationDetail() {
           {/* Quick Stats Card */}
           {stats != null && (
             <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Quick Stats
               </h3>
               <dl className="space-y-2 text-sm">
@@ -384,12 +370,8 @@ function AntennaCard({ antenna }: { antenna: Antenna }) {
         </div>
         <div className="mt-1 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
           {antenna.diameter > 0 && <span>Diameter: {antenna.diameter}m</span>}
-          {antenna.max_input_power > 0 && (
-            <span>Max Input Power: {antenna.max_input_power} W</span>
-          )}
-          {antenna.max_output_eirp > 0 && (
-            <span>Max EIRP: {antenna.max_output_eirp} dBW</span>
-          )}
+          {antenna.max_input_power > 0 && <span>Max Input Power: {antenna.max_input_power} W</span>}
+          {antenna.max_output_eirp > 0 && <span>Max EIRP: {antenna.max_output_eirp} dBW</span>}
         </div>
       </div>
 

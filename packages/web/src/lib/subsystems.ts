@@ -28,17 +28,12 @@ const SUBSYSTEM_MAP: Record<string, SubsystemInfo> = {
   SAT: { bg: 'bg-indigo-200', hex: '#818cf8', label: 'Space Stations', text: 'text-indigo-700' },
   SCL: { bg: 'bg-teal-200', hex: '#2dd4bf', label: 'Submarine Cable', text: 'text-teal-700' },
   SES: { bg: 'bg-emerald-200', hex: '#34d399', label: 'Earth Stations', text: 'text-emerald-700' },
-  SPC: {
-    bg: 'bg-cyan-200',
-    hex: '#22d3ee',
-    label: 'Signalling Point Codes',
-    text: 'text-cyan-700',
-  },
+  SPC: { bg: 'bg-cyan-200', hex: '#22d3ee', label: 'Signalling Point Codes', text: 'text-cyan-700' },
 };
 
 const FALLBACK: SubsystemInfo = {
   bg: 'bg-neutral-200',
-  hex: '#d4d4d4', // neutral-300
+  hex: '#d4d4d4',  // neutral-300
   label: 'Unknown',
   text: 'text-neutral-600',
 };

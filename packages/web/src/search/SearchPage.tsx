@@ -47,7 +47,10 @@ const TABS: ReadonlyArray<{ key: SearchTab; label: string }> = [
 
 // ── Autocomplete hook ────────────────────────────────────────────────
 
-function useAutocomplete(entity: string, field: string): {
+function useAutocomplete(
+  entity: string,
+  field: string,
+): {
   suggestions: string[];
   query: string;
   setQuery: (value: string) => void;
@@ -728,34 +731,50 @@ function buildFilingQueryString(filters: FilingFilters, params: DataTableFetchPa
   const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
   if (params.sort != null) parts.push(`sort=${params.sort}`);
   if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.file_number.trim() !== '') parts.push(`file_number=${encodeURIComponent(filters.file_number.trim())}`);
-  if (filters.callsign.trim() !== '') parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
-  if (filters.applicant.trim() !== '') parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
-  if (filters.subsystem_code.length > 0) parts.push(`subsystem_code=${filters.subsystem_code.join(',')}`);
-  if (filters.app_type_code.length > 0) parts.push(`app_type_code=${filters.app_type_code.join(',')}`);
+  if (filters.file_number.trim() !== '')
+    parts.push(`file_number=${encodeURIComponent(filters.file_number.trim())}`);
+  if (filters.callsign.trim() !== '')
+    parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
+  if (filters.applicant.trim() !== '')
+    parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
+  if (filters.subsystem_code.length > 0)
+    parts.push(`subsystem_code=${filters.subsystem_code.join(',')}`);
+  if (filters.app_type_code.length > 0)
+    parts.push(`app_type_code=${filters.app_type_code.join(',')}`);
   if (filters.status_code.length > 0) parts.push(`status_code=${filters.status_code.join(',')}`);
   if (filters.date_filed_from !== '') parts.push(`date_filed_from=${filters.date_filed_from}`);
   if (filters.date_filed_to !== '') parts.push(`date_filed_to=${filters.date_filed_to}`);
   return parts.join('&');
 }
 
-function buildSatelliteQueryString(filters: SatelliteFilters, params: DataTableFetchParams): string {
+function buildSatelliteQueryString(
+  filters: SatelliteFilters,
+  params: DataTableFetchParams,
+): string {
   const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
   if (params.sort != null) parts.push(`sort=${params.sort}`);
   if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.us_name.trim() !== '') parts.push(`us_name=${encodeURIComponent(filters.us_name.trim())}`);
-  if (filters.itu_name.trim() !== '') parts.push(`itu_name=${encodeURIComponent(filters.itu_name.trim())}`);
-  if (filters.orbit_location.trim() !== '') parts.push(`orbit_location=${encodeURIComponent(filters.orbit_location.trim())}`);
+  if (filters.us_name.trim() !== '')
+    parts.push(`us_name=${encodeURIComponent(filters.us_name.trim())}`);
+  if (filters.itu_name.trim() !== '')
+    parts.push(`itu_name=${encodeURIComponent(filters.itu_name.trim())}`);
+  if (filters.orbit_location.trim() !== '')
+    parts.push(`orbit_location=${encodeURIComponent(filters.orbit_location.trim())}`);
   if (filters.active !== 'any') parts.push(`active=${filters.active}`);
   return parts.join('&');
 }
 
-function buildEarthStationQueryString(filters: EarthStationFilters, params: DataTableFetchParams): string {
+function buildEarthStationQueryString(
+  filters: EarthStationFilters,
+  params: DataTableFetchParams,
+): string {
   const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
   if (params.sort != null) parts.push(`sort=${params.sort}`);
   if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.callsign.trim() !== '') parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
-  if (filters.applicant.trim() !== '') parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
+  if (filters.callsign.trim() !== '')
+    parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
+  if (filters.applicant.trim() !== '')
+    parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
   if (filters.state.length > 0) parts.push(`state=${filters.state.join(',')}`);
   if (filters.city.trim() !== '') parts.push(`city=${encodeURIComponent(filters.city.trim())}`);
   return parts.join('&');
@@ -776,7 +795,8 @@ export default function SearchPage() {
   // Filter state per tab
   const [filingFilters, setFilingFilters] = useState<FilingFilters>(emptyFilingFilters);
   const [satelliteFilters, setSatelliteFilters] = useState<SatelliteFilters>(emptySatelliteFilters);
-  const [earthStationFilters, setEarthStationFilters] = useState<EarthStationFilters>(emptyEarthStationFilters);
+  const [earthStationFilters, setEarthStationFilters] =
+    useState<EarthStationFilters>(emptyEarthStationFilters);
 
   // Trigger counter to force DataTable refetch when filters change on search
   const [searchTrigger, setSearchTrigger] = useState<number>(0);
@@ -903,14 +923,10 @@ export default function SearchPage() {
             <Search className="h-4 w-4" />
             Filters
           </span>
-          {filtersOpen ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
+          {filtersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
         {filtersOpen && (
-          <div className="space-y-4 border-t border-neutral-200 px-4 pb-4 pt-3 dark:border-neutral-700">
+          <div className="space-y-4 border-t border-neutral-200 px-4 pt-3 pb-4 dark:border-neutral-700">
             {activeTab === 'filings' && (
               <FilingFilterForm filters={filingFilters} onChange={setFilingFilters} />
             )}

@@ -166,8 +166,7 @@ export default function FilingDetailPage() {
   }
 
   const subsystem = getSubsystem(filing.subsystemCode);
-  const hasTransferInfo: boolean =
-    filing.transferorName != null || filing.transfereeName != null;
+  const hasTransferInfo: boolean = filing.transferorName != null || filing.transfereeName != null;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -185,9 +184,7 @@ export default function FilingDetailPage() {
               {filing.appTypeLabel} ({filing.appTypeCode})
             </span>
           )}
-          {filing.statusText != null && (
-            <Badge variant="secondary">{filing.statusText}</Badge>
-          )}
+          {filing.statusText != null && <Badge variant="secondary">{filing.statusText}</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
           {filing.applicantName != null && (
@@ -201,9 +198,7 @@ export default function FilingDetailPage() {
               </Link>
             </span>
           )}
-          {filing.dateFiled != null && (
-            <span>Filed: {formatDate(filing.dateFiled)}</span>
-          )}
+          {filing.dateFiled != null && <span>Filed: {formatDate(filing.dateFiled)}</span>}
         </div>
       </div>
 
@@ -341,7 +336,7 @@ export default function FilingDetailPage() {
         <div className="space-y-6">
           {/* Filing details card */}
           <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Filing Details
             </h3>
             <dl className="space-y-3 text-sm">
@@ -364,10 +359,9 @@ export default function FilingDetailPage() {
           </div>
 
           {/* Related entities card */}
-          {(filing.relatedSpaceStation != null ||
-            filing.relatedEarthStationCallsign != null) && (
+          {(filing.relatedSpaceStation != null || filing.relatedEarthStationCallsign != null) && (
             <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Related Entities
               </h3>
               <dl className="space-y-3 text-sm">
@@ -408,7 +402,7 @@ export default function FilingDetailPage() {
 
           {/* Dates card */}
           <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
               Key Dates
             </h3>
             <dl className="space-y-3 text-sm">
@@ -437,7 +431,7 @@ export default function FilingDetailPage() {
           {/* Transfer info card (conditional) */}
           {hasTransferInfo && (
             <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                 Transfer Information
               </h3>
               <dl className="space-y-3 text-sm">
