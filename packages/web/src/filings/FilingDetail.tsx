@@ -101,6 +101,8 @@ const PLEADING_TYPE_STYLES: Record<string, string> = {
   LETTER: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   PETITION: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
   COMMENT: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
+  SUPPLEMENT: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  DECISION: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
 };
 
 function PleadingTypeBadge({ type }: { type: string | null }) {
