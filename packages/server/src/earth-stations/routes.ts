@@ -26,9 +26,10 @@ earthStationRoutes.get('/:callsign', async (c) => {
     const paginationRequest: PaginatedRequest = {
       page: Number(c.req.query('page') ?? '1'),
       pageSize: Number(c.req.query('pageSize') ?? '25'),
-      sort: c.req.query('sort'),
       order: (c.req.query('order') ?? 'desc') as SortOrder,
     };
+    const sortParam: string | undefined = c.req.query('sort');
+    if (sortParam != null) paginationRequest.sort = sortParam;
 
     const [filings, antennas, stats] = await Promise.all([
       getEarthStationFilings(conn, callsign, paginationRequest),

@@ -18,17 +18,12 @@ const searchRoutes = new Hono();
 
 /** Parse pagination params from query string */
 function parsePagination(query: Record<string, string>): PaginatedRequest {
-  return {
-    page: query.page != null ? Number(query.page) : undefined,
-    pageSize: query.pageSize != null ? Number(query.pageSize) : undefined,
-    sort: query.sort ?? undefined,
-    order:
-      query.order === 'desc'
-        ? 'desc'
-        : query.order === 'asc'
-          ? 'asc'
-          : undefined,
-  };
+  const req: PaginatedRequest = {};
+  if (query.page != null) req.page = Number(query.page);
+  if (query.pageSize != null) req.pageSize = Number(query.pageSize);
+  if (query.sort != null) req.sort = query.sort;
+  if (query.order === 'asc' || query.order === 'desc') req.order = query.order;
+  return req;
 }
 
 /** Parse a comma-separated query param into a string array, or undefined */
@@ -43,16 +38,18 @@ function parseList(value: string | undefined): string[] | undefined {
 // GET /api/search/filings
 searchRoutes.get('/filings', async (c) => {
   const q = c.req.query();
-  const filters: FilingSearchFilters = {
-    file_number: q.file_number ?? undefined,
-    callsign: q.callsign ?? undefined,
-    applicant: q.applicant ?? undefined,
-    subsystem_code: parseList(q.subsystem_code),
-    app_type_code: parseList(q.app_type_code),
-    status_code: parseList(q.status_code),
-    date_filed_from: q.date_filed_from ?? undefined,
-    date_filed_to: q.date_filed_to ?? undefined,
-  };
+  const filters: FilingSearchFilters = {};
+  if (q.file_number != null) filters.file_number = q.file_number;
+  if (q.callsign != null) filters.callsign = q.callsign;
+  if (q.applicant != null) filters.applicant = q.applicant;
+  const subsystems = parseList(q.subsystem_code);
+  if (subsystems != null) filters.subsystem_code = subsystems;
+  const appTypes = parseList(q.app_type_code);
+  if (appTypes != null) filters.app_type_code = appTypes;
+  const statuses = parseList(q.status_code);
+  if (statuses != null) filters.status_code = statuses;
+  if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
+  if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();
@@ -68,12 +65,11 @@ searchRoutes.get('/filings', async (c) => {
 // GET /api/search/satellites
 searchRoutes.get('/satellites', async (c) => {
   const q = c.req.query();
-  const filters: SatelliteSearchFilters = {
-    us_name: q.us_name ?? undefined,
-    itu_name: q.itu_name ?? undefined,
-    orbit_location: q.orbit_location ?? undefined,
-    active: q.active != null ? q.active === 'true' : undefined,
-  };
+  const filters: SatelliteSearchFilters = {};
+  if (q.us_name != null) filters.us_name = q.us_name;
+  if (q.itu_name != null) filters.itu_name = q.itu_name;
+  if (q.orbit_location != null) filters.orbit_location = q.orbit_location;
+  if (q.active != null) filters.active = q.active === 'true';
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();
@@ -89,12 +85,11 @@ searchRoutes.get('/satellites', async (c) => {
 // GET /api/search/earth-stations
 searchRoutes.get('/earth-stations', async (c) => {
   const q = c.req.query();
-  const filters: EarthStationSearchFilters = {
-    callsign: q.callsign ?? undefined,
-    applicant: q.applicant ?? undefined,
-    state: q.state ?? undefined,
-    city: q.city ?? undefined,
-  };
+  const filters: EarthStationSearchFilters = {};
+  if (q.callsign != null) filters.callsign = q.callsign;
+  if (q.applicant != null) filters.applicant = q.applicant;
+  if (q.state != null) filters.state = q.state;
+  if (q.city != null) filters.city = q.city;
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();

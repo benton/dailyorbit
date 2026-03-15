@@ -7,6 +7,7 @@ import { getAuth } from './lib/auth.ts';
 import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
+import { statsRoutes } from './stats/routes.ts';
 
 const app = new Hono();
 
@@ -24,6 +25,7 @@ app.get('/', (c) => c.json({ status: 'ok' }));
 app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw));
 
 app.route('/api/admin/config', configRoutes);
+app.route('/api/admin/stats', statsRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
 app.route('/api/earth-stations', earthStationRoutes);
