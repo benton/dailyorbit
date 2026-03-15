@@ -21,7 +21,7 @@ export default function PublicLayout() {
       <header className="border-b border-neutral-200 bg-white px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
         <nav className="flex items-center gap-4">
           <Link className="text-base font-bold text-neutral-900 dark:text-neutral-100" to="/">
-            Daily Orbit
+            The Daily Orbit
           </Link>
           <span className="text-neutral-300 dark:text-neutral-600">|</span>
           <NavLink label="Home" to="/" />
