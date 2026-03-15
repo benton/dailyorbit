@@ -1,4 +1,5 @@
 import type { ArgDef } from 'citty';
+import { type FileNumber, normalizeFileNumber } from '../../lib/file-number.ts';
 
 export const databaseArg = {
   type: 'string',
@@ -47,3 +48,23 @@ export const requestArgs = {
     default: '1',
   },
 } as const satisfies Record<string, ArgDef>;
+
+/**
+ * Parse a comma-separated string of file numbers into normalized FileNumber[].
+ * Skips values that cannot be normalized and logs a warning.
+ */
+export function parseFileNumbers(
+  raw: string | undefined,
+): FileNumber[] | undefined {
+  if (raw == null) return undefined;
+  const results: FileNumber[] = [];
+  for (const s of raw.split(',')) {
+    const result = normalizeFileNumber(s.trim());
+    if (result.ok) {
+      results.push(result.fileNumber);
+    } else {
+      console.warn(`Skipping unparseable file number: ${s.trim()}`);
+    }
+  }
+  return results.length > 0 ? results : undefined;
+}

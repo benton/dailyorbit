@@ -1,4 +1,5 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
+import type { FileNumber } from '../lib/file-number.ts';
 import { parseDuration } from './duration.ts';
 import type {
   AttachmentMetadata,
@@ -76,6 +77,34 @@ export async function createAttachmentTable(
     await conn.run(sql);
   }
   await migratePrimaryKeyConstraint(conn);
+  await migrateFileNumberNormalization(conn);
+}
+
+/**
+ * Normalize compact file_number values in the attachment table by copying the
+ * canonical hyphenated file_number from the filing table (joined on filing_key).
+ * Only updates rows where the attachment file_number doesn't contain a hyphen.
+ * No-op if the filing table doesn't exist (e.g. in unit tests).
+ */
+async function migrateFileNumberNormalization(
+  conn: DuckDBConnection,
+): Promise<void> {
+  const tableCheck = await conn.runAndReadAll(`
+    SELECT COUNT(*) AS cnt
+    FROM information_schema.tables
+    WHERE table_name = 'filing'
+  `);
+  const filingTableExists: boolean =
+    Number(tableCheck.getRowObjectsJS()[0]!.cnt) > 0;
+  if (!filingTableExists) return;
+
+  await conn.run(`
+    UPDATE attachment
+    SET file_number = f.file_number
+    FROM filing f
+    WHERE attachment.filing_key = f.filing_key
+      AND attachment.file_number NOT LIKE '%-%'
+  `);
 }
 
 export async function countDuplicateKeys(
@@ -204,7 +233,7 @@ export async function getFilingsForScope(
 
   return rows.map((r) => ({
     filingKey: Number(r.filing_key),
-    fileNumber: String(r.file_number),
+    fileNumber: String(r.file_number) as FileNumber,
     subsystemCode: String(r.subsystem_code),
     appTypeCode: String(r.app_type_code),
     discoveredAt: r.discovered_at != null ? String(r.discovered_at) : null,
@@ -244,7 +273,7 @@ export async function getPendingDownloads(
   return rows.map((r) => ({
     attachmentKey: Number(r.attachment_key),
     filingKey: Number(r.filing_key),
-    fileNumber: String(r.file_number),
+    fileNumber: String(r.file_number) as FileNumber,
     source: String(r.source),
     attachmentName: String(r.attachment_name),
     description: String(r.description),

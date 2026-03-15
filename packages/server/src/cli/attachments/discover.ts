@@ -1,6 +1,7 @@
 import { defineCommand } from 'citty';
 import {
   databaseArg,
+  parseFileNumbers,
   requestArgs,
   scopeArgs,
   storagePathArg,
@@ -46,7 +47,7 @@ export const discoverCommand = defineCommand({
       storageBasePath: resolveFromRoot(args['storage-path']),
       provider: args.provider === 'fcc-gov' ? 'fcc-gov' : 'fcc-report',
       scope: {
-        fileNumbers: args.filing?.split(','),
+        fileNumbers: parseFileNumbers(args.filing),
         subsystems: args.subsystem?.split(','),
         dateFrom: args['date-from'],
         dateTo: args['date-to'],

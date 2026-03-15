@@ -5,7 +5,6 @@ import {
   untrackConnection,
 } from '../lib/graceful-shutdown.ts';
 import { extensionForContentType } from './content-type.ts';
-import { compactToHyphenated } from './file-number.ts';
 import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
@@ -184,15 +183,10 @@ export async function runAttachmentPipeline(
     if (skipExisting) {
       for (const att of pending) {
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
-        const hyphenated: string = compactToHyphenated(
-          filing.fileNumber,
-          filing.subsystemCode,
-          filing.appTypeCode,
-        );
         const existing = await findExistingAttachment(
           options.storageBasePath,
           filing.subsystemCode,
-          hyphenated,
+          filing.fileNumber,
           att.attachmentKey,
         );
         if (existing != null) {
@@ -231,17 +225,12 @@ export async function runAttachmentPipeline(
       toDownload,
       async (att: AttachmentRow): Promise<DownloadResult> => {
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
-        const hyphenated: string = compactToHyphenated(
-          filing.fileNumber,
-          filing.subsystemCode,
-          filing.appTypeCode,
-        );
 
         // Download to a temporary path first, then derive final path from content-type
         const tmpPath: string = attachmentStoragePath(
           options.storageBasePath,
           filing.subsystemCode,
-          hyphenated,
+          filing.fileNumber,
           att.attachmentKey,
           'tmp',
         );
@@ -257,7 +246,7 @@ export async function runAttachmentPipeline(
         const destPath: string = attachmentStoragePath(
           options.storageBasePath,
           filing.subsystemCode,
-          hyphenated,
+          filing.fileNumber,
           att.attachmentKey,
           ext,
         );

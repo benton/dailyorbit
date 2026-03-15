@@ -1,10 +1,11 @@
 import type { DuckDBInstance } from '@duckdb/node-api';
+import type { FileNumber } from '../lib/file-number.ts';
 
 /** Metadata for a single attachment discovered from a filing page */
 export type AttachmentMetadata = {
   attachmentKey: number;
   filingKey: number;
-  fileNumber: string;
+  fileNumber: FileNumber;
   /** Origin section: 'attachment' (from Attachments table) or 'file' (from Files table) */
   source: string;
   attachmentName: string;
@@ -14,7 +15,7 @@ export type AttachmentMetadata = {
 
 /** Scope filter for which filings to discover attachments for */
 export type DiscoveryScope = {
-  fileNumbers?: string[] | undefined;
+  fileNumbers?: FileNumber[] | undefined;
   subsystems?: string[] | undefined;
   dateFrom?: string | undefined;
   dateTo?: string | undefined;
@@ -29,7 +30,7 @@ export type DiscoveryScope = {
 export type DiscoveryProvider = {
   name: string;
   discover(
-    fileNumber: string,
+    fileNumber: FileNumber,
     filingKey: number,
   ): Promise<AttachmentMetadata[]>;
 };
@@ -65,7 +66,7 @@ export type AttachmentPipelineResult = {
 /** A filing row with the columns needed for attachment discovery */
 export type FilingRow = {
   filingKey: number;
-  fileNumber: string;
+  fileNumber: FileNumber;
   subsystemCode: string;
   appTypeCode: string;
   discoveredAt: string | null;

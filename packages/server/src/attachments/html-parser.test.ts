@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { FileNumber } from '../lib/file-number.ts';
 import { parseAttachmentsFromHtml } from './html-parser.ts';
 import type { AttachmentMetadata } from './types.ts';
 
@@ -38,7 +39,7 @@ const FILES_HTML: string = `
 
 const COMBINED_HTML: string = `${ATTACHMENTS_HTML}\n${FILES_HTML}`;
 
-const FILE_NUMBER: string = 'SATSTA2023061400142';
+const FILE_NUMBER: FileNumber = 'SAT-STA-20230614-00142' as FileNumber;
 const FILING_KEY: number = 12345;
 
 describe('parseAttachmentsFromHtml', () => {
@@ -86,7 +87,7 @@ describe('parseAttachmentsFromHtml', () => {
   it('extracts files from the Files table with description from Type column', () => {
     const result: AttachmentMetadata[] = parseAttachmentsFromHtml(
       FILES_HTML,
-      'SATLOA2020052600055',
+      'SAT-LOA-20200526-00055' as FileNumber,
       99,
     );
 
@@ -94,7 +95,7 @@ describe('parseAttachmentsFromHtml', () => {
       {
         attachmentKey: 14552447,
         filingKey: 99,
-        fileNumber: 'SATLOA2020052600055',
+        fileNumber: 'SAT-LOA-20200526-00055',
         source: 'file',
         attachmentName: 'Viasat Ex Parte on Kuiper',
         description: 'LETTER\n2022-01-13',
@@ -104,7 +105,7 @@ describe('parseAttachmentsFromHtml', () => {
       {
         attachmentKey: 14553085,
         filingKey: 99,
-        fileNumber: 'SATLOA2020052600055',
+        fileNumber: 'SAT-LOA-20200526-00055',
         source: 'file',
         attachmentName: 'Grant Request For Extension',
         description: 'DECISION\n2022-01-13',

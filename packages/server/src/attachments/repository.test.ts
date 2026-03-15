@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import type { FileNumber } from '../lib/file-number.ts';
 import {
   countDuplicateKeys,
   createAttachmentTable,
@@ -21,7 +22,7 @@ import type {
 const ATTACHMENT_A: AttachmentMetadata = {
   attachmentKey: 100,
   filingKey: 1,
-  fileNumber: 'SATSTA2023061400142',
+  fileNumber: 'SAT-STA-20230614-00142' as FileNumber,
   source: 'attachment',
   attachmentName: 'Narrative',
   description: '',
@@ -31,7 +32,7 @@ const ATTACHMENT_A: AttachmentMetadata = {
 const ATTACHMENT_B: AttachmentMetadata = {
   attachmentKey: 200,
   filingKey: 1,
-  fileNumber: 'SATSTA2023061400142',
+  fileNumber: 'SAT-STA-20230614-00142' as FileNumber,
   source: 'file',
   attachmentName: 'Application',
   description: 'PDF',

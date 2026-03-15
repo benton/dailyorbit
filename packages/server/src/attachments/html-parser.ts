@@ -1,5 +1,6 @@
 import { parse } from 'node-html-parser';
 import type { HTMLElement } from 'node-html-parser';
+import type { FileNumber } from '../lib/file-number.ts';
 import type { AttachmentMetadata } from './types.ts';
 
 const FCC_REPORT_BASE: string = 'https://fcc.report';
@@ -34,7 +35,7 @@ const SECTIONS: SectionDef[] = [
  */
 export function parseAttachmentsFromHtml(
   html: string,
-  fileNumber: string,
+  fileNumber: FileNumber,
   filingKey: number,
 ): AttachmentMetadata[] {
   const root: HTMLElement = parse(html);

@@ -24,14 +24,14 @@ async function seedFilingTable(conn: DuckDBConnection): Promise<void> {
   `);
   await conn.run(`INSERT INTO filing VALUES ($1, $2, $3, $4, $5)`, [
     1,
-    'SATSTA2023061400142',
+    'SAT-STA-20230614-00142',
     'SAT',
     'STA',
     '2023-06-14',
   ] as DuckDBValue[]);
   await conn.run(`INSERT INTO filing VALUES ($1, $2, $3, $4, $5)`, [
     2,
-    'SESLOA2024010100001',
+    'SES-LOA-20240101-00001',
     'SES',
     'LOA',
     '2024-01-01',
@@ -157,7 +157,7 @@ describe('runAttachmentPipeline', () => {
       [
         99999,
         1,
-        'SATSTA2023061400142',
+        'SAT-STA-20230614-00142',
         'Test Attachment',
         'https://example.com/fake',
       ] as DuckDBValue[],
