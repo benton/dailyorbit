@@ -492,10 +492,39 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Filings by Subsystem */}
+      {/* Last 3 Months Filing Volume by Company */}
       <div className={cardClass}>
         <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Filings by Subsystem
+          Last 3 Months Filing Volume by Company
+        </p>
+        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Monthly filing counts by company over the last 3 months.
+        </p>
+        <div className="mt-3">
+          {companyVolumeLoading && (
+            <p className="text-sm text-neutral-500">Loading company volume chart...</p>
+          )}
+          <div ref={companyVolumeRef} />
+          {companyNames.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+              {companyNames.map((name: string, i: number) => (
+                <div className="flex items-center gap-1.5" key={name}>
+                  <span
+                    className="inline-block h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
+                  />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Total Filings by Subsystem */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Total Filings by Subsystem
         </p>
         <div className="mt-3 space-y-1.5">
           {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
@@ -524,35 +553,6 @@ export default function HomePage() {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* Last 3 Months Filing Volume by Company */}
-      <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Last 3 Months Filing Volume by Company
-        </p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-          Monthly filing counts by company over the last 3 months.
-        </p>
-        <div className="mt-3">
-          {companyVolumeLoading && (
-            <p className="text-sm text-neutral-500">Loading company volume chart...</p>
-          )}
-          <div ref={companyVolumeRef} />
-          {companyNames.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
-              {companyNames.map((name: string, i: number) => (
-                <div className="flex items-center gap-1.5" key={name}>
-                  <span
-                    className="inline-block h-3 w-3 rounded-sm"
-                    style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
-                  />
-                  <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
