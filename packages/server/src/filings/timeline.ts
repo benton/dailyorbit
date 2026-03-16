@@ -29,7 +29,9 @@ const FILING_DATE_FIELDS: Array<{
 ];
 
 /** Maps pleading type strings to TimelineEventType. */
-function pleadingTypeToEventType(pleadingType: string | null): TimelineEventType {
+function pleadingTypeToEventType(
+  pleadingType: string | null,
+): TimelineEventType {
   switch (pleadingType?.toUpperCase()) {
     case 'PETITION':
       return 'petition';
@@ -92,7 +94,9 @@ export function synthesizeTimeline(
   }
 
   // 3. Sort by date ascending
-  events.sort((a: TimelineEvent, b: TimelineEvent) => a.date.localeCompare(b.date));
+  events.sort((a: TimelineEvent, b: TimelineEvent) =>
+    a.date.localeCompare(b.date),
+  );
 
   return events;
 }

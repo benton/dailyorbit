@@ -13,13 +13,13 @@ type TimelineEvent = {
 
 /** Map from event category (used as colorDomain key) to hex color. */
 const CATEGORY_COLORS: Record<string, string> = {
-  milestone: '#b45309',  // amber-700
-  petition: '#d97706',   // amber-600
-  supplement: '#0d9488',  // teal-600
-  decision: '#9333ea',   // purple-600
-  letter: '#2563eb',     // blue-600
-  comment: '#525252',    // neutral-600
-  other: '#737373',      // neutral-500
+  milestone: '#b45309', // amber-700
+  petition: '#d97706', // amber-600
+  supplement: '#0d9488', // teal-600
+  decision: '#9333ea', // purple-600
+  letter: '#2563eb', // blue-600
+  comment: '#525252', // neutral-600
+  other: '#737373', // neutral-500
 };
 
 /** Derive a color category from a timeline event. */
@@ -141,13 +141,8 @@ function TimelineLegend({ events }: { events: TimelineEvent[] }) {
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span
-        className="inline-block h-3 w-3 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      <span className="text-xs text-neutral-600 dark:text-neutral-400">
-        {label}
-      </span>
+      <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+      <span className="text-xs text-neutral-600 dark:text-neutral-400">{label}</span>
     </div>
   );
 }
