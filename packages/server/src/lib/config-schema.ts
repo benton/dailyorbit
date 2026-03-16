@@ -24,6 +24,18 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Frontend domain for CORS',
   },
+  bedrockRegion: {
+    key: 'bedrockRegion',
+    defaultValue: 'us-east-2',
+    encrypted: false,
+    description: 'AWS region for Bedrock inference',
+  },
+  bedrockDefaultModel: {
+    key: 'bedrockDefaultModel',
+    defaultValue: 'anthropic.claude-haiku-4-5-20251001-v1:0',
+    encrypted: false,
+    description: 'Default Bedrock model ID for inference',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

@@ -54,6 +54,13 @@ describe('config routes', () => {
       expect(authUrl!.description).toEqual('Auth service base URL');
     });
 
+    it('includes bedrock config keys', () => {
+      const entries = buildConfigEntries();
+      const keys: string[] = entries.map((e) => e.key);
+      expect(keys).toContain('bedrockRegion');
+      expect(keys).toContain('bedrockDefaultModel');
+    });
+
     it('reflects updated values after set', async () => {
       await service.set('clientDomain', 'https://example.com');
       const entries = buildConfigEntries();
