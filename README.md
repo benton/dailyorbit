@@ -120,6 +120,7 @@ graph TD
 - [fbtee](https://github.com/nkzw-tech/fbtee) for i18n
 - [Better Auth](https://www.better-auth.com/) for authentication
 - [React Router v7](https://reactrouter.com/)
+- [Cosmograph](https://cosmograph.app/)
 
 ### Backend (`packages/server`)
 
