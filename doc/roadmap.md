@@ -8,20 +8,20 @@
 - v0.1.7 [x] Show basic data set information and explore visualization library
 - v0.2.0 [x] Basic Entity viewing and search
 - v0.3.0 [x] Company entity, attribution & ownership tracking
-- v0.3.5 [ ] Enriched data model: Comment atttachments, timelines
+- v0.3.5 [x] Enriched data model: Comment atttachments, timelines
 - v0.4.0 [ ] Attachment processing: text (markdown?) extraction
 - v0.5.0 [ ] Anonymous home page
 - v0.6.0 [ ] User authentication and profile
 - v0.7.0 [ ] User home page, preferences, and viewing history
 - v0.8.0 [ ] Admin ingest control UI (maybe)
-- v0.9.0 [ ] Remove legavy IBFS code and references
+- v0.9.0 [ ] Remove legacy IBFS code and references
+- v0.9.5 [ ] AI foundations: internal multi-model inference API w/cost accounting
 
 ## Medium Term - LLM-driven features
 
 - v1.0.0 [ ] Summarizations: per App, Comment, and Timeline. check out [Flock][4]
 - v1.1.0 [ ] Vector-DB search?
 - v1.2.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering
--
 
 ## Medium Term: The Daily Orbit Newspaper
 
