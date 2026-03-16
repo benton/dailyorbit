@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { getConfigService } from '../lib/config.ts';
-import { InferenceService, type ConverseFunction } from './inference-service.ts';
+import {
+  InferenceService,
+  type ConverseFunction,
+} from './inference-service.ts';
 import { listAvailableModels } from './models.ts';
 import {
   DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
@@ -18,7 +21,10 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
     const body = await c.req.json<InferenceRequest>();
 
     if (!body.messages || body.messages.length === 0) {
-      return c.json({ error: 'messages array must contain at least one message' }, 400);
+      return c.json(
+        { error: 'messages array must contain at least one message' },
+        400,
+      );
     }
 
     try {

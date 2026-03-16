@@ -76,12 +76,12 @@ function createDuckDbAdapter(): Adapter {
       }
       // Filter out null/undefined values — DuckDB can't bind untyped NULLs.
       // The table's DEFAULT constraints handle missing columns.
-      const entries = Object.entries(data).filter(
-        ([, v]) => v != null,
-      );
+      const entries = Object.entries(data).filter(([, v]) => v != null);
       const cols = entries.map(([k]) => `"${k}"`).join(', ');
       const placeholders = entries.map((_, i) => `$${i + 1}`).join(', ');
-      const values = entries.map(([, v]) => coerceToDuckDBValue(v)) as DuckDBValue[];
+      const values = entries.map(([, v]) =>
+        coerceToDuckDBValue(v),
+      ) as DuckDBValue[];
       const reader = await conn.runAndReadAll(
         `INSERT INTO "${model}" (${cols}) VALUES (${placeholders}) RETURNING *`,
         values,
@@ -99,10 +99,7 @@ function createDuckDbAdapter(): Adapter {
           : '*';
       const { sql, params } = buildWhereClause(where);
       const query: string = `SELECT ${cols} FROM "${model}" ${sql} LIMIT 1`;
-      const reader = await conn.runAndReadAll(
-        query,
-        params as DuckDBValue[],
-      );
+      const reader = await conn.runAndReadAll(query, params as DuckDBValue[]);
       const rows = reader.getRowObjectsJS();
       if (rows.length === 0) {
         conn.closeSync();

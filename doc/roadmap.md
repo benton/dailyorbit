@@ -14,13 +14,14 @@
 - v0.6.0 [x] User authentication and profile
 - v0.7.0 [x] User home page, preferences, and viewing history
 - v0.8.0 [x] AI foundations: internal multi-model inference API w/cost accounting
-- v0.9.0 [ ]
 
 ## Medium Term - LLM-driven features
 
 - v1.0.0 [x] Summarizations: per Application, per Attachment
-- v1.1.0 [ ] Vector-DB search?
-- v1.2.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering
+- v1.1.0 [ ] Full text search
+- v1.2.0 [ ] Vector-DB search?
+- v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
+- v1.4.0 [ ]
 
 ## Medium Term: The Daily Orbit Newspaper
 
@@ -38,7 +39,7 @@
 
 ## Off the Wall Ideas or Nice to have
 
-- v?.x.x [ ] Backup PDF text extraction tool
+- v?.x.x [ ] Premium feature: Voice in/out
 - v?.x.x [ ] Backup PDF text extraction tool
 - v?.x.x [ ] Admin ingest control UI
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser

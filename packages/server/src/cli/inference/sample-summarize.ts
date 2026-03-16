@@ -7,7 +7,10 @@ import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
 import { InferenceService } from '../../inference/inference-service.ts';
 import { setConfigService } from '../../lib/config.ts';
-import type { InferenceRequest, InferenceResponse } from '../../inference/types.ts';
+import type {
+  InferenceRequest,
+  InferenceResponse,
+} from '../../inference/types.ts';
 
 // ---------------------------------------------------------------------------
 // Prompts
@@ -265,7 +268,9 @@ Full backlog: ${String(TOTAL_DOCS_WITH_TEXT)} docs with extracted text
 `;
   for (const s of stats) {
     const results: SummaryResult[] = allResults.get(s.model) ?? [];
-    const latencies: number[] = results.map((r) => r.latencyMs).sort((a, b) => a - b);
+    const latencies: number[] = results
+      .map((r) => r.latencyMs)
+      .sort((a, b) => a - b);
     const min: number = latencies[0] ?? 0;
     const max: number = latencies[latencies.length - 1] ?? 0;
     const median: number = latencies[Math.floor(latencies.length / 2)] ?? 0;
@@ -286,8 +291,8 @@ Full backlog: ${String(TOTAL_DOCS_WITH_TEXT)} docs with extracted text
   md += `|---|---|---|---|\n`;
 
   for (const s of stats) {
-    const priceKey: string | undefined = Object.keys(pricing).find(
-      (k) => s.model.includes(k),
+    const priceKey: string | undefined = Object.keys(pricing).find((k) =>
+      s.model.includes(k),
     );
     if (priceKey != null) {
       const p = pricing[priceKey]!;
@@ -308,14 +313,15 @@ Full backlog: ${String(TOTAL_DOCS_WITH_TEXT)} docs with extracted text
     const projOutput: number = Math.round(s.totalOutputTokens * scale);
     const projLatencyMs: number = Math.round(s.totalLatencyMs * scale);
 
-    const priceKey: string | undefined = Object.keys(pricing).find(
-      (k) => s.model.includes(k),
+    const priceKey: string | undefined = Object.keys(pricing).find((k) =>
+      s.model.includes(k),
     );
     let costStr: string = 'N/A';
     let batchCostStr: string = 'N/A';
     if (priceKey != null) {
       const p = pricing[priceKey]!;
-      const cost: number = (projInput / 1_000_000) * p.input + (projOutput / 1_000_000) * p.output;
+      const cost: number =
+        (projInput / 1_000_000) * p.input + (projOutput / 1_000_000) * p.output;
       costStr = `$${cost.toFixed(2)}`;
       batchCostStr = `$${(cost * 0.5).toFixed(2)}`;
     }
@@ -327,7 +333,14 @@ Full backlog: ${String(TOTAL_DOCS_WITH_TEXT)} docs with extracted text
   }
 
   // --- Per-document timing data (JSON for further analysis) ---
-  const timingData: Array<{ model: string; fileNumber: string; textLength: number; inputTokens: number; outputTokens: number; latencyMs: number }> = [];
+  const timingData: Array<{
+    model: string;
+    fileNumber: string;
+    textLength: number;
+    inputTokens: number;
+    outputTokens: number;
+    latencyMs: number;
+  }> = [];
   for (const [model, results] of allResults) {
     for (const r of results) {
       timingData.push({
@@ -340,7 +353,11 @@ Full backlog: ${String(TOTAL_DOCS_WITH_TEXT)} docs with extracted text
       });
     }
   }
-  await writeFile(join(outputDir, 'timings.json'), JSON.stringify(timingData, null, 2), 'utf-8');
+  await writeFile(
+    join(outputDir, 'timings.json'),
+    JSON.stringify(timingData, null, 2),
+    'utf-8',
+  );
 
   await writeFile(join(outputDir, 'stats.md'), md, 'utf-8');
 }
@@ -380,7 +397,9 @@ export const sampleSummarizeCommand = defineCommand({
   },
   async run({ args }) {
     const sampleSize: number = parseInt(args.sample, 10);
-    const modelIds: string[] = (args.models as string).split(',').map((s: string) => s.trim());
+    const modelIds: string[] = (args.models as string)
+      .split(',')
+      .map((s: string) => s.trim());
     const outputDir: string = args.output;
     const region: string = args.region;
 
@@ -397,7 +416,10 @@ export const sampleSummarizeCommand = defineCommand({
 
     try {
       console.log(`Sampling ${String(sampleSize)} attachments...`);
-      const samples: AttachmentMeta[] = await sampleAttachments(conn, sampleSize);
+      const samples: AttachmentMeta[] = await sampleAttachments(
+        conn,
+        sampleSize,
+      );
       console.log(`Got ${String(samples.length)} attachments`);
 
       if (samples.length === 0) {
@@ -407,7 +429,9 @@ export const sampleSummarizeCommand = defineCommand({
 
       // Print sample overview
       const totalChars: number = samples.reduce((s, a) => s + a.textLength, 0);
-      console.log(`Total text: ${String(totalChars)} chars (~${String(Math.round(totalChars / 4))} tokens)`);
+      console.log(
+        `Total text: ${String(totalChars)} chars (~${String(Math.round(totalChars / 4))} tokens)`,
+      );
       console.log(`Models: ${modelIds.join(', ')}`);
       console.log(`Output: ${outputDir}\n`);
 
@@ -431,14 +455,19 @@ export const sampleSummarizeCommand = defineCommand({
           );
 
           try {
-            const result: SummaryResult = await summarizeOne(service, modelId, meta);
+            const result: SummaryResult = await summarizeOne(
+              service,
+              modelId,
+              meta,
+            );
             results.push(result);
             await writeResult(outputDir, meta, modelLabel, result);
             console.log(
               `${String(result.outputTokens)} tokens, ${String(result.latencyMs)} ms`,
             );
           } catch (err: unknown) {
-            const msg: string = err instanceof Error ? err.message : String(err);
+            const msg: string =
+              err instanceof Error ? err.message : String(err);
             console.log(`ERROR: ${msg}`);
           }
         }

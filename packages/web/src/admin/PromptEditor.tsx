@@ -64,10 +64,8 @@ export function PromptEditor({
     onUserPromptChange(defaultUserPrompt);
   }, [defaultUserPrompt, onUserPromptChange]);
 
-  const isSystemDefault: boolean =
-    systemPrompt === defaultSystemPrompt || systemPrompt === '';
-  const isUserDefault: boolean =
-    userPrompt === defaultUserPrompt || userPrompt === '';
+  const isSystemDefault: boolean = systemPrompt === defaultSystemPrompt || systemPrompt === '';
+  const isUserDefault: boolean = userPrompt === defaultUserPrompt || userPrompt === '';
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
@@ -77,23 +75,24 @@ export function PromptEditor({
         onClick={() => setOpen(!open)}
         type="button"
       >
-        {open
-          ? <ChevronDown className="h-4 w-4 text-neutral-400" />
-          : <ChevronRight className="h-4 w-4 text-neutral-400" />
-        }
+        {open ? (
+          <ChevronDown className="h-4 w-4 text-neutral-400" />
+        ) : (
+          <ChevronRight className="h-4 w-4 text-neutral-400" />
+        )}
         <div>
           <h2 className="text-lg font-medium">{title}</h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {description}
-          </p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">{description}</p>
         </div>
         {!isSystemDefault || !isUserDefault ? (
-          <Badge className="ml-auto" variant="secondary">customized</Badge>
+          <Badge className="ml-auto" variant="secondary">
+            customized
+          </Badge>
         ) : null}
       </button>
 
       {open && (
-        <div className="space-y-6 border-t border-neutral-200 px-6 pb-6 pt-4 dark:border-neutral-800">
+        <div className="space-y-6 border-t border-neutral-200 px-6 pt-4 pb-6 dark:border-neutral-800">
           {/* System Prompt */}
           <div>
             <div className="mb-1 flex items-center justify-between">
@@ -119,9 +118,7 @@ export function PromptEditor({
               value={systemPrompt}
             />
             {systemPrompt === '' && (
-              <p className="mt-1 text-xs text-neutral-400">
-                Blank = built-in default is used
-              </p>
+              <p className="mt-1 text-xs text-neutral-400">Blank = built-in default is used</p>
             )}
           </div>
 
@@ -150,9 +147,7 @@ export function PromptEditor({
               value={userPrompt}
             />
             {userPrompt === '' && (
-              <p className="mt-1 text-xs text-neutral-400">
-                Blank = built-in default is used
-              </p>
+              <p className="mt-1 text-xs text-neutral-400">Blank = built-in default is used</p>
             )}
           </div>
 
@@ -163,10 +158,11 @@ export function PromptEditor({
               onClick={() => setVarsOpen(!varsOpen)}
               type="button"
             >
-              {varsOpen
-                ? <ChevronDown className="h-3.5 w-3.5" />
-                : <ChevronRight className="h-3.5 w-3.5" />
-              }
+              {varsOpen ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
               Available Variables
               <Badge variant="secondary">{variables.length}</Badge>
             </button>
@@ -175,10 +171,10 @@ export function PromptEditor({
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:border-neutral-700">
-                      <th className="pb-2 pr-4">Variable</th>
-                      <th className="pb-2 pr-4">Source</th>
-                      <th className="pb-2 pr-4">Description</th>
+                    <tr className="border-b border-neutral-200 text-left text-xs font-medium tracking-wider text-neutral-500 uppercase dark:border-neutral-700">
+                      <th className="pr-4 pb-2">Variable</th>
+                      <th className="pr-4 pb-2">Source</th>
+                      <th className="pr-4 pb-2">Description</th>
                       <th className="pb-2">Example</th>
                     </tr>
                   </thead>
@@ -193,13 +189,9 @@ export function PromptEditor({
                             {'{{' + v.name + '}}'}
                           </code>
                         </td>
-                        <td className="py-2 pr-4 text-neutral-500">
-                          {v.source}
-                        </td>
+                        <td className="py-2 pr-4 text-neutral-500">{v.source}</td>
                         <td className="py-2 pr-4">{v.description}</td>
-                        <td className="py-2 font-mono text-xs text-neutral-500">
-                          {v.example}
-                        </td>
+                        <td className="py-2 font-mono text-xs text-neutral-500">{v.example}</td>
                       </tr>
                     ))}
                   </tbody>

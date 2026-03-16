@@ -9,7 +9,8 @@ import { InferenceService } from './inference-service.ts';
 import { listAvailableModels } from './models.ts';
 
 const REGION = 'us-east-2';
-const HAS_AWS_CREDS: boolean = process.env.AWS_PROFILE != null || process.env.AWS_ACCESS_KEY_ID != null;
+const HAS_AWS_CREDS: boolean =
+  process.env.AWS_PROFILE != null || process.env.AWS_ACCESS_KEY_ID != null;
 
 const TEST_KEY: Buffer = randomBytes(32);
 let db: DuckDBInstance;
@@ -33,7 +34,9 @@ describe.skipIf(!HAS_AWS_CREDS)('Bedrock integration', () => {
 
     const resp = await svc.complete({
       modelId: 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-      messages: [{ role: 'user', content: 'Reply with exactly: INTEGRATION_TEST_OK' }],
+      messages: [
+        { role: 'user', content: 'Reply with exactly: INTEGRATION_TEST_OK' },
+      ],
       params: { maxTokens: 32, temperature: 0 },
     });
 

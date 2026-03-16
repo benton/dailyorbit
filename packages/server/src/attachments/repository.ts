@@ -452,7 +452,10 @@ export type PendingSummarizationRow = {
 
 export async function getPendingSummarizations(
   conn: DuckDBConnection,
-  options: { filingKeys?: number[] | undefined; limit?: number | undefined } = {},
+  options: {
+    filingKeys?: number[] | undefined;
+    limit?: number | undefined;
+  } = {},
 ): Promise<PendingSummarizationRow[]> {
   const limitClause: string =
     options.limit != null ? `LIMIT ${String(options.limit)}` : '';

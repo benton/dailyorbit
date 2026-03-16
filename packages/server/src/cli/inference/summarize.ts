@@ -10,7 +10,10 @@ import {
   renderPrompt,
 } from '../../inference/prompts.ts';
 import { setConfigService } from '../../lib/config.ts';
-import type { InferenceRequest, InferenceResponse } from '../../inference/types.ts';
+import type {
+  InferenceRequest,
+  InferenceResponse,
+} from '../../inference/types.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,7 +76,9 @@ async function fetchBatch(
   conn: DuckDBConnection,
   batchSize: number,
 ): Promise<AttachmentRow[]> {
-  const reader = await conn.runAndReadAll(FETCH_BATCH_SQL, [batchSize] as DuckDBValue[]);
+  const reader = await conn.runAndReadAll(FETCH_BATCH_SQL, [
+    batchSize,
+  ] as DuckDBValue[]);
   const rows: AttachmentRow[] = [];
   for (const row of reader.getRows()) {
     rows.push({
@@ -132,7 +137,9 @@ async function summarizeOne(
 
   const request: InferenceRequest = {
     modelId,
-    messages: [{ role: 'user', content: renderPrompt(userPromptTemplate, vars) }],
+    messages: [
+      { role: 'user', content: renderPrompt(userPromptTemplate, vars) },
+    ],
     params: {
       systemPrompt,
       maxTokens: 512,
@@ -242,10 +249,13 @@ export const summarizeCommand = defineCommand({
 
     try {
       const remaining: number = await countRemaining(conn);
-      const target: number = maxLimit > 0 ? Math.min(maxLimit, remaining) : remaining;
+      const target: number =
+        maxLimit > 0 ? Math.min(maxLimit, remaining) : remaining;
 
       console.log(`Attachments needing summary: ${String(remaining)}`);
-      console.log(`Target: ${String(target)} | Model: ${modelId} | Concurrency: ${String(concurrency)}`);
+      console.log(
+        `Target: ${String(target)} | Model: ${modelId} | Concurrency: ${String(concurrency)}`,
+      );
 
       if (dryRun) {
         console.log('Dry run — exiting.');
@@ -269,17 +279,28 @@ export const summarizeCommand = defineCommand({
         const rows: AttachmentRow[] = await fetchBatch(conn, fetchSize);
         if (rows.length === 0) break;
 
-        const results = await processWithConcurrency(rows, concurrency, async (row) => {
-          try {
-            const resp: InferenceResponse = await summarizeOne(service, modelId, systemPrompt, userPromptTemplate, row);
-            await saveSummary(conn, row.attachmentKey, resp.content);
-            return { ok: true as const, resp };
-          } catch (err: unknown) {
-            const msg: string = err instanceof Error ? err.message : String(err);
-            process.stderr.write(`\nERROR [${row.fileNumber}]: ${msg}\n`);
-            return { ok: false as const };
-          }
-        });
+        const results = await processWithConcurrency(
+          rows,
+          concurrency,
+          async (row) => {
+            try {
+              const resp: InferenceResponse = await summarizeOne(
+                service,
+                modelId,
+                systemPrompt,
+                userPromptTemplate,
+                row,
+              );
+              await saveSummary(conn, row.attachmentKey, resp.content);
+              return { ok: true as const, resp };
+            } catch (err: unknown) {
+              const msg: string =
+                err instanceof Error ? err.message : String(err);
+              process.stderr.write(`\nERROR [${row.fileNumber}]: ${msg}\n`);
+              return { ok: false as const };
+            }
+          },
+        );
 
         for (const r of results) {
           if (r.ok) {
@@ -292,7 +313,9 @@ export const summarizeCommand = defineCommand({
         }
 
         processed += rows.length;
-        const elapsed: number = Math.round((performance.now() - startTime) / 1000);
+        const elapsed: number = Math.round(
+          (performance.now() - startTime) / 1000,
+        );
         const rate: number = processed / elapsed;
         const eta: number = Math.round((target - processed) / rate);
         process.stdout.write(
@@ -300,7 +323,9 @@ export const summarizeCommand = defineCommand({
         );
       }
 
-      const wallSec: number = Math.round((performance.now() - startTime) / 1000);
+      const wallSec: number = Math.round(
+        (performance.now() - startTime) / 1000,
+      );
       console.log('\n');
       console.log('=== Summarization Complete ===');
       console.log(`  Processed:      ${String(processed)}`);
@@ -308,7 +333,9 @@ export const summarizeCommand = defineCommand({
       console.log(`  Input tokens:   ${String(totalInputTokens)}`);
       console.log(`  Output tokens:  ${String(totalOutputTokens)}`);
       console.log(`  Wall time:      ${formatDuration(wallSec)}`);
-      console.log(`  Avg latency:    ${String(Math.round(totalLatencyMs / (processed - errors)))} ms/doc`);
+      console.log(
+        `  Avg latency:    ${String(Math.round(totalLatencyMs / (processed - errors)))} ms/doc`,
+      );
     } finally {
       conn.closeSync();
       dbInstance.closeSync();

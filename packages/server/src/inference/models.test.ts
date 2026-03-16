@@ -5,15 +5,31 @@ describe('parseModelList', () => {
   it('maps Bedrock ListFoundationModels output to ModelInfo array', () => {
     const raw = {
       modelSummaries: [
-        { modelId: 'anthropic.claude-haiku-4-5-20251001-v1:0', modelName: 'Claude Haiku 4.5', providerName: 'Anthropic' },
-        { modelId: 'amazon.nova-micro-v1:0', modelName: 'Nova Micro', providerName: 'Amazon' },
+        {
+          modelId: 'anthropic.claude-haiku-4-5-20251001-v1:0',
+          modelName: 'Claude Haiku 4.5',
+          providerName: 'Anthropic',
+        },
+        {
+          modelId: 'amazon.nova-micro-v1:0',
+          modelName: 'Nova Micro',
+          providerName: 'Amazon',
+        },
       ],
     };
 
     const models = parseModelList(raw);
     expect(models).toEqual([
-      { modelId: 'anthropic.claude-haiku-4-5-20251001-v1:0', modelName: 'Claude Haiku 4.5', provider: 'Anthropic' },
-      { modelId: 'amazon.nova-micro-v1:0', modelName: 'Nova Micro', provider: 'Amazon' },
+      {
+        modelId: 'anthropic.claude-haiku-4-5-20251001-v1:0',
+        modelName: 'Claude Haiku 4.5',
+        provider: 'Anthropic',
+      },
+      {
+        modelId: 'amazon.nova-micro-v1:0',
+        modelName: 'Nova Micro',
+        provider: 'Amazon',
+      },
     ]);
   });
 
@@ -44,8 +60,16 @@ describe('parseInferenceProfiles', () => {
 
     const models = parseInferenceProfiles(raw);
     expect(models).toEqual([
-      { modelId: 'us.anthropic.claude-3-haiku-20240307-v1:0', modelName: 'Claude 3 Haiku', provider: 'Anthropic' },
-      { modelId: 'us.meta.llama3-2-1b-instruct-v1:0', modelName: 'Llama 3.2 1B Instruct', provider: 'Meta' },
+      {
+        modelId: 'us.anthropic.claude-3-haiku-20240307-v1:0',
+        modelName: 'Claude 3 Haiku',
+        provider: 'Anthropic',
+      },
+      {
+        modelId: 'us.meta.llama3-2-1b-instruct-v1:0',
+        modelName: 'Llama 3.2 1B Instruct',
+        provider: 'Meta',
+      },
     ]);
   });
 
@@ -72,6 +96,8 @@ describe('parseInferenceProfiles', () => {
 
   it('returns empty array when no profiles', () => {
     expect(parseInferenceProfiles({})).toEqual([]);
-    expect(parseInferenceProfiles({ inferenceProfileSummaries: [] })).toEqual([]);
+    expect(parseInferenceProfiles({ inferenceProfileSummaries: [] })).toEqual(
+      [],
+    );
   });
 });

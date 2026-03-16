@@ -89,7 +89,9 @@ export const syncCommand = defineCommand({
       `  Texts skipped (no text):${String(result.textsSkippedNoText).padStart(2)}`,
     );
     console.log(`  Texts failed:           ${String(result.textsFailed)}`);
-    console.log(`  Summaries generated:    ${String(result.summariesGenerated)}`);
+    console.log(
+      `  Summaries generated:    ${String(result.summariesGenerated)}`,
+    );
     console.log(`  Summaries failed:       ${String(result.summariesFailed)}`);
     console.log(
       `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,

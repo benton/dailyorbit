@@ -4,13 +4,12 @@ import {
   type ConverseCommandInput,
   type ConverseCommandOutput,
 } from '@aws-sdk/client-bedrock-runtime';
-import type {
-  InferenceRequest,
-  InferenceResponse,
-} from './types.ts';
+import type { InferenceRequest, InferenceResponse } from './types.ts';
 
 /** Build a Bedrock ConverseCommandInput from our internal request type. */
-export function buildConverseInput(req: InferenceRequest): ConverseCommandInput {
+export function buildConverseInput(
+  req: InferenceRequest,
+): ConverseCommandInput {
   const messages = req.messages.map((m) => ({
     role: m.role as 'user' | 'assistant',
     content: [{ text: m.content }],
@@ -25,7 +24,8 @@ export function buildConverseInput(req: InferenceRequest): ConverseCommandInput 
   if (params != null) {
     const inferenceConfig: Record<string, number> = {};
     if (params.maxTokens != null) inferenceConfig.maxTokens = params.maxTokens;
-    if (params.temperature != null) inferenceConfig.temperature = params.temperature;
+    if (params.temperature != null)
+      inferenceConfig.temperature = params.temperature;
     if (params.topP != null) inferenceConfig.topP = params.topP;
     if (Object.keys(inferenceConfig).length > 0) {
       input.inferenceConfig = inferenceConfig;

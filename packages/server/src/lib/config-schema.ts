@@ -46,13 +46,15 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     key: 'summarizationSystemPrompt',
     defaultValue: '',
     encrypted: false,
-    description: 'System prompt for attachment summarization (blank = built-in default)',
+    description:
+      'System prompt for attachment summarization (blank = built-in default)',
   },
   summarizationUserPrompt: {
     key: 'summarizationUserPrompt',
     defaultValue: '',
     encrypted: false,
-    description: 'User prompt template for attachment summarization (blank = built-in default)',
+    description:
+      'User prompt template for attachment summarization (blank = built-in default)',
   },
 } as const;
 

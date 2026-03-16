@@ -38,9 +38,7 @@ const modelColumns: Array<ColumnDef<ModelInfo, unknown>> = [
     accessorKey: 'modelId',
     header: 'Model ID',
     size: 400,
-    cell: ({ getValue }) => (
-      <span className="font-mono text-sm">{getValue() as string}</span>
-    ),
+    cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() as string}</span>,
   },
 ];
 
@@ -102,26 +100,29 @@ function AiSettingsInner() {
   }, [toast]);
 
   /** Fetch models from API, cache for dropdown, and return as PaginatedResponse for DataTable. */
-  const fetchModelsPage = useCallback(async (params: DataTableFetchParams): Promise<PaginatedResponse<ModelInfo>> => {
-    const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
-    setModels(data);
+  const fetchModelsPage = useCallback(
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<ModelInfo>> => {
+      const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
+      setModels(data);
 
-    // Client-side sort since the API returns all models in one page
-    const { sort, order } = params;
-    if (sort != null) {
-      const key = sort as keyof ModelInfo;
-      const dir: number = order === 'desc' ? -1 : 1;
-      data.sort((a, b) => a[key].localeCompare(b[key]) * dir);
-    }
+      // Client-side sort since the API returns all models in one page
+      const { sort, order } = params;
+      if (sort != null) {
+        const key = sort as keyof ModelInfo;
+        const dir: number = order === 'desc' ? -1 : 1;
+        data.sort((a, b) => a[key].localeCompare(b[key]) * dir);
+      }
 
-    return {
-      data,
-      page: 1,
-      pageSize: data.length,
-      totalRows: data.length,
-      totalPages: 1,
-    };
-  }, []);
+      return {
+        data,
+        page: 1,
+        pageSize: data.length,
+        totalRows: data.length,
+        totalPages: 1,
+      };
+    },
+    [],
+  );
 
   useEffect(() => {
     void fetchConfig();
@@ -197,11 +198,7 @@ function AiSettingsInner() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="bedrock-region">AWS Region</Label>
-            <Input
-              id="bedrock-region"
-              onChange={(e) => setRegion(e.target.value)}
-              value={region}
-            />
+            <Input id="bedrock-region" onChange={(e) => setRegion(e.target.value)} value={region} />
           </div>
           <div>
             <Label htmlFor="bedrock-model">Default Model ID</Label>
@@ -238,7 +235,14 @@ function AiSettingsInner() {
             <label
               className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
               key={m.id}
-              style={summarizationModel === m.id ? { borderColor: 'var(--color-blue-500)', backgroundColor: 'var(--color-blue-50)' } : undefined}
+              style={
+                summarizationModel === m.id
+                  ? {
+                      borderColor: 'var(--color-blue-500)',
+                      backgroundColor: 'var(--color-blue-50)',
+                    }
+                  : undefined
+              }
             >
               <input
                 checked={summarizationModel === m.id}
@@ -279,7 +283,9 @@ function AiSettingsInner() {
           <Input
             className="flex-1"
             onChange={(e) => setTestPrompt(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void handleTest(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleTest();
+            }}
             placeholder="Enter a test prompt..."
             value={testPrompt}
           />

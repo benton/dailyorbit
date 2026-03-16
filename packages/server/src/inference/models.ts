@@ -30,8 +30,10 @@ export function parseInferenceProfiles(
       // Extract provider from the profile name (e.g. "US Anthropic Claude 3 Haiku" -> "Anthropic")
       const nameParts: string[] = (p.inferenceProfileName ?? '').split(' ');
       // Skip the region prefix (US/EU) to get the provider
-      const provider: string = nameParts.length > 1 ? nameParts[1] : nameParts[0] ?? '';
-      const modelName: string = nameParts.slice(2).join(' ') || p.inferenceProfileName || '';
+      const provider: string =
+        nameParts.length > 1 ? nameParts[1] : (nameParts[0] ?? '');
+      const modelName: string =
+        nameParts.slice(2).join(' ') || p.inferenceProfileName || '';
       return {
         modelId: p.inferenceProfileId ?? '',
         modelName,
@@ -45,7 +47,9 @@ export function parseInferenceProfiles(
  * Returns inference profiles (which include Anthropic and other INFERENCE_PROFILE-only models)
  * plus ON_DEMAND foundation models that don't have inference profiles.
  */
-export async function listAvailableModels(region: string): Promise<ModelInfo[]> {
+export async function listAvailableModels(
+  region: string,
+): Promise<ModelInfo[]> {
   const client = new BedrockMgmtClient({ region });
 
   // Fetch inference profiles — these are the IDs that actually work for invocation

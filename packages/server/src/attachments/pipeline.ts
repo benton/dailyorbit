@@ -26,7 +26,10 @@ import {
   saveSummary,
   upsertAttachments,
 } from './repository.ts';
-import type { PendingExtractionRow, PendingSummarizationRow } from './repository.ts';
+import type {
+  PendingExtractionRow,
+  PendingSummarizationRow,
+} from './repository.ts';
 import {
   attachmentStoragePath,
   downloadFile,
@@ -381,17 +384,22 @@ export async function runAttachmentPipeline(
   let summariesFailed: number = 0;
 
   if (options.discoverOnly !== true && options.skipSummarization !== true) {
-    const filingKeysForSummarization: number[] = filings.map((f) => f.filingKey);
+    const filingKeysForSummarization: number[] = filings.map(
+      (f) => f.filingKey,
+    );
     const pendingSummarizations: PendingSummarizationRow[] =
       await getPendingSummarizations(conn, {
         filingKeys: filingKeysForSummarization,
       });
 
     if (pendingSummarizations.length > 0) {
-      log(`${String(pendingSummarizations.length)} attachments pending summarization`);
+      log(
+        `${String(pendingSummarizations.length)} attachments pending summarization`,
+      );
 
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      const { InferenceService } = await import('../inference/inference-service.ts');
+      const { InferenceService } =
+        await import('../inference/inference-service.ts');
       const {
         DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
         DEFAULT_SUMMARIZATION_USER_PROMPT,
@@ -400,17 +408,26 @@ export async function runAttachmentPipeline(
 
       // Resolve config — prefer explicit options, fall back to ConfigService, then defaults
       let region: string = options.bedrockRegion ?? 'us-east-2';
-      let modelId: string = options.summarizationModel ?? 'us.amazon.nova-pro-v1:0';
+      let modelId: string =
+        options.summarizationModel ?? 'us.amazon.nova-pro-v1:0';
       let systemPrompt: string = DEFAULT_SUMMARIZATION_SYSTEM_PROMPT;
       let userPromptTemplate: string = DEFAULT_SUMMARIZATION_USER_PROMPT;
 
       try {
         const { getConfigService } = await import('../lib/config.ts');
         const config = getConfigService();
-        region = options.bedrockRegion ?? ((config.get('bedrockRegion') as string) || region);
-        modelId = options.summarizationModel ?? ((config.get('summarizationModel') as string) || modelId);
-        const customSystem: string = config.get('summarizationSystemPrompt') as string;
-        const customUser: string = config.get('summarizationUserPrompt') as string;
+        region =
+          options.bedrockRegion ??
+          ((config.get('bedrockRegion') as string) || region);
+        modelId =
+          options.summarizationModel ??
+          ((config.get('summarizationModel') as string) || modelId);
+        const customSystem: string = config.get(
+          'summarizationSystemPrompt',
+        ) as string;
+        const customUser: string = config.get(
+          'summarizationUserPrompt',
+        ) as string;
         if (customSystem) systemPrompt = customSystem;
         if (customUser) userPromptTemplate = customUser;
       } catch {
@@ -421,7 +438,9 @@ export async function runAttachmentPipeline(
       const service = new InferenceService(client);
       const summConcurrency: number = options.summarizationConcurrency ?? 10;
 
-      log(`Summarizing with ${modelId} (concurrency: ${String(summConcurrency)})`);
+      log(
+        `Summarizing with ${modelId} (concurrency: ${String(summConcurrency)})`,
+      );
 
       const summResults: (boolean | undefined)[] = await processQueue(
         pendingSummarizations,
@@ -439,7 +458,9 @@ export async function runAttachmentPipeline(
 
           const resp = await service.complete({
             modelId,
-            messages: [{ role: 'user', content: renderPrompt(userPromptTemplate, vars) }],
+            messages: [
+              { role: 'user', content: renderPrompt(userPromptTemplate, vars) },
+            ],
             params: {
               systemPrompt,
               maxTokens: 512,
@@ -454,7 +475,8 @@ export async function runAttachmentPipeline(
           concurrency: summConcurrency,
           delayMs: 0,
           onError: (error: unknown, row: PendingSummarizationRow) => {
-            const msg: string = error instanceof Error ? error.message : String(error);
+            const msg: string =
+              error instanceof Error ? error.message : String(error);
             log(`Summarization error [${row.fileNumber}]: ${msg}`);
           },
           onItemComplete: (completed: number, total: number) => {

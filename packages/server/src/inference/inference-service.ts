@@ -1,4 +1,7 @@
-import type { ConverseCommandInput, ConverseCommandOutput } from '@aws-sdk/client-bedrock-runtime';
+import type {
+  ConverseCommandInput,
+  ConverseCommandOutput,
+} from '@aws-sdk/client-bedrock-runtime';
 import { getConfigService } from '../lib/config.ts';
 import { buildConverseInput, parseConverseOutput } from './bedrock-client.ts';
 import type { InferenceRequest, InferenceResponse } from './types.ts';

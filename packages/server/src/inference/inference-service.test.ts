@@ -45,7 +45,9 @@ describe('InferenceService', () => {
 
     // Verify the model ID passed to Bedrock
     const calledInput = mockConverse.mock.calls[0][0];
-    expect(calledInput.modelId).toEqual('us.anthropic.claude-haiku-4-5-20251001-v1:0');
+    expect(calledInput.modelId).toEqual(
+      'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+    );
   });
 
   it('uses explicit modelId when provided', async () => {

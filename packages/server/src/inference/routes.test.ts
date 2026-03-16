@@ -27,7 +27,12 @@ describe('inference routes', () => {
     it('returns inference response from mock backend', async () => {
       const mockBackend = {
         converse: vi.fn().mockResolvedValue({
-          output: { message: { role: 'assistant', content: [{ text: 'Test response' }] } },
+          output: {
+            message: {
+              role: 'assistant',
+              content: [{ text: 'Test response' }],
+            },
+          },
           usage: { inputTokens: 5, outputTokens: 3, totalTokens: 8 },
           stopReason: 'end_turn',
         }),
