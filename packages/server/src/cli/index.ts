@@ -3,6 +3,7 @@ import { attachmentsCommand } from './attachments/index.ts';
 import { companiesCommand } from './companies/index.ts';
 import { configCommand } from './config/index.ts';
 import { dbCommand } from './db/index.ts';
+import { inferenceCommand } from './inference/index.ts';
 import { ingestCommand } from './ingest/index.ts';
 import { serveCommand } from './serve/index.ts';
 import { userCommand } from './user/index.ts';
@@ -17,6 +18,7 @@ export const main = defineCommand({
     companies: companiesCommand,
     config: configCommand,
     db: dbCommand,
+    inference: inferenceCommand,
     ingest: ingestCommand,
     serve: serveCommand,
     user: userCommand,

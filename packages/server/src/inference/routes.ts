@@ -2,6 +2,11 @@ import { Hono } from 'hono';
 import { getConfigService } from '../lib/config.ts';
 import { InferenceService, type ConverseFunction } from './inference-service.ts';
 import { listAvailableModels } from './models.ts';
+import {
+  DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
+  DEFAULT_SUMMARIZATION_USER_PROMPT,
+  SUMMARIZATION_VARIABLES,
+} from './prompts.ts';
 import type { InferenceRequest } from './types.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */
@@ -44,6 +49,17 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
       const message: string = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 502);
     }
+  });
+
+  /** GET /prompt-templates — Return prompt template metadata for the admin UI. */
+  routes.get('/prompt-templates', (c) => {
+    return c.json({
+      summarization: {
+        defaultSystemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
+        defaultUserPrompt: DEFAULT_SUMMARIZATION_USER_PROMPT,
+        variables: SUMMARIZATION_VARIABLES,
+      },
+    });
   });
 
   return routes;

@@ -18,7 +18,7 @@
 
 ## Medium Term - LLM-driven features
 
-- v1.0.0 [x] Summarizations: per Filing, per Attachment, check out [Flock][4]
+- v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [ ] Vector-DB search?
 - v1.2.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering
 

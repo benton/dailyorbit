@@ -36,6 +36,24 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Default Bedrock model ID for inference',
   },
+  summarizationModel: {
+    key: 'summarizationModel',
+    defaultValue: 'us.amazon.nova-pro-v1:0',
+    encrypted: false,
+    description: 'Bedrock model ID used for attachment summarization',
+  },
+  summarizationSystemPrompt: {
+    key: 'summarizationSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'System prompt for attachment summarization (blank = built-in default)',
+  },
+  summarizationUserPrompt: {
+    key: 'summarizationUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'User prompt template for attachment summarization (blank = built-in default)',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

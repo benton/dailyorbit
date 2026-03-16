@@ -8,6 +8,7 @@ import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '..
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
 import { ToastProvider, useToast } from '../ui/toast.tsx';
+import { PromptEditor } from './PromptEditor.tsx';
 
 type ModelInfo = {
   modelId: string;
@@ -43,9 +44,29 @@ const modelColumns: Array<ColumnDef<ModelInfo, unknown>> = [
   },
 ];
 
+const SUMMARIZATION_MODELS: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'us.amazon.nova-pro-v1:0', label: 'Amazon Nova Pro' },
+  { id: 'us.anthropic.claude-haiku-4-5-20251001-v1:0', label: 'Claude Haiku 4.5' },
+  { id: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0', label: 'Claude Sonnet 4.5' },
+];
+
+type TemplateVariable = {
+  name: string;
+  source: string;
+  description: string;
+  example: string;
+};
+
+type PromptTemplateMeta = {
+  defaultSystemPrompt: string;
+  defaultUserPrompt: string;
+  variables: TemplateVariable[];
+};
+
 function AiSettingsInner() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [defaultModel, setDefaultModel] = useState<string>('');
+  const [summarizationModel, setSummarizationModel] = useState<string>('');
   const [region, setRegion] = useState<string>('');
   const [testPrompt, setTestPrompt] = useState<string>('Say hello in one sentence.');
   const [testResult, setTestResult] = useState<InferenceResponse | null>(null);
@@ -53,13 +74,28 @@ function AiSettingsInner() {
   const [savingConfig, setSavingConfig] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // Prompt template state
+  const [summSystemPrompt, setSummSystemPrompt] = useState<string>('');
+  const [summUserPrompt, setSummUserPrompt] = useState<string>('');
+  const [summMeta, setSummMeta] = useState<PromptTemplateMeta | null>(null);
+
   const fetchConfig = useCallback(async () => {
     try {
-      const entries: ConfigEntry[] = await apiFetch('/api/admin/config');
+      const [entries, templates] = await Promise.all([
+        apiFetch<ConfigEntry[]>('/api/admin/config'),
+        apiFetch<{ summarization: PromptTemplateMeta }>('/api/admin/inference/prompt-templates'),
+      ]);
       const regionEntry = entries.find((e) => e.key === 'bedrockRegion');
       const modelEntry = entries.find((e) => e.key === 'bedrockDefaultModel');
+      const summModelEntry = entries.find((e) => e.key === 'summarizationModel');
+      const summSysEntry = entries.find((e) => e.key === 'summarizationSystemPrompt');
+      const summUserEntry = entries.find((e) => e.key === 'summarizationUserPrompt');
       if (regionEntry) setRegion(regionEntry.value);
       if (modelEntry) setDefaultModel(modelEntry.value);
+      if (summModelEntry) setSummarizationModel(summModelEntry.value);
+      if (summSysEntry) setSummSystemPrompt(summSysEntry.value);
+      if (summUserEntry) setSummUserPrompt(summUserEntry.value);
+      setSummMeta(templates.summarization);
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Failed to load config', 'error');
     }
@@ -102,6 +138,18 @@ function AiSettingsInner() {
         apiFetch('/api/admin/config/bedrockDefaultModel', {
           method: 'PUT',
           body: JSON.stringify({ value: defaultModel }),
+        }),
+        apiFetch('/api/admin/config/summarizationModel', {
+          method: 'PUT',
+          body: JSON.stringify({ value: summarizationModel }),
+        }),
+        apiFetch('/api/admin/config/summarizationSystemPrompt', {
+          method: 'PUT',
+          body: JSON.stringify({ value: summSystemPrompt }),
+        }),
+        apiFetch('/api/admin/config/summarizationUserPrompt', {
+          method: 'PUT',
+          body: JSON.stringify({ value: summUserPrompt }),
         }),
       ]);
       toast('AI settings saved', 'success');
@@ -178,6 +226,51 @@ function AiSettingsInner() {
           {savingConfig ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
+
+      {/* Summarization Model */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">Summarization Model</h2>
+        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+          Model used for batch attachment summarization in the ingestion pipeline.
+        </p>
+        <div className="space-y-3">
+          {SUMMARIZATION_MODELS.map((m) => (
+            <label
+              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              key={m.id}
+              style={summarizationModel === m.id ? { borderColor: 'var(--color-blue-500)', backgroundColor: 'var(--color-blue-50)' } : undefined}
+            >
+              <input
+                checked={summarizationModel === m.id}
+                className="h-4 w-4 accent-blue-600"
+                name="summarization-model"
+                onChange={() => setSummarizationModel(m.id)}
+                type="radio"
+                value={m.id}
+              />
+              <div>
+                <div className="text-sm font-medium">{m.label}</div>
+                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Prompt Templates */}
+      {summMeta != null && (
+        <PromptEditor
+          title="Summarization Prompts"
+          description="Templates used when summarizing attachment text in the ingestion pipeline."
+          systemPrompt={summSystemPrompt}
+          userPrompt={summUserPrompt}
+          defaultSystemPrompt={summMeta.defaultSystemPrompt}
+          defaultUserPrompt={summMeta.defaultUserPrompt}
+          variables={summMeta.variables}
+          onSystemPromptChange={setSummSystemPrompt}
+          onUserPromptChange={setSummUserPrompt}
+        />
+      )}
 
       {/* Test Section */}
       <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">

@@ -25,10 +25,12 @@
     "citty": "^0.2.1",
     "consola": "^3.4.2",
     "hono": "^4.7.11",
+    "mustache": "^4.2.0",
     "node-html-parser": "^7.1.0",
     "pdf-oxide-wasm": "^0.3.17"
   },
   "devDependencies": {
+    "@types/mustache": "^4.2.6",
     "@types/node": "^24.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
     "nodemon": "^3.1.10",
