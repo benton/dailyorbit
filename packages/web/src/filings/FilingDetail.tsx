@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
 import { getSubsystem } from '../lib/subsystems.ts';
+import { markRead } from '../lib/viewing-history.ts';
 import { Badge } from '../ui/badge.tsx';
 import { FilingTimeline } from './FilingTimeline.tsx';
 
@@ -165,6 +166,13 @@ export default function FilingDetailPage() {
       cancelled = true;
     };
   }, [fileNumber]);
+
+  // Auto-mark as read when filing loads
+  useEffect(() => {
+    if (filing != null) {
+      void markRead(filing.fileNumber);
+    }
+  }, [filing]);
 
   // ── Loading state ───────────────────────────────────────────────
 

@@ -214,9 +214,7 @@ export async function getTopLineStats(
   conn: DuckDBConnection,
 ): Promise<TopLineStats> {
   const [countResult, ownershipResult, activeResult] = await Promise.all([
-    conn.runAndReadAll(
-      'SELECT count(*)::INTEGER AS cnt FROM filing',
-    ),
+    conn.runAndReadAll('SELECT count(*)::INTEGER AS cnt FROM filing'),
     conn.runAndReadAll(
       `SELECT count(*)::INTEGER AS cnt FROM ownership_event
        WHERE effective_date >= date_trunc('quarter', CURRENT_DATE) - INTERVAL '3 months'`,
@@ -234,8 +232,12 @@ export async function getTopLineStats(
     ),
   ]);
 
-  const filing_count: number = Number(countResult.getRowObjectsJS()[0]?.cnt ?? 0);
-  const recent_ownership_events: number = Number(ownershipResult.getRowObjectsJS()[0]?.cnt ?? 0);
+  const filing_count: number = Number(
+    countResult.getRowObjectsJS()[0]?.cnt ?? 0,
+  );
+  const recent_ownership_events: number = Number(
+    ownershipResult.getRowObjectsJS()[0]?.cnt ?? 0,
+  );
   const most_active_filings = activeResult.getRowObjectsJS().map((r) => ({
     file_number: String(r.file_number),
     company_name: r.company_name != null ? String(r.company_name) : null,

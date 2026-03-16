@@ -50,8 +50,16 @@ type CompanyFilingVolume = {
 
 // Distinct color palette for the company volume chart legend
 const COMPANY_COLORS: Array<string> = [
-  '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
-  '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac',
+  '#4e79a7',
+  '#f28e2b',
+  '#e15759',
+  '#76b7b2',
+  '#59a14f',
+  '#edc948',
+  '#b07aa1',
+  '#ff9da7',
+  '#9c755f',
+  '#bab0ac',
   '#86bcb6',
 ];
 
@@ -435,18 +443,14 @@ export default function HomePage() {
             <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
               {topLine.recent_ownership_events.toLocaleString()}
             </p>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-              ownership events
-            </p>
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">ownership events</p>
           </div>
         )}
 
         {/* Most Active Filings This Week */}
         {topLine != null && topLine.most_active_filings.length > 0 && (
           <div className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Most Active This Week
-            </p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Most Active This Week</p>
             <ul className="mt-2 space-y-1">
               {topLine.most_active_filings.slice(0, 3).map((f: ActiveFiling) => (
                 <li className="flex items-center justify-between text-xs" key={f.file_number}>
@@ -479,7 +483,9 @@ export default function HomePage() {
           {recentLoading ? (
             <p className="text-sm text-neutral-500">Loading recent filings...</p>
           ) : recentFilings.length === 0 ? (
-            <p className="text-sm text-neutral-500">No filings recorded on the last business day.</p>
+            <p className="text-sm text-neutral-500">
+              No filings recorded on the last business day.
+            </p>
           ) : (
             <SimpleDataTable<RecentFiling>
               columns={recentFilingColumns}

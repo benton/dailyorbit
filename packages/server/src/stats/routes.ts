@@ -22,8 +22,13 @@ import { trackConnection } from '../lib/graceful-shutdown.ts';
 function lastBusinessDate(): string {
   const now: Date = new Date();
   // Convert to US Eastern for day-of-week check
-  const eastern: string = now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short' });
-  const today: Date = new Date(now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }));
+  const eastern: string = now.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+  });
+  const today: Date = new Date(
+    now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }),
+  );
 
   let daysBack: number = 1;
   if (eastern === 'Sat') {

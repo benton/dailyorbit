@@ -5,12 +5,20 @@ import ConfigEditor from './admin/ConfigEditor.tsx';
 import Dashboard from './admin/Dashboard.tsx';
 import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
 import FilingDetail from './filings/FilingDetail.tsx';
+import { SettingsProvider } from './lib/settings-context.tsx';
 import SatelliteDetail from './satellites/SatelliteDetail.tsx';
 import SearchPage from './search/SearchPage.tsx';
 import PublicLayout from './ui/PublicLayout.tsx';
+import { AuthProvider } from './user/AuthContext.tsx';
+import LoginPage from './user/LoginPage.tsx';
+import ProfilePage from './user/ProfilePage.tsx';
+import RequireAdmin from './user/RequireAdmin.tsx';
+import RequireAuth from './user/RequireAuth.tsx';
 
 const HomePage = lazy(() => import('./home/HomePage.tsx'));
+const UserHomePage = lazy(() => import('./home/UserHomePage.tsx'));
 const Companies = lazy(() => import('./admin/Companies.tsx'));
+const Users = lazy(() => import('./admin/Users.tsx'));
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 
@@ -39,50 +47,87 @@ const About = () => (
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <HomePage />
-            </Suspense>
-          }
-          path="/"
-        />
-        <Route element={<About />} path="/about" />
-        <Route element={<SearchPage />} path="/search" />
-        <Route element={<FilingDetail />} path="/filings/:fileNumber" />
-        <Route element={<SatelliteDetail />} path="/satellites/:id" />
-        <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <CompaniesPage />
-            </Suspense>
-          }
-          path="/companies"
-        />
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <CompanyDetail />
-            </Suspense>
-          }
-          path="/companies/:id"
-        />
-      </Route>
-      <Route element={<AdminLayout />} path="/admin">
-        <Route element={<Dashboard />} index />
-        <Route element={<ConfigEditor />} path="config" />
-        <Route
-          element={
-            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-              <Companies />
-            </Suspense>
-          }
-          path="companies"
-        />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <SettingsProvider>
+        <Routes>
+          <Route element={<LoginPage />} path="/login" />
+          <Route
+            element={
+              <RequireAuth>
+                <PublicLayout />
+              </RequireAuth>
+            }
+          >
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <UserHomePage />
+                </Suspense>
+              }
+              path="/"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <HomePage />
+                </Suspense>
+              }
+              path="/stats"
+            />
+            <Route element={<About />} path="/about" />
+            <Route element={<ProfilePage />} path="/profile" />
+            <Route element={<SearchPage />} path="/search" />
+            <Route element={<FilingDetail />} path="/filings/:fileNumber" />
+            <Route element={<SatelliteDetail />} path="/satellites/:id" />
+            <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <CompaniesPage />
+                </Suspense>
+              }
+              path="/companies"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <CompanyDetail />
+                </Suspense>
+              }
+              path="/companies/:id"
+            />
+          </Route>
+          <Route
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AdminLayout />
+                </RequireAdmin>
+              </RequireAuth>
+            }
+            path="/admin"
+          >
+            <Route element={<Dashboard />} index />
+            <Route element={<ConfigEditor />} path="config" />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <Companies />
+                </Suspense>
+              }
+              path="companies"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <Users />
+                </Suspense>
+              }
+              path="users"
+            />
+          </Route>
+        </Routes>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }

@@ -2,6 +2,7 @@ import { DuckDBConnection } from '@duckdb/node-api';
 import type { DuckDBValue } from '@duckdb/node-api';
 import { betterAuth } from 'better-auth';
 import type { Adapter } from 'better-auth';
+import { admin } from 'better-auth/plugins/admin';
 import { buildWhereClause } from './auth-helpers.ts';
 import type { ConfigService } from './config-service.ts';
 import { getDb } from './db.ts';
@@ -142,6 +143,7 @@ export function initializeAuth(config: ConfigService): void {
     emailAndPassword: {
       enabled: true,
     },
+    plugins: [admin()],
   });
 }
 

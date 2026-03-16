@@ -7,11 +7,19 @@ import { configRoutes } from './config/routes.ts';
 import { earthStationRoutes } from './earth-stations/routes.ts';
 import { filingRoutes } from './filings/routes.ts';
 import { getAuth } from './lib/auth.ts';
+import { requireAuth, requireAdmin } from './lib/auth-middleware.ts';
 import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
 import { publicStatsRoutes, statsRoutes } from './stats/routes.ts';
+import {
+  userRoutes,
+  userProfileRoutes,
+  userAdminRoutes,
+} from './user/routes.ts';
+import { userSettingsRoutes } from './user-settings/routes.ts';
+import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 
 const app = new Hono();
 
@@ -28,9 +36,26 @@ app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw));
 
+// Protected API routes — require authentication
+app.use('/api/*', async (c, next) => {
+  const path: string = c.req.path;
+  if (path === '/api/health' || path.startsWith('/api/auth/')) {
+    return next();
+  }
+  return requireAuth()(c, next);
+});
+
+// Admin routes — require admin role
+app.use('/api/admin/*', requireAdmin());
+
+app.route('/api/me', userRoutes);
+app.route('/api/user', userProfileRoutes);
+app.route('/api/user/settings', userSettingsRoutes);
+app.route('/api/user/viewing-history', viewingHistoryRoutes);
 app.route('/api/admin/config', configRoutes);
 app.route('/api/admin/stats', statsRoutes);
 app.route('/api/admin/companies', companyAdminRoutes);
+app.route('/api/admin/users', userAdminRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
 app.route('/api/earth-stations', earthStationRoutes);

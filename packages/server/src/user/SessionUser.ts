@@ -1,6 +1,6 @@
-import type { betterAuth } from 'better-auth';
-
-type AuthInstance = ReturnType<typeof betterAuth>;
-type User = AuthInstance['$Infer']['Session']['user'];
-
-export type SessionUser = Pick<User, 'email' | 'id' | 'name'>;
+export type SessionUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+};

@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich user-create user-disable user-delete user-reset-password
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -76,6 +76,18 @@ companies-extract-ownership: ## Extract ownership events from T/C and ASG filing
 
 companies-enrich: ## Enrich company data from GLEIF and Wikidata
 	$(CLI) companies enrich $(ARGS)
+
+user-create: ## Create a new user account (pass ARGS for options)
+	$(CLI) user create $(ARGS)
+
+user-disable: ## Disable a user account (pass ARGS for options)
+	$(CLI) user disable $(ARGS)
+
+user-delete: ## Delete a user account permanently (pass ARGS for options)
+	$(CLI) user delete $(ARGS)
+
+user-reset-password: ## Reset a user's password (pass ARGS for options)
+	$(CLI) user reset-password $(ARGS)
 
 clean: ## Remove node_modules, build artifacts, and DB files
 	rm -rf node_modules packages/*/node_modules packages/*/dist coverage data/*.duckdb

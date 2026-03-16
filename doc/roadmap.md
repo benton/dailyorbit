@@ -9,10 +9,10 @@
 - v0.2.0 [x] Basic Entity viewing and search
 - v0.3.0 [x] Company entity, attribution & ownership tracking
 - v0.3.5 [x] Enriched data model: Comment atttachments, timelines
-- v0.4.0 [ ] Attachment processing: text (markdown?) extraction
+- v0.4.0 [x] Attachment processing: text (markdown?) extraction
 - v0.5.0 [x] Anonymous home page
-- v0.6.0 [ ] User authentication and profile
-- v0.7.0 [ ] User home page, preferences, and viewing history
+- v0.6.0 [x] User authentication and profile
+- v0.7.0 [x] User home page, preferences, and viewing history
 - v0.8.0 [ ] Admin ingest control UI (maybe)
 - v0.9.0 [ ] Remove legacy IBFS code and references
 - v0.9.5 [ ] AI foundations: internal multi-model inference API w/cost accounting

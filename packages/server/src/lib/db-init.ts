@@ -2,6 +2,9 @@ import { DuckDBConnection } from '@duckdb/node-api';
 import type { DuckDBInstance } from '@duckdb/node-api';
 import { trackConnection } from './graceful-shutdown.ts';
 import { ensureCompanyTables, ensureCompanyFk } from '../companies/schema.ts';
+import { ensureAuthTables } from '../user/schema.ts';
+import { ensureUserSettingsTables } from '../user-settings/schema.ts';
+import { ensureViewingHistoryTables } from '../viewing-history/schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -19,6 +22,9 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
     )
   `);
 
+  await ensureAuthTables(conn);
+  await ensureUserSettingsTables(conn);
+  await ensureViewingHistoryTables(conn);
   await ensureCompanyTables(conn);
   await ensureCompanyFk(conn);
 

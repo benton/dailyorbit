@@ -1,0 +1,127 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import ReadUnreadToggle from '../filings/ReadUnreadToggle.tsx';
+import { apiFetch } from '../lib/api.ts';
+
+type UnreadFiling = {
+  fileNumber: string;
+  dateFiled: string | null;
+  subsystemCode: string | null;
+  appTypeCode: string | null;
+  applicantName: string | null;
+};
+
+type ViewRecord = {
+  fileNumber: string;
+  lastViewedAt: string;
+};
+
+const cardClass: string =
+  'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+
+export default function UserHomePage() {
+  const navigate = useNavigate();
+  const [unread, setUnread] = useState<UnreadFiling[]>([]);
+  const [unreadLoading, setUnreadLoading] = useState<boolean>(true);
+  const [recent, setRecent] = useState<ViewRecord[]>([]);
+  const [recentLoading, setRecentLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    apiFetch<UnreadFiling[]>('/api/user/viewing-history/unread?since=7')
+      .then((data: UnreadFiling[]) => setUnread(data))
+      .catch(() => {})
+      .finally(() => setUnreadLoading(false));
+  }, []);
+
+  useEffect(() => {
+    apiFetch<ViewRecord[]>('/api/user/viewing-history/recent?limit=10')
+      .then((data: ViewRecord[]) => setRecent(data))
+      .catch(() => {})
+      .finally(() => setRecentLoading(false));
+  }, []);
+
+  const goToFiling = useCallback(
+    (fileNumber: string) => void navigate(`/filings/${fileNumber}`),
+    [navigate],
+  );
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          The Daily Orbit
+        </h1>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          Your personalized filing dashboard.
+        </p>
+      </div>
+
+      {/* Unread Filings */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Unread Filings (Last 7 Days)
+        </p>
+        <div className="mt-3">
+          {unreadLoading ? (
+            <p className="text-sm text-neutral-500">Loading...</p>
+          ) : unread.length === 0 ? (
+            <p className="text-sm text-neutral-500">All caught up!</p>
+          ) : (
+            <div className="space-y-1">
+              {unread.map((f: UnreadFiling) => (
+                <div
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  key={f.fileNumber}
+                  onClick={() => goToFiling(f.fileNumber)}
+                >
+                  <ReadUnreadToggle fileNumber={f.fileNumber} initialRead={false} />
+                  <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                    {f.fileNumber}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {f.subsystemCode} {f.appTypeCode}
+                  </span>
+                  <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
+                    {f.dateFiled != null ? new Date(f.dateFiled).toLocaleDateString() : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recently Viewed */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Recently Viewed
+        </p>
+        <div className="mt-3">
+          {recentLoading ? (
+            <p className="text-sm text-neutral-500">Loading...</p>
+          ) : recent.length === 0 ? (
+            <p className="text-sm text-neutral-500">No filings viewed yet.</p>
+          ) : (
+            <div className="space-y-1">
+              {recent.map((r: ViewRecord) => (
+                <div
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  key={r.fileNumber}
+                  onClick={() => goToFiling(r.fileNumber)}
+                >
+                  <ReadUnreadToggle fileNumber={r.fileNumber} initialRead={true} />
+                  <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                    {r.fileNumber}
+                  </span>
+                  <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
+                    {new Date(r.lastViewedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
