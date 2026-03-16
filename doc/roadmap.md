@@ -10,7 +10,7 @@
 - v0.3.0 [x] Company entity, attribution & ownership tracking
 - v0.3.5 [x] Enriched data model: Comment atttachments, timelines
 - v0.4.0 [ ] Attachment processing: text (markdown?) extraction
-- v0.5.0 [ ] Anonymous home page
+- v0.5.0 [x] Anonymous home page
 - v0.6.0 [ ] User authentication and profile
 - v0.7.0 [ ] User home page, preferences, and viewing history
 - v0.8.0 [ ] Admin ingest control UI (maybe)
