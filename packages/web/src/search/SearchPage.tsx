@@ -9,6 +9,7 @@ import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
+import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -21,6 +22,7 @@ type FilingSearchResult = {
   status_code: string | null;
   date_filed: string | null;
   company_name: string | null;
+  summary: string | null;
 };
 
 type SatelliteSearchResult = {
@@ -399,6 +401,11 @@ const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
     accessorKey: 'file_number',
     header: 'File Number',
     size: 240,
+    cell: ({ row }) => (
+      <SummaryTooltip summary={row.original.summary}>
+        <span className="font-mono text-sm">{row.original.file_number}</span>
+      </SummaryTooltip>
+    ),
   },
   {
     accessorKey: 'subsystem_code',

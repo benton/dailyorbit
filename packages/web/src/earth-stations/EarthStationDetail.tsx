@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 // ── Types matching server-side models (camelCase) ────────────────────────────
@@ -28,6 +29,7 @@ type EarthStationFiling = {
   dateGrant: string | null;
   dateExpire: string | null;
   description: string | null;
+  summary: string | null;
 };
 
 type AntennaFrequency = {
@@ -94,12 +96,14 @@ const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
     header: 'File Number',
     size: 240,
     cell: ({ row }) => (
-      <Link
-        to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
-        className="text-blue-600 hover:underline dark:text-blue-400"
-      >
-        {row.original.fileNumber}
-      </Link>
+      <SummaryTooltip summary={row.original.summary}>
+        <Link
+          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          {row.original.fileNumber}
+        </Link>
+      </SummaryTooltip>
     ),
   },
   {

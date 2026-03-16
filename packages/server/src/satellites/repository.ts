@@ -55,10 +55,11 @@ export async function getSatelliteFilings(
   usName: string,
   request: PaginatedRequest,
 ): Promise<PaginatedResponse<SatelliteFiling>> {
-  const baseSql: string = `SELECT filing_key, file_number, subsystem_code, app_type_code,
-       status_code, date_filed, date_grant, address_attention, callsign, description
-     FROM filing
-     WHERE callsign = $1`;
+  const baseSql: string = `SELECT f.filing_key, f.file_number, f.subsystem_code, f.app_type_code,
+       f.status_code, f.date_filed, f.date_grant, f.address_attention, f.callsign, f.description,
+       (SELECT a.summary FROM attachment a WHERE a.file_number = f.file_number AND a.summary IS NOT NULL ORDER BY CASE WHEN a.attachment_name = 'Attachment Application' THEN 0 ELSE 1 END, a.attachment_key LIMIT 1) AS summary
+     FROM filing f
+     WHERE f.callsign = $1`;
   const baseParams: DuckDBValue[] = [usName] as DuckDBValue[];
 
   const pq = buildPaginatedQuery(
@@ -86,6 +87,7 @@ export async function getSatelliteFilings(
       row.address_attention != null ? String(row.address_attention) : null,
     callsign: row.callsign != null ? String(row.callsign) : null,
     description: row.description != null ? String(row.description) : null,
+    summary: row.summary != null ? String(row.summary) : null,
   }));
 
   const totalRows: number = Number(countResult.getRowObjectsJS()[0]!.total);

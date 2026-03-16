@@ -4,6 +4,7 @@ import { ApiError, apiFetch } from '../lib/api.ts';
 import { getSubsystem } from '../lib/subsystems.ts';
 import { markRead } from '../lib/viewing-history.ts';
 import { Badge } from '../ui/badge.tsx';
+import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 import { FilingTimeline } from './FilingTimeline.tsx';
 
 // ── Types mirroring server-side FilingDetail ────────────────────────
@@ -17,6 +18,7 @@ type FilingAttachment = {
   downloadStatus: string;
   contentType: string | null;
   fileSizeBytes: number | null;
+  summary: string | null;
 };
 
 type FilingPetition = {
@@ -74,6 +76,7 @@ type FilingDetail = {
   natureOfService: string | null;
   companyId: number | null;
   companyName: string | null;
+  summary: string | null;
   transferorName: string | null;
   transfereeName: string | null;
   attachments: FilingAttachment[];
@@ -300,6 +303,22 @@ export default function FilingDetailPage() {
             </section>
           )}
 
+          {/* Filing Summary */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Summary
+            </h2>
+            <div className="rounded-md border border-neutral-200 bg-white p-4 text-sm leading-relaxed text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+              {filing.summary != null ? (
+                filing.summary
+              ) : (
+                <span className="text-neutral-400 italic dark:text-neutral-500">
+                  [content unavailable]
+                </span>
+              )}
+            </div>
+          </section>
+
           {/* Timeline */}
           <FilingTimeline events={filing.timeline} />
 
@@ -375,18 +394,20 @@ export default function FilingDetailPage() {
                         className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
                       >
                         <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
-                          {att.downloadUrl ? (
-                            <a
-                              href={att.downloadUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline dark:text-blue-400"
-                            >
-                              {att.attachmentName}
-                            </a>
-                          ) : (
-                            att.attachmentName
-                          )}
+                          <SummaryTooltip summary={att.summary}>
+                            {att.downloadUrl ? (
+                              <a
+                                href={att.downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline dark:text-blue-400"
+                              >
+                                {att.attachmentName}
+                              </a>
+                            ) : (
+                              att.attachmentName
+                            )}
+                          </SummaryTooltip>
                         </td>
                         <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
                           {att.description}

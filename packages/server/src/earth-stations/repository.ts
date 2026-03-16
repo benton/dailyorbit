@@ -76,16 +76,17 @@ export async function getEarthStationFilings(
 ): Promise<PaginatedResponse<EarthStationFiling>> {
   const baseSql: string = `
     SELECT
-      filing_key,
-      file_number,
-      app_type_code,
-      status_code,
-      date_filed,
-      date_grant,
-      date_expire,
-      description
-    FROM filing
-    WHERE callsign = $1 AND subsystem_code = 'SES'`;
+      f.filing_key,
+      f.file_number,
+      f.app_type_code,
+      f.status_code,
+      f.date_filed,
+      f.date_grant,
+      f.date_expire,
+      f.description,
+      (SELECT a.summary FROM attachment a WHERE a.file_number = f.file_number AND a.summary IS NOT NULL ORDER BY CASE WHEN a.attachment_name = 'Attachment Application' THEN 0 ELSE 1 END, a.attachment_key LIMIT 1) AS summary
+    FROM filing f
+    WHERE f.callsign = $1 AND f.subsystem_code = 'SES'`;
 
   const baseParams: DuckDBValue[] = [callsign] as DuckDBValue[];
 
@@ -113,6 +114,7 @@ export async function getEarthStationFilings(
       dateGrant: r.date_grant != null ? String(r.date_grant) : null,
       dateExpire: r.date_expire != null ? String(r.date_expire) : null,
       description: r.description != null ? String(r.description) : null,
+      summary: r.summary != null ? String(r.summary) : null,
     }));
 
   const totalRows: number = Number(countReader.getRowObjectsJS()[0]!.total);

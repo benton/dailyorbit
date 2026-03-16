@@ -55,6 +55,16 @@ const CREATE_EARTH_STATION_STA_TABLE: string = `
   )
 `;
 
+const CREATE_ATTACHMENT_TABLE: string = `
+  CREATE TABLE attachment (
+    attachment_key INTEGER NOT NULL,
+    filing_key INTEGER NOT NULL,
+    file_number VARCHAR NOT NULL,
+    attachment_name VARCHAR NOT NULL DEFAULT '',
+    summary TEXT
+  )
+`;
+
 // ---------------------------------------------------------------------------
 // Seed data
 // ---------------------------------------------------------------------------
@@ -114,6 +124,7 @@ beforeEach(async () => {
   await conn.run(CREATE_FILING_TABLE);
   await conn.run(CREATE_SPACE_STATION_TABLE);
   await conn.run(CREATE_EARTH_STATION_STA_TABLE);
+  await conn.run(CREATE_ATTACHMENT_TABLE);
   await seedCompanies(conn);
   await seedFilings(conn);
   await seedSpaceStations(conn);

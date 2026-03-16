@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 
 // ── Types mirroring server-side models ──────────────────────────────
 
@@ -27,6 +28,7 @@ type SatelliteFiling = {
   addressAttention: string | null;
   callsign: string | null;
   description: string | null;
+  summary: string | null;
 };
 
 type SatelliteStats = {
@@ -49,12 +51,14 @@ const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
     header: 'File Number',
     size: 240,
     cell: ({ row }) => (
-      <Link
-        to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
-        className="text-blue-600 hover:underline dark:text-blue-400"
-      >
-        {row.original.fileNumber}
-      </Link>
+      <SummaryTooltip summary={row.original.summary}>
+        <Link
+          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          {row.original.fileNumber}
+        </Link>
+      </SummaryTooltip>
     ),
   },
   {

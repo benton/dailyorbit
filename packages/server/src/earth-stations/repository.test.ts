@@ -61,6 +61,16 @@ async function createTables(conn: DuckDBConnection): Promise<void> {
   `);
 
   await conn.run(`
+    CREATE TABLE attachment (
+      attachment_key INTEGER NOT NULL,
+      filing_key INTEGER NOT NULL,
+      file_number VARCHAR NOT NULL,
+      attachment_name VARCHAR NOT NULL DEFAULT '',
+      summary TEXT
+    )
+  `);
+
+  await conn.run(`
     CREATE TABLE frequency (
       frequency_key INTEGER NOT NULL,
       antenna_key INTEGER NOT NULL,

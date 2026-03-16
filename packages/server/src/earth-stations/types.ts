@@ -22,6 +22,7 @@ export type EarthStationFiling = {
   dateGrant: string | null;
   dateExpire: string | null;
   description: string | null;
+  summary: string | null;
 };
 
 /** A frequency record associated with an antenna */

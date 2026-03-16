@@ -117,7 +117,8 @@ export async function searchFilings(
     conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
 
   const baseSql: string = `SELECT f.file_number, f.callsign, f.address_attention, f.subsystem_code, f.app_type_code, f.status_code, f.date_filed,
-    (SELECT co.name FROM company co WHERE co.id = f.company_id) AS company_name
+    (SELECT co.name FROM company co WHERE co.id = f.company_id) AS company_name,
+    (SELECT a.summary FROM attachment a WHERE a.file_number = f.file_number AND a.summary IS NOT NULL ORDER BY CASE WHEN a.attachment_name = 'Attachment Application' THEN 0 ELSE 1 END, a.attachment_key LIMIT 1) AS summary
     FROM filing f${whereClause}`;
 
   const {
@@ -157,6 +158,7 @@ function rowToFilingResult(row: Record<string, unknown>): FilingSearchResult {
     status_code: row.status_code != null ? String(row.status_code) : null,
     date_filed: row.date_filed != null ? String(row.date_filed) : null,
     company_name: row.company_name != null ? String(row.company_name) : null,
+    summary: row.summary != null ? String(row.summary) : null,
   };
 }
 

@@ -59,7 +59,8 @@ const SETUP_SQL: string = `
     download_url VARCHAR NOT NULL,
     download_status VARCHAR NOT NULL DEFAULT 'pending',
     content_type VARCHAR,
-    file_size_bytes BIGINT
+    file_size_bytes BIGINT,
+    summary TEXT
   );
 
   CREATE TABLE petition_to_deny (

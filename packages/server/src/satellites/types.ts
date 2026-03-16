@@ -20,6 +20,7 @@ export type SatelliteFiling = {
   addressAttention: string | null;
   callsign: string | null;
   description: string | null;
+  summary: string | null;
 };
 
 /** Quick stats for a satellite */

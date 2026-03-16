@@ -8,6 +8,7 @@ export type FilingAttachment = {
   downloadStatus: string;
   contentType: string | null;
   fileSizeBytes: number | null;
+  summary: string | null;
 };
 
 /** A petition/comment associated with a filing */
@@ -93,6 +94,8 @@ export type FilingDetail = {
   transfereeName: string | null;
   companyId: number | null;
   companyName: string | null;
+  /** Best available summary for this filing (from the application attachment) */
+  summary: string | null;
   attachments: FilingAttachment[];
   petitions: FilingPetition[];
   timeline: TimelineEvent[];

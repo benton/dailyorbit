@@ -148,6 +148,11 @@ export async function getFilingByFileNumber(
       row.transferee_name != null ? String(row.transferee_name) : null,
     companyId: row.company_id != null ? Number(row.company_id) : null,
     companyName: row.company_name != null ? String(row.company_name) : null,
+    summary:
+      attachments.find((a) => a.attachmentName === 'Attachment Application')
+        ?.summary ??
+      attachments.find((a) => a.summary != null)?.summary ??
+      null,
     attachments,
     petitions,
     timeline,
@@ -163,7 +168,7 @@ async function fetchAttachments(
 ): Promise<FilingAttachment[]> {
   const result = await conn.runAndReadAll(
     `SELECT attachment_key, attachment_name, description, source,
-            download_url, download_status, content_type, file_size_bytes
+            download_url, download_status, content_type, file_size_bytes, summary
      FROM attachment
      WHERE filing_key = $1
      ORDER BY attachment_key`,
@@ -179,6 +184,7 @@ async function fetchAttachments(
     downloadStatus: String(r.download_status),
     contentType: r.content_type != null ? String(r.content_type) : null,
     fileSizeBytes: r.file_size_bytes != null ? Number(r.file_size_bytes) : null,
+    summary: r.summary != null ? String(r.summary) : null,
   }));
 }
 

@@ -35,6 +35,17 @@ const CREATE_FILING_TABLE: string = `
   )
 `;
 
+/** Minimal attachment table for the summary subquery */
+const CREATE_ATTACHMENT_TABLE: string = `
+  CREATE TABLE attachment (
+    attachment_key INTEGER NOT NULL,
+    filing_key INTEGER NOT NULL,
+    file_number VARCHAR NOT NULL,
+    attachment_name VARCHAR NOT NULL DEFAULT '',
+    summary TEXT
+  )
+`;
+
 /** Insert sample space station rows */
 async function seedSpaceStations(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
@@ -106,6 +117,7 @@ describe('getSatelliteFilings', () => {
     conn = await DuckDBConnection.create(db);
     await conn.run(CREATE_SPACE_STATION_TABLE);
     await conn.run(CREATE_FILING_TABLE);
+    await conn.run(CREATE_ATTACHMENT_TABLE);
     await seedSpaceStations(conn);
     await seedFilings(conn);
   });
@@ -197,6 +209,7 @@ describe('getSatelliteStats', () => {
     conn = await DuckDBConnection.create(db);
     await conn.run(CREATE_SPACE_STATION_TABLE);
     await conn.run(CREATE_FILING_TABLE);
+    await conn.run(CREATE_ATTACHMENT_TABLE);
     await seedSpaceStations(conn);
     await seedFilings(conn);
   });

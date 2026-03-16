@@ -12,7 +12,9 @@ const filingRoutes = new Hono();
  * attachments, petitions, and related entity links.
  */
 filingRoutes.get('/*', async (c) => {
-  const fileNumber: string = decodeURIComponent(c.req.path.replace(/^\/api\/filings\//, ''));
+  const fileNumber: string = decodeURIComponent(
+    c.req.path.replace(/^\/api\/filings\//, ''),
+  );
 
   if (fileNumber.trim() === '') {
     return c.json({ error: 'File number is required' }, 400);
