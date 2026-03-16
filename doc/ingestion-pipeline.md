@@ -175,6 +175,21 @@ flowchart TD
 
 **Combined command:** `make attachments` runs discover + download + text extraction in one pass.
 
+#### Known Gap: ServiceNow Attachment Downloads
+
+As of 2026-03-15, **43,755 attachment records** (17% of total) have download URLs pointing to `fccprod.servicenowservices.com/sys_attachment.do`. These URLs are behind FCC's Okta SSO (SAML authentication) and cannot be fetched without credentials, despite being listed on the public ICFS portal.
+
+| Metric | Count |
+|---|---|
+| ServiceNow URLs (inaccessible) | 43,755 |
+| Likely duplicates of fcc.report downloads | ~30,528 |
+| Genuinely missing (no alternative source) | ~13,227 |
+| Filings with zero accessible attachments | 1,186 |
+
+**Root cause:** The ICFS migration (June 2025) moved attachments to ServiceNow's `sys_attachment.do` endpoint, which requires authentication. The predecessor IBFS system served these same documents without auth. The fcc.report mirror still hosts copies of ~70% of the affected documents under slightly different names (e.g., "Attachment Application" on fcc.report vs. "Application.pdf" on ServiceNow).
+
+**Status:** A formal comment has been drafted for GN Docket No. 25-194 (ICFS Modernization) requesting the FCC restore public access. See `doc/fcc-icfs-attachment-access-complaint.md` and `doc/plans/2026-03-15-servicenow-attachment-gap.md` for details.
+
 ### 2c. Text Extraction
 
 | | |
