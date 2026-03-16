@@ -11,6 +11,7 @@ import PublicLayout from './ui/PublicLayout.tsx';
 
 const HomePage = lazy(() => import('./home/HomePage.tsx'));
 const Companies = lazy(() => import('./admin/Companies.tsx'));
+const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
@@ -53,6 +54,14 @@ export default function App() {
         <Route element={<FilingDetail />} path="/filings/:fileNumber" />
         <Route element={<SatelliteDetail />} path="/satellites/:id" />
         <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
+        <Route
+          element={
+            <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+              <CompaniesPage />
+            </Suspense>
+          }
+          path="/companies"
+        />
         <Route
           element={
             <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>

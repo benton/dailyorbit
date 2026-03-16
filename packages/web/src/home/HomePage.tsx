@@ -1,7 +1,17 @@
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import { vg } from '@cosmograph/react';
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { cn } from '../lib/cn.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type SubsystemCount = { count: number; subsystem_code: string };
 type PublicStats = {
@@ -15,10 +25,167 @@ type YearlyFilingVolume = {
   year: string;
 };
 
+type RecentFiling = {
+  address_attention: string | null;
+  app_type_code: string;
+  callsign: string | null;
+  company_name: string | null;
+  date_filed: string | null;
+  file_number: string;
+  status_code: string | null;
+  subsystem_code: string;
+};
+
+type RecentFilingsResponse = {
+  date: string;
+  dayLabel: string;
+  filings: Array<RecentFiling>;
+};
+
+type CompanyFilingVolume = {
+  company_name: string;
+  count: number;
+  month: string;
+};
+
+// Distinct color palette for the company volume chart legend
+const COMPANY_COLORS: Array<string> = [
+  '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
+  '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac',
+  '#86bcb6',
+];
+
+type ActiveFiling = {
+  activity_count: number;
+  company_name: string | null;
+  file_number: string;
+};
+
+type TopLineStats = {
+  filing_count: number;
+  most_active_filings: Array<ActiveFiling>;
+  recent_ownership_events: number;
+};
+
+// ── Column definitions for recent filings table ─────────────────────
+
+const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
+  { accessorKey: 'file_number', header: 'File Number', size: 220 },
+  { accessorKey: 'subsystem_code', header: 'Subsystem', size: 80 },
+  { accessorKey: 'app_type_code', header: 'App Type', size: 80 },
+  { accessorKey: 'address_attention', header: 'Applicant', size: 180 },
+  {
+    accessorKey: 'company_name',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
+    header: 'Company',
+    size: 180,
+  },
+  { accessorKey: 'callsign', header: 'Callsign', size: 100 },
+  { accessorKey: 'status_code', header: 'Status', size: 100 },
+];
+
+// ── Client-side sortable data table (no pagination needed) ──────────
+
+type SimpleDataTableProps<TData> = {
+  columns: Array<ColumnDef<TData, unknown>>;
+  data: Array<TData>;
+  defaultOrder?: 'asc' | 'desc';
+  defaultSort?: string;
+  onRowClick?: (row: TData) => void;
+};
+
+function SimpleDataTable<TData>({
+  columns,
+  data,
+  defaultOrder = 'asc',
+  defaultSort,
+  onRowClick,
+}: SimpleDataTableProps<TData>) {
+  const [sorting, setSorting] = useState<SortingState>(
+    defaultSort != null ? [{ desc: defaultOrder === 'desc', id: defaultSort }] : [],
+  );
+
+  const table = useReactTable<TData>({
+    columns,
+    data,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    state: { sorting },
+  });
+
+  return (
+    <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
+      <Table className="min-w-full">
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const canSort: boolean = header.column.getCanSort();
+                const sorted = header.column.getIsSorted();
+                return (
+                  <TableHead
+                    className="select-none"
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                  >
+                    <div
+                      className={cn(
+                        'flex items-center gap-1',
+                        canSort &&
+                          'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
+                      )}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {canSort && (
+                        <span className="text-xs">
+                          {sorted === 'asc' ? '\u25B2' : sorted === 'desc' ? '\u25BC' : '\u25B2'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.length === 0 ? (
+            <TableRow>
+              <TableCell
+                className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                colSpan={columns.length}
+              >
+                No results.
+              </TableCell>
+            </TableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                className={cn(onRowClick && 'cursor-pointer')}
+                key={row.id}
+                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 const cardClass: string =
   'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +194,22 @@ export default function HomePage() {
   const [volumeLoading, setVolumeLoading] = useState<boolean>(true);
   const [volumeCodes, setVolumeCodes] = useState<Array<string>>([]);
 
+  const companyVolumeRef = useRef<HTMLDivElement>(null);
+  const [companyVolumeLoading, setCompanyVolumeLoading] = useState<boolean>(true);
+  const [companyNames, setCompanyNames] = useState<Array<string>>([]);
+
+  const [recentFilings, setRecentFilings] = useState<Array<RecentFiling>>([]);
+  const [recentDayLabel, setRecentDayLabel] = useState<string>('Yesterday');
+  const [recentLoading, setRecentLoading] = useState<boolean>(true);
+
+  const [topLine, setTopLine] = useState<TopLineStats | null>(null);
+
   const fetchStats = useCallback(async () => {
     try {
       const data: PublicStats = await apiFetch<PublicStats>('/api/stats');
       setStats(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load stats');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to load stats');
     } finally {
       setLoading(false);
     }
@@ -42,7 +219,122 @@ export default function HomePage() {
     void fetchStats();
   }, [fetchStats]);
 
-  // Filing volume chart
+  // Recent filings
+  useEffect(() => {
+    let cancelled: boolean = false;
+    apiFetch<RecentFilingsResponse>('/api/stats/recent-filings')
+      .then((data: RecentFilingsResponse) => {
+        if (!cancelled) {
+          setRecentFilings(data.filings);
+          setRecentDayLabel(`${data.dayLabel}'s Filings`);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) {
+          setRecentLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Top-line stats
+  useEffect(() => {
+    let cancelled: boolean = false;
+    apiFetch<TopLineStats>('/api/stats/top-line-stats')
+      .then((data: TopLineStats) => {
+        if (!cancelled) {
+          setTopLine(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Company volume chart (last 3 months)
+  useEffect(() => {
+    let cancelled: boolean = false;
+
+    async function renderCompanyVolume(): Promise<void> {
+      try {
+        const data: Array<CompanyFilingVolume> = await apiFetch<Array<CompanyFilingVolume>>(
+          '/api/stats/recent-volume-by-company',
+        );
+        if (cancelled || companyVolumeRef.current == null) {
+          return;
+        }
+
+        // Pick top N companies by total volume, group rest as "Other"
+        const totals: Map<string, number> = new Map();
+        for (const d of data) {
+          totals.set(d.company_name, (totals.get(d.company_name) ?? 0) + d.count);
+        }
+        const sorted: Array<[string, number]> = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+        const topN: number = 10;
+        const topSet: Set<string> = new Set(sorted.slice(0, topN).map(([name]) => name));
+
+        const chartData: Array<{ company: string; count: number; month: string }> = [];
+        const otherMap: Map<string, number> = new Map();
+
+        for (const d of data) {
+          if (topSet.has(d.company_name)) {
+            chartData.push({ company: d.company_name, count: d.count, month: d.month });
+          } else {
+            otherMap.set(d.month, (otherMap.get(d.month) ?? 0) + d.count);
+          }
+        }
+        for (const [month, count] of otherMap.entries()) {
+          chartData.push({ company: 'Other', count, month });
+        }
+
+        const names: Array<string> = [...topSet];
+        if (otherMap.size > 0) {
+          names.push('Other');
+        }
+
+        const colors: Array<string> = names.map(
+          (_: string, i: number) => COMPANY_COLORS[i % COMPANY_COLORS.length],
+        );
+
+        const chart = vg.plot(
+          vg.barY(chartData, {
+            fill: 'company',
+            tip: true,
+            x: 'month',
+            y: 'count',
+          }),
+          vg.colorDomain(names),
+          vg.colorRange(colors),
+          vg.height(400),
+          vg.width(800),
+          vg.xLabel('Month'),
+          vg.yGrid(true),
+          vg.yLabel('Filings'),
+        );
+
+        if (!cancelled && companyVolumeRef.current != null) {
+          companyVolumeRef.current.replaceChildren(chart);
+          setCompanyNames(names);
+          setCompanyVolumeLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setCompanyVolumeLoading(false);
+        }
+      }
+    }
+
+    void renderCompanyVolume();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Filing volume chart (historical yearly)
   useEffect(() => {
     let cancelled: boolean = false;
 
@@ -51,7 +343,9 @@ export default function HomePage() {
         const data: Array<YearlyFilingVolume> = await apiFetch<Array<YearlyFilingVolume>>(
           '/api/stats/filing-volume',
         );
-        if (cancelled || volumeRef.current == null) return;
+        if (cancelled || volumeRef.current == null) {
+          return;
+        }
 
         const chart = vg.plot(
           vg.barY(data, {
@@ -62,7 +356,7 @@ export default function HomePage() {
           }),
           vg.colorDomain(SUBSYSTEM_CODES),
           vg.colorRange(SUBSYSTEM_COLORS),
-          vg.height(400),
+          vg.height(260),
           vg.width(800),
           vg.xLabel('Year'),
           vg.xTickSpacing(120),
@@ -79,7 +373,9 @@ export default function HomePage() {
           setVolumeLoading(false);
         }
       } catch {
-        if (!cancelled) setVolumeLoading(false);
+        if (!cancelled) {
+          setVolumeLoading(false);
+        }
       }
     }
 
@@ -88,6 +384,14 @@ export default function HomePage() {
       cancelled = true;
     };
   }, []);
+
+  // Row click handler for recent filings
+  const onRecentFilingClick = useCallback(
+    (row: RecentFiling) => {
+      void navigate(`/filings/${row.file_number}`);
+    },
+    [navigate],
+  );
 
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading...</p>;
@@ -122,46 +426,140 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Filings by Subsystem */}
-        <div className={`${cardClass} sm:col-span-2 lg:col-span-2`}>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Filings by Subsystem
-          </p>
-          <div className="mt-3 space-y-1.5">
-            {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
-              const info = getSubsystem(sub.subsystem_code);
-              const pct: number = (sub.count / maxSubsystemCount) * 100;
-              return (
-                <div className="flex items-center gap-2" key={sub.subsystem_code}>
-                  <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                    {sub.subsystem_code}
-                  </span>
-                  <span className="w-36 shrink-0 truncate text-xs text-neutral-500 dark:text-neutral-400">
-                    {info.label}
-                  </span>
-                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
-                    <div
-                      className="h-full rounded transition-all"
-                      style={{
-                        backgroundColor: info.hex,
-                        width: `${String(Math.max(pct, 0.5))}%`,
-                      }}
-                    />
-                  </div>
-                  <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
-                    {sub.count.toLocaleString()}
-                  </span>
-                </div>
-              );
-            })}
+        {/* M&A Activity */}
+        {topLine != null && (
+          <div className={cardClass}>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              M&amp;A Activity (Last Quarter)
+            </p>
+            <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+              {topLine.recent_ownership_events.toLocaleString()}
+            </p>
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              ownership events
+            </p>
           </div>
+        )}
+
+        {/* Most Active Filings This Week */}
+        {topLine != null && topLine.most_active_filings.length > 0 && (
+          <div className={cardClass}>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Most Active This Week
+            </p>
+            <ul className="mt-2 space-y-1">
+              {topLine.most_active_filings.slice(0, 3).map((f: ActiveFiling) => (
+                <li className="flex items-center justify-between text-xs" key={f.file_number}>
+                  <button
+                    className="truncate font-mono text-blue-600 hover:underline dark:text-blue-400"
+                    onClick={() => navigate(`/filings/${f.file_number}`)}
+                    type="button"
+                  >
+                    {f.file_number}
+                  </button>
+                  <span className="ml-2 shrink-0 text-neutral-500 dark:text-neutral-400">
+                    {f.activity_count} pleadings
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Recent Business Day Filings */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          {recentDayLabel}
+        </p>
+        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Filings recorded on the most recent business day.
+        </p>
+        <div className="mt-3">
+          {recentLoading ? (
+            <p className="text-sm text-neutral-500">Loading recent filings...</p>
+          ) : recentFilings.length === 0 ? (
+            <p className="text-sm text-neutral-500">No filings recorded on the last business day.</p>
+          ) : (
+            <SimpleDataTable<RecentFiling>
+              columns={recentFilingColumns}
+              data={recentFilings}
+              defaultOrder="asc"
+              defaultSort="file_number"
+              onRowClick={onRecentFilingClick}
+            />
+          )}
         </div>
       </div>
 
-      {/* Filing Volume by Year */}
+      {/* Filings by Subsystem */}
       <div className={cardClass}>
         <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Filing Volume by Year
+          Filings by Subsystem
+        </p>
+        <div className="mt-3 space-y-1.5">
+          {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
+            const info = getSubsystem(sub.subsystem_code);
+            const pct: number = (sub.count / maxSubsystemCount) * 100;
+            return (
+              <div className="flex items-center gap-2" key={sub.subsystem_code}>
+                <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  {sub.subsystem_code}
+                </span>
+                <span className="w-36 shrink-0 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                  {info.label}
+                </span>
+                <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                  <div
+                    className="h-full rounded transition-all"
+                    style={{
+                      backgroundColor: info.hex,
+                      width: `${String(Math.max(pct, 0.5))}%`,
+                    }}
+                  />
+                </div>
+                <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                  {sub.count.toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Last 3 Months Filing Volume by Company */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Last 3 Months Filing Volume by Company
+        </p>
+        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Monthly filing counts by company over the last 3 months.
+        </p>
+        <div className="mt-3">
+          {companyVolumeLoading && (
+            <p className="text-sm text-neutral-500">Loading company volume chart...</p>
+          )}
+          <div ref={companyVolumeRef} />
+          {companyNames.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+              {companyNames.map((name: string, i: number) => (
+                <div className="flex items-center gap-1.5" key={name}>
+                  <span
+                    className="inline-block h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
+                  />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Historical Filing Volume by Year */}
+      <div className={cardClass}>
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          Historical Filing Volume by Year
         </p>
         <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
           Stacked bar chart of filing counts per subsystem, grouped by year.

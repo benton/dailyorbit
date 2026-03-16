@@ -26,6 +26,7 @@ declare module '@cosmograph/react' {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   export const vg: {
+    areaY(data: Array<unknown>, options: any): any;
     barY(data: Array<unknown>, options: any): any;
     colorDomain(domain: Array<string>): any;
     colorLegend(show: boolean): any;

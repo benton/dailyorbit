@@ -3,7 +3,10 @@ import type {
   ApplicantFiling,
   ApplicantNode,
   AttachmentStats,
+  CompanyFilingVolume,
   DatasetStats,
+  RecentFiling,
+  TopLineStats,
   YearlyFilingVolume,
   SubsystemCount,
 } from './types.ts';
@@ -154,4 +157,90 @@ export async function getYearlyFilingVolume(
     subsystem_code: String(r.subsystem_code),
     count: Number(r.count),
   }));
+}
+
+export async function getRecentFilings(
+  conn: DuckDBConnection,
+  targetDate: string,
+): Promise<RecentFiling[]> {
+  const result = await conn.runAndReadAll(
+    `SELECT f.file_number, f.callsign, f.address_attention,
+            f.subsystem_code, f.app_type_code, f.status_code,
+            f.date_filed::VARCHAR AS date_filed,
+            c.name AS company_name
+     FROM filing f
+     LEFT JOIN company c ON c.id = f.company_id
+     WHERE f.date_filed::DATE = $1::DATE
+     ORDER BY f.file_number ASC`,
+    [targetDate] as DuckDBValue[],
+  );
+  return result.getRowObjectsJS().map((r) => ({
+    file_number: String(r.file_number),
+    callsign: r.callsign != null ? String(r.callsign) : null,
+    address_attention:
+      r.address_attention != null ? String(r.address_attention) : null,
+    subsystem_code: String(r.subsystem_code),
+    app_type_code: String(r.app_type_code),
+    status_code: r.status_code != null ? String(r.status_code) : null,
+    date_filed: r.date_filed != null ? String(r.date_filed) : null,
+    company_name: r.company_name != null ? String(r.company_name) : null,
+  }));
+}
+
+export async function getRecentFilingVolumeByCompany(
+  conn: DuckDBConnection,
+): Promise<CompanyFilingVolume[]> {
+  const result = await conn.runAndReadAll(
+    `SELECT
+       strftime(date_trunc('month', f.date_filed), '%Y-%m') AS month,
+       coalesce(c.name, 'Other') AS company_name,
+       count(*)::INTEGER AS count
+     FROM filing f
+     LEFT JOIN company c ON c.id = f.company_id
+     WHERE f.date_filed IS NOT NULL
+       AND f.date_filed >= date_trunc('month', CURRENT_DATE) - INTERVAL '2 months'
+       AND f.date_filed <= CURRENT_DATE
+     GROUP BY 1, 2
+     ORDER BY 1, count DESC`,
+  );
+  return result.getRowObjectsJS().map((r) => ({
+    month: String(r.month),
+    company_name: String(r.company_name),
+    count: Number(r.count),
+  }));
+}
+
+export async function getTopLineStats(
+  conn: DuckDBConnection,
+): Promise<TopLineStats> {
+  const [countResult, ownershipResult, activeResult] = await Promise.all([
+    conn.runAndReadAll(
+      'SELECT count(*)::INTEGER AS cnt FROM filing',
+    ),
+    conn.runAndReadAll(
+      `SELECT count(*)::INTEGER AS cnt FROM ownership_event
+       WHERE effective_date >= date_trunc('quarter', CURRENT_DATE) - INTERVAL '3 months'`,
+    ),
+    conn.runAndReadAll(
+      `SELECT f.file_number, c.name AS company_name,
+              count(*)::INTEGER AS activity_count
+       FROM pleading p
+       JOIN filing f ON f.filing_key = p.filing_key
+       LEFT JOIN company c ON c.id = f.company_id
+       WHERE p.created_on >= CURRENT_DATE - INTERVAL '7 days'
+       GROUP BY f.file_number, c.name
+       ORDER BY activity_count DESC
+       LIMIT 5`,
+    ),
+  ]);
+
+  const filing_count: number = Number(countResult.getRowObjectsJS()[0]?.cnt ?? 0);
+  const recent_ownership_events: number = Number(ownershipResult.getRowObjectsJS()[0]?.cnt ?? 0);
+  const most_active_filings = activeResult.getRowObjectsJS().map((r) => ({
+    file_number: String(r.file_number),
+    company_name: r.company_name != null ? String(r.company_name) : null,
+    activity_count: Number(r.activity_count),
+  }));
+
+  return { filing_count, recent_ownership_events, most_active_filings };
 }
