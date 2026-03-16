@@ -23,7 +23,6 @@ export async function listAvailableModels(region: string): Promise<ModelInfo[]> 
   const resp = await client.send(
     new ListFoundationModelsCommand({
       byOutputModality: 'TEXT',
-      byInferenceType: 'ON_DEMAND',
     }),
   );
   return parseModelList(resp);

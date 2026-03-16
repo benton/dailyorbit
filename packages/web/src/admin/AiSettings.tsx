@@ -110,6 +110,7 @@ function AiSettingsInner() {
       const resp: InferenceResponse = await apiFetch('/api/admin/inference/test', {
         method: 'POST',
         body: JSON.stringify({
+          modelId: defaultModel || undefined,
           messages: [{ role: 'user', content: testPrompt }],
           params: { maxTokens: 256, temperature: 0.7 },
         }),
@@ -120,7 +121,7 @@ function AiSettingsInner() {
     } finally {
       setTesting(false);
     }
-  }, [testPrompt, toast]);
+  }, [defaultModel, testPrompt, toast]);
 
   return (
     <div className="space-y-8">
