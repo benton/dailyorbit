@@ -1,11 +1,12 @@
+import type { ColumnDef } from '@tanstack/react-table';
 import { Loader2, Send } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { Button } from '../ui/button.tsx';
+import { DataTable, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 import { ToastProvider, useToast } from '../ui/toast.tsx';
 
 type ModelInfo = {
@@ -29,9 +30,21 @@ type ConfigEntry = {
   encrypted: boolean;
 };
 
+const modelColumns: Array<ColumnDef<ModelInfo, unknown>> = [
+  { accessorKey: 'provider', header: 'Provider', size: 150 },
+  { accessorKey: 'modelName', header: 'Name', size: 250 },
+  {
+    accessorKey: 'modelId',
+    header: 'Model ID',
+    size: 400,
+    cell: ({ getValue }) => (
+      <span className="font-mono text-sm">{getValue() as string}</span>
+    ),
+  },
+];
+
 function AiSettingsInner() {
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [loadingModels, setLoadingModels] = useState<boolean>(true);
   const [defaultModel, setDefaultModel] = useState<string>('');
   const [region, setRegion] = useState<string>('');
   const [testPrompt, setTestPrompt] = useState<string>('Say hello in one sentence.');
@@ -52,21 +65,22 @@ function AiSettingsInner() {
     }
   }, [toast]);
 
-  const fetchModels = useCallback(async () => {
-    try {
-      const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
-      setModels(data);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to list models', 'error');
-    } finally {
-      setLoadingModels(false);
-    }
-  }, [toast]);
+  /** Fetch models from API, cache for dropdown, and return as PaginatedResponse for DataTable. */
+  const fetchModelsPage = useCallback(async (): Promise<PaginatedResponse<ModelInfo>> => {
+    const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
+    setModels(data);
+    return {
+      data,
+      page: 1,
+      pageSize: data.length,
+      totalRows: data.length,
+      totalPages: 1,
+    };
+  }, []);
 
   useEffect(() => {
     void fetchConfig();
-    void fetchModels();
-  }, [fetchConfig, fetchModels]);
+  }, [fetchConfig]);
 
   const handleSaveConfig = useCallback(async () => {
     setSavingConfig(true);
@@ -133,11 +147,21 @@ function AiSettingsInner() {
           </div>
           <div>
             <Label htmlFor="bedrock-model">Default Model ID</Label>
-            <Input
+            <select
+              className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
               id="bedrock-model"
               onChange={(e) => setDefaultModel(e.target.value)}
               value={defaultModel}
-            />
+            >
+              {models.length === 0 && defaultModel && (
+                <option value={defaultModel}>{defaultModel}</option>
+              )}
+              {models.map((m) => (
+                <option key={m.modelId} value={m.modelId}>
+                  {m.provider} — {m.modelName} ({m.modelId})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <Button className="mt-4" disabled={savingConfig} onClick={() => void handleSaveConfig()}>
@@ -176,35 +200,19 @@ function AiSettingsInner() {
       </div>
 
       {/* Available Models */}
-      <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="p-6 pb-2">
-          <h2 className="text-lg font-medium">Available Models</h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            On-demand text models in {region || 'configured region'}.
-          </p>
-        </div>
-        {loadingModels ? (
-          <p className="px-6 pb-6 text-sm text-neutral-500">Loading models...</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Provider</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Model ID</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {models.map((m) => (
-                <TableRow key={m.modelId}>
-                  <TableCell>{m.provider}</TableCell>
-                  <TableCell>{m.modelName}</TableCell>
-                  <TableCell className="font-mono text-sm">{m.modelId}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+      <div>
+        <h2 className="mb-2 text-lg font-medium">Available Models</h2>
+        <p className="mb-4 text-sm text-neutral-500">
+          On-demand text models in {region || 'configured region'}.
+        </p>
+        <DataTable<ModelInfo>
+          columns={modelColumns}
+          fetchData={fetchModelsPage}
+          defaultSort="provider"
+          defaultOrder="asc"
+          defaultPageSize={25}
+          paramPrefix="m_"
+        />
       </div>
     </div>
   );
