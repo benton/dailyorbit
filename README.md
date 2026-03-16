@@ -1,6 +1,6 @@
 # The Daily Orbit
 
-An FCC IBFS Explorer
+Satellite communications filing data at a glance
 
 ## 1. Project Overview
 

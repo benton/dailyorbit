@@ -347,6 +347,7 @@ export type PendingExtractionRow = {
 };
 
 export type ExtractionQueryOptions = {
+  filingKeys?: number[] | undefined;
   retryFailed?: boolean | undefined;
   limit?: number | undefined;
 };
@@ -362,6 +363,12 @@ export async function getPendingExtractions(
   const limitClause: string =
     options.limit != null ? `LIMIT ${String(options.limit)}` : '';
 
+  const filingKeys: number[] | undefined = options.filingKeys;
+  const filingFilter: string =
+    filingKeys != null && filingKeys.length > 0
+      ? `AND filing_key IN (${filingKeys.map((_, i) => `$${String(i + 1)}`).join(', ')})`
+      : '';
+
   const sql: string = `
     SELECT attachment_key, local_path, content_type
     FROM attachment
@@ -369,10 +376,17 @@ export async function getPendingExtractions(
       AND content_type = 'application/pdf'
       AND local_path IS NOT NULL
       AND ${statusCondition}
+      ${filingFilter}
     ORDER BY attachment_key
     ${limitClause}`;
 
-  const reader = await conn.runAndReadAll(sql);
+  const params: number[] =
+    filingKeys != null && filingKeys.length > 0 ? filingKeys : [];
+  const stmt = await conn.prepare(sql);
+  for (let i: number = 0; i < params.length; i++) {
+    stmt.bindInteger(i + 1, params[i]!);
+  }
+  const reader = await stmt.runAndReadAll();
   return reader.getRowObjectsJS().map((r) => ({
     attachmentKey: Number(r.attachment_key),
     localPath: String(r.local_path),

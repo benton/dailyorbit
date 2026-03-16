@@ -310,13 +310,14 @@ export async function runAttachmentPipeline(
   let textsFailed: number = 0;
 
   if (options.discoverOnly !== true) {
+    const filingKeysForExtraction: number[] = filings.map((f) => f.filingKey);
     const pendingExtractions: PendingExtractionRow[] =
-      await getPendingExtractions(conn);
+      await getPendingExtractions(conn, {
+        filingKeys: filingKeysForExtraction,
+      });
 
     if (pendingExtractions.length > 0) {
-      log(
-        `${String(pendingExtractions.length)} PDFs pending text extraction`,
-      );
+      log(`${String(pendingExtractions.length)} PDFs pending text extraction`);
 
       const { readFileSync } = await import('node:fs');
 
@@ -324,9 +325,7 @@ export async function runAttachmentPipeline(
         const row: PendingExtractionRow = pendingExtractions[i]!;
 
         try {
-          const bytes: Uint8Array = new Uint8Array(
-            readFileSync(row.localPath),
-          );
+          const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
           const result = extractTextFromPdf(bytes);
 
           if (result.status === 'extracted') {
@@ -363,9 +362,7 @@ export async function runAttachmentPipeline(
           await markExtractionFailed(conn, row.attachmentKey);
           textsFailed++;
           const msg: string = e instanceof Error ? e.message : String(e);
-          log(
-            `  ${String(row.attachmentKey)}: extraction FAILED — ${msg}`,
-          );
+          log(`  ${String(row.attachmentKey)}: extraction FAILED — ${msg}`);
         }
 
         printProgress(i + 1, pendingExtractions.length, 'Extracting');
