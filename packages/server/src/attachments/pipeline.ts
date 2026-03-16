@@ -8,17 +8,23 @@ import { extensionForContentType } from './content-type.ts';
 import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
+import { extractTextFromPdf } from './extract-text.ts';
 import {
   countDuplicateKeys,
   createAttachmentTable,
   createDiscoveryLogTable,
   getFilingsForScope,
   getPendingDownloads,
+  getPendingExtractions,
   markDownloaded,
+  markExtracted,
+  markExtractionFailed,
+  markExtractionSkipped,
   markFailed,
   markFilingsDiscovered,
   upsertAttachments,
 } from './repository.ts';
+import type { PendingExtractionRow } from './repository.ts';
 import {
   attachmentStoragePath,
   downloadFile,
@@ -298,6 +304,79 @@ export async function runAttachmentPipeline(
     }
   }
 
+  // Stage 5: Extract text from newly downloaded PDFs
+  let textsExtracted: number = 0;
+  let textsSkippedNoText: number = 0;
+  let textsFailed: number = 0;
+
+  if (options.discoverOnly !== true) {
+    const pendingExtractions: PendingExtractionRow[] =
+      await getPendingExtractions(conn);
+
+    if (pendingExtractions.length > 0) {
+      log(
+        `${String(pendingExtractions.length)} PDFs pending text extraction`,
+      );
+
+      const { readFileSync } = await import('node:fs');
+
+      for (let i: number = 0; i < pendingExtractions.length; i++) {
+        const row: PendingExtractionRow = pendingExtractions[i]!;
+
+        try {
+          const bytes: Uint8Array = new Uint8Array(
+            readFileSync(row.localPath),
+          );
+          const result = extractTextFromPdf(bytes);
+
+          if (result.status === 'extracted') {
+            await markExtracted(
+              conn,
+              row.attachmentKey,
+              result.text,
+              result.textLength,
+            );
+            textsExtracted++;
+            if (verbose) {
+              log(
+                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+              );
+            }
+          } else if (result.status === 'skipped_no_text') {
+            await markExtractionSkipped(
+              conn,
+              row.attachmentKey,
+              'skipped_no_text',
+            );
+            textsSkippedNoText++;
+            if (verbose) {
+              log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+            }
+          } else {
+            await markExtractionFailed(conn, row.attachmentKey);
+            textsFailed++;
+            log(
+              `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
+            );
+          }
+        } catch (e: unknown) {
+          await markExtractionFailed(conn, row.attachmentKey);
+          textsFailed++;
+          const msg: string = e instanceof Error ? e.message : String(e);
+          log(
+            `  ${String(row.attachmentKey)}: extraction FAILED — ${msg}`,
+          );
+        }
+
+        printProgress(i + 1, pendingExtractions.length, 'Extracting');
+      }
+
+      log(
+        `Extraction: ${String(textsExtracted)} extracted, ${String(textsSkippedNoText)} skipped (no text), ${String(textsFailed)} failed`,
+      );
+    }
+  }
+
   untrackConnection(conn);
   conn.closeSync();
 
@@ -316,6 +395,9 @@ export async function runAttachmentPipeline(
     attachmentsDownloaded,
     attachmentsFailed,
     attachmentsSkipped,
+    textsExtracted,
+    textsSkippedNoText,
+    textsFailed,
     durationMs,
   };
 }

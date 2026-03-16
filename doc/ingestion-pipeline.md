@@ -173,7 +173,7 @@ flowchart TD
 3. Download to temp path → detect content type → rename with correct extension
 4. Update DB: `local_path`, `file_size_bytes`, `content_type`, `downloaded_at`, `download_status`
 
-**Combined command:** `make attachments` runs discover + download in one pass.
+**Combined command:** `make attachments` runs discover + download + text extraction in one pass.
 
 ### 2c. Text Extraction
 
@@ -292,11 +292,8 @@ The recommended nightly pipeline order:
 # 1. Ingest new filings from ICFS (includes auto-attribution)
 make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
 
-# 2. Discover and download attachments for new filings
+# 2. Discover, download, and extract text from attachments
 make attachments
-
-# 2c. Extract text from newly downloaded PDFs
-make attachments-extract
 
 # 3. Ensure company seed data is current (no-ops if unchanged)
 make companies-seed

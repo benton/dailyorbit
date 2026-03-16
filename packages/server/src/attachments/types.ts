@@ -60,6 +60,9 @@ export type AttachmentPipelineResult = {
   attachmentsDownloaded: number;
   attachmentsFailed: number;
   attachmentsSkipped: number;
+  textsExtracted: number;
+  textsSkippedNoText: number;
+  textsFailed: number;
   durationMs: number;
 };
 

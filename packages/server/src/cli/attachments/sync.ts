@@ -85,6 +85,15 @@ export const syncCommand = defineCommand({
       `  Attachments failed:     ${String(result.attachmentsFailed)}`,
     );
     console.log(
+      `  Texts extracted:        ${String(result.textsExtracted)}`,
+    );
+    console.log(
+      `  Texts skipped (no text):${String(result.textsSkippedNoText).padStart(2)}`,
+    );
+    console.log(
+      `  Texts failed:           ${String(result.textsFailed)}`,
+    );
+    console.log(
       `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },
