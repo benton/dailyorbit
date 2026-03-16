@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { Button } from '../ui/button.tsx';
-import { DataTable, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
 import { ToastProvider, useToast } from '../ui/toast.tsx';
@@ -66,9 +66,18 @@ function AiSettingsInner() {
   }, [toast]);
 
   /** Fetch models from API, cache for dropdown, and return as PaginatedResponse for DataTable. */
-  const fetchModelsPage = useCallback(async (): Promise<PaginatedResponse<ModelInfo>> => {
+  const fetchModelsPage = useCallback(async (params: DataTableFetchParams): Promise<PaginatedResponse<ModelInfo>> => {
     const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
     setModels(data);
+
+    // Client-side sort since the API returns all models in one page
+    const { sort, order } = params;
+    if (sort != null) {
+      const key = sort as keyof ModelInfo;
+      const dir: number = order === 'desc' ? -1 : 1;
+      data.sort((a, b) => a[key].localeCompare(b[key]) * dir);
+    }
+
     return {
       data,
       page: 1,
