@@ -8,33 +8,33 @@ import { Label } from '../ui/label.tsx';
 // ---------------------------------------------------------------------------
 
 type TemplateVariable = {
-  name: string;
-  source: string;
   description: string;
   example: string;
+  name: string;
+  source: string;
 };
 
 export type PromptEditorProps = {
-  /** Section title, e.g. "Summarization Prompts" */
-  title: string;
-  /** Brief description shown below the title */
-  description: string;
-  /** Current system prompt value */
-  systemPrompt: string;
-  /** Current user prompt template value */
-  userPrompt: string;
+  /** Whether the section starts expanded */
+  defaultOpen?: boolean;
   /** Built-in default system prompt (for reset) */
   defaultSystemPrompt: string;
   /** Built-in default user prompt (for reset) */
   defaultUserPrompt: string;
-  /** Available template variables */
-  variables: readonly TemplateVariable[];
+  /** Brief description shown below the title */
+  description: string;
   /** Called when the admin changes the system prompt */
   onSystemPromptChange: (value: string) => void;
   /** Called when the admin changes the user prompt */
   onUserPromptChange: (value: string) => void;
-  /** Whether the section starts expanded */
-  defaultOpen?: boolean;
+  /** Current system prompt value */
+  systemPrompt: string;
+  /** Section title, e.g. "Summarization Prompts" */
+  title: string;
+  /** Current user prompt template value */
+  userPrompt: string;
+  /** Available template variables */
+  variables: ReadonlyArray<TemplateVariable>;
 };
 
 // ---------------------------------------------------------------------------
@@ -42,16 +42,16 @@ export type PromptEditorProps = {
 // ---------------------------------------------------------------------------
 
 export function PromptEditor({
-  title,
-  description,
-  systemPrompt,
-  userPrompt,
+  defaultOpen = false,
   defaultSystemPrompt,
   defaultUserPrompt,
-  variables,
+  description,
   onSystemPromptChange,
   onUserPromptChange,
-  defaultOpen = false,
+  systemPrompt,
+  title,
+  userPrompt,
+  variables,
 }: PromptEditorProps) {
   const [open, setOpen] = useState<boolean>(defaultOpen);
   const [varsOpen, setVarsOpen] = useState<boolean>(false);

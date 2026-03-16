@@ -2,26 +2,26 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import AuthClient from './AuthClient.tsx';
 
 type AuthUser = {
-  id: string;
   email: string;
+  id: string;
   name: string;
   role: string;
 };
 
 type AuthContextValue = {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
   isAdmin: boolean;
+  isAuthenticated: boolean;
   isLoading: boolean;
   refetch: () => void;
+  user: AuthUser | null;
 };
 
 const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  isAuthenticated: false,
   isAdmin: false,
+  isAuthenticated: false,
   isLoading: true,
   refetch: () => {},
+  user: null,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result.data?.user != null) {
           const u = result.data.user as Record<string, unknown>;
           setUser({
-            id: u.id as string,
             email: u.email as string,
+            id: u.id as string,
             name: u.name as string,
             role: (u.role as string) ?? 'user',
           });
@@ -53,15 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     fetchSession();
   }, []);
 
   const value: AuthContextValue = {
-    user,
-    isAuthenticated: user != null,
     isAdmin: user?.role === 'admin',
+    isAuthenticated: user != null,
     isLoading,
     refetch: fetchSession,
+    user,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;

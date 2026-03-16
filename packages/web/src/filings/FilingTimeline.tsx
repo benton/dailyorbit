@@ -4,27 +4,29 @@ import { useEffect, useRef, useState } from 'react';
 type TimelineEventSource = 'filing_field' | 'pleading';
 
 type TimelineEvent = {
-  date: string;
-  type: string;
-  label: string;
   actor: string | null;
+  date: string;
+  label: string;
   source: TimelineEventSource;
+  type: string;
 };
 
 /** Map from event category (used as colorDomain key) to hex color. */
 const CATEGORY_COLORS: Record<string, string> = {
-  milestone: '#b45309', // amber-700
-  petition: '#d97706', // amber-600
-  supplement: '#0d9488', // teal-600
+  comment: '#525252', // neutral-600
   decision: '#9333ea', // purple-600
   letter: '#2563eb', // blue-600
-  comment: '#525252', // neutral-600
+  milestone: '#b45309', // amber-700
   other: '#737373', // neutral-500
+  petition: '#d97706', // amber-600
+  supplement: '#0d9488', // teal-600
 };
 
 /** Derive a color category from a timeline event. */
 function eventCategory(e: TimelineEvent): string {
-  if (e.source === 'filing_field') return 'milestone';
+  if (e.source === 'filing_field') {
+    return 'milestone';
+  }
   return CATEGORY_COLORS[e.type] != null ? e.type : 'other';
 }
 
@@ -33,15 +35,17 @@ function eventCategory(e: TimelineEvent): string {
  * Top lane: filing milestones (date fields).
  * Bottom lane: pleading activity (comments, petitions, etc.).
  */
-export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
+export function FilingTimeline({ events }: { events: Array<TimelineEvent> }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState<boolean>(false);
 
   useEffect(() => {
-    if (chartRef.current == null || events.length === 0) return;
+    if (chartRef.current == null || events.length === 0) {
+      return;
+    }
 
     // Collect the distinct categories present in data
-    const categories: string[] = [];
+    const categories: Array<string> = [];
     const seen = new Set<string>();
     for (const e of events) {
       const cat: string = eventCategory(e);
@@ -53,20 +57,20 @@ export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
 
     // Prepare data: parse dates to Date objects for proper time scale
     const plotData = events.map((e: TimelineEvent) => ({
+      category: eventCategory(e),
       date: new Date(e.date),
       label: e.label,
-      category: eventCategory(e),
       lane: e.source === 'filing_field' ? 'Milestones' : 'Pleadings',
     }));
 
     const chart = vg.plot(
       vg.dot(plotData, {
-        x: 'date',
-        y: 'lane',
         fill: 'category',
         r: 5,
         tip: true,
         title: 'label',
+        x: 'date',
+        y: 'lane',
       }),
       vg.colorDomain(categories),
       vg.colorRange(categories.map((c: string) => CATEGORY_COLORS[c] ?? '#737373')),
@@ -82,6 +86,7 @@ export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
     );
 
     chartRef.current.replaceChildren(chart);
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setRendered(true);
 
     // vgplot renders its built-in legend asynchronously — observe and remove it.
@@ -89,7 +94,9 @@ export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
     if (plotEl != null) {
       const removeLegend = (): void => {
         const legend: HTMLElement | null = plotEl.querySelector(':scope > .legend');
-        if (legend != null) legend.remove();
+        if (legend != null) {
+          legend.remove();
+        }
       };
       removeLegend(); // in case it's already there
       const observer = new MutationObserver(removeLegend);
@@ -98,7 +105,9 @@ export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
     }
   }, [events]);
 
-  if (events.length === 0) return null;
+  if (events.length === 0) {
+    return null;
+  }
 
   return (
     <section>
@@ -114,8 +123,8 @@ export function FilingTimeline({ events }: { events: TimelineEvent[] }) {
 }
 
 /** Compact legend showing event type colors. */
-function TimelineLegend({ events }: { events: TimelineEvent[] }) {
-  const categories: string[] = [];
+function TimelineLegend({ events }: { events: Array<TimelineEvent> }) {
+  const categories: Array<string> = [];
   const seen = new Set<string>();
   for (const e of events) {
     const cat: string = eventCategory(e);
@@ -129,8 +138,8 @@ function TimelineLegend({ events }: { events: TimelineEvent[] }) {
     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-2 dark:border-neutral-800">
       {categories.map((cat: string) => (
         <LegendItem
-          key={cat}
           color={CATEGORY_COLORS[cat] ?? '#737373'}
+          key={cat}
           label={cat.charAt(0).toUpperCase() + cat.slice(1)}
         />
       ))}

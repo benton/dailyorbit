@@ -14,32 +14,32 @@ import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 // ── Types mirroring server-side search result shapes ─────────────────
 
 type FilingSearchResult = {
-  file_number: string;
-  callsign: string | null;
   address_attention: string | null;
-  subsystem_code: string;
   app_type_code: string;
-  status_code: string | null;
-  date_filed: string | null;
+  callsign: string | null;
   company_name: string | null;
+  date_filed: string | null;
+  file_number: string;
+  status_code: string | null;
+  subsystem_code: string;
   summary: string | null;
 };
 
 type SatelliteSearchResult = {
-  space_station_key: number;
-  us_name: string;
+  company_name: string | null;
+  inactive_date: string | null;
   itu_name: string | null;
   orbit_location: string | null;
-  inactive_date: string | null;
-  company_name: string | null;
+  space_station_key: number;
+  us_name: string;
 };
 
 type EarthStationSearchResult = {
-  callsign: string;
   address_attention: string | null;
+  callsign: string;
+  company_name: string | null;
   filing_count: number;
   most_recent_filing: string | null;
-  company_name: string | null;
 };
 
 type SearchTab = 'filings' | 'satellites' | 'earth-stations';
@@ -56,17 +56,18 @@ function useAutocomplete(
   entity: string,
   field: string,
 ): {
-  suggestions: string[];
+  clearSuggestions: () => void;
   query: string;
   setQuery: (value: string) => void;
-  clearSuggestions: () => void;
+  suggestions: Array<string>;
 } {
   const [query, setQuery] = useState<string>('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Array<string>>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (query.length < 2) {
+      // eslint-disable-next-line react-hooks-js/set-state-in-effect
       setSuggestions([]);
       return;
     }
@@ -74,7 +75,7 @@ function useAutocomplete(
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      apiFetch<string[]>(
+      apiFetch<Array<string>>(
         `/api/autocomplete/${entity}/${field}?q=${encodeURIComponent(query)}&limit=10`,
       )
         .then(setSuggestions)
@@ -90,29 +91,29 @@ function useAutocomplete(
 
   const clearSuggestions = useCallback(() => setSuggestions([]), []);
 
-  return { suggestions, query, setQuery, clearSuggestions };
+  return { clearSuggestions, query, setQuery, suggestions };
 }
 
 // ── AutocompleteInput component ──────────────────────────────────────
 
 type AutocompleteInputProps = {
-  label: string;
   entity: string;
   field: string;
-  value: string;
+  label: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  value: string;
 };
 
 function AutocompleteInput({
-  label,
   entity,
   field,
-  value,
+  label,
   onChange,
   placeholder,
+  value,
 }: AutocompleteInputProps) {
-  const { suggestions, setQuery, clearSuggestions } = useAutocomplete(entity, field);
+  const { clearSuggestions, setQuery, suggestions } = useAutocomplete(entity, field);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -146,22 +147,24 @@ function AutocompleteInput({
   }, []);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative" ref={containerRef}>
       <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
       <Input
-        value={value}
         onChange={(e) => handleInput(e.target.value)}
         onFocus={() => {
-          if (suggestions.length > 0) setShowDropdown(true);
+          if (suggestions.length > 0) {
+            setShowDropdown(true);
+          }
         }}
         placeholder={placeholder ?? `Search ${label.toLowerCase()}...`}
+        value={value}
       />
       {showDropdown && suggestions.length > 0 && (
         <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           {suggestions.map((s: string) => (
             <li
-              key={s}
               className="cursor-pointer px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              key={s}
               onMouseDown={() => handleSelect(s)}
             >
               {s}
@@ -177,18 +180,18 @@ function AutocompleteInput({
 
 type MultiSelectProps = {
   label: string;
+  onChange: (values: Array<string>) => void;
   options: ReadonlyArray<{ code: string; label: string }>;
-  selected: string[];
-  onChange: (values: string[]) => void;
+  selected: Array<string>;
 };
 
-function MultiSelect({ label, options, selected, onChange }: MultiSelectProps) {
+function MultiSelect({ label, onChange, options, selected }: MultiSelectProps) {
   const [open, setOpen] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const toggle = useCallback(
     (code: string) => {
-      const next: string[] = selected.includes(code)
+      const next: Array<string> = selected.includes(code)
         ? selected.filter((s: string) => s !== code)
         : [...selected, code];
       onChange(next);
@@ -217,12 +220,12 @@ function MultiSelect({ label, options, selected, onChange }: MultiSelectProps) {
         : `${selected.length} selected`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative" ref={containerRef}>
       <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
       <button
-        type="button"
-        onClick={() => setOpen(!open)}
         className="flex h-9 w-full items-center justify-between rounded-md border border-neutral-200 bg-transparent px-3 text-left text-sm shadow-sm dark:border-neutral-700"
+        onClick={() => setOpen(!open)}
+        type="button"
       >
         <span className="truncate text-neutral-700 dark:text-neutral-300">{displayText}</span>
         <ChevronDown className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -232,9 +235,9 @@ function MultiSelect({ label, options, selected, onChange }: MultiSelectProps) {
           {selected.length > 0 && (
             <div className="border-b border-neutral-200 p-2 dark:border-neutral-700">
               <button
-                type="button"
-                onClick={clearAll}
                 className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                onClick={clearAll}
+                type="button"
               >
                 Clear all
               </button>
@@ -242,14 +245,14 @@ function MultiSelect({ label, options, selected, onChange }: MultiSelectProps) {
           )}
           {options.map((opt) => (
             <label
-              key={opt.code}
               className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              key={opt.code}
             >
               <input
-                type="checkbox"
                 checked={selected.includes(opt.code)}
-                onChange={() => toggle(opt.code)}
                 className="rounded"
+                onChange={() => toggle(opt.code)}
+                type="checkbox"
               />
               <span className="font-mono text-xs text-neutral-500">{opt.code}</span>
               <span className="text-neutral-700 dark:text-neutral-300">{opt.label}</span>
@@ -264,41 +267,46 @@ function MultiSelect({ label, options, selected, onChange }: MultiSelectProps) {
 // ── AutocompleteMultiSelect: fetches options from autocomplete endpoint ───
 
 type AutocompleteMultiSelectProps = {
-  label: string;
   entity: string;
   field: string;
-  selected: string[];
-  onChange: (values: string[]) => void;
+  label: string;
+  onChange: (values: Array<string>) => void;
+  selected: Array<string>;
 };
 
 function AutocompleteMultiSelect({
-  label,
   entity,
   field,
-  selected,
+  label,
   onChange,
+  selected,
 }: AutocompleteMultiSelectProps) {
   const [query, setQuery] = useState<string>('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Array<string>>([]);
   const [open, setOpen] = useState<boolean>(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (query.length < 1) {
+      // eslint-disable-next-line react-hooks-js/set-state-in-effect
       setSuggestions([]);
       return;
     }
-    if (debounceRef.current != null) clearTimeout(debounceRef.current);
+    if (debounceRef.current != null) {
+      clearTimeout(debounceRef.current);
+    }
     debounceRef.current = setTimeout(() => {
-      apiFetch<string[]>(
+      apiFetch<Array<string>>(
         `/api/autocomplete/${entity}/${field}?q=${encodeURIComponent(query)}&limit=20`,
       )
         .then(setSuggestions)
         .catch(() => setSuggestions([]));
     }, 250);
     return () => {
-      if (debounceRef.current != null) clearTimeout(debounceRef.current);
+      if (debounceRef.current != null) {
+        clearTimeout(debounceRef.current);
+      }
     };
   }, [query, entity, field]);
 
@@ -315,7 +323,7 @@ function AutocompleteMultiSelect({
 
   const toggle = useCallback(
     (value: string) => {
-      const next: string[] = selected.includes(value)
+      const next: Array<string> = selected.includes(value)
         ? selected.filter((s: string) => s !== value)
         : [...selected, value];
       onChange(next);
@@ -331,12 +339,12 @@ function AutocompleteMultiSelect({
         : `${selected.length} selected`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative" ref={containerRef}>
       <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
       <button
-        type="button"
-        onClick={() => setOpen(!open)}
         className="flex h-9 w-full items-center justify-between rounded-md border border-neutral-200 bg-transparent px-3 text-left text-sm shadow-sm dark:border-neutral-700"
+        onClick={() => setOpen(!open)}
+        type="button"
       >
         <span className="truncate text-neutral-700 dark:text-neutral-300">{displayText}</span>
         <ChevronDown className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -345,10 +353,10 @@ function AutocompleteMultiSelect({
         <div className="absolute z-50 mt-1 w-full rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           <div className="border-b border-neutral-200 p-2 dark:border-neutral-700">
             <Input
-              value={query}
+              className="h-7 text-xs"
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Type to search ${label.toLowerCase()}...`}
-              className="h-7 text-xs"
+              value={query}
             />
           </div>
           {selected.length > 0 && (
@@ -356,14 +364,14 @@ function AutocompleteMultiSelect({
               <div className="flex flex-wrap gap-1">
                 {selected.map((s: string) => (
                   <span
-                    key={s}
                     className="inline-flex items-center gap-1 rounded bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-700"
+                    key={s}
                   >
                     {s}
                     <button
-                      type="button"
-                      onClick={() => toggle(s)}
                       className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                      onClick={() => toggle(s)}
+                      type="button"
                     >
                       x
                     </button>
@@ -377,8 +385,8 @@ function AutocompleteMultiSelect({
               .filter((s: string) => !selected.includes(s))
               .map((s: string) => (
                 <li
-                  key={s}
                   className="cursor-pointer px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                  key={s}
                   onMouseDown={() => toggle(s)}
                 >
                   {s}
@@ -399,13 +407,13 @@ function AutocompleteMultiSelect({
 const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   {
     accessorKey: 'file_number',
-    header: 'File Number',
-    size: 240,
     cell: ({ row }) => (
       <SummaryTooltip summary={row.original.summary}>
         <span className="font-mono text-sm">{row.original.file_number}</span>
       </SummaryTooltip>
     ),
+    header: 'File Number',
+    size: 240,
   },
   {
     accessorKey: 'subsystem_code',
@@ -424,9 +432,9 @@ const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   },
   {
     accessorKey: 'company_name',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
     header: 'Company',
     size: 180,
-    cell: ({ getValue }) => (getValue() as string | null) ?? '',
   },
   {
     accessorKey: 'callsign',
@@ -440,12 +448,12 @@ const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   },
   {
     accessorKey: 'date_filed',
-    header: 'Date Filed',
-    size: 120,
     cell: ({ getValue }) => {
       const value: string | null = getValue() as string | null;
       return value != null ? new Date(value).toLocaleDateString() : '';
     },
+    header: 'Date Filed',
+    size: 120,
   },
 ];
 
@@ -462,9 +470,9 @@ const satelliteColumns: Array<ColumnDef<SatelliteSearchResult, unknown>> = [
   },
   {
     accessorKey: 'company_name',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
     header: 'Company',
     size: 180,
-    cell: ({ getValue }) => (getValue() as string | null) ?? '',
   },
   {
     accessorKey: 'orbit_location',
@@ -473,12 +481,12 @@ const satelliteColumns: Array<ColumnDef<SatelliteSearchResult, unknown>> = [
   },
   {
     accessorKey: 'inactive_date',
-    header: 'Status',
-    size: 100,
     cell: ({ getValue }) => {
       const value: string | null = getValue() as string | null;
       return value == null ? 'Active' : 'Inactive';
     },
+    header: 'Status',
+    size: 100,
   },
 ];
 
@@ -495,9 +503,9 @@ const earthStationColumns: Array<ColumnDef<EarthStationSearchResult, unknown>> =
   },
   {
     accessorKey: 'company_name',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
     header: 'Company',
     size: 180,
-    cell: ({ getValue }) => (getValue() as string | null) ?? '',
   },
   {
     accessorKey: 'filing_count',
@@ -506,65 +514,65 @@ const earthStationColumns: Array<ColumnDef<EarthStationSearchResult, unknown>> =
   },
   {
     accessorKey: 'most_recent_filing',
-    header: 'Most Recent',
-    size: 120,
     cell: ({ getValue }) => {
       const value: string | null = getValue() as string | null;
       return value != null ? new Date(value).toLocaleDateString() : '';
     },
+    header: 'Most Recent',
+    size: 120,
   },
 ];
 
 // ── Filter forms ─────────────────────────────────────────────────────
 
 type FilingFilters = {
-  file_number: string;
-  callsign: string;
+  app_type_code: Array<string>;
   applicant: string;
+  callsign: string;
   company: string;
-  subsystem_code: string[];
-  app_type_code: string[];
-  status_code: string[];
   date_filed_from: string;
   date_filed_to: string;
+  file_number: string;
+  status_code: Array<string>;
+  subsystem_code: Array<string>;
 };
 
 function emptyFilingFilters(): FilingFilters {
   return {
-    file_number: '',
-    callsign: '',
-    applicant: '',
-    company: '',
-    subsystem_code: [],
     app_type_code: [],
-    status_code: [],
+    applicant: '',
+    callsign: '',
+    company: '',
     date_filed_from: '',
     date_filed_to: '',
+    file_number: '',
+    status_code: [],
+    subsystem_code: [],
   };
 }
 
 type SatelliteFilters = {
-  us_name: string;
-  itu_name: string;
-  orbit_location: string;
   active: 'any' | 'true' | 'false';
   company: string;
+  itu_name: string;
+  orbit_location: string;
+  us_name: string;
 };
 
 function emptySatelliteFilters(): SatelliteFilters {
-  return { us_name: '', itu_name: '', orbit_location: '', active: 'any', company: '' };
+  return { active: 'any', company: '', itu_name: '', orbit_location: '', us_name: '' };
 }
 
 type EarthStationFilters = {
-  callsign: string;
   applicant: string;
-  state: string[];
+  callsign: string;
   city: string;
   company: string;
+  state: Array<string>;
 };
 
 function emptyEarthStationFilters(): EarthStationFilters {
-  return { callsign: '', applicant: '', state: [], city: '', company: '' };
+  return { applicant: '', callsign: '', city: '', company: '', state: [] };
 }
 
 // ── Filing filter form ───────────────────────────────────────────────
@@ -588,65 +596,65 @@ function FilingFilterForm({
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">File Number</Label>
         <Input
-          value={filters.file_number}
           onChange={(e) => update('file_number', e.target.value)}
           placeholder="e.g. SAT-LOA-2024..."
+          value={filters.file_number}
         />
       </div>
       <AutocompleteInput
-        label="Callsign"
         entity="filings"
         field="callsign"
-        value={filters.callsign}
+        label="Callsign"
         onChange={(v: string) => update('callsign', v)}
+        value={filters.callsign}
       />
       <AutocompleteInput
-        label="Applicant"
         entity="filings"
         field="address_attention"
-        value={filters.applicant}
+        label="Applicant"
         onChange={(v: string) => update('applicant', v)}
+        value={filters.applicant}
       />
       <AutocompleteInput
-        label="Company"
         entity="companies"
         field="name"
-        value={filters.company}
+        label="Company"
         onChange={(v: string) => update('company', v)}
+        value={filters.company}
       />
       <MultiSelect
         label="Subsystem"
+        onChange={(v: Array<string>) => update('subsystem_code', v)}
         options={SUBSYSTEM_OPTIONS}
         selected={filters.subsystem_code}
-        onChange={(v: string[]) => update('subsystem_code', v)}
       />
       <MultiSelect
         label="App Type"
+        onChange={(v: Array<string>) => update('app_type_code', v)}
         options={APP_TYPE_CODES}
         selected={filters.app_type_code}
-        onChange={(v: string[]) => update('app_type_code', v)}
       />
       <AutocompleteMultiSelect
-        label="Status"
         entity="filings"
         field="status_code"
+        label="Status"
+        onChange={(v: Array<string>) => update('status_code', v)}
         selected={filters.status_code}
-        onChange={(v: string[]) => update('status_code', v)}
       />
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Date Filed From</Label>
         <Input
+          onChange={(e) => update('date_filed_from', e.target.value)}
           type="date"
           value={filters.date_filed_from}
-          onChange={(e) => update('date_filed_from', e.target.value)}
         />
       </div>
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Date Filed To</Label>
         <Input
+          onChange={(e) => update('date_filed_to', e.target.value)}
           type="date"
           value={filters.date_filed_to}
-          onChange={(e) => update('date_filed_to', e.target.value)}
         />
       </div>
     </div>
@@ -672,43 +680,43 @@ function SatelliteFilterForm({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AutocompleteInput
-        label="US Name"
         entity="satellites"
         field="us_name"
-        value={filters.us_name}
+        label="US Name"
         onChange={(v: string) => update('us_name', v)}
+        value={filters.us_name}
       />
       <AutocompleteInput
-        label="ITU Name"
         entity="satellites"
         field="itu_name"
-        value={filters.itu_name}
+        label="ITU Name"
         onChange={(v: string) => update('itu_name', v)}
+        value={filters.itu_name}
       />
       <AutocompleteInput
-        label="Orbital Position"
         entity="satellites"
         field="orbit_location"
-        value={filters.orbit_location}
+        label="Orbital Position"
         onChange={(v: string) => update('orbit_location', v)}
+        value={filters.orbit_location}
       />
       <AutocompleteInput
-        label="Company"
         entity="companies"
         field="name"
-        value={filters.company}
+        label="Company"
         onChange={(v: string) => update('company', v)}
+        value={filters.company}
       />
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Status</Label>
         <div className="flex h-9 items-center gap-4">
           {(['any', 'true', 'false'] as const).map((val) => (
-            <label key={val} className="flex items-center gap-1.5 text-sm">
+            <label className="flex items-center gap-1.5 text-sm" key={val}>
               <input
-                type="radio"
-                name="satellite-active"
                 checked={filters.active === val}
+                name="satellite-active"
                 onChange={() => update('active', val)}
+                type="radio"
               />
               <span className="text-neutral-700 dark:text-neutral-300">
                 {val === 'any' ? 'Any' : val === 'true' ? 'Active' : 'Inactive'}
@@ -740,39 +748,39 @@ function EarthStationFilterForm({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AutocompleteInput
-        label="Callsign"
         entity="earth-stations"
         field="callsign"
-        value={filters.callsign}
+        label="Callsign"
         onChange={(v: string) => update('callsign', v)}
+        value={filters.callsign}
       />
       <AutocompleteInput
-        label="Applicant"
         entity="earth-stations"
         field="address_attention"
-        value={filters.applicant}
+        label="Applicant"
         onChange={(v: string) => update('applicant', v)}
+        value={filters.applicant}
       />
       <AutocompleteMultiSelect
-        label="State"
         entity="earth-stations"
         field="state"
+        label="State"
+        onChange={(v: Array<string>) => update('state', v)}
         selected={filters.state}
-        onChange={(v: string[]) => update('state', v)}
       />
       <AutocompleteInput
-        label="City"
         entity="earth-stations"
         field="city"
-        value={filters.city}
+        label="City"
         onChange={(v: string) => update('city', v)}
+        value={filters.city}
       />
       <AutocompleteInput
-        label="Company"
         entity="companies"
         field="name"
-        value={filters.company}
+        label="Company"
         onChange={(v: string) => update('company', v)}
+        value={filters.company}
       />
     </div>
   );
@@ -781,24 +789,40 @@ function EarthStationFilterForm({
 // ── Query string builders ────────────────────────────────────────────
 
 function buildFilingQueryString(filters: FilingFilters, params: DataTableFetchParams): string {
-  const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
-  if (params.sort != null) parts.push(`sort=${params.sort}`);
-  if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.file_number.trim() !== '')
+  const parts: Array<string> = [`page=${params.page}`, `pageSize=${params.pageSize}`];
+  if (params.sort != null) {
+    parts.push(`sort=${params.sort}`);
+  }
+  if (params.order != null) {
+    parts.push(`order=${params.order}`);
+  }
+  if (filters.file_number.trim() !== '') {
     parts.push(`file_number=${encodeURIComponent(filters.file_number.trim())}`);
-  if (filters.callsign.trim() !== '')
+  }
+  if (filters.callsign.trim() !== '') {
     parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
-  if (filters.applicant.trim() !== '')
+  }
+  if (filters.applicant.trim() !== '') {
     parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
-  if (filters.company.trim() !== '')
+  }
+  if (filters.company.trim() !== '') {
     parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
-  if (filters.subsystem_code.length > 0)
+  }
+  if (filters.subsystem_code.length > 0) {
     parts.push(`subsystem_code=${filters.subsystem_code.join(',')}`);
-  if (filters.app_type_code.length > 0)
+  }
+  if (filters.app_type_code.length > 0) {
     parts.push(`app_type_code=${filters.app_type_code.join(',')}`);
-  if (filters.status_code.length > 0) parts.push(`status_code=${filters.status_code.join(',')}`);
-  if (filters.date_filed_from !== '') parts.push(`date_filed_from=${filters.date_filed_from}`);
-  if (filters.date_filed_to !== '') parts.push(`date_filed_to=${filters.date_filed_to}`);
+  }
+  if (filters.status_code.length > 0) {
+    parts.push(`status_code=${filters.status_code.join(',')}`);
+  }
+  if (filters.date_filed_from !== '') {
+    parts.push(`date_filed_from=${filters.date_filed_from}`);
+  }
+  if (filters.date_filed_to !== '') {
+    parts.push(`date_filed_to=${filters.date_filed_to}`);
+  }
   return parts.join('&');
 }
 
@@ -806,18 +830,28 @@ function buildSatelliteQueryString(
   filters: SatelliteFilters,
   params: DataTableFetchParams,
 ): string {
-  const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
-  if (params.sort != null) parts.push(`sort=${params.sort}`);
-  if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.us_name.trim() !== '')
+  const parts: Array<string> = [`page=${params.page}`, `pageSize=${params.pageSize}`];
+  if (params.sort != null) {
+    parts.push(`sort=${params.sort}`);
+  }
+  if (params.order != null) {
+    parts.push(`order=${params.order}`);
+  }
+  if (filters.us_name.trim() !== '') {
     parts.push(`us_name=${encodeURIComponent(filters.us_name.trim())}`);
-  if (filters.itu_name.trim() !== '')
+  }
+  if (filters.itu_name.trim() !== '') {
     parts.push(`itu_name=${encodeURIComponent(filters.itu_name.trim())}`);
-  if (filters.orbit_location.trim() !== '')
+  }
+  if (filters.orbit_location.trim() !== '') {
     parts.push(`orbit_location=${encodeURIComponent(filters.orbit_location.trim())}`);
-  if (filters.active !== 'any') parts.push(`active=${filters.active}`);
-  if (filters.company.trim() !== '')
+  }
+  if (filters.active !== 'any') {
+    parts.push(`active=${filters.active}`);
+  }
+  if (filters.company.trim() !== '') {
     parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
+  }
   return parts.join('&');
 }
 
@@ -825,17 +859,28 @@ function buildEarthStationQueryString(
   filters: EarthStationFilters,
   params: DataTableFetchParams,
 ): string {
-  const parts: string[] = [`page=${params.page}`, `pageSize=${params.pageSize}`];
-  if (params.sort != null) parts.push(`sort=${params.sort}`);
-  if (params.order != null) parts.push(`order=${params.order}`);
-  if (filters.callsign.trim() !== '')
+  const parts: Array<string> = [`page=${params.page}`, `pageSize=${params.pageSize}`];
+  if (params.sort != null) {
+    parts.push(`sort=${params.sort}`);
+  }
+  if (params.order != null) {
+    parts.push(`order=${params.order}`);
+  }
+  if (filters.callsign.trim() !== '') {
     parts.push(`callsign=${encodeURIComponent(filters.callsign.trim())}`);
-  if (filters.applicant.trim() !== '')
+  }
+  if (filters.applicant.trim() !== '') {
     parts.push(`applicant=${encodeURIComponent(filters.applicant.trim())}`);
-  if (filters.state.length > 0) parts.push(`state=${filters.state.join(',')}`);
-  if (filters.city.trim() !== '') parts.push(`city=${encodeURIComponent(filters.city.trim())}`);
-  if (filters.company.trim() !== '')
+  }
+  if (filters.state.length > 0) {
+    parts.push(`state=${filters.state.join(',')}`);
+  }
+  if (filters.city.trim() !== '') {
+    parts.push(`city=${encodeURIComponent(filters.city.trim())}`);
+  }
+  if (filters.company.trim() !== '') {
     parts.push(`company=${encodeURIComponent(filters.company.trim())}`);
+  }
   return parts.join('&');
 }
 
@@ -884,9 +929,13 @@ export default function SearchPage() {
   }, [setSearchParams]);
 
   const handleClear = useCallback(() => {
-    if (activeTab === 'filings') setFilingFilters(emptyFilingFilters());
-    else if (activeTab === 'satellites') setSatelliteFilters(emptySatelliteFilters());
-    else setEarthStationFilters(emptyEarthStationFilters());
+    if (activeTab === 'filings') {
+      setFilingFilters(emptyFilingFilters());
+    } else if (activeTab === 'satellites') {
+      setSatelliteFilters(emptySatelliteFilters());
+    } else {
+      setEarthStationFilters(emptyEarthStationFilters());
+    }
     setSearchTrigger((prev: number) => prev + 1);
   }, [activeTab]);
 
@@ -956,15 +1005,15 @@ export default function SearchPage() {
       <div className="flex border-b border-neutral-200 dark:border-neutral-700">
         {TABS.map((tab) => (
           <button
-            key={tab.key}
-            type="button"
-            onClick={() => switchTab(tab.key)}
             className={cn(
               'px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.key
                 ? 'border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                 : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',
             )}
+            key={tab.key}
+            onClick={() => switchTab(tab.key)}
+            type="button"
           >
             {tab.label}
           </button>
@@ -974,9 +1023,9 @@ export default function SearchPage() {
       {/* Collapsible filter panel */}
       <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
         <button
-          type="button"
-          onClick={() => setFiltersOpen(!filtersOpen)}
           className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          type="button"
         >
           <span className="flex items-center gap-2">
             <Search className="h-4 w-4" />
@@ -1002,7 +1051,7 @@ export default function SearchPage() {
               <Button onClick={handleSearch} size="sm">
                 Search
               </Button>
-              <Button onClick={handleClear} variant="outline" size="sm">
+              <Button onClick={handleClear} size="sm" variant="outline">
                 Clear
               </Button>
             </div>
@@ -1014,9 +1063,9 @@ export default function SearchPage() {
       {activeTab === 'filings' && (
         <DataTable<FilingSearchResult>
           columns={filingCols}
-          fetchData={fetchFilings}
-          defaultSort="date_filed"
           defaultOrder="desc"
+          defaultSort="date_filed"
+          fetchData={fetchFilings}
           onRowClick={onFilingClick}
           paramPrefix="f_"
         />
@@ -1024,9 +1073,9 @@ export default function SearchPage() {
       {activeTab === 'satellites' && (
         <DataTable<SatelliteSearchResult>
           columns={satelliteCols}
-          fetchData={fetchSatellites}
-          defaultSort="us_name"
           defaultOrder="asc"
+          defaultSort="us_name"
+          fetchData={fetchSatellites}
           onRowClick={onSatelliteClick}
           paramPrefix="s_"
         />
@@ -1034,9 +1083,9 @@ export default function SearchPage() {
       {activeTab === 'earth-stations' && (
         <DataTable<EarthStationSearchResult>
           columns={earthStationCols}
-          fetchData={fetchEarthStations}
-          defaultSort="callsign"
           defaultOrder="asc"
+          defaultSort="callsign"
+          fetchData={fetchEarthStations}
           onRowClick={onEarthStationClick}
           paramPrefix="e_"
         />

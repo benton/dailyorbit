@@ -7,18 +7,18 @@ import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '..
 const CompanyGraph = lazy(() => import('./CompanyGraph.tsx'));
 
 type CompanyListItem = {
+  filingCount: number;
   id: number;
   name: string;
   parentName: string | null;
-  filingCount: number;
 };
 
 type AttributionStats = {
-  totalFilings: number;
   attributedFilings: number;
-  unattributedFilings: number;
   coveragePercent: number;
-  topUnattributedNames: Array<{ name: string; count: number }>;
+  topUnattributedNames: Array<{ count: number; name: string }>;
+  totalFilings: number;
+  unattributedFilings: number;
 };
 
 export default function Companies() {
@@ -50,29 +50,29 @@ export default function Companies() {
     (): Array<ColumnDef<CompanyListItem, unknown>> => [
       {
         accessorKey: 'name',
-        header: 'Name',
-        size: 300,
         cell: ({ row }) => (
           <Link
-            to={`/companies/${row.original.id}`}
             className="text-blue-600 hover:underline dark:text-blue-400"
             onClick={(e) => e.stopPropagation()}
+            to={`/companies/${row.original.id}`}
           >
             {row.original.name}
           </Link>
         ),
+        header: 'Name',
+        size: 300,
       },
       {
         accessorKey: 'parentName',
+        cell: ({ getValue }) => (getValue() as string | null) ?? '',
         header: 'Parent',
         size: 250,
-        cell: ({ getValue }) => (getValue() as string | null) ?? '',
       },
       {
         accessorKey: 'filingCount',
+        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
         header: 'Filings',
         size: 100,
-        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
       },
     ],
     [],
@@ -93,8 +93,10 @@ export default function Companies() {
         method: 'POST',
       });
       setActionMessage(`${label}: ${JSON.stringify(result)}`);
-    } catch (err: unknown) {
-      setActionMessage(`${label} failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      setActionMessage(
+        `${label} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     } finally {
       setActionLoading(false);
     }
@@ -186,10 +188,10 @@ export default function Companies() {
       <div className="max-h-[50vh] overflow-y-auto">
         <DataTable<CompanyListItem>
           columns={columns}
-          fetchData={fetchData}
-          defaultSort="name"
           defaultOrder="asc"
           defaultPageSize={25}
+          defaultSort="name"
+          fetchData={fetchData}
           onRowClick={handleRowClick}
         />
       </div>

@@ -18,17 +18,17 @@ type ModelInfo = {
 
 type InferenceResponse = {
   content: string;
-  modelId: string;
-  usage: { inputTokens: number; outputTokens: number; totalTokens: number };
-  stopReason: string;
   latencyMs: number;
+  modelId: string;
+  stopReason: string;
+  usage: { inputTokens: number; outputTokens: number; totalTokens: number };
 };
 
 type ConfigEntry = {
-  key: string;
-  value: string;
   description: string;
   encrypted: boolean;
+  key: string;
+  value: string;
 };
 
 const modelColumns: Array<ColumnDef<ModelInfo, unknown>> = [
@@ -36,9 +36,9 @@ const modelColumns: Array<ColumnDef<ModelInfo, unknown>> = [
   { accessorKey: 'modelName', header: 'Name', size: 250 },
   {
     accessorKey: 'modelId',
+    cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() as string}</span>,
     header: 'Model ID',
     size: 400,
-    cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() as string}</span>,
   },
 ];
 
@@ -49,20 +49,20 @@ const SUMMARIZATION_MODELS: ReadonlyArray<{ id: string; label: string }> = [
 ];
 
 type TemplateVariable = {
-  name: string;
-  source: string;
   description: string;
   example: string;
+  name: string;
+  source: string;
 };
 
 type PromptTemplateMeta = {
   defaultSystemPrompt: string;
   defaultUserPrompt: string;
-  variables: TemplateVariable[];
+  variables: Array<TemplateVariable>;
 };
 
 function AiSettingsInner() {
-  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [models, setModels] = useState<Array<ModelInfo>>([]);
   const [defaultModel, setDefaultModel] = useState<string>('');
   const [summarizationModel, setSummarizationModel] = useState<string>('');
   const [region, setRegion] = useState<string>('');
@@ -80,7 +80,7 @@ function AiSettingsInner() {
   const fetchConfig = useCallback(async () => {
     try {
       const [entries, templates] = await Promise.all([
-        apiFetch<ConfigEntry[]>('/api/admin/config'),
+        apiFetch<Array<ConfigEntry>>('/api/admin/config'),
         apiFetch<{ summarization: PromptTemplateMeta }>('/api/admin/inference/prompt-templates'),
       ]);
       const regionEntry = entries.find((e) => e.key === 'bedrockRegion');
@@ -88,25 +88,35 @@ function AiSettingsInner() {
       const summModelEntry = entries.find((e) => e.key === 'summarizationModel');
       const summSysEntry = entries.find((e) => e.key === 'summarizationSystemPrompt');
       const summUserEntry = entries.find((e) => e.key === 'summarizationUserPrompt');
-      if (regionEntry) setRegion(regionEntry.value);
-      if (modelEntry) setDefaultModel(modelEntry.value);
-      if (summModelEntry) setSummarizationModel(summModelEntry.value);
-      if (summSysEntry) setSummSystemPrompt(summSysEntry.value);
-      if (summUserEntry) setSummUserPrompt(summUserEntry.value);
+      if (regionEntry) {
+        setRegion(regionEntry.value);
+      }
+      if (modelEntry) {
+        setDefaultModel(modelEntry.value);
+      }
+      if (summModelEntry) {
+        setSummarizationModel(summModelEntry.value);
+      }
+      if (summSysEntry) {
+        setSummSystemPrompt(summSysEntry.value);
+      }
+      if (summUserEntry) {
+        setSummUserPrompt(summUserEntry.value);
+      }
       setSummMeta(templates.summarization);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to load config', 'error');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Failed to load config', 'error');
     }
   }, [toast]);
 
   /** Fetch models from API, cache for dropdown, and return as PaginatedResponse for DataTable. */
   const fetchModelsPage = useCallback(
     async (params: DataTableFetchParams): Promise<PaginatedResponse<ModelInfo>> => {
-      const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
+      const data: Array<ModelInfo> = await apiFetch('/api/admin/inference/models');
       setModels(data);
 
       // Client-side sort since the API returns all models in one page
-      const { sort, order } = params;
+      const { order, sort } = params;
       if (sort != null) {
         const key = sort as keyof ModelInfo;
         const dir: number = order === 'desc' ? -1 : 1;
@@ -117,8 +127,8 @@ function AiSettingsInner() {
         data,
         page: 1,
         pageSize: data.length,
-        totalRows: data.length,
         totalPages: 1,
+        totalRows: data.length,
       };
     },
     [],
@@ -133,49 +143,49 @@ function AiSettingsInner() {
     try {
       await Promise.all([
         apiFetch('/api/admin/config/bedrockRegion', {
-          method: 'PUT',
           body: JSON.stringify({ value: region }),
+          method: 'PUT',
         }),
         apiFetch('/api/admin/config/bedrockDefaultModel', {
-          method: 'PUT',
           body: JSON.stringify({ value: defaultModel }),
+          method: 'PUT',
         }),
         apiFetch('/api/admin/config/summarizationModel', {
-          method: 'PUT',
           body: JSON.stringify({ value: summarizationModel }),
+          method: 'PUT',
         }),
         apiFetch('/api/admin/config/summarizationSystemPrompt', {
-          method: 'PUT',
           body: JSON.stringify({ value: summSystemPrompt }),
+          method: 'PUT',
         }),
         apiFetch('/api/admin/config/summarizationUserPrompt', {
-          method: 'PUT',
           body: JSON.stringify({ value: summUserPrompt }),
+          method: 'PUT',
         }),
       ]);
       toast('AI settings saved', 'success');
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to save', 'error');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Failed to save', 'error');
     } finally {
       setSavingConfig(false);
     }
-  }, [region, defaultModel, toast]);
+  }, [region, defaultModel, summarizationModel, summSystemPrompt, summUserPrompt, toast]);
 
   const handleTest = useCallback(async () => {
     setTesting(true);
     setTestResult(null);
     try {
       const resp: InferenceResponse = await apiFetch('/api/admin/inference/test', {
-        method: 'POST',
         body: JSON.stringify({
+          messages: [{ content: testPrompt, role: 'user' }],
           modelId: defaultModel || undefined,
-          messages: [{ role: 'user', content: testPrompt }],
           params: { maxTokens: 256, temperature: 0.7 },
         }),
+        method: 'POST',
       });
       setTestResult(resp);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Inference failed', 'error');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Inference failed', 'error');
     } finally {
       setTesting(false);
     }
@@ -238,8 +248,8 @@ function AiSettingsInner() {
               style={
                 summarizationModel === m.id
                   ? {
-                      borderColor: 'var(--color-blue-500)',
                       backgroundColor: 'var(--color-blue-50)',
+                      borderColor: 'var(--color-blue-500)',
                     }
                   : undefined
               }
@@ -264,15 +274,15 @@ function AiSettingsInner() {
       {/* Prompt Templates */}
       {summMeta != null && (
         <PromptEditor
-          title="Summarization Prompts"
-          description="Templates used when summarizing attachment text in the ingestion pipeline."
-          systemPrompt={summSystemPrompt}
-          userPrompt={summUserPrompt}
           defaultSystemPrompt={summMeta.defaultSystemPrompt}
           defaultUserPrompt={summMeta.defaultUserPrompt}
-          variables={summMeta.variables}
+          description="Templates used when summarizing attachment text in the ingestion pipeline."
           onSystemPromptChange={setSummSystemPrompt}
           onUserPromptChange={setSummUserPrompt}
+          systemPrompt={summSystemPrompt}
+          title="Summarization Prompts"
+          userPrompt={summUserPrompt}
+          variables={summMeta.variables}
         />
       )}
 
@@ -284,7 +294,9 @@ function AiSettingsInner() {
             className="flex-1"
             onChange={(e) => setTestPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') void handleTest();
+              if (e.key === 'Enter') {
+                void handleTest();
+              }
             }}
             placeholder="Enter a test prompt..."
             value={testPrompt}
@@ -316,10 +328,10 @@ function AiSettingsInner() {
         </p>
         <DataTable<ModelInfo>
           columns={modelColumns}
-          fetchData={fetchModelsPage}
-          defaultSort="provider"
           defaultOrder="asc"
           defaultPageSize={25}
+          defaultSort="provider"
+          fetchData={fetchModelsPage}
           paramPrefix="m_"
         />
       </div>

@@ -4,26 +4,26 @@ import { apiFetch } from '../lib/api.ts';
 import CosmographWrapper from '../ui/CosmographWrapper.tsx';
 
 type CompanyListItem = {
+  filingCount: number;
   id: number;
   name: string;
   parentName: string | null;
-  filingCount: number;
 };
 
 type PaginatedCompanies = {
-  data: CompanyListItem[];
+  data: Array<CompanyListItem>;
   page: number;
   pageSize: number;
-  totalRows: number;
   totalPages: number;
+  totalRows: number;
 };
 
 type GraphPoint = {
+  color: string;
   id: string;
   idx: number;
   label: string;
   size: number;
-  color: string;
 };
 
 type GraphLink = {
@@ -33,7 +33,7 @@ type GraphLink = {
   targetIdx: number;
 };
 
-function transformData(companies: CompanyListItem[]): {
+function transformData(companies: Array<CompanyListItem>): {
   links: Array<GraphLink>;
   points: Array<GraphPoint>;
 } {
@@ -48,7 +48,7 @@ function transformData(companies: CompanyListItem[]): {
   }
 
   // Only include companies that are a parent or a child
-  const relevant: CompanyListItem[] = companies.filter(
+  const relevant: Array<CompanyListItem> = companies.filter(
     (c) => parentNames.has(c.name) || childNames.has(c.name),
   );
 
@@ -58,11 +58,11 @@ function transformData(companies: CompanyListItem[]): {
     (company: CompanyListItem, i: number): GraphPoint => {
       idToIdx.set(company.id, i);
       return {
+        color: company.parentName != null ? '#3b82f6' : '#f59e0b',
         id: `company-${company.id}`,
         idx: i,
         label: company.name,
         size: Math.max(3, Math.sqrt(company.filingCount) * 2),
-        color: company.parentName != null ? '#3b82f6' : '#f59e0b',
       };
     },
   );
@@ -105,8 +105,9 @@ export default function CompanyGraph(): React.ReactElement {
         setLinks(result.links);
         setLoading(false);
       })
-      .catch((err: unknown): void => {
-        const message: string = err instanceof Error ? err.message : 'Failed to load company data';
+      .catch((error: unknown): void => {
+        const message: string =
+          error instanceof Error ? error.message : 'Failed to load company data';
         setError(message);
         setLoading(false);
       });

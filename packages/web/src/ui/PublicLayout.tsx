@@ -5,7 +5,7 @@ import { useSettings } from '../lib/settings-context.tsx';
 import { useAuth } from '../user/AuthContext.tsx';
 import UserMenu from './UserMenu.tsx';
 
-function NavLink({ to, label }: { to: string; label: string }) {
+function NavLink({ label, to }: { label: string; to: string }) {
   const location = useLocation();
   const isActive: boolean =
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
@@ -21,7 +21,7 @@ function NavLink({ to, label }: { to: string; label: string }) {
 }
 
 export default function PublicLayout() {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated } = useAuth();
   const { settings, updateSetting } = useSettings();
   const [localWide, setLocalWide] = useState<boolean>(false);
   const isWide: boolean = isAuthenticated ? (settings?.wideView ?? false) : localWide;

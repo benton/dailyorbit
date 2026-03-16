@@ -5,12 +5,12 @@ import { Button } from '../ui/button.tsx';
 import { Input } from '../ui/input.tsx';
 
 type UserProfile = {
+  createdAt: string;
+  email: string;
+  gravatarUrl: string;
   id: string;
   name: string;
-  email: string;
   role: string;
-  createdAt: string;
-  gravatarUrl: string;
 };
 
 export default function ProfilePage() {
@@ -37,12 +37,14 @@ export default function ProfilePage() {
   }, [fetchProfile]);
 
   const handleSaveName = async () => {
-    if (editName === profile?.name) return;
+    if (editName === profile?.name) {
+      return;
+    }
     setSaving(true);
     try {
       const updated: UserProfile = await apiFetch<UserProfile>('/api/user/profile', {
-        method: 'PATCH',
         body: JSON.stringify({ name: editName }),
+        method: 'PATCH',
       });
       setProfile(updated);
     } catch {

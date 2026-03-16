@@ -14,11 +14,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 
 /** Matches the server-side PaginatedResponse envelope */
 export type PaginatedResponse<T> = {
-  data: T[];
+  data: Array<T>;
   page: number;
   pageSize: number;
-  totalRows: number;
   totalPages: number;
+  totalRows: number;
 };
 
 /** Sort direction, matching server-side SortOrder */
@@ -26,30 +26,30 @@ export type SortOrder = 'asc' | 'desc';
 
 /** Parameters passed to the fetch function */
 export type DataTableFetchParams = {
+  order?: SortOrder;
   page: number;
   pageSize: number;
   sort?: string;
-  order?: SortOrder;
 };
 
 /** Props for the DataTable component */
 export type DataTableProps<TData> = {
+  /** Optional CSS class for the container */
+  className?: string;
   /** TanStack column definitions */
   columns: Array<ColumnDef<TData, unknown>>;
-  /** Server-side data fetch function */
-  fetchData: (params: DataTableFetchParams) => Promise<PaginatedResponse<TData>>;
-  /** Default column to sort by */
-  defaultSort?: string;
   /** Default sort direction */
   defaultOrder?: SortOrder;
   /** Default page size */
   defaultPageSize?: number;
-  /** Available page size options */
-  pageSizeOptions?: Array<number>;
+  /** Default column to sort by */
+  defaultSort?: string;
+  /** Server-side data fetch function */
+  fetchData: (params: DataTableFetchParams) => Promise<PaginatedResponse<TData>>;
   /** Optional callback when a row is clicked (e.g. for navigation) */
   onRowClick?: (row: TData) => void;
-  /** Optional CSS class for the container */
-  className?: string;
+  /** Available page size options */
+  pageSizeOptions?: Array<number>;
   /** Optional prefix for URL query params to avoid collisions between multiple tables */
   paramPrefix?: string;
 };
@@ -67,14 +67,14 @@ const DEFAULT_PAGE_SIZE_OPTIONS: Array<number> = [10, 25, 50, 100];
  * - Clickable rows (optional)
  */
 export function DataTable<TData>({
+  className,
   columns,
-  fetchData,
-  defaultSort,
   defaultOrder = 'asc',
   defaultPageSize = 25,
-  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  defaultSort,
+  fetchData,
   onRowClick,
-  className,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   paramPrefix = '',
 }: DataTableProps<TData>) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -103,8 +103,10 @@ export function DataTable<TData>({
 
   // Build TanStack sorting state from URL params
   const sorting: SortingState = useMemo((): SortingState => {
-    if (sortParam == null) return [];
-    return [{ id: sortParam, desc: orderParam === 'desc' }];
+    if (sortParam == null) {
+      return [];
+    }
+    return [{ desc: orderParam === 'desc', id: sortParam }];
   }, [sortParam, orderParam]);
 
   // Update URL search params without replacing other params
@@ -132,26 +134,32 @@ export function DataTable<TData>({
     setError(null);
 
     const params: DataTableFetchParams = {
+      order: orderParam,
       page: pageParam,
       pageSize: pageSizeParam,
       sort: sortParam,
-      order: orderParam,
     };
 
     fetchData(params)
       .then((response: PaginatedResponse<TData>) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setData(response.data);
         setTotalRows(response.totalRows);
         setTotalPages(response.totalPages);
       })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const message: string = err instanceof Error ? err.message : 'Failed to fetch data';
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        const message: string = error instanceof Error ? error.message : 'Failed to fetch data';
         setError(message);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -169,7 +177,7 @@ export function DataTable<TData>({
           : isCurrentSort && orderParam === 'desc'
             ? 'asc'
             : 'asc';
-      updateParams({ sort: columnId, order: nextOrder, page: '1' });
+      updateParams({ order: nextOrder, page: '1', sort: columnId });
     },
     [sortParam, orderParam, updateParams],
   );
@@ -185,22 +193,23 @@ export function DataTable<TData>({
   // Handle page size change
   const changePageSize = useCallback(
     (size: number) => {
-      updateParams({ pageSize: String(size), page: '1' });
+      updateParams({ page: '1', pageSize: String(size) });
     },
     [updateParams],
   );
 
+  // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<TData>({
-    data,
-    columns,
     columnResizeMode,
+    columns,
+    data,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     manualSorting: true,
     pageCount: totalPages,
     state: {
-      sorting,
       pagination: { pageIndex: pageParam - 1, pageSize: pageSizeParam },
+      sorting,
     },
   });
 
@@ -208,7 +217,7 @@ export function DataTable<TData>({
     <div className={cn('space-y-4', className)}>
       {/* Table */}
       <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
-        <Table style={{ width: table.getCenterTotalSize() }} className="min-w-full">
+        <Table className="min-w-full" style={{ width: table.getCenterTotalSize() }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -223,8 +232,8 @@ export function DataTable<TData>({
 
                   return (
                     <TableHead
-                      key={header.id}
                       className="relative select-none"
+                      key={header.id}
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder ? null : (
@@ -243,13 +252,13 @@ export function DataTable<TData>({
                       {/* Column resize handle */}
                       {header.column.getCanResize() && (
                         <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
                           className={cn(
                             'absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none',
                             'bg-transparent hover:bg-neutral-300 dark:hover:bg-neutral-600',
                             header.column.getIsResizing() && 'bg-blue-500 dark:bg-blue-400',
                           )}
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
                         />
                       )}
                     </TableHead>
@@ -262,8 +271,8 @@ export function DataTable<TData>({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
                   className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                  colSpan={columns.length}
                 >
                   Loading...
                 </TableCell>
@@ -271,8 +280,8 @@ export function DataTable<TData>({
             ) : error ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
                   className="h-24 text-center text-red-600 dark:text-red-400"
+                  colSpan={columns.length}
                 >
                   {error}
                 </TableCell>
@@ -280,8 +289,8 @@ export function DataTable<TData>({
             ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
                   className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                  colSpan={columns.length}
                 >
                   No results found.
                 </TableCell>
@@ -289,8 +298,8 @@ export function DataTable<TData>({
             ) : (
               table.getRowModel().rows.map((row) => (
                 <TableRow
-                  key={row.id}
                   className={cn(onRowClick && 'cursor-pointer')}
+                  key={row.id}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -310,9 +319,9 @@ export function DataTable<TData>({
         <div className="flex items-center gap-2">
           <span>Rows per page:</span>
           <select
-            value={pageSizeParam}
-            onChange={(e) => changePageSize(Number(e.target.value))}
             className="rounded-md border border-neutral-200 bg-transparent px-2 py-1 text-sm dark:border-neutral-700"
+            onChange={(e) => changePageSize(Number(e.target.value))}
+            value={pageSizeParam}
           >
             {pageSizeOptions.map((size: number) => (
               <option key={size} value={size}>
@@ -330,34 +339,34 @@ export function DataTable<TData>({
           </span>
           <div className="flex gap-1">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(1)}
               disabled={pageParam <= 1}
+              onClick={() => goToPage(1)}
+              size="sm"
+              variant="outline"
             >
               First
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pageParam - 1)}
               disabled={pageParam <= 1}
+              onClick={() => goToPage(pageParam - 1)}
+              size="sm"
+              variant="outline"
             >
               Prev
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pageParam + 1)}
               disabled={pageParam >= totalPages}
+              onClick={() => goToPage(pageParam + 1)}
+              size="sm"
+              variant="outline"
             >
               Next
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(totalPages)}
               disabled={pageParam >= totalPages}
+              onClick={() => goToPage(totalPages)}
+              size="sm"
+              variant="outline"
             >
               Last
             </Button>
@@ -372,14 +381,14 @@ export function DataTable<TData>({
 function SortIndicator({ direction }: { direction: false | 'asc' | 'desc' }) {
   if (direction === 'asc') {
     return (
-      <span className="text-xs" aria-label="sorted ascending">
+      <span aria-label="sorted ascending" className="text-xs">
         {'\u25B2'}
       </span>
     );
   }
   if (direction === 'desc') {
     return (
-      <span className="text-xs" aria-label="sorted descending">
+      <span aria-label="sorted descending" className="text-xs">
         {'\u25BC'}
       </span>
     );

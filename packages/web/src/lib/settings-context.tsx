@@ -3,8 +3,8 @@ import { useAuth } from '../user/AuthContext.tsx';
 import { apiFetch } from './api.ts';
 
 export type UserSettings = {
-  userId: string;
   emailDailyOrbit: boolean;
+  userId: string;
   wideView: boolean;
 };
 
@@ -27,6 +27,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
+      // eslint-disable-next-line react-hooks-js/set-state-in-effect
       setSettings(null);
       return;
     }
@@ -43,8 +44,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // Fire-and-forget PATCH
       void apiFetch('/api/user/settings', {
-        method: 'PATCH',
         body: JSON.stringify({ [key]: value }),
+        method: 'PATCH',
       });
     },
     [],

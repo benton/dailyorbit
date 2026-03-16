@@ -10,62 +10,62 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 // ── Types matching server-side models (camelCase) ────────────────────────────
 
 type EarthStationInfo = {
-  callsign: string;
-  applicantName: string | null;
   applicantCity: string | null;
-  applicantState: string | null;
   applicantCountry: string | null;
-  mostRecentFileNumber: string;
+  applicantName: string | null;
+  applicantState: string | null;
+  callsign: string;
   mostRecentDateFiled: string | null;
+  mostRecentFileNumber: string;
   mostRecentStatus: string | null;
 };
 
 type EarthStationFiling = {
-  filingKey: number;
-  fileNumber: string;
   appTypeCode: string;
-  statusCode: string | null;
+  dateExpire: string | null;
   dateFiled: string | null;
   dateGrant: string | null;
-  dateExpire: string | null;
   description: string | null;
+  fileNumber: string;
+  filingKey: number;
+  statusCode: string | null;
   summary: string | null;
 };
 
 type AntennaFrequency = {
-  frequencyKey: number;
-  polarizationCode: string | null;
   eirp: number | null;
   eirpDensity: number | null;
   emission: string | null;
+  frequencyKey: number;
   frequencyLower: string | null;
   frequencyUpper: string | null;
-  transMode: string | null;
   modulation: string | null;
+  polarizationCode: string | null;
+  transMode: string | null;
 };
 
 type EarthStationAntenna = {
-  antennaKey: number;
   antennaId: string;
-  siteKey: number;
+  antennaKey: number;
   diameter: number | null;
+  frequencies: Array<AntennaFrequency>;
   manufacturer: string | null;
-  model: string | null;
   maxInputPower: number | null;
   maxOutputEirp: number | null;
-  frequencies: AntennaFrequency[];
+  model: string | null;
+  siteKey: number;
 };
 
 type EarthStationStats = {
-  totalFilingCount: number;
-  mostRecentFilingDate: string | null;
   antennaCount: number;
+  mostRecentFilingDate: string | null;
+  totalFilingCount: number;
 };
 
 type EarthStationResponse = {
-  info: EarthStationInfo;
+  antennas: Array<EarthStationAntenna>;
   filings: PaginatedResponse<EarthStationFiling>;
-  antennas: EarthStationAntenna[];
+  info: EarthStationInfo;
   stats: EarthStationStats;
 };
 
@@ -73,15 +73,21 @@ type EarthStationResponse = {
 
 /** Determine whether a station status is "active" for badge display */
 function isActiveStatus(status: string | null): boolean {
-  if (status == null) return false;
+  if (status == null) {
+    return false;
+  }
   const normalized: string = status.toLowerCase();
   return normalized.includes('grant') || normalized.includes('active') || normalized === 'g';
 }
 
 function formatFrequency(value: string | null): string {
-  if (value == null) return '';
+  if (value == null) {
+    return '';
+  }
   const mhz: number = Number(value);
-  if (Number.isNaN(mhz)) return value;
+  if (Number.isNaN(mhz)) {
+    return value;
+  }
   if (mhz >= 1000) {
     return `${(mhz / 1000).toFixed(3)} GHz`;
   }
@@ -93,18 +99,18 @@ function formatFrequency(value: string | null): string {
 const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
   {
     accessorKey: 'fileNumber',
-    header: 'File Number',
-    size: 240,
     cell: ({ row }) => (
       <SummaryTooltip summary={row.original.summary}>
         <Link
-          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
           className="text-blue-600 hover:underline dark:text-blue-400"
+          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
         >
           {row.original.fileNumber}
         </Link>
       </SummaryTooltip>
     ),
+    header: 'File Number',
+    size: 240,
   },
   {
     accessorKey: 'appTypeCode',
@@ -113,17 +119,19 @@ const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
   },
   {
     accessorKey: 'dateFiled',
-    header: 'Date Filed',
-    size: 120,
     cell: ({ row }) => {
       const raw: string | null = row.original.dateFiled;
-      if (raw == null) return '';
+      if (raw == null) {
+        return '';
+      }
       return new Date(raw).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
         day: 'numeric',
+        month: 'short',
+        year: 'numeric',
       });
     },
+    header: 'Date Filed',
+    size: 120,
   },
   {
     accessorKey: 'statusCode',
@@ -143,31 +151,40 @@ export default function EarthStationDetail() {
   const { callsign } = useParams<{ callsign: string }>();
 
   const [info, setInfo] = useState<EarthStationInfo | null>(null);
-  const [antennas, setAntennas] = useState<EarthStationAntenna[]>([]);
+  const [antennas, setAntennas] = useState<Array<EarthStationAntenna>>([]);
   const [stats, setStats] = useState<EarthStationStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch non-paginated data on mount
   useEffect(() => {
-    if (callsign == null) return;
+    if (callsign == null) {
+      return;
+    }
     let cancelled: boolean = false;
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setLoading(true);
     setError(null);
 
     apiFetch<EarthStationResponse>(`/api/earth-stations/${encodeURIComponent(callsign)}`)
       .then((response: EarthStationResponse) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setInfo(response.info);
         setAntennas(response.antennas);
         setStats(response.stats);
       })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to load earth station');
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        setError(error instanceof Error ? error.message : 'Failed to load earth station');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -179,14 +196,18 @@ export default function EarthStationDetail() {
   const fetchFilings = useCallback(
     async (params: DataTableFetchParams): Promise<PaginatedResponse<EarthStationFiling>> => {
       if (callsign == null) {
-        return { data: [], page: 1, pageSize: params.pageSize, totalRows: 0, totalPages: 0 };
+        return { data: [], page: 1, pageSize: params.pageSize, totalPages: 0, totalRows: 0 };
       }
       const searchParams: URLSearchParams = new URLSearchParams({
         page: String(params.page),
         pageSize: String(params.pageSize),
       });
-      if (params.sort != null) searchParams.set('sort', params.sort);
-      if (params.order != null) searchParams.set('order', params.order);
+      if (params.sort != null) {
+        searchParams.set('sort', params.sort);
+      }
+      if (params.order != null) {
+        searchParams.set('order', params.order);
+      }
 
       const response: EarthStationResponse = await apiFetch<EarthStationResponse>(
         `/api/earth-stations/${encodeURIComponent(callsign)}?${searchParams.toString()}`,
@@ -247,10 +268,10 @@ export default function EarthStationDetail() {
             </h2>
             <DataTable
               columns={columns}
-              fetchData={fetchFilings}
-              defaultSort="date_filed"
               defaultOrder="desc"
               defaultPageSize={10}
+              defaultSort="date_filed"
+              fetchData={fetchFilings}
               paramPrefix="f_"
             />
           </section>
@@ -267,7 +288,7 @@ export default function EarthStationDetail() {
             ) : (
               <div className="space-y-4">
                 {antennas.map((antenna: EarthStationAntenna) => (
-                  <AntennaCard key={antenna.antennaKey} antenna={antenna} />
+                  <AntennaCard antenna={antenna} key={antenna.antennaKey} />
                 ))}
               </div>
             )}
@@ -332,9 +353,9 @@ export default function EarthStationDetail() {
                   <dd className="text-neutral-900 dark:text-neutral-100">
                     {stats.mostRecentFilingDate != null
                       ? new Date(stats.mostRecentFilingDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
                           day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
                         })
                       : 'N/A'}
                   </dd>

@@ -9,37 +9,37 @@ import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 // ── Types mirroring server-side models ──────────────────────────────
 
 type SpaceStation = {
-  spaceStationKey: number;
-  usName: string;
+  inactiveDate: string | null;
   ituName: string | null;
   orbitLocation: string | null;
+  spaceStationKey: number;
+  usName: string;
   verbose: string | null;
-  inactiveDate: string | null;
 };
 
 type SatelliteFiling = {
-  filingKey: number;
-  fileNumber: string;
-  subsystemCode: string;
+  addressAttention: string | null;
   appTypeCode: string;
-  statusCode: string | null;
+  callsign: string | null;
   dateFiled: string | null;
   dateGrant: string | null;
-  addressAttention: string | null;
-  callsign: string | null;
   description: string | null;
+  fileNumber: string;
+  filingKey: number;
+  statusCode: string | null;
+  subsystemCode: string;
   summary: string | null;
 };
 
 type SatelliteStats = {
-  totalFilings: number;
-  mostRecentFilingDate: string | null;
   distinctApplicantCount: number;
+  mostRecentFilingDate: string | null;
+  totalFilings: number;
 };
 
 type SatelliteDetailResponse = {
-  satellite: SpaceStation;
   filings: PaginatedResponse<SatelliteFiling>;
+  satellite: SpaceStation;
   stats: SatelliteStats;
 };
 
@@ -48,18 +48,18 @@ type SatelliteDetailResponse = {
 const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
   {
     accessorKey: 'fileNumber',
-    header: 'File Number',
-    size: 240,
     cell: ({ row }) => (
       <SummaryTooltip summary={row.original.summary}>
         <Link
-          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
           className="text-blue-600 hover:underline dark:text-blue-400"
+          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
         >
           {row.original.fileNumber}
         </Link>
       </SummaryTooltip>
     ),
+    header: 'File Number',
+    size: 240,
   },
   {
     accessorKey: 'appTypeCode',
@@ -73,12 +73,12 @@ const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
   },
   {
     accessorKey: 'dateFiled',
-    header: 'Date Filed',
-    size: 120,
     cell: ({ getValue }) => {
       const value: string | null = getValue() as string | null;
       return value ? new Date(value).toLocaleDateString() : '';
     },
+    header: 'Date Filed',
+    size: 120,
   },
   {
     accessorKey: 'statusCode',
@@ -100,22 +100,30 @@ export default function SatelliteDetail() {
   // Fetch satellite info and stats on mount
   useEffect(() => {
     let cancelled: boolean = false;
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setLoading(true);
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setError(null);
 
     apiFetch<SatelliteDetailResponse>(`/api/satellites/${id}`)
       .then((response: SatelliteDetailResponse) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setSatellite(response.satellite);
         setStats(response.stats);
       })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const message: string = err instanceof Error ? err.message : 'Failed to load satellite';
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        const message: string = error instanceof Error ? error.message : 'Failed to load satellite';
         setError(message);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -141,7 +149,7 @@ export default function SatelliteDetail() {
 
   const hasItuName: boolean = useMemo(
     () => satellite?.ituName != null && satellite.ituName !== satellite.usName,
-    [satellite?.ituName, satellite?.usName],
+    [satellite],
   );
 
   if (loading) {
@@ -194,9 +202,9 @@ export default function SatelliteDetail() {
             </h2>
             <DataTable<SatelliteFiling>
               columns={filingColumns}
-              fetchData={fetchFilings}
-              defaultSort="date_filed"
               defaultOrder="desc"
+              defaultSort="date_filed"
+              fetchData={fetchFilings}
             />
           </section>
 
@@ -246,7 +254,7 @@ export default function SatelliteDetail() {
               <div>
                 <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
                 <dd>
-                  <Badge variant={isActive ? 'default' : 'destructive'} className="mt-1">
+                  <Badge className="mt-1" variant={isActive ? 'default' : 'destructive'}>
                     {isActive ? 'Active' : 'Inactive'}
                   </Badge>
                   {satellite.inactiveDate != null && (

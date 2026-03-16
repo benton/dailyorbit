@@ -52,12 +52,12 @@ type Company = {
 };
 
 type CompanyDetail = {
-  aliases: CompanyAlias[];
+  aliases: Array<CompanyAlias>;
   company: Company;
   filingCount: number;
-  ownershipEvents: OwnershipEvent[];
+  ownershipEvents: Array<OwnershipEvent>;
   parent: CompanyListItem | null;
-  subsidiaries: CompanyListItem[];
+  subsidiaries: Array<CompanyListItem>;
 };
 
 function formatDate(iso: string | null): string {
@@ -142,6 +142,7 @@ function SimpleTable<TData>({
     defaultSort != null ? [{ desc: defaultOrder === 'desc', id: defaultSort }] : [],
   );
 
+  // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<TData>({
     columns,
     data,
@@ -224,6 +225,7 @@ export default function CompanyDetailPage() {
 
   useEffect(() => {
     let cancelled: boolean = false;
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setLoading(true);
     setError(null);
     setNotFound(false);
@@ -236,7 +238,9 @@ export default function CompanyDetailPage() {
         setDetail(data);
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         if (error instanceof ApiError && error.status === 404) {
           setNotFound(true);
         } else {

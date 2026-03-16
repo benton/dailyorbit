@@ -15,23 +15,23 @@ import { Input } from '../ui/input.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type UserRecord = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
   banned: boolean;
   banReason: string | null;
   createdAt: string;
+  email: string;
+  id: string;
+  name: string;
+  role: string;
 };
 
 export default function Users() {
-  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [users, setUsers] = useState<Array<UserRecord>>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data: UserRecord[] = await apiFetch<UserRecord[]>('/api/admin/users');
+      const data: Array<UserRecord> = await apiFetch<Array<UserRecord>>('/api/admin/users');
       setUsers(data);
     } catch {
       // handled silently
@@ -61,8 +61,8 @@ export default function Users() {
 
   const handleSetRole = async (id: string, role: string) => {
     await apiFetch(`/api/admin/users/${id}/role`, {
-      method: 'PUT',
       body: JSON.stringify({ role }),
+      method: 'PUT',
     });
     void fetchUsers();
   };
@@ -182,8 +182,8 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
     setError(null);
     try {
       await apiFetch('/api/admin/users', {
-        method: 'POST',
         body: JSON.stringify({ email, name, password, role }),
+        method: 'POST',
       });
       setOpen(false);
       setEmail('');
@@ -191,8 +191,8 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
       setPassword('');
       setRole('user');
       onCreated();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create user');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to create user');
     }
   };
 
@@ -247,8 +247,8 @@ function ResetPasswordDialog({ userId }: { userId: string }) {
 
   const handleSubmit = async () => {
     await apiFetch(`/api/admin/users/${userId}/reset-password`, {
-      method: 'POST',
       body: JSON.stringify({ password }),
+      method: 'POST',
     });
     setOpen(false);
     setPassword('');

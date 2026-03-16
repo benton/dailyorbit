@@ -4,11 +4,11 @@ import ReadUnreadToggle from '../filings/ReadUnreadToggle.tsx';
 import { apiFetch } from '../lib/api.ts';
 
 type UnreadFiling = {
-  fileNumber: string;
-  dateFiled: string | null;
-  subsystemCode: string | null;
-  appTypeCode: string | null;
   applicantName: string | null;
+  appTypeCode: string | null;
+  dateFiled: string | null;
+  fileNumber: string;
+  subsystemCode: string | null;
 };
 
 type ViewRecord = {
@@ -21,21 +21,21 @@ const cardClass: string =
 
 export default function UserHomePage() {
   const navigate = useNavigate();
-  const [unread, setUnread] = useState<UnreadFiling[]>([]);
+  const [unread, setUnread] = useState<Array<UnreadFiling>>([]);
   const [unreadLoading, setUnreadLoading] = useState<boolean>(true);
-  const [recent, setRecent] = useState<ViewRecord[]>([]);
+  const [recent, setRecent] = useState<Array<ViewRecord>>([]);
   const [recentLoading, setRecentLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    apiFetch<UnreadFiling[]>('/api/user/viewing-history/unread?since=7')
-      .then((data: UnreadFiling[]) => setUnread(data))
+    apiFetch<Array<UnreadFiling>>('/api/user/viewing-history/unread?since=7')
+      .then((data: Array<UnreadFiling>) => setUnread(data))
       .catch(() => {})
       .finally(() => setUnreadLoading(false));
   }, []);
 
   useEffect(() => {
-    apiFetch<ViewRecord[]>('/api/user/viewing-history/recent?limit=10')
-      .then((data: ViewRecord[]) => setRecent(data))
+    apiFetch<Array<ViewRecord>>('/api/user/viewing-history/recent?limit=10')
+      .then((data: Array<ViewRecord>) => setRecent(data))
       .catch(() => {})
       .finally(() => setRecentLoading(false));
   }, []);

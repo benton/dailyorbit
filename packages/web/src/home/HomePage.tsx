@@ -113,6 +113,7 @@ function SimpleDataTable<TData>({
     defaultSort != null ? [{ desc: defaultOrder === 'desc', id: defaultSort }] : [],
   );
 
+  // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<TData>({
     columns,
     data,

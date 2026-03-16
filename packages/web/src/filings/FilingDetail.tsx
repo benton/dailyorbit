@@ -12,97 +12,107 @@ import { FilingTimeline } from './FilingTimeline.tsx';
 type FilingAttachment = {
   attachmentKey: number;
   attachmentName: string;
-  description: string;
-  source: string;
-  downloadUrl: string;
-  downloadStatus: string;
   contentType: string | null;
+  description: string;
+  downloadStatus: string;
+  downloadUrl: string;
   fileSizeBytes: number | null;
+  source: string;
   summary: string | null;
 };
 
 type FilingPetition = {
-  filingKey: number;
-  partyName: string | null;
   dateFiled: string | null;
   description: string | null;
-  pleadingType: string | null;
+  filingKey: number;
+  partyName: string | null;
   pleadingNumber: string | null;
+  pleadingType: string | null;
 };
 
 type RelatedSpaceStation = {
-  spaceStationKey: number;
-  usName: string;
   ituName: string | null;
   orbitLocation: string | null;
+  spaceStationKey: number;
+  usName: string;
 };
 
 type TimelineEvent = {
-  date: string;
-  type: string;
-  label: string;
   actor: string | null;
+  date: string;
+  label: string;
   source: 'filing_field' | 'pleading';
+  type: string;
 };
 
 type DataSource = 'icfs' | 'ibfs-legacy';
 
 type FilingDetail = {
-  dataSource: DataSource;
-  filingKey: number;
-  fileNumber: string;
-  subsystemCode: string;
-  subsystemLabel: string | null;
+  applicantFrn: string | null;
+  applicantName: string | null;
   appTypeCode: string;
   appTypeLabel: string | null;
-  statusCode: string | null;
-  statusText: string | null;
-  callsign: string | null;
-  applicantName: string | null;
-  applicantFrn: string | null;
-  dateFiled: string | null;
-  dateSigned: string | null;
-  dateGrant: string | null;
-  dateBegin: string | null;
-  dateExpire: string | null;
-  lastAction: string | null;
-  lastActionDate: string | null;
+  attachments: Array<FilingAttachment>;
   briefDescription: string | null;
-  description: string | null;
-  daNumber: string | null;
-  redLightStatus: string | null;
-  streamlined: string | null;
-  environmentalImpact: string | null;
-  natureOfService: string | null;
+  callsign: string | null;
   companyId: number | null;
   companyName: string | null;
-  summary: string | null;
-  transferorName: string | null;
-  transfereeName: string | null;
-  attachments: FilingAttachment[];
-  petitions: FilingPetition[];
-  timeline: TimelineEvent[];
-  relatedSpaceStation: RelatedSpaceStation | null;
+  daNumber: string | null;
+  dataSource: DataSource;
+  dateBegin: string | null;
+  dateExpire: string | null;
+  dateFiled: string | null;
+  dateGrant: string | null;
+  dateSigned: string | null;
+  description: string | null;
+  environmentalImpact: string | null;
+  fileNumber: string;
+  filingKey: number;
+  lastAction: string | null;
+  lastActionDate: string | null;
+  natureOfService: string | null;
+  petitions: Array<FilingPetition>;
+  redLightStatus: string | null;
   relatedEarthStationCallsign: string | null;
+  relatedSpaceStation: RelatedSpaceStation | null;
+  statusCode: string | null;
+  statusText: string | null;
+  streamlined: string | null;
+  subsystemCode: string;
+  subsystemLabel: string | null;
+  summary: string | null;
+  timeline: Array<TimelineEvent>;
+  transfereeName: string | null;
+  transferorName: string | null;
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function formatDate(iso: string | null): string {
-  if (iso == null) return '';
+  if (iso == null) {
+    return '';
+  }
   return new Date(iso).toLocaleDateString();
 }
 
 function formatBytes(bytes: number | null): string {
-  if (bytes == null) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes == null) {
+    return '';
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** Sidebar detail row — renders nothing when value is null/empty. */
 function DetailRow({ label, value }: { label: string; value: string | null }) {
-  if (value == null || value.trim() === '') return null;
+  if (value == null || value.trim() === '') {
+    return null;
+  }
   return (
     <div>
       <dt className="text-neutral-500 dark:text-neutral-400">{label}</dt>
@@ -112,15 +122,17 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
 }
 
 const PLEADING_TYPE_STYLES: Record<string, string> = {
+  COMMENT: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
+  DECISION: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
   LETTER: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   PETITION: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  COMMENT: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
   SUPPLEMENT: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
-  DECISION: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
 };
 
 function PleadingTypeBadge({ type }: { type: string | null }) {
-  if (type == null || type === '') return null;
+  if (type == null || type === '') {
+    return null;
+  }
   const style: string =
     PLEADING_TYPE_STYLES[type] ??
     'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300';
@@ -144,26 +156,33 @@ export default function FilingDetailPage() {
 
   useEffect(() => {
     let cancelled: boolean = false;
+    // eslint-disable-next-line react-hooks-js/set-state-in-effect
     setLoading(true);
     setError(null);
     setNotFound(false);
 
     apiFetch<FilingDetail>(`/api/filings/${encodeURIComponent(fileNumber ?? '')}`)
       .then((data: FilingDetail) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setFiling(data);
       })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 404) {
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && error.status === 404) {
           setNotFound(true);
         } else {
-          const message: string = err instanceof Error ? err.message : 'Failed to load filing';
+          const message: string = error instanceof Error ? error.message : 'Failed to load filing';
           setError(message);
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -239,8 +258,8 @@ export default function FilingDetailPage() {
             <span>
               Applicant:{' '}
               <Link
-                to={`/search?applicant=${encodeURIComponent(filing.applicantName)}`}
                 className="text-blue-600 hover:underline dark:text-blue-400"
+                to={`/search?applicant=${encodeURIComponent(filing.applicantName)}`}
               >
                 {filing.applicantName}
               </Link>
@@ -250,8 +269,8 @@ export default function FilingDetailPage() {
             <span>
               Company:{' '}
               <Link
-                to={`/companies/${filing.companyId}`}
                 className="text-blue-600 hover:underline dark:text-blue-400"
+                to={`/companies/${filing.companyId}`}
               >
                 {filing.companyName}
               </Link>
@@ -267,14 +286,14 @@ export default function FilingDetailPage() {
           <svg
             className="mt-0.5 h-5 w-5 shrink-0"
             fill="none"
-            viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+            viewBox="0 0 24 24"
           >
             <path
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
           <div>
@@ -338,22 +357,22 @@ export default function FilingDetailPage() {
               if (appPdf != null) {
                 return (
                   <a
-                    href={appPdf.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="mb-4 inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
+                    href={appPdf.downloadUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
                   >
                     <svg
                       className="h-4 w-4"
                       fill="none"
-                      viewBox="0 0 24 24"
                       stroke="currentColor"
                       strokeWidth={2}
+                      viewBox="0 0 24 24"
                     >
                       <path
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
                     Download Application Filing
@@ -390,17 +409,17 @@ export default function FilingDetailPage() {
                   <tbody>
                     {filing.attachments.map((att: FilingAttachment) => (
                       <tr
-                        key={att.attachmentKey}
                         className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                        key={att.attachmentKey}
                       >
                         <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
                           <SummaryTooltip summary={att.summary}>
                             {att.downloadUrl ? (
                               <a
-                                href={att.downloadUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
+                                href={att.downloadUrl}
+                                rel="noopener noreferrer"
+                                target="_blank"
                               >
                                 {att.attachmentName}
                               </a>
@@ -457,8 +476,8 @@ export default function FilingDetailPage() {
                   <tbody>
                     {filing.petitions.map((pet: FilingPetition, idx: number) => (
                       <tr
-                        key={`${pet.filingKey}-${idx}`}
                         className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                        key={`${pet.filingKey}-${idx}`}
                       >
                         <td className="px-4 py-2">
                           <PleadingTypeBadge type={pet.pleadingType} />
@@ -519,8 +538,8 @@ export default function FilingDetailPage() {
                     <dt className="text-neutral-500 dark:text-neutral-400">Space Station</dt>
                     <dd>
                       <Link
-                        to={`/satellites/${filing.relatedSpaceStation.spaceStationKey}`}
                         className="text-blue-600 hover:underline dark:text-blue-400"
+                        to={`/satellites/${filing.relatedSpaceStation.spaceStationKey}`}
                       >
                         {filing.relatedSpaceStation.usName}
                       </Link>
@@ -537,8 +556,8 @@ export default function FilingDetailPage() {
                     <dt className="text-neutral-500 dark:text-neutral-400">Earth Station</dt>
                     <dd>
                       <Link
-                        to={`/earth-stations/${filing.relatedEarthStationCallsign}`}
                         className="text-blue-600 hover:underline dark:text-blue-400"
+                        to={`/earth-stations/${filing.relatedEarthStationCallsign}`}
                       >
                         {filing.relatedEarthStationCallsign}
                       </Link>

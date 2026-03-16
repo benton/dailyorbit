@@ -5,14 +5,14 @@ import AuthClient from '../user/AuthClient.tsx';
 import { useAuth } from '../user/AuthContext.tsx';
 
 type MenuItem = {
+  disabled?: boolean;
   icon: React.ReactNode;
   label: string;
-  disabled?: boolean;
   onClick: () => void;
 };
 
 export default function UserMenu() {
-  const { user, isLoading } = useAuth();
+  const { isLoading, user } = useAuth();
   const [open, setOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -27,7 +27,9 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return null;
+  }
 
   if (user == null) {
     return (
@@ -48,28 +50,28 @@ export default function UserMenu() {
     });
   };
 
-  const items: MenuItem[] = [
+  const items: Array<MenuItem> = [
     {
       icon: <User className="h-4 w-4" />,
       label: 'Profile',
       onClick: () => void navigate('/profile'),
     },
     {
+      disabled: true,
       icon: <Settings className="h-4 w-4" />,
       label: 'Settings',
-      disabled: true,
       onClick: () => {},
     },
     {
+      disabled: true,
       icon: <HelpCircle className="h-4 w-4" />,
       label: 'Help',
-      disabled: true,
       onClick: () => {},
     },
     {
+      disabled: true,
       icon: <Monitor className="h-4 w-4" />,
       label: 'Demo',
-      disabled: true,
       onClick: () => {},
     },
     {
@@ -90,11 +92,11 @@ export default function UserMenu() {
         <svg
           className="h-4 w-4"
           fill="none"
-          viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth={2}
+          viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       {open && (
