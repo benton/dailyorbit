@@ -40,12 +40,12 @@ describe('InferenceService', () => {
     const resp: InferenceResponse = await svc.complete(req);
 
     expect(resp.content).toEqual('Hi');
-    expect(resp.modelId).toEqual('anthropic.claude-haiku-4-5-20251001-v1:0');
+    expect(resp.modelId).toEqual('us.anthropic.claude-haiku-4-5-20251001-v1:0');
     expect(resp.usage.totalTokens).toEqual(7);
 
     // Verify the model ID passed to Bedrock
     const calledInput = mockConverse.mock.calls[0][0];
-    expect(calledInput.modelId).toEqual('anthropic.claude-haiku-4-5-20251001-v1:0');
+    expect(calledInput.modelId).toEqual('us.anthropic.claude-haiku-4-5-20251001-v1:0');
   });
 
   it('uses explicit modelId when provided', async () => {

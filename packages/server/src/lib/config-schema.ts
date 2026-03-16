@@ -32,7 +32,7 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
   },
   bedrockDefaultModel: {
     key: 'bedrockDefaultModel',
-    defaultValue: 'anthropic.claude-haiku-4-5-20251001-v1:0',
+    defaultValue: 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
     encrypted: false,
     description: 'Default Bedrock model ID for inference',
   },
