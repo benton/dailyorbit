@@ -11,6 +11,7 @@ import { requireAuth, requireAdmin } from './lib/auth-middleware.ts';
 import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
+import { buildInferenceRoutes } from './inference/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
 import { publicStatsRoutes, statsRoutes } from './stats/routes.ts';
 import {
@@ -69,6 +70,7 @@ app.route('/api/user/viewing-history', viewingHistoryRoutes);
 app.route('/api/admin/config', configRoutes);
 app.route('/api/admin/stats', statsRoutes);
 app.route('/api/admin/companies', companyAdminRoutes);
+app.route('/api/admin/inference', buildInferenceRoutes());
 app.route('/api/admin/users', userAdminRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
