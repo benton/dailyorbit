@@ -44,7 +44,7 @@ describe('InferenceService', () => {
     expect(resp.usage.totalTokens).toEqual(7);
 
     // Verify the model ID passed to Bedrock
-    const calledInput = mockConverse.mock.calls[0][0];
+    const calledInput = mockConverse.mock.calls[0]![0]!;
     expect(calledInput.modelId).toEqual(
       'us.anthropic.claude-haiku-4-5-20251001-v1:0',
     );
@@ -67,7 +67,7 @@ describe('InferenceService', () => {
     const resp: InferenceResponse = await svc.complete(req);
 
     expect(resp.modelId).toEqual('amazon.nova-micro-v1:0');
-    const calledInput = mockConverse.mock.calls[0][0];
+    const calledInput = mockConverse.mock.calls[0]![0]!;
     expect(calledInput.modelId).toEqual('amazon.nova-micro-v1:0');
   });
 

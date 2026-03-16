@@ -31,9 +31,9 @@ export function parseInferenceProfiles(
       const nameParts: string[] = (p.inferenceProfileName ?? '').split(' ');
       // Skip the region prefix (US/EU) to get the provider
       const provider: string =
-        nameParts.length > 1 ? nameParts[1] : (nameParts[0] ?? '');
+        nameParts.length > 1 ? (nameParts[1] ?? '') : (nameParts[0] ?? '');
       const modelName: string =
-        nameParts.slice(2).join(' ') || p.inferenceProfileName || '';
+        nameParts.slice(2).join(' ') || (p.inferenceProfileName ?? '');
       return {
         modelId: p.inferenceProfileId ?? '',
         modelName,

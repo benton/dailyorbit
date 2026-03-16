@@ -51,7 +51,10 @@ describe('inference routes', () => {
       });
 
       expect(resp.status).toEqual(200);
-      const body = await resp.json();
+      const body = (await resp.json()) as {
+        content: string;
+        usage: { totalTokens: number };
+      };
       expect(body.content).toEqual('Test response');
       expect(body.usage.totalTokens).toEqual(8);
     });

@@ -51,14 +51,16 @@ describe('buildConverseInput', () => {
 describe('parseConverseOutput', () => {
   it('extracts text content, usage, and stop reason from Bedrock response', () => {
     const raw = {
+      $metadata: { httpStatusCode: 200 },
+      metrics: { latencyMs: 100 },
       output: {
         message: {
-          role: 'assistant',
+          role: 'assistant' as const,
           content: [{ text: 'Hello! How can I help?' }],
         },
       },
       usage: { inputTokens: 10, outputTokens: 8, totalTokens: 18 },
-      stopReason: 'end_turn',
+      stopReason: 'end_turn' as const,
     };
 
     const result = parseConverseOutput(raw, 'test-model', 123);
@@ -74,9 +76,11 @@ describe('parseConverseOutput', () => {
 
   it('returns empty content when response has no text blocks', () => {
     const raw = {
-      output: { message: { role: 'assistant', content: [] } },
+      $metadata: { httpStatusCode: 200 },
+      metrics: { latencyMs: 0 },
+      output: { message: { role: 'assistant' as const, content: [] } },
       usage: { inputTokens: 5, outputTokens: 0, totalTokens: 5 },
-      stopReason: 'max_tokens',
+      stopReason: 'max_tokens' as const,
     };
 
     const result = parseConverseOutput(raw, 'test-model', 0);

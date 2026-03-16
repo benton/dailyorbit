@@ -51,6 +51,6 @@ describe.skipIf(!HAS_AWS_CREDS)('Bedrock integration', () => {
     const models = await listAvailableModels(REGION);
     expect(models.length).toBeGreaterThan(0);
     // Verify at least one model has a non-empty modelId
-    expect(models[0].modelId.length).toBeGreaterThan(0);
+    expect(models[0]!.modelId.length).toBeGreaterThan(0);
   }, 15_000);
 });
