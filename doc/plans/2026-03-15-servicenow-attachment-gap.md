@@ -1,7 +1,8 @@
 # ServiceNow Attachment Download Gap
 
 **Date:** 2026-03-15
-**Status:** Investigation needed
+**Updated:** 2026-03-16 (browser investigation of ICFS portal)
+**Status:** Blocked — PDF attachments require FCC Okta SSO authentication
 
 ---
 
@@ -13,6 +14,10 @@ file content. These attachments span filings from the 1970s through 2026 and
 include critical document types (applications, narratives, grants, schedule S
 data). They represent **17% of all known attachments** and are completely
 inaccessible through the current pipeline.
+
+Browser testing on 2026-03-16 confirmed that **all PDF attachment downloads
+on ICFS require FCC Okta SSO authentication**. There is no public download
+path for these files.
 
 ---
 
@@ -60,6 +65,43 @@ authentication**: no cookies, no API keys, no session tokens.
 - **ServiceNow URLs**: return HTTP 200 with `Content-Length: 0` and
   `Set-Cookie` headers, followed by an HTML login page. The pipeline saves
   18 bytes of text reading "Invalid attachment".
+
+---
+
+## ICFS Portal Investigation (2026-03-16)
+
+Browser testing with Playwright confirmed the following access model:
+
+### Publicly accessible (no login)
+
+| Content | Notes |
+|---------|-------|
+| ICFS home page, search, recent filings/notices | Full navigation works |
+| Filing summary metadata (for *some* filings) | Via `?id=ibfs_application_summary&number={fileNumber}` navigated from home page |
+| Filing Documents table (attachment list) | Metadata only — document names, descriptions, and download links are visible |
+| EDOCS Public Notices | Full PDF + text at `docs.fcc.gov/public/attachments/DOC-{id}.{pdf,txt}` |
+
+### Requires FCC Okta SSO authentication
+
+| Content | Behavior |
+|---------|----------|
+| **PDF attachment downloads** (`sys_attachment.do?sys_id=...`) | Redirects to `fcc-ext.okta.com` SSO login page |
+| **View Form** (full application form, `?id=app&sys_id=...`) | Redirects to Okta SSO |
+| **Schedule B data** (technical parameters) | Page loads but API returns 401; shows "Failed to load Schedule" |
+| **Older filing summaries** (accessed by sys_id) | "Application information isn't publicly available" |
+
+### Key finding: EDOCS vs. ICFS
+
+ICFS public notice links (e.g., `SAT-01982`) redirect to the FCC **EDOCS**
+system at `fcc.gov/edocs`, where the Public Notice documents are available
+as both PDF and plain text. However, these are **Public Notice documents**
+(batch listings of filings accepted/acted upon), not the individual
+per-filing attachments (Application.pdf, Narrative.pdf, Schedule S, etc.).
+
+EDOCS URL pattern:
+
+    https://docs.fcc.gov/public/attachments/DOC-{docId}A1.pdf
+    https://docs.fcc.gov/public/attachments/DOC-{docId}A1.txt
 
 ---
 
@@ -124,44 +166,48 @@ Almost exclusively SAT filings:
 616 attachments have relative or internal FCC URLs that cannot be fetched:
 
 - `/ibfs?id=ibfs_schedule_b_edit&schedule_b=...` — interactive Schedule B
-  forms, not downloadable as files.
+  forms, not downloadable as files (page loads but data requires auth).
 - `/nav_to.do?uri=x_fmc_ibfs_sv3_satellite.do?sys_id=...` — ServiceNow
   navigation links (not direct file URLs).
 
-These are likely not downloadable in any straightforward way.
+These are not downloadable without authentication.
 
 ---
 
-## Questions for Deep Dive
+## Possible Strategies
 
-1. **Is there a public ServiceNow API for these attachments?**
-   The ICFS portal (`/ibfs`) is unauthenticated and uses portal API
-   endpoints. Does the portal expose an attachment download endpoint that
-   works without a session?
+### 1. FOIA Request
+File a Freedom of Information Act request for bulk access to IBFS/ICFS
+attachment data. The FCC is required to provide public records.
+Pros: legally entitled to the data. Cons: slow (weeks to months).
 
-2. **Can we get a session cookie from the public portal?**
-   The `sys_attachment.do` endpoint sets `JSESSIONID` and `BIGipServer`
-   cookies. Perhaps establishing a session through the public portal first
-   would allow attachment downloads.
+### 2. FCC API / Data Feeds
+Investigate whether the FCC provides a bulk data feed or API that includes
+attachment binaries. The IBFS bulk XML feed provided metadata but not
+binary attachments.
 
-3. **Does fcc.report have an API or bulk download option?**
-   If fcc.report is sourcing these files from ServiceNow, perhaps there is
-   an alternative URL pattern on fcc.report that serves the same content.
+### 3. Alternative Sources
+- **fcc.report** already mirrors most attachments; the 43k ServiceNow
+  URLs are the ones fcc.report itself couldn't serve.
+- **Internet Archive / Wayback Machine** may have historical snapshots
+  of IBFS filing pages with working attachment links.
+- **Google Cache** or other search engine caches may have indexed some
+  of the PDF content.
 
-4. **Are these the same files accessible through ICFS search results?**
-   The ICFS search API returns filing detail pages. Do those detail pages
-   include working attachment download links?
-
-5. **Is there a rate limit or IP block in play?**
-   The "Invalid attachment" response may be access-control rather than
-   authentication — worth testing from different networks or with different
-   user-agent strings.
+### 4. Authenticated Access
+If the application obtains FCC credentials (e.g., through a registered
+ICFS account), the `sys_attachment.do` URLs would work. This would require
+storing and managing FCC session tokens in the pipeline.
 
 ---
 
 ## Immediate Next Steps
 
-- [ ] Run `make attachments-extract` to extract text from the 129k already-downloaded PDFs (~3.5 hours)
-- [ ] Investigate ServiceNow attachment access (deep dive)
-- [ ] Determine whether ICFS portal API provides alternative download paths
-- [ ] Test `sys_attachment.do` with session cookies obtained from the portal
+- [x] Run `make attachments-extract` to extract text from the 129k
+      already-downloaded PDFs (~3.5 hours)
+- [x] Browser-test ICFS portal to determine public vs. auth-gated content
+- [ ] Investigate FOIA or bulk data request options
+- [ ] Check Internet Archive for historical IBFS attachment snapshots
+- [ ] Evaluate whether authenticated ICFS access is feasible/appropriate
+- [ ] Ingest EDOCS Public Notice documents (PDF + text) as a supplementary
+      data source — these are publicly available and cover regulatory actions

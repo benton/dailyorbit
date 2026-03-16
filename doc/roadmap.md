@@ -13,13 +13,12 @@
 - v0.5.0 [x] Anonymous home page
 - v0.6.0 [x] User authentication and profile
 - v0.7.0 [x] User home page, preferences, and viewing history
-- v0.8.0 [ ] Admin ingest control UI (maybe)
+- v0.8.0 [ ] AI foundations: internal multi-model inference API w/cost accounting
 - v0.9.0 [ ] Remove legacy IBFS code and references
-- v0.9.5 [ ] AI foundations: internal multi-model inference API w/cost accounting
 
 ## Medium Term - LLM-driven features
 
-- v1.0.0 [ ] Summarizations: per App, Comment, and Timeline. check out [Flock][4]
+- v1.0.0 [ ] Summarizations: per Filing, per Attachment, check out [Flock][4]
 - v1.1.0 [ ] Vector-DB search?
 - v1.2.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering
 
@@ -37,6 +36,8 @@
 - v3.0.x [ ] Demo slideshow; focus on business motivation; ingestion pipeline with enrichment;
 - v3.0.x [ ] Syndication from other LoE-satellite-related news sources
 
-## Off the Wall Ideas
+## Off the Wall Ideas or Nice to have
 
-- v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser?
+- v?.x.x [ ] Backup PDF text extraction tool
+- v?.x.x [ ] Admin ingest control UI
+- v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser

@@ -34,7 +34,7 @@ app.use(
 
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
-app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw));
+app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
 // Protected API routes — require authentication
 app.use('/api/*', async (c, next) => {
