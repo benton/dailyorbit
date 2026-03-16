@@ -11,8 +11,8 @@ const filingRoutes = new Hono();
  * Returns the full filing detail including lookup labels,
  * attachments, petitions, and related entity links.
  */
-filingRoutes.get('/:fileNumber', async (c) => {
-  const fileNumber: string = c.req.param('fileNumber');
+filingRoutes.get('/*', async (c) => {
+  const fileNumber: string = decodeURIComponent(c.req.path.replace(/^\/api\/filings\//, ''));
 
   if (fileNumber.trim() === '') {
     return c.json({ error: 'File number is required' }, 400);

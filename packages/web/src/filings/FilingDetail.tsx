@@ -131,7 +131,8 @@ function PleadingTypeBadge({ type }: { type: string | null }) {
 // ── Component ───────────────────────────────────────────────────────
 
 export default function FilingDetailPage() {
-  const { fileNumber } = useParams<{ fileNumber: string }>();
+  const params = useParams();
+  const fileNumber: string | undefined = params['*'];
 
   const [filing, setFiling] = useState<FilingDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -144,7 +145,7 @@ export default function FilingDetailPage() {
     setError(null);
     setNotFound(false);
 
-    apiFetch<FilingDetail>(`/api/filings/${fileNumber}`)
+    apiFetch<FilingDetail>(`/api/filings/${encodeURIComponent(fileNumber ?? '')}`)
       .then((data: FilingDetail) => {
         if (cancelled) return;
         setFiling(data);

@@ -41,7 +41,7 @@ export default function UserHomePage() {
   }, []);
 
   const goToFiling = useCallback(
-    (fileNumber: string) => void navigate(`/filings/${fileNumber}`),
+    (fileNumber: string) => void navigate(`/filings/${encodeURIComponent(fileNumber)}`),
     [navigate],
   );
 

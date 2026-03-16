@@ -78,7 +78,7 @@ const ownershipEventColumns: Array<ColumnDef<OwnershipEvent, unknown>> = [
         <Link
           className="text-blue-600 hover:underline dark:text-blue-400"
           onClick={(e) => e.stopPropagation()}
-          to={`/filings/${fn}`}
+          to={`/filings/${encodeURIComponent(fn)}`}
         >
           {fn}
         </Link>

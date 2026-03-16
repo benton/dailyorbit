@@ -63,7 +63,7 @@ export default function App() {
             />
             <Route element={<About />} path="/about" />
             <Route element={<SearchPage />} path="/search" />
-            <Route element={<FilingDetail />} path="/filings/:fileNumber" />
+            <Route element={<FilingDetail />} path="/filings/*" />
             <Route element={<SatelliteDetail />} path="/satellites/:id" />
             <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
             <Route

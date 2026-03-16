@@ -95,7 +95,7 @@ const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
     size: 240,
     cell: ({ row }) => (
       <Link
-        to={`/filings/${row.original.fileNumber}`}
+        to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
         className="text-blue-600 hover:underline dark:text-blue-400"
       >
         {row.original.fileNumber}

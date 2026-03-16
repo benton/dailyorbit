@@ -916,7 +916,7 @@ export default function SearchPage() {
   // Row click handlers
   const onFilingClick = useCallback(
     (row: FilingSearchResult) => {
-      void navigate(`/filings/${row.file_number}`);
+      void navigate(`/filings/${encodeURIComponent(row.file_number)}`);
     },
     [navigate],
   );

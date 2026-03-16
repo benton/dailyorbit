@@ -396,7 +396,7 @@ export default function HomePage() {
   // Row click handler for recent filings
   const onRecentFilingClick = useCallback(
     (row: RecentFiling) => {
-      void navigate(`/filings/${row.file_number}`);
+      void navigate(`/filings/${encodeURIComponent(row.file_number)}`);
     },
     [navigate],
   );
@@ -456,7 +456,7 @@ export default function HomePage() {
                 <li className="flex items-center justify-between text-xs" key={f.file_number}>
                   <button
                     className="truncate font-mono text-blue-600 hover:underline dark:text-blue-400"
-                    onClick={() => navigate(`/filings/${f.file_number}`)}
+                    onClick={() => navigate(`/filings/${encodeURIComponent(f.file_number)}`)}
                     type="button"
                   >
                     {f.file_number}
