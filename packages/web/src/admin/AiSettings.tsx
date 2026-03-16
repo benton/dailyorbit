@@ -1,0 +1,219 @@
+import { Loader2, Send } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api.ts';
+import { Badge } from '../ui/badge.tsx';
+import { Button } from '../ui/button.tsx';
+import { Input } from '../ui/input.tsx';
+import { Label } from '../ui/label.tsx';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
+import { ToastProvider, useToast } from '../ui/toast.tsx';
+
+type ModelInfo = {
+  modelId: string;
+  modelName: string;
+  provider: string;
+};
+
+type InferenceResponse = {
+  content: string;
+  modelId: string;
+  usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+  stopReason: string;
+  latencyMs: number;
+};
+
+type ConfigEntry = {
+  key: string;
+  value: string;
+  description: string;
+  encrypted: boolean;
+};
+
+function AiSettingsInner() {
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [loadingModels, setLoadingModels] = useState<boolean>(true);
+  const [defaultModel, setDefaultModel] = useState<string>('');
+  const [region, setRegion] = useState<string>('');
+  const [testPrompt, setTestPrompt] = useState<string>('Say hello in one sentence.');
+  const [testResult, setTestResult] = useState<InferenceResponse | null>(null);
+  const [testing, setTesting] = useState<boolean>(false);
+  const [savingConfig, setSavingConfig] = useState<boolean>(false);
+  const { toast } = useToast();
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      const entries: ConfigEntry[] = await apiFetch('/api/admin/config');
+      const regionEntry = entries.find((e) => e.key === 'bedrockRegion');
+      const modelEntry = entries.find((e) => e.key === 'bedrockDefaultModel');
+      if (regionEntry) setRegion(regionEntry.value);
+      if (modelEntry) setDefaultModel(modelEntry.value);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to load config', 'error');
+    }
+  }, [toast]);
+
+  const fetchModels = useCallback(async () => {
+    try {
+      const data: ModelInfo[] = await apiFetch('/api/admin/inference/models');
+      setModels(data);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to list models', 'error');
+    } finally {
+      setLoadingModels(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    void fetchConfig();
+    void fetchModels();
+  }, [fetchConfig, fetchModels]);
+
+  const handleSaveConfig = useCallback(async () => {
+    setSavingConfig(true);
+    try {
+      await Promise.all([
+        apiFetch('/api/admin/config/bedrockRegion', {
+          method: 'PUT',
+          body: JSON.stringify({ value: region }),
+        }),
+        apiFetch('/api/admin/config/bedrockDefaultModel', {
+          method: 'PUT',
+          body: JSON.stringify({ value: defaultModel }),
+        }),
+      ]);
+      toast('AI settings saved', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to save', 'error');
+    } finally {
+      setSavingConfig(false);
+    }
+  }, [region, defaultModel, toast]);
+
+  const handleTest = useCallback(async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const resp: InferenceResponse = await apiFetch('/api/admin/inference/test', {
+        method: 'POST',
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: testPrompt }],
+          params: { maxTokens: 256, temperature: 0.7 },
+        }),
+      });
+      setTestResult(resp);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Inference failed', 'error');
+    } finally {
+      setTesting(false);
+    }
+  }, [testPrompt, toast]);
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          AI Settings
+        </h1>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          Configure language model inference via AWS Bedrock.
+        </p>
+      </div>
+
+      {/* Config Section */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">Bedrock Configuration</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="bedrock-region">AWS Region</Label>
+            <Input
+              id="bedrock-region"
+              onChange={(e) => setRegion(e.target.value)}
+              value={region}
+            />
+          </div>
+          <div>
+            <Label htmlFor="bedrock-model">Default Model ID</Label>
+            <Input
+              id="bedrock-model"
+              onChange={(e) => setDefaultModel(e.target.value)}
+              value={defaultModel}
+            />
+          </div>
+        </div>
+        <Button className="mt-4" disabled={savingConfig} onClick={() => void handleSaveConfig()}>
+          {savingConfig ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+
+      {/* Test Section */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">Test Inference</h2>
+        <div className="flex gap-2">
+          <Input
+            className="flex-1"
+            onChange={(e) => setTestPrompt(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') void handleTest(); }}
+            placeholder="Enter a test prompt..."
+            value={testPrompt}
+          />
+          <Button disabled={testing || !testPrompt} onClick={() => void handleTest()}>
+            {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
+        {testResult && (
+          <div className="mt-4 space-y-2">
+            <div className="rounded bg-neutral-50 p-4 text-sm dark:bg-neutral-800">
+              {testResult.content}
+            </div>
+            <div className="flex gap-3 text-xs text-neutral-500">
+              <Badge variant="secondary">{testResult.modelId}</Badge>
+              <span>{testResult.usage.totalTokens} tokens</span>
+              <span>{testResult.latencyMs}ms</span>
+              <span>{testResult.stopReason}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Available Models */}
+      <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="p-6 pb-2">
+          <h2 className="text-lg font-medium">Available Models</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            On-demand text models in {region || 'configured region'}.
+          </p>
+        </div>
+        {loadingModels ? (
+          <p className="px-6 pb-6 text-sm text-neutral-500">Loading models...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Provider</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Model ID</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {models.map((m) => (
+                <TableRow key={m.modelId}>
+                  <TableCell>{m.provider}</TableCell>
+                  <TableCell>{m.modelName}</TableCell>
+                  <TableCell className="font-mono text-sm">{m.modelId}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AiSettings() {
+  return (
+    <ToastProvider>
+      <AiSettingsInner />
+    </ToastProvider>
+  );
+}
