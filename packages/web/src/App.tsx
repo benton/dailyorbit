@@ -51,31 +51,17 @@ export default function App() {
       <SettingsProvider>
         <Routes>
           <Route element={<LoginPage />} path="/login" />
-          <Route
-            element={
-              <RequireAuth>
-                <PublicLayout />
-              </RequireAuth>
-            }
-          >
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <UserHomePage />
-                </Suspense>
-              }
-              path="/"
-            />
+          {/* Public routes — no auth required */}
+          <Route element={<PublicLayout />}>
             <Route
               element={
                 <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
                   <HomePage />
                 </Suspense>
               }
-              path="/stats"
+              path="/"
             />
             <Route element={<About />} path="/about" />
-            <Route element={<ProfilePage />} path="/profile" />
             <Route element={<SearchPage />} path="/search" />
             <Route element={<FilingDetail />} path="/filings/:fileNumber" />
             <Route element={<SatelliteDetail />} path="/satellites/:id" />
@@ -96,7 +82,27 @@ export default function App() {
               }
               path="/companies/:id"
             />
+            {/* Auth-required user pages */}
+            <Route
+              element={
+                <RequireAuth>
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <UserHomePage />
+                  </Suspense>
+                </RequireAuth>
+              }
+              path="/filings/unread"
+            />
+            <Route
+              element={
+                <RequireAuth>
+                  <ProfilePage />
+                </RequireAuth>
+              }
+              path="/profile"
+            />
           </Route>
+          {/* Admin routes */}
           <Route
             element={
               <RequireAuth>

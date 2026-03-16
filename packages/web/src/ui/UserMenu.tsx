@@ -1,4 +1,4 @@
-import { LogOut, Settings, HelpCircle, Monitor, User } from 'lucide-react';
+import { LogIn, LogOut, Settings, HelpCircle, Monitor, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import AuthClient from '../user/AuthClient.tsx';
@@ -12,7 +12,7 @@ type MenuItem = {
 };
 
 export default function UserMenu() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [open, setOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -27,7 +27,20 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (user == null) return null;
+  if (isLoading) return null;
+
+  if (user == null) {
+    return (
+      <button
+        className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+        onClick={() => void navigate('/login')}
+        type="button"
+      >
+        <LogIn className="h-4 w-4" />
+        Login
+      </button>
+    );
+  }
 
   const handleLogout = () => {
     void AuthClient.signOut().then(() => {

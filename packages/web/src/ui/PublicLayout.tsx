@@ -1,4 +1,5 @@
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 import { useSettings } from '../lib/settings-context.tsx';
 import { useAuth } from '../user/AuthContext.tsx';
@@ -20,9 +21,18 @@ function NavLink({ to, label }: { to: string; label: string }) {
 }
 
 export default function PublicLayout() {
-  const { isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const { settings, updateSetting } = useSettings();
-  const isWide: boolean = settings?.wideView ?? false;
+  const [localWide, setLocalWide] = useState<boolean>(false);
+  const isWide: boolean = isAuthenticated ? (settings?.wideView ?? false) : localWide;
+
+  const toggleWide = () => {
+    if (isAuthenticated) {
+      updateSetting('wideView', !isWide);
+    } else {
+      setLocalWide(!localWide);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
@@ -37,7 +47,7 @@ export default function PublicLayout() {
           <div className="ml-auto flex items-center gap-3">
             <button
               className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              onClick={() => updateSetting('wideView', !isWide)}
+              onClick={toggleWide}
               title={isWide ? 'Narrow view' : 'Wide view'}
               type="button"
             >

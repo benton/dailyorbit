@@ -37,9 +37,23 @@ app.get('/api/health', (c) => c.json({ status: 'ok' }));
 app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
 // Protected API routes — require authentication
+// Public endpoints are exempted: health, auth, stats, filings, satellites,
+// earth-stations, search, autocomplete, companies (pregenerated content).
+// User-specific and admin endpoints still require auth.
+const publicPrefixes: string[] = [
+  '/api/health',
+  '/api/auth/',
+  '/api/stats',
+  '/api/filings',
+  '/api/satellites',
+  '/api/earth-stations',
+  '/api/search',
+  '/api/autocomplete',
+  '/api/companies',
+];
 app.use('/api/*', async (c, next) => {
   const path: string = c.req.path;
-  if (path === '/api/health' || path.startsWith('/api/auth/')) {
+  if (publicPrefixes.some((prefix: string) => path.startsWith(prefix))) {
     return next();
   }
   return requireAuth()(c, next);
