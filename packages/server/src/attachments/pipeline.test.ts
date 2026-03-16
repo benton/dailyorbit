@@ -195,6 +195,7 @@ describe('runAttachmentPipeline', () => {
       scope: { subsystems: ['SAT'], limit: 1 },
       downloadOnly: true,
       skipExisting: true,
+      skipSummarization: true,
       delayMs: 0,
       onProgress: (msg: string) => logs.push(msg),
     });

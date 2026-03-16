@@ -4,7 +4,7 @@
 
 ## Overview
 
-Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF attachments, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
+Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF attachments, generates LLM-powered summaries of attachment text via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
 
 All pipeline stages are **idempotent** and designed to run nightly.
 
@@ -18,6 +18,7 @@ flowchart TD
         IBFS["IBFS Legacy Bulk Export\n(FTP .dat files, frozen 2025-06-24)"]
         ICFS["ICFS ServiceNow API\n(Live filings, REST)"]
         FCC_PAGES["FCC Filing Web Pages\n(Attachment HTML)"]
+        BEDROCK["AWS Bedrock\n(LLM inference)"]
         GLEIF["GLEIF LEI API\n(Legal Entity Identifiers)"]
         WIKIDATA["Wikidata SPARQL\n(Corporate metadata)"]
     end
@@ -31,6 +32,7 @@ flowchart TD
         ATT_DISCOVER["2a. Attachment Discovery\n./daily-orbit attachments discover\nScrape filing pages → extract URLs"]
         ATT_DOWNLOAD["2b. Attachment Download\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
         ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF → markdown via pdf-oxide-wasm"]
+        ATT_SUMMARIZE["2d. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -63,6 +65,9 @@ flowchart TD
     ATT_DOWNLOAD --> DISK
     DISK --> ATT_EXTRACT
     ATT_EXTRACT --> DB
+    DB --> ATT_SUMMARIZE
+    BEDROCK --> ATT_SUMMARIZE
+    ATT_SUMMARIZE --> DB
 
     SEED --> DB
     DB --> ATTRIBUTE
@@ -211,6 +216,28 @@ As of 2026-03-15, **43,755 attachment records** (17% of total) have download URL
 
 **Key options:** `--limit`, `--retry-failed`, `--verbose`
 
+### 2d. Summarization
+
+| | |
+|---|---|
+| **Command** | `make summarize` or via `./daily-orbit attachments sync` |
+| **CLI** | `./daily-orbit inference summarize [OPTIONS]` |
+| **Source** | `attachment` table (rows where `full_text IS NOT NULL AND summary IS NULL`) |
+| **Writes to** | `attachment.summary` |
+
+**Flow:**
+
+1. Query attachments with extracted text but no summary, joined with `filing` for metadata
+2. For each attachment, render a Mustache prompt template with filing context variables (`fileNumber`, `applicantName`, `dateFiled`, `appTypeCode`, `subsystemCode`, `attachmentName`, `fullText`, `companyName`)
+3. Send to AWS Bedrock via the app's `InferenceService` abstraction
+4. Write the LLM-generated summary back to `attachment.summary`
+
+**Integration:** Summarization also runs as Stage 6 of `./daily-orbit attachments sync`, after text extraction. The sync pipeline uses the same idempotent query (skips already-summarized rows).
+
+**Prompt configuration:** System and user prompt templates are configurable via the admin UI (AI Settings page) and stored as config keys `summarizationSystemPrompt` and `summarizationUserPrompt`. Blank values fall back to built-in defaults defined in `packages/server/src/inference/prompts.ts`.
+
+**Key options:** `--model` (default: `us.amazon.nova-pro-v1:0`), `--region` (default: `us-east-2`), `--concurrency` (default: 10), `--batch` (default: 100), `--limit`, `--dry-run`
+
 ---
 
 ## Stage 3 — Company Attribution
@@ -307,7 +334,7 @@ The recommended nightly pipeline order:
 # 1. Ingest new filings from ICFS (includes auto-attribution)
 make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
 
-# 2. Discover, download, and extract text from attachments
+# 2. Discover, download, extract text, and summarize attachments
 make attachments
 
 # 3. Ensure company seed data is current (no-ops if unchanged)
@@ -336,6 +363,7 @@ make companies-stats
 | ICFS Fetch | 500ms | 4 | Per filing detail fetch |
 | Attachment Discovery | 500ms | 1 | Per filing page scrape |
 | Attachment Download | 500ms | 1 | Per file download |
+| Summarization (Bedrock) | 0ms | 10 | Bedrock handles throttling; concurrency configurable |
 | GLEIF API | 300ms | 1 | Built-in rate limiter |
 | Wikidata SPARQL | 1000ms | 1 | Per Wikidata policy |
 
@@ -352,6 +380,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
 | Attachment Download | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
 | Text Extraction | Marks individual attachments as `'failed'` or `'skipped_no_text'` | `--retry-failed` retries failed; skipped PDFs stay skipped |
+| Summarization | Per-attachment errors isolated, continues | Re-run; only processes `summary IS NULL` rows |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
 | External Enrichment | API failures are non-fatal, per-company | Re-run; only retries companies missing data |
@@ -371,6 +400,8 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | IBFS pipeline | `packages/server/src/ingest/` |
 | ICFS pipeline | `packages/server/src/icfs/` |
 | Attachments pipeline | `packages/server/src/attachments/` |
+| Inference module | `packages/server/src/inference/` |
+| Prompt templates | `packages/server/src/inference/prompts.ts` |
 | Companies module | `packages/server/src/companies/` |
 | Enrichment module | `packages/server/src/enrichment/` |
 | Makefile | `Makefile` |

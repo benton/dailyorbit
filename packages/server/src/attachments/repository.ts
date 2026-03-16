@@ -435,6 +435,82 @@ export async function markExtractionFailed(
   );
 }
 
+// ---------------------------------------------------------------------------
+// Summarization
+// ---------------------------------------------------------------------------
+
+export type PendingSummarizationRow = {
+  attachmentKey: number;
+  fileNumber: string;
+  applicantName: string;
+  dateFiled: string;
+  appTypeCode: string;
+  subsystemCode: string;
+  attachmentName: string;
+  fullText: string;
+};
+
+export async function getPendingSummarizations(
+  conn: DuckDBConnection,
+  options: { filingKeys?: number[] | undefined; limit?: number | undefined } = {},
+): Promise<PendingSummarizationRow[]> {
+  const limitClause: string =
+    options.limit != null ? `LIMIT ${String(options.limit)}` : '';
+
+  const filingKeys: number[] | undefined = options.filingKeys;
+  const filingFilter: string =
+    filingKeys != null && filingKeys.length > 0
+      ? `AND a.filing_key IN (${filingKeys.map((_, i) => `$${String(i + 1)}`).join(', ')})`
+      : '';
+
+  const sql: string = `
+    SELECT
+      a.attachment_key,
+      a.file_number,
+      COALESCE(f.signer_name, '(unknown)') AS applicant_name,
+      COALESCE(CAST(f.date_filed AS VARCHAR), '(unknown)') AS date_filed,
+      COALESCE(f.app_type_code, '(unknown)') AS app_type_code,
+      COALESCE(f.subsystem_code, '(unknown)') AS subsystem_code,
+      COALESCE(a.attachment_name, '') AS attachment_name,
+      a.full_text
+    FROM attachment a
+    JOIN filing f ON a.file_number = f.file_number
+    WHERE a.full_text IS NOT NULL
+      AND a.summary IS NULL
+      ${filingFilter}
+    ORDER BY a.text_length ASC
+    ${limitClause}`;
+
+  const params: number[] =
+    filingKeys != null && filingKeys.length > 0 ? filingKeys : [];
+  const stmt = await conn.prepare(sql);
+  for (let i: number = 0; i < params.length; i++) {
+    stmt.bindInteger(i + 1, params[i]!);
+  }
+  const reader = await stmt.runAndReadAll();
+  return reader.getRowObjectsJS().map((r) => ({
+    attachmentKey: Number(r.attachment_key),
+    fileNumber: String(r.file_number),
+    applicantName: String(r.applicant_name),
+    dateFiled: String(r.date_filed),
+    appTypeCode: String(r.app_type_code),
+    subsystemCode: String(r.subsystem_code),
+    attachmentName: String(r.attachment_name),
+    fullText: String(r.full_text),
+  }));
+}
+
+export async function saveSummary(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+  summary: string,
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment SET summary = $1 WHERE attachment_key = $2`,
+    [summary, attachmentKey] as DuckDBValue[],
+  );
+}
+
 export async function markFilingsDiscovered(
   conn: DuckDBConnection,
   filingKeys: number[],

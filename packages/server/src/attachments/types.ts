@@ -51,6 +51,14 @@ export type AttachmentPipelineOptions = {
   concurrency?: number;
   verbose?: boolean;
   onProgress?: (msg: string) => void;
+  /** Skip the summarization stage (default: false) */
+  skipSummarization?: boolean;
+  /** AWS region for Bedrock inference (default: from config or 'us-east-2') */
+  bedrockRegion?: string;
+  /** Model ID for summarization (default: from config) */
+  summarizationModel?: string;
+  /** Concurrency for Bedrock inference calls (default: 10) */
+  summarizationConcurrency?: number;
 };
 
 /** Result summary from a pipeline run */
@@ -63,6 +71,8 @@ export type AttachmentPipelineResult = {
   textsExtracted: number;
   textsSkippedNoText: number;
   textsFailed: number;
+  summariesGenerated: number;
+  summariesFailed: number;
   durationMs: number;
 };
 
