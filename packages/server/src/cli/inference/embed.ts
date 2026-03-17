@@ -13,8 +13,12 @@ import { ensureEmbeddingSchema } from '../../search/embedding-schema.ts';
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Conservative char limit for Titan V2's 8,192 token input (~4 chars/token). */
-const EMBEDDING_MAX_CHARS: number = 30_000;
+/**
+ * Conservative char limit for Titan V2's 8,192 token input.
+ * Empirical worst-case ratio on FCC legal text is ~2.58 chars/token,
+ * so 20k chars ≈ 7,750 tokens — safely under the 8,192 limit.
+ */
+const EMBEDDING_MAX_CHARS: number = 20_000;
 
 /** Overlap chars between consecutive chunks for context continuity. */
 const EMBEDDING_OVERLAP: number = 500;
