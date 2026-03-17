@@ -375,7 +375,7 @@ export async function getPendingExtractions(
     SELECT attachment_key, local_path, content_type
     FROM attachment
     WHERE download_status = 'downloaded'
-      AND content_type = 'application/pdf'
+      AND content_type IN ('application/pdf', 'text/plain', 'text/csv')
       AND local_path IS NOT NULL
       AND ${statusCondition}
       ${filingFilter}

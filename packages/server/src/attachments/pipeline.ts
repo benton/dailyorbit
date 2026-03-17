@@ -403,7 +403,9 @@ export async function runAttachmentPipeline(
       });
 
     if (pendingExtractions.length > 0) {
-      log(`${String(pendingExtractions.length)} PDFs pending text extraction`);
+      log(
+        `${String(pendingExtractions.length)} attachments pending text extraction`,
+      );
 
       const { readFileSync } = await import('node:fs');
 
@@ -411,38 +413,71 @@ export async function runAttachmentPipeline(
         const row: PendingExtractionRow = pendingExtractions[i]!;
 
         try {
-          const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
-          const result = extractTextFromPdf(bytes, row.localPath);
-
-          if (result.status === 'extracted') {
-            await markExtracted(
-              conn,
-              row.attachmentKey,
-              result.text,
-              result.textLength,
-            );
-            textsExtracted++;
-            if (verbose) {
-              log(
-                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+          // Text and CSV files: read directly as UTF-8 text
+          if (
+            row.contentType === 'text/plain' ||
+            row.contentType === 'text/csv'
+          ) {
+            const text: string = readFileSync(row.localPath, 'utf-8');
+            const textLength: number = text.replace(/\s/g, '').length;
+            if (textLength >= 10) {
+              await markExtracted(
+                conn,
+                row.attachmentKey,
+                text,
+                textLength,
               );
-            }
-          } else if (result.status === 'skipped_no_text') {
-            await markExtractionSkipped(
-              conn,
-              row.attachmentKey,
-              'skipped_no_text',
-            );
-            textsSkippedNoText++;
-            if (verbose) {
-              log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+              textsExtracted++;
+              if (verbose) {
+                log(
+                  `  ${String(row.attachmentKey)}: extracted ${String(textLength)} chars (text)`,
+                );
+              }
+            } else {
+              await markExtractionSkipped(
+                conn,
+                row.attachmentKey,
+                'skipped_no_text',
+              );
+              textsSkippedNoText++;
             }
           } else {
-            await markExtractionFailed(conn, row.attachmentKey);
-            textsFailed++;
-            log(
-              `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
+            // PDF extraction
+            const bytes: Uint8Array = new Uint8Array(
+              readFileSync(row.localPath),
             );
+            const result = extractTextFromPdf(bytes, row.localPath);
+
+            if (result.status === 'extracted') {
+              await markExtracted(
+                conn,
+                row.attachmentKey,
+                result.text,
+                result.textLength,
+              );
+              textsExtracted++;
+              if (verbose) {
+                log(
+                  `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+                );
+              }
+            } else if (result.status === 'skipped_no_text') {
+              await markExtractionSkipped(
+                conn,
+                row.attachmentKey,
+                'skipped_no_text',
+              );
+              textsSkippedNoText++;
+              if (verbose) {
+                log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+              }
+            } else {
+              await markExtractionFailed(conn, row.attachmentKey);
+              textsFailed++;
+              log(
+                `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
+              );
+            }
           }
         } catch (e: unknown) {
           await markExtractionFailed(conn, row.attachmentKey);

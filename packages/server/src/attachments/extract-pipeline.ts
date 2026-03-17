@@ -101,32 +101,62 @@ export async function runExtractionPipeline(
     const row: PendingExtractionRow = pending[i]!;
 
     try {
-      const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
-      const result = extractTextFromPdf(bytes, row.localPath);
-
-      if (result.status === 'extracted') {
-        await markExtracted(
-          conn,
-          row.attachmentKey,
-          result.text,
-          result.textLength,
-        );
-        extracted++;
-        if (options.verbose) {
-          log(
-            `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+      // Text and CSV files: read directly as UTF-8 text
+      if (
+        row.contentType === 'text/plain' ||
+        row.contentType === 'text/csv'
+      ) {
+        const text: string = readFileSync(row.localPath, 'utf-8');
+        const textLength: number = text.replace(/\s/g, '').length;
+        if (textLength >= 10) {
+          await markExtracted(conn, row.attachmentKey, text, textLength);
+          extracted++;
+          if (options.verbose) {
+            log(
+              `  ${String(row.attachmentKey)}: extracted ${String(textLength)} chars (text)`,
+            );
+          }
+        } else {
+          await markExtractionSkipped(
+            conn,
+            row.attachmentKey,
+            'skipped_no_text',
           );
-        }
-      } else if (result.status === 'skipped_no_text') {
-        await markExtractionSkipped(conn, row.attachmentKey, 'skipped_no_text');
-        skippedNoText++;
-        if (options.verbose) {
-          log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+          skippedNoText++;
         }
       } else {
-        await markExtractionFailed(conn, row.attachmentKey);
-        failed++;
-        log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
+        // PDF extraction
+        const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
+        const result = extractTextFromPdf(bytes, row.localPath);
+
+        if (result.status === 'extracted') {
+          await markExtracted(
+            conn,
+            row.attachmentKey,
+            result.text,
+            result.textLength,
+          );
+          extracted++;
+          if (options.verbose) {
+            log(
+              `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+            );
+          }
+        } else if (result.status === 'skipped_no_text') {
+          await markExtractionSkipped(
+            conn,
+            row.attachmentKey,
+            'skipped_no_text',
+          );
+          skippedNoText++;
+          if (options.verbose) {
+            log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+          }
+        } else {
+          await markExtractionFailed(conn, row.attachmentKey);
+          failed++;
+          log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
+        }
       }
     } catch (e: unknown) {
       await markExtractionFailed(conn, row.attachmentKey);

@@ -369,10 +369,27 @@ describe('attachment repository', () => {
       );
     });
 
-    it('returns only downloaded PDFs with pending extract_status', async () => {
+    it('returns only downloaded extractable types with pending extract_status', async () => {
       const rows = await getPendingExtractions(conn);
       expect(rows).toHaveLength(1);
       expect(rows[0]!.attachmentKey).toEqual(100);
+    });
+
+    it('includes text/plain and text/csv in extractable types', async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, content_type, local_path, extract_status)
+         VALUES
+          (110, 1, 'SAT-STA-20230614-00142', 'Text Doc', 'https://example.com/110.txt',
+           'downloaded', 'text/plain', '/tmp/110.txt', 'pending'),
+          (111, 1, 'SAT-STA-20230614-00142', 'CSV Data', 'https://example.com/111.csv',
+           'downloaded', 'text/csv', '/tmp/111.csv', 'pending')`,
+      );
+      const rows = await getPendingExtractions(conn);
+      const keys: number[] = rows.map((r) => r.attachmentKey);
+      expect(keys).toContain(110);
+      expect(keys).toContain(111);
     });
 
     it('includes failed extractions when retryFailed is true', async () => {
