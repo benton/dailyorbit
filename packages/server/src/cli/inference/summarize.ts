@@ -402,9 +402,18 @@ export const summarizeCommand = defineCommand({
               await saveSummary(conn, row.attachmentKey, resp.content);
               return { ok: true as const, resp };
             } catch (err: unknown) {
+              const errName: string =
+                err != null &&
+                typeof err === 'object' &&
+                'name' in err &&
+                typeof err.name === 'string'
+                  ? err.name
+                  : 'Error';
               const msg: string =
                 err instanceof Error ? err.message : String(err);
-              process.stderr.write(`\nERROR [${row.fileNumber}]: ${msg}\n`);
+              process.stderr.write(
+                `\nERROR [${row.fileNumber}] (${errName}, ${String(row.textLength)} chars): ${msg}\n`,
+              );
               return { ok: false as const };
             }
           },
