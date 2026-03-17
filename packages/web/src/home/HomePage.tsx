@@ -422,7 +422,7 @@ export default function HomePage() {
           The Daily Orbit
         </h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Satellite communications filing data at a glance.
+          Satellite Communications Industry Assistant
         </p>
       </div>
 
