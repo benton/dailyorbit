@@ -61,6 +61,39 @@ export type EarthStationSearchFilters = {
   company?: string;
 };
 
+/** Search mode for content search */
+export type SearchMode = 'keyword' | 'semantic' | 'hybrid';
+
+/** Content search query parameters (on top of existing filters) */
+export type ContentSearchQuery = {
+  /** Free-text search query */
+  q: string;
+  /** Search mode */
+  mode?: SearchMode;
+};
+
+/** A single content search hit */
+export type ContentSearchHit = {
+  /** The filing's file_number */
+  file_number: string;
+  /** Which source matched: filing metadata, attachment text, or pleading */
+  source: 'filing' | 'attachment' | 'pleading';
+  /** Source identifier (attachment_key or pleading_key, null for filing) */
+  source_key: string | null;
+  /** BM25 relevance score */
+  score: number;
+  /** Snippet with <mark> highlights */
+  snippet: string;
+  /** Filing metadata for display */
+  callsign: string | null;
+  address_attention: string | null;
+  subsystem_code: string;
+  app_type_code: string;
+  status_code: string | null;
+  date_filed: string | null;
+  company_name: string | null;
+};
+
 /** Whitelist of allowed entity/field combos for autocomplete */
 export const AUTOCOMPLETE_WHITELIST: Record<string, ReadonlySet<string>> = {
   filings: new Set([
