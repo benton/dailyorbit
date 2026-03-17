@@ -8,6 +8,8 @@ export async function loadVssExtension(
   conn: DuckDBConnection,
 ): Promise<void> {
   await conn.run(`INSTALL vss; LOAD vss;`);
+  // Required for HNSW indexes on persistent (on-disk) databases
+  await conn.run(`SET hnsw_enable_experimental_persistence = true;`);
 }
 
 /**
