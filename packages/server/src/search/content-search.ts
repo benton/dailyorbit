@@ -12,6 +12,16 @@ import type {
   FilingSearchFilters,
 } from './types.ts';
 
+/** Columns that can be used for sorting content search results */
+const CONTENT_SORTABLE_COLUMNS: ReadonlySet<string> = new Set([
+  'score',
+  'file_number',
+  'date_filed',
+  'subsystem_code',
+  'address_attention',
+  'company_name',
+]);
+
 /** Escape a string for safe interpolation into SQL single-quoted literals */
 function escapeSqlString(value: string): string {
   return value.replace(/'/g, "''");
@@ -30,8 +40,17 @@ export async function searchFilingContent(
   filters: FilingSearchFilters,
   pagination: PaginatedRequest,
 ): Promise<PaginatedResponse<ContentSearchHit>> {
-  const { page, pageSize } = normalizePaginatedRequest(pagination);
+  const { page, pageSize, sort, order } = normalizePaginatedRequest(pagination);
   const offset: number = (page - 1) * pageSize;
+  const sortColumn: string =
+    sort != null && CONTENT_SORTABLE_COLUMNS.has(sort) ? sort : 'score';
+  // Default to DESC for score, ASC for everything else
+  const sortOrder: string =
+    order !== 'asc' && order !== 'desc'
+      ? sortColumn === 'score'
+        ? 'desc'
+        : 'asc'
+      : order;
   const q: string = query.q.trim();
 
   if (q === '') {
@@ -160,7 +179,7 @@ export async function searchFilingContent(
       (SELECT co.name FROM company co WHERE co.id = r.company_id) AS company_name
     FROM ranked r
     WHERE r.rn = 1
-    ORDER BY r.score DESC
+    ORDER BY r."${sortColumn}" ${sortOrder}
     LIMIT ${String(pageSize)} OFFSET ${String(offset)}
   `;
 
