@@ -120,7 +120,11 @@ function extractWithWasm(bytes: Uint8Array): ExtractionResult {
     const error: string = e instanceof Error ? e.message : String(e);
     return { status: 'failed', text: null, textLength: 0, pageCount: 0, error };
   } finally {
-    try { doc?.free(); } catch { /* WASM cleanup may throw after a panic */ }
+    try {
+      doc?.free();
+    } catch {
+      /* WASM cleanup may throw after a panic */
+    }
   }
 }
 

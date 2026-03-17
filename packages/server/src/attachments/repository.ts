@@ -375,7 +375,7 @@ export async function getPendingExtractions(
     SELECT attachment_key, local_path, content_type
     FROM attachment
     WHERE download_status = 'downloaded'
-      AND content_type IN ('application/pdf', 'text/plain', 'text/csv')
+      AND content_type IN ('application/pdf', 'text/plain', 'text/csv', 'text/html')
       AND local_path IS NOT NULL
       AND ${statusCondition}
       ${filingFilter}
@@ -415,7 +415,7 @@ export async function markExtracted(
 export async function markExtractionSkipped(
   conn: DuckDBConnection,
   attachmentKey: number,
-  reason: 'skipped_no_text' | 'skipped_not_pdf',
+  reason: 'skipped_no_text' | 'skipped_not_pdf' | 'skipped_auth_error',
 ): Promise<void> {
   await conn.run(
     `UPDATE attachment

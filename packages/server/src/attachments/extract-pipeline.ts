@@ -5,6 +5,7 @@ import {
   trackInstance,
   untrackConnection,
 } from '../lib/graceful-shutdown.ts';
+import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
 import { printProgress } from './progress.ts';
 import {
@@ -37,6 +38,7 @@ export type ExtractionPipelineResult = {
   extracted: number;
   skippedNoText: number;
   skippedNotPdf: number;
+  skippedAuthError: number;
   failed: number;
   durationMs: number;
 };
@@ -95,6 +97,7 @@ export async function runExtractionPipeline(
 
   let extracted: number = 0;
   let skippedNoText: number = 0;
+  let skippedAuthError: number = 0;
   let failed: number = 0;
 
   for (let i: number = 0; i < pending.length; i++) {
@@ -102,10 +105,7 @@ export async function runExtractionPipeline(
 
     try {
       // Text and CSV files: read directly as UTF-8 text
-      if (
-        row.contentType === 'text/plain' ||
-        row.contentType === 'text/csv'
-      ) {
+      if (row.contentType === 'text/plain' || row.contentType === 'text/csv') {
         const text: string = readFileSync(row.localPath, 'utf-8');
         const textLength: number = text.replace(/\s/g, '').length;
         if (textLength >= 10) {
@@ -123,6 +123,52 @@ export async function runExtractionPipeline(
             'skipped_no_text',
           );
           skippedNoText++;
+        }
+      } else if (row.contentType === 'text/html') {
+        // HTML extraction
+        const html: string = readFileSync(row.localPath, 'utf-8');
+        const { statSync } = await import('node:fs');
+        const fileSizeBytes: number = statSync(row.localPath).size;
+        if (looksLikeAuthError(html, fileSizeBytes)) {
+          await markExtractionSkipped(
+            conn,
+            row.attachmentKey,
+            'skipped_auth_error',
+          );
+          skippedAuthError++;
+          if (options.verbose) {
+            log(`  ${String(row.attachmentKey)}: skipped (auth error stub)`);
+          }
+        } else {
+          const result = extractTextFromHtml(html);
+          if (result.status === 'extracted') {
+            await markExtracted(
+              conn,
+              row.attachmentKey,
+              result.text,
+              result.textLength,
+            );
+            extracted++;
+            if (options.verbose) {
+              log(
+                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (html)`,
+              );
+            }
+          } else if (result.status === 'skipped_no_text') {
+            await markExtractionSkipped(
+              conn,
+              row.attachmentKey,
+              'skipped_no_text',
+            );
+            skippedNoText++;
+            if (options.verbose) {
+              log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+            }
+          } else {
+            await markExtractionFailed(conn, row.attachmentKey);
+            failed++;
+            log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
+          }
         }
       } else {
         // PDF extraction
@@ -172,8 +218,12 @@ export async function runExtractionPipeline(
   conn.closeSync();
 
   const durationMs: number = Date.now() - start;
+  const skippedParts: string[] = [`${String(skippedNoText)} no text`];
+  if (skippedAuthError > 0) {
+    skippedParts.push(`${String(skippedAuthError)} auth errors`);
+  }
   log(
-    `Extraction complete: ${String(extracted)} extracted, ${String(skippedNoText)} skipped (no text), ${String(failed)} failed (${String(Math.round(durationMs / 1000))}s)`,
+    `Extraction complete: ${String(extracted)} extracted, ${skippedParts.join(', ')} skipped, ${String(failed)} failed (${String(Math.round(durationMs / 1000))}s)`,
   );
 
   return {
@@ -181,6 +231,7 @@ export async function runExtractionPipeline(
     extracted,
     skippedNoText,
     skippedNotPdf: 0,
+    skippedAuthError,
     failed,
     durationMs,
   };

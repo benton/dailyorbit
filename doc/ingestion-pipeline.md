@@ -4,7 +4,7 @@
 
 ## Overview
 
-Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF attachments, generates LLM-powered summaries of attachment text via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
+Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries of attachment text via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
 
 All pipeline stages are **idempotent** and designed to run nightly.
 
@@ -13,6 +13,7 @@ All pipeline stages are **idempotent** and designed to run nightly.
 ## Pipeline Diagram
 
 ```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 40, 'rankSpacing': 80, 'subGraphTitleMargin': {'top': 10, 'bottom': 10}}}}%%
 flowchart TD
     subgraph sources["Data Sources"]
         IBFS["IBFS Legacy Bulk Export\n(FTP .dat files, frozen 2025-06-24)"]
@@ -32,7 +33,7 @@ flowchart TD
         ATT_DISCOVER["2a. Attachment Discovery\n./daily-orbit attachments discover\nScrape filing pages → extract URLs"]
         ATT_DOWNLOAD["2b. Attachment Download (public)\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
         ATT_AUTH["2b′. Authenticated Download\n./daily-orbit attachments download --auth-cookies\nServiceNow URLs via session cookies"]
-        ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF → markdown via pdf-oxide-wasm"]
+        ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF/HTML/text/CSV → full text"]
         ATT_SUMMARIZE["2d. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
         FTS_REBUILD["2e. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
     end
@@ -257,16 +258,29 @@ make attachments-extract
 |---|---|
 | **Command** | `make attachments-extract` |
 | **CLI** | `./daily-orbit attachments extract [OPTIONS]` |
-| **Source** | Downloaded PDF files in `data/attachments/` |
+| **Source** | Downloaded files in `data/attachments/` (PDF, text, CSV, HTML) |
 | **Writes to** | `attachment` table: `full_text`, `text_length`, `extract_status` |
+
+**Supported content types:**
+
+| Content Type | Method | Notes |
+|---|---|---|
+| `application/pdf` | `pdf-oxide-wasm` (WASM), fallback to `pdftotext` (poppler) | Per-page markdown with heading detection |
+| `text/plain` | Direct UTF-8 read | Minimum 10 non-whitespace chars |
+| `text/csv` | Direct UTF-8 read | Same threshold as plain text |
+| `text/html` | `node-html-parser` DOM parse → text extraction | Strips script/style/noscript; auth-failure stubs detected and skipped |
 
 **Flow:**
 
-1. Query attachments where `download_status = 'downloaded'`, `content_type = 'application/pdf'`, and `extract_status = 'pending'`
-2. For each PDF, read bytes from disk and extract per-page markdown via `pdf-oxide-wasm`
+1. Query attachments where `download_status = 'downloaded'`, `content_type IN ('application/pdf', 'text/plain', 'text/csv', 'text/html')`, and `extract_status = 'pending'`
+2. Dispatch by content type:
+   - **PDF** — read bytes, extract per-page markdown via `pdf-oxide-wasm`
+   - **Text/CSV** — read as UTF-8 text
+   - **HTML** — check for auth-failure stub (< 500 bytes + error pattern), then parse DOM and extract text
 3. Classify result:
-   - **extracted** — ≥ 50 non-whitespace chars → store `full_text` + `text_length`
-   - **skipped_no_text** — < 50 chars (scanned/image-only PDF) → mark skipped
+   - **extracted** — ≥ 50 non-whitespace chars (PDF/HTML) or ≥ 10 chars (text/CSV) → store `full_text` + `text_length`
+   - **skipped_no_text** — below threshold (scanned/image-only PDF, empty HTML) → mark skipped
+   - **skipped_auth_error** — HTML auth-failure stub (download error page) → mark skipped for potential re-download
    - **failed** — parse error or file not found → mark failed
 4. Progress bar shown on stderr
 
@@ -471,7 +485,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
 | Attachment Download (public) | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
 | Attachment Download (auth) | Stops gracefully on session expiry; leaves remaining items `pending` | Re-extract cookies and re-run; resumes from where it stopped |
-| Text Extraction | Marks individual attachments as `'failed'` or `'skipped_no_text'` | `--retry-failed` retries failed; skipped PDFs stay skipped |
+| Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped PDFs stay skipped; auth-error stubs flagged for potential re-download |
 | Summarization | Per-attachment errors isolated, continues | Re-run; only processes `summary IS NULL` rows |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |

@@ -371,8 +371,17 @@ describe('attachment repository', () => {
 
     it('returns only downloaded extractable types with pending extract_status', async () => {
       const rows = await getPendingExtractions(conn);
-      expect(rows).toHaveLength(1);
-      expect(rows[0]!.attachmentKey).toEqual(100);
+      expect(rows).toHaveLength(2);
+      const keys: number[] = rows.map((r) => r.attachmentKey);
+      expect(keys).toContain(100);
+      expect(keys).toContain(102);
+    });
+
+    it('includes text/html in extractable types', async () => {
+      const rows = await getPendingExtractions(conn);
+      const htmlRow = rows.find((r) => r.contentType === 'text/html');
+      expect(htmlRow).toBeDefined();
+      expect(htmlRow!.attachmentKey).toEqual(102);
     });
 
     it('includes text/plain and text/csv in extractable types', async () => {
@@ -397,8 +406,10 @@ describe('attachment repository', () => {
         `UPDATE attachment SET extract_status = 'failed' WHERE attachment_key = 100`,
       );
       const rows = await getPendingExtractions(conn, { retryFailed: true });
-      expect(rows).toHaveLength(1);
-      expect(rows[0]!.attachmentKey).toEqual(100);
+      expect(rows).toHaveLength(2);
+      const keys: number[] = rows.map((r) => r.attachmentKey);
+      expect(keys).toContain(100);
+      expect(keys).toContain(102);
     });
 
     it('respects limit parameter', async () => {
@@ -455,6 +466,16 @@ describe('attachment repository', () => {
       );
       expect(String(reader.getRowObjectsJS()[0]!.extract_status)).toEqual(
         'skipped_no_text',
+      );
+    });
+
+    it('sets extract_status to skipped_auth_error', async () => {
+      await markExtractionSkipped(conn, 201, 'skipped_auth_error');
+      const reader = await conn.runAndReadAll(
+        `SELECT extract_status FROM attachment WHERE attachment_key = 201`,
+      );
+      expect(String(reader.getRowObjectsJS()[0]!.extract_status)).toEqual(
+        'skipped_auth_error',
       );
     });
   });

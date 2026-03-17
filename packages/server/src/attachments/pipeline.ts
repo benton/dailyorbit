@@ -8,6 +8,7 @@ import { extensionForContentType } from './content-type.ts';
 import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
+import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
 import {
   countDuplicateKeys,
@@ -393,6 +394,7 @@ export async function runAttachmentPipeline(
   // Stage 5: Extract text from newly downloaded PDFs
   let textsExtracted: number = 0;
   let textsSkippedNoText: number = 0;
+  let textsSkippedAuthError: number = 0;
   let textsFailed: number = 0;
 
   if (options.discoverOnly !== true) {
@@ -421,12 +423,7 @@ export async function runAttachmentPipeline(
             const text: string = readFileSync(row.localPath, 'utf-8');
             const textLength: number = text.replace(/\s/g, '').length;
             if (textLength >= 10) {
-              await markExtracted(
-                conn,
-                row.attachmentKey,
-                text,
-                textLength,
-              );
+              await markExtracted(conn, row.attachmentKey, text, textLength);
               textsExtracted++;
               if (verbose) {
                 log(
@@ -440,6 +437,56 @@ export async function runAttachmentPipeline(
                 'skipped_no_text',
               );
               textsSkippedNoText++;
+            }
+          } else if (row.contentType === 'text/html') {
+            // HTML extraction
+            const html: string = readFileSync(row.localPath, 'utf-8');
+            const { statSync } = await import('node:fs');
+            const fileSizeBytes: number = statSync(row.localPath).size;
+            if (looksLikeAuthError(html, fileSizeBytes)) {
+              await markExtractionSkipped(
+                conn,
+                row.attachmentKey,
+                'skipped_auth_error',
+              );
+              textsSkippedAuthError++;
+              if (verbose) {
+                log(
+                  `  ${String(row.attachmentKey)}: skipped (auth error stub)`,
+                );
+              }
+            } else {
+              const result = extractTextFromHtml(html);
+              if (result.status === 'extracted') {
+                await markExtracted(
+                  conn,
+                  row.attachmentKey,
+                  result.text,
+                  result.textLength,
+                );
+                textsExtracted++;
+                if (verbose) {
+                  log(
+                    `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (html)`,
+                  );
+                }
+              } else if (result.status === 'skipped_no_text') {
+                await markExtractionSkipped(
+                  conn,
+                  row.attachmentKey,
+                  'skipped_no_text',
+                );
+                textsSkippedNoText++;
+                if (verbose) {
+                  log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+                }
+              } else {
+                await markExtractionFailed(conn, row.attachmentKey);
+                textsFailed++;
+                log(
+                  `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
+                );
+              }
             }
           } else {
             // PDF extraction
@@ -649,6 +696,7 @@ export async function runAttachmentPipeline(
     attachmentsSkipped,
     textsExtracted,
     textsSkippedNoText,
+    textsSkippedAuthError,
     textsFailed,
     summariesGenerated,
     summariesFailed,

@@ -58,6 +58,7 @@ describe('runExtractionPipeline', () => {
       extracted: 0,
       skippedNoText: 0,
       skippedNotPdf: 0,
+      skippedAuthError: 0,
       failed: 0,
       durationMs: expect.any(Number),
     });

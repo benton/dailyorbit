@@ -38,7 +38,9 @@ export class EmbeddingService {
     normalize: boolean,
     concurrency: number,
   ): Promise<EmbeddingResponse[]> {
-    const results: EmbeddingResponse[] = Array.from<EmbeddingResponse>({ length: texts.length });
+    const results: EmbeddingResponse[] = Array.from<EmbeddingResponse>({
+      length: texts.length,
+    });
     let nextIndex: number = 0;
 
     async function worker(fn: EmbedFunction): Promise<void> {

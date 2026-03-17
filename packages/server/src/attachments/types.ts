@@ -72,6 +72,7 @@ export type AttachmentPipelineResult = {
   attachmentsSkipped: number;
   textsExtracted: number;
   textsSkippedNoText: number;
+  textsSkippedAuthError: number;
   textsFailed: number;
   summariesGenerated: number;
   summariesFailed: number;
