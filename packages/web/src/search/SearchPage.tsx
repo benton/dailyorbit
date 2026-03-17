@@ -544,9 +544,7 @@ type ContentSearchResult = {
 const contentColumns: Array<ColumnDef<ContentSearchResult, unknown>> = [
   {
     accessorKey: 'file_number',
-    cell: ({ getValue }) => (
-      <span className="font-mono text-sm">{getValue() as string}</span>
-    ),
+    cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() as string}</span>,
     header: 'File Number',
     size: 220,
   },
@@ -555,11 +553,7 @@ const contentColumns: Array<ColumnDef<ContentSearchResult, unknown>> = [
     cell: ({ getValue }) => {
       const source: string = getValue() as string;
       const label: string =
-        source === 'filing'
-          ? 'Filing'
-          : source === 'attachment'
-            ? 'Attachment'
-            : 'Comment';
+        source === 'filing' ? 'Filing' : source === 'attachment' ? 'Attachment' : 'Comment';
       return (
         <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-700">
           {label}
@@ -1090,7 +1084,9 @@ export default function SearchPage() {
       if (filingFilters.company.trim() !== '') {
         parts.push(`company=${encodeURIComponent(filingFilters.company.trim())}`);
       }
-      return apiFetch<PaginatedResponse<ContentSearchResult>>(`/api/search/content?${parts.join('&')}`);
+      return apiFetch<PaginatedResponse<ContentSearchResult>>(
+        `/api/search/content?${parts.join('&')}`,
+      );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [contentQuery, searchMode, filingFilters, searchTrigger],
@@ -1132,7 +1128,7 @@ export default function SearchPage() {
       {/* Content search bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input
             className="pl-10"
             onChange={(e) => setContentQuery(e.target.value)}
@@ -1147,9 +1143,7 @@ export default function SearchPage() {
         </div>
         <select
           className="h-9 rounded-md border border-neutral-200 bg-transparent px-2 text-sm dark:border-neutral-700"
-          onChange={(e) =>
-            setSearchMode(e.target.value as 'keyword' | 'semantic' | 'hybrid')
-          }
+          onChange={(e) => setSearchMode(e.target.value as 'keyword' | 'semantic' | 'hybrid')}
           value={searchMode}
         >
           <option value="keyword">Keyword</option>

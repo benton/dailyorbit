@@ -6,7 +6,8 @@ import { resolveFromRoot } from '../shared/context.ts';
 export const rebuildIndexCommand = defineCommand({
   meta: {
     name: 'rebuild-index',
-    description: 'Rebuild all full-text search indexes (run after data ingestion)',
+    description:
+      'Rebuild all full-text search indexes (run after data ingestion)',
   },
   args: {
     database: databaseArg,

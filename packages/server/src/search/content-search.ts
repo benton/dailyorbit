@@ -62,20 +62,14 @@ export async function searchFilingContent(
   // Build filter conditions (no parameters needed — filters are whitelisted values)
   const conditions: string[] = [];
 
-  if (
-    filters.subsystem_code != null &&
-    filters.subsystem_code.length > 0
-  ) {
+  if (filters.subsystem_code != null && filters.subsystem_code.length > 0) {
     const values: string = filters.subsystem_code
       .map((v: string) => `'${escapeSqlString(v)}'`)
       .join(', ');
     conditions.push(`f.subsystem_code IN (${values})`);
   }
 
-  if (
-    filters.app_type_code != null &&
-    filters.app_type_code.length > 0
-  ) {
+  if (filters.app_type_code != null && filters.app_type_code.length > 0) {
     const values: string = filters.app_type_code
       .map((v: string) => `'${escapeSqlString(v)}'`)
       .join(', ');
@@ -98,10 +92,7 @@ export async function searchFilingContent(
     );
   }
 
-  if (
-    filters.date_filed_to != null &&
-    filters.date_filed_to.trim() !== ''
-  ) {
+  if (filters.date_filed_to != null && filters.date_filed_to.trim() !== '') {
     conditions.push(
       `f.date_filed <= '${escapeSqlString(filters.date_filed_to.trim())}'`,
     );
@@ -228,22 +219,16 @@ export async function searchFilingContent(
       return {
         file_number: String(row.file_number ?? ''),
         source: String(row.source) as 'filing' | 'attachment' | 'pleading',
-        source_key:
-          row.source_key != null ? String(row.source_key) : null,
+        source_key: row.source_key != null ? String(row.source_key) : null,
         score: Number(row.score ?? 0),
         snippet,
-        callsign:
-          row.callsign != null ? String(row.callsign) : null,
+        callsign: row.callsign != null ? String(row.callsign) : null,
         address_attention:
-          row.address_attention != null
-            ? String(row.address_attention)
-            : null,
+          row.address_attention != null ? String(row.address_attention) : null,
         subsystem_code: String(row.subsystem_code ?? ''),
         app_type_code: String(row.app_type_code ?? ''),
-        status_code:
-          row.status_code != null ? String(row.status_code) : null,
-        date_filed:
-          row.date_filed != null ? String(row.date_filed) : null,
+        status_code: row.status_code != null ? String(row.status_code) : null,
+        date_filed: row.date_filed != null ? String(row.date_filed) : null,
         company_name:
           row.company_name != null ? String(row.company_name) : null,
       };

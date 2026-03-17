@@ -50,8 +50,7 @@ describe('extractSnippet', () => {
   });
 
   it('should escape HTML in the source text to prevent XSS', () => {
-    const xssText: string =
-      'Some <script>alert("xss")</script> satellite text';
+    const xssText: string = 'Some <script>alert("xss")</script> satellite text';
     const result = extractSnippet(xssText, 'satellite', 200);
     expect(result.snippet).not.toContain('<script>');
     expect(result.snippet).toContain('&lt;script&gt;');

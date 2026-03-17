@@ -44,10 +44,7 @@ export function extractSnippet(
   }
 
   // Use non-global regex to find first match position (g flag omits index)
-  const firstMatchPattern: RegExp = new RegExp(
-    `(${terms.join('|')})`,
-    'i',
-  );
+  const firstMatchPattern: RegExp = new RegExp(`(${terms.join('|')})`, 'i');
   const firstMatch: RegExpMatchArray | null = text.match(firstMatchPattern);
   let start: number = 0;
   if (firstMatch?.index != null) {
