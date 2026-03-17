@@ -6,4 +6,5 @@ export default defineConfig({
   target: 'node23',
   outDir: 'dist',
   clean: true,
+  external: ['playwright'],
 });
