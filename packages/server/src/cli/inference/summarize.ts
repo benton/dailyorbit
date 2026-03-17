@@ -317,7 +317,7 @@ export const summarizeCommand = defineCommand({
     'chunk-size': {
       type: 'string',
       description: 'Max chars per chunk for large documents (0 = no chunking)',
-      default: '80000',
+      default: '60000',
     },
     'dry-run': {
       type: 'boolean',
