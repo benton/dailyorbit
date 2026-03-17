@@ -1,6 +1,9 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
-import { createHash } from 'node:crypto';
 import type { FileNumber } from '../lib/file-number.ts';
+import { computeTextChecksum } from '../lib/text-utils.ts';
+
+// Re-export so existing consumers (tests, other modules) can still import from here
+export { computeTextChecksum } from '../lib/text-utils.ts';
 import { parseDuration } from './duration.ts';
 import type {
   AttachmentMetadata,
@@ -429,10 +432,6 @@ export async function getPendingExtractions(
     localPath: String(r.local_path),
     contentType: String(r.content_type),
   }));
-}
-
-export function computeTextChecksum(text: string): string {
-  return createHash('md5').update(text).digest('hex');
 }
 
 export async function markExtracted(

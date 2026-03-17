@@ -36,7 +36,8 @@ flowchart TD
         ATT_VALIDATE["2c. Content-Type Validation\n./daily-orbit attachments validate\nfile magic → correct MIME type"]
         ATT_EXTRACT["2d. Text Extraction\n./daily-orbit attachments extract\nPDF/HTML/text/CSV → full text"]
         ATT_SUMMARIZE["2e. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
-        FTS_REBUILD["2f. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
+        ATT_EMBED["2f. Vector Embedding\n./daily-orbit inference embed\nChunked full-text → Titan V2 embeddings via Bedrock"]
+        FTS_REBUILD["2g. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -76,6 +77,9 @@ flowchart TD
     DB --> ATT_SUMMARIZE
     BEDROCK --> ATT_SUMMARIZE
     ATT_SUMMARIZE --> DB
+    DB --> ATT_EMBED
+    BEDROCK --> ATT_EMBED
+    ATT_EMBED --> DB
     DB --> FTS_REBUILD
     FTS_REBUILD --> DB
 
@@ -338,7 +342,37 @@ make attachments-extract
 
 ---
 
-### 2f. Full-Text Search Index Rebuild
+### 2f. Vector Embedding
+
+| | |
+|---|---|
+| **Command** | `make embed-all` or `make embed SOURCE=attachment` |
+| **CLI** | `./daily-orbit inference embed [OPTIONS]` |
+| **Source** | `attachment.full_text`, `filing.description`, `pleading.exhibit_attachment_html` |
+| **Writes to** | `embedding` table (one row per chunk per source document) |
+
+**Flow:**
+
+1. For each source table (attachment, filing, pleading):
+   - Query rows with non-NULL text that have no embedding, or whose text has changed (MD5 checksum mismatch)
+2. For each row:
+   - Compute `text_checksum` (MD5 of source text)
+   - Split text into chunks of ≤ 30,000 chars with 500-char overlap (conservative for Titan V2's 8,192 token limit)
+   - Short texts (under 30k chars) produce a single chunk
+3. Embed each chunk via AWS Bedrock Titan Embed Text V2 (512-dimensional vectors, cosine-normalized)
+4. Store each chunk as a separate `embedding` row: `(source_table, source_key, chunk_index, embedding, model_id, text_checksum)`
+5. On re-run with changed text: upsert new chunks, delete any stale higher-indexed chunks from previous runs
+6. Update source table attribution: `indexed_by`, `indexed_at`
+
+**Deduplication:** The checksum-based skip logic makes the command fully idempotent — re-running on an already-indexed dataset is a fast no-op (only the checksum comparison query runs, no Bedrock calls).
+
+**Vector search integration:** The existing vector search query deduplicates by `file_number` keeping the best cosine similarity across all chunks, so multi-chunk documents work transparently.
+
+**Key options:** `--source` (attachment|filing|pleading|all, default: all), `--model` (default: `amazon.titan-embed-text-v2:0`), `--dimensions` (default: 512), `--region` (default: `us-east-2`), `--concurrency` (default: 10), `--batch` (default: 100), `--limit`, `--dry-run`
+
+---
+
+### 2g. Full-Text Search Index Rebuild
 
 | | |
 |---|---|
@@ -460,28 +494,31 @@ make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
 # 2. Discover and download public attachments, extract text, summarize
 make attachments
 
-# 3. Extract ICFS session cookies (opens browser — log in, press Enter)
+# 3. Generate vector embeddings for semantic search
+make embed-all
+
+# 4. Extract ICFS session cookies (opens browser — log in, press Enter)
 make attachments-extract-cookies
 
-# 4. Download ServiceNow-hosted attachments using session cookies
+# 5. Download ServiceNow-hosted attachments using session cookies
 make attachments-download-auth
 
-# 5. Extract text from newly downloaded authenticated attachments
+# 6. Extract text from newly downloaded authenticated attachments
 make attachments-extract
 
-# 6. Ensure company seed data is current (no-ops if unchanged)
+# 7. Ensure company seed data is current (no-ops if unchanged)
 make companies-seed
 
-# 7. Attribute any remaining unattributed filings
+# 8. Attribute any remaining unattributed filings
 make companies-attribute
 
-# 8. Extract ownership events from new T/C and ASG filings
+# 9. Extract ownership events from new T/C and ASG filings
 make companies-extract-ownership
 
-# 9. Enrich any companies missing external data
+# 10. Enrich any companies missing external data
 make companies-enrich
 
-# 10. (Optional) Report attribution coverage
+# 11. (Optional) Report attribution coverage
 make companies-stats
 ```
 
@@ -497,6 +534,7 @@ make companies-stats
 | Attachment Download (public) | 500ms | 1 | Per file download |
 | Attachment Download (auth) | 500ms | 1 | Start conservative; increase gradually |
 | Summarization (Bedrock) | 0ms | 10 | Bedrock handles throttling; concurrency configurable |
+| Embedding (Bedrock) | 0ms | 10 | Bedrock handles throttling; multiple chunks per row |
 | GLEIF API | 300ms | 1 | Built-in rate limiter |
 | Wikidata SPARQL | 1000ms | 1 | Per Wikidata policy |
 
@@ -516,6 +554,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Content-Type Validation | Non-fatal per-file; unvalidated files retried next run | Re-run `attachments validate`; idempotent |
 | Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped files stay skipped; auth-error stubs flagged for potential re-download |
 | Summarization | Per-attachment errors isolated, continues; dedup copies existing summaries for identical text | Re-run; only processes `summary IS NULL` rows; dedup is automatic |
+| Embedding | Per-row errors isolated, continues; checksum dedup skips unchanged text | Re-run; only processes rows with missing or stale checksums; fully idempotent |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
 | External Enrichment | API failures are non-fatal, per-company | Re-run; only retries companies missing data |

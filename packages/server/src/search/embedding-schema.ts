@@ -30,10 +30,16 @@ export async function ensureEmbeddingSchema(
       chunk_index   INTEGER NOT NULL DEFAULT 0,
       embedding     FLOAT[512],
       model_id      VARCHAR NOT NULL,
+      text_checksum VARCHAR,
       created_at    TIMESTAMP NOT NULL DEFAULT current_timestamp,
       UNIQUE (source_table, source_key, chunk_index)
     )
   `);
+
+  // Migration for existing tables
+  await conn.run(
+    `ALTER TABLE embedding ADD COLUMN IF NOT EXISTS text_checksum VARCHAR`,
+  );
 
   // HNSW index for cosine similarity
   await conn.run(`

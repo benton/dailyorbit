@@ -4,7 +4,20 @@ import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
 import { EmbeddingService } from '../../inference/embedding-service.ts';
+import { splitText } from '../../inference/text-chunker.ts';
+import { processWithConcurrency } from '../../lib/concurrency.ts';
+import { computeTextChecksum } from '../../lib/text-utils.ts';
 import { ensureEmbeddingSchema } from '../../search/embedding-schema.ts';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Conservative char limit for Titan V2's 8,192 token input (~4 chars/token). */
+const EMBEDDING_MAX_CHARS: number = 30_000;
+
+/** Overlap chars between consecutive chunks for context continuity. */
+const EMBEDDING_OVERLAP: number = 500;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,7 +36,7 @@ const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
   attachment: {
     table: 'attachment',
     keyColumn: 'attachment_key',
-    textColumn: 'summary',
+    textColumn: 'full_text',
     joinClause: '',
   },
   filing: {
@@ -43,12 +56,18 @@ const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
 type EmbeddableRow = {
   readonly sourceKey: string;
   readonly text: string;
+  readonly textChecksum: string;
 };
 
 // ---------------------------------------------------------------------------
 // DB operations
 // ---------------------------------------------------------------------------
 
+/**
+ * Fetch a batch of rows that need (re-)embedding. A row needs embedding if:
+ * - No embedding rows exist for it, OR
+ * - The existing embedding's text_checksum differs from the source text checksum
+ */
 async function fetchBatch(
   conn: DuckDBConnection,
   cfg: SourceConfig,
@@ -60,8 +79,13 @@ async function fetchBatch(
     FROM ${cfg.table} t
     ${cfg.joinClause}
     WHERE t.${cfg.textColumn} IS NOT NULL
-      AND CAST(t.${cfg.keyColumn} AS VARCHAR) NOT IN (
-        SELECT e.source_key FROM embedding e WHERE e.source_table = ?
+      AND NOT EXISTS (
+        SELECT 1 FROM embedding e
+        WHERE e.source_table = ?
+          AND e.source_key = CAST(t.${cfg.keyColumn} AS VARCHAR)
+          AND e.chunk_index = 0
+          AND e.text_checksum IS NOT NULL
+          AND e.text_checksum = md5(t.${cfg.textColumn})
       )
     ORDER BY t.${cfg.keyColumn}
     LIMIT ?
@@ -72,9 +96,11 @@ async function fetchBatch(
   ] as DuckDBValue[]);
   const rows: EmbeddableRow[] = [];
   for (const row of reader.getRows()) {
+    const text: string = String(row[1]);
     rows.push({
       sourceKey: String(row[0]),
-      text: String(row[1]),
+      text,
+      textChecksum: computeTextChecksum(text),
     });
   }
   return rows;
@@ -84,22 +110,44 @@ async function saveEmbedding(
   conn: DuckDBConnection,
   sourceTable: string,
   sourceKey: string,
+  chunkIndex: number,
   embedding: number[],
   modelId: string,
+  textChecksum: string,
 ): Promise<void> {
   await conn.run(
-    `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id)
-     VALUES (?, ?, 0, ?::FLOAT[512], ?)
+    `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id, text_checksum)
+     VALUES (?, ?, ?, ?::FLOAT[512], ?, ?)
      ON CONFLICT (source_table, source_key, chunk_index) DO UPDATE
        SET embedding = EXCLUDED.embedding,
            model_id = EXCLUDED.model_id,
+           text_checksum = EXCLUDED.text_checksum,
            created_at = current_timestamp`,
     [
       sourceTable,
       sourceKey,
+      chunkIndex,
       JSON.stringify(embedding),
       modelId,
+      textChecksum,
     ] as DuckDBValue[],
+  );
+}
+
+/**
+ * Delete any stale chunk rows for a source key that have a higher chunk_index
+ * than the current number of chunks (e.g. text got shorter on re-embed).
+ */
+async function deleteStaleChunks(
+  conn: DuckDBConnection,
+  sourceTable: string,
+  sourceKey: string,
+  maxChunkIndex: number,
+): Promise<void> {
+  await conn.run(
+    `DELETE FROM embedding
+     WHERE source_table = ? AND source_key = ? AND chunk_index > ?`,
+    [sourceTable, sourceKey, maxChunkIndex] as DuckDBValue[],
   );
 }
 
@@ -125,39 +173,17 @@ async function countRemaining(
   const sql: string = `
     SELECT COUNT(*) FROM ${cfg.table} t
     WHERE t.${cfg.textColumn} IS NOT NULL
-      AND CAST(t.${cfg.keyColumn} AS VARCHAR) NOT IN (
-        SELECT e.source_key FROM embedding e WHERE e.source_table = ?
+      AND NOT EXISTS (
+        SELECT 1 FROM embedding e
+        WHERE e.source_table = ?
+          AND e.source_key = CAST(t.${cfg.keyColumn} AS VARCHAR)
+          AND e.chunk_index = 0
+          AND e.text_checksum IS NOT NULL
+          AND e.text_checksum = md5(t.${cfg.textColumn})
       )
   `;
   const reader = await conn.runAndReadAll(sql, [cfg.table] as DuckDBValue[]);
   return Number(reader.getRows()[0]![0]);
-}
-
-// ---------------------------------------------------------------------------
-// Concurrency helper (same pattern as summarize.ts)
-// ---------------------------------------------------------------------------
-
-async function processWithConcurrency<T, R>(
-  items: readonly T[],
-  concurrency: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = Array.from<R>({ length: items.length });
-  let nextIndex: number = 0;
-
-  async function worker(): Promise<void> {
-    while (nextIndex < items.length) {
-      const idx: number = nextIndex++;
-      results[idx] = await fn(items[idx]!);
-    }
-  }
-
-  const workers: Promise<void>[] = [];
-  for (let i = 0; i < Math.min(concurrency, items.length); i++) {
-    workers.push(worker());
-  }
-  await Promise.all(workers);
-  return results;
 }
 
 // ---------------------------------------------------------------------------
@@ -248,19 +274,9 @@ export const embedCommand = defineCommand({
         console.log(
           `  Target: ${String(target)} | Model: ${modelId} | Dims: ${String(dimensions)} | Concurrency: ${String(concurrency)}`,
         );
-
-        if (source === 'attachment') {
-          // Warn if most attachment summaries are NULL
-          const nullCount = await conn.runAndReadAll(
-            `SELECT COUNT(*) FROM attachment WHERE summary IS NULL AND full_text IS NOT NULL`,
-          );
-          const nullSummaries: number = Number(nullCount.getRows()[0]![0]);
-          if (nullSummaries > remaining) {
-            console.warn(
-              `  ⚠ ${String(nullSummaries)} attachments have NULL summaries — run 'inference summarize' first`,
-            );
-          }
-        }
+        console.log(
+          `  Chunk size: ${String(EMBEDDING_MAX_CHARS)} chars | Overlap: ${String(EMBEDDING_OVERLAP)} chars`,
+        );
 
         if (dryRun) {
           console.log('  Dry run — skipping.');
@@ -276,6 +292,7 @@ export const embedCommand = defineCommand({
         const service = new EmbeddingService(client);
 
         let processed: number = 0;
+        let totalChunks: number = 0;
         let totalTokens: number = 0;
         let totalLatencyMs: number = 0;
         let errors: number = 0;
@@ -291,24 +308,49 @@ export const embedCommand = defineCommand({
             concurrency,
             async (row: EmbeddableRow) => {
               try {
-                const resp = await service.embedQuery(
+                const chunks: string[] = splitText(
                   row.text,
-                  modelId,
-                  dimensions,
-                  true,
+                  EMBEDDING_MAX_CHARS,
+                  EMBEDDING_OVERLAP,
                 );
-                await saveEmbedding(
+
+                let rowTokens: number = 0;
+                let rowLatencyMs: number = 0;
+
+                for (let ci = 0; ci < chunks.length; ci++) {
+                  const resp = await service.embedQuery(
+                    chunks[ci]!,
+                    modelId,
+                    dimensions,
+                    true,
+                  );
+                  await saveEmbedding(
+                    conn,
+                    source,
+                    row.sourceKey,
+                    ci,
+                    resp.embedding,
+                    modelId,
+                    row.textChecksum,
+                  );
+                  rowTokens += resp.inputTokenCount;
+                  rowLatencyMs += resp.latencyMs;
+                }
+
+                // Clean up any leftover chunks from a previous run with more chunks
+                await deleteStaleChunks(
                   conn,
                   source,
                   row.sourceKey,
-                  resp.embedding,
-                  modelId,
+                  chunks.length - 1,
                 );
+
                 await updateAttribution(conn, cfg, row.sourceKey, modelId);
                 return {
                   ok: true as const,
-                  tokens: resp.inputTokenCount,
-                  latencyMs: resp.latencyMs,
+                  tokens: rowTokens,
+                  latencyMs: rowLatencyMs,
+                  chunks: chunks.length,
                 };
               } catch (err: unknown) {
                 const msg: string =
@@ -316,7 +358,12 @@ export const embedCommand = defineCommand({
                 process.stderr.write(
                   `\n  ERROR [${source}:${row.sourceKey}]: ${msg}\n`,
                 );
-                return { ok: false as const, tokens: 0, latencyMs: 0 };
+                return {
+                  ok: false as const,
+                  tokens: 0,
+                  latencyMs: 0,
+                  chunks: 0,
+                };
               }
             },
           );
@@ -325,6 +372,7 @@ export const embedCommand = defineCommand({
             if (r.ok) {
               totalTokens += r.tokens;
               totalLatencyMs += r.latencyMs;
+              totalChunks += r.chunks;
             } else {
               errors++;
             }
@@ -338,7 +386,7 @@ export const embedCommand = defineCommand({
           const eta: number =
             rate > 0 ? Math.round((target - processed) / rate) : 0;
           process.stdout.write(
-            `\r  ${String(processed)} / ${String(target)} | ${rate.toFixed(1)} rows/s | elapsed ${formatDuration(elapsed)} | ETA ${formatDuration(eta)} | errors: ${String(errors)}`,
+            `\r  ${String(processed)} / ${String(target)} | ${rate.toFixed(1)} rows/s | ${String(totalChunks)} chunks | elapsed ${formatDuration(elapsed)} | ETA ${formatDuration(eta)} | errors: ${String(errors)}`,
           );
         }
 
@@ -346,7 +394,7 @@ export const embedCommand = defineCommand({
           (performance.now() - startTime) / 1000,
         );
         console.log(
-          `\n  Done: ${String(processed)} rows, ${String(totalTokens)} tokens, ${formatDuration(wallSec)}, avg latency ${processed > 0 ? String(Math.round(totalLatencyMs / processed)) : '0'}ms, ${String(errors)} errors`,
+          `\n  Done: ${String(processed)} rows, ${String(totalChunks)} chunks, ${String(totalTokens)} tokens, ${formatDuration(wallSec)}, avg latency ${processed > 0 ? String(Math.round(totalLatencyMs / processed)) : '0'}ms, ${String(errors)} errors`,
         );
       }
     } finally {
