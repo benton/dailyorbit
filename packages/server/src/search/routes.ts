@@ -8,9 +8,11 @@ import {
   searchFilings,
   searchSatellites,
 } from './repository.ts';
+import { searchFilingContent } from './content-search.ts';
 import type {
   EarthStationSearchFilters,
   FilingSearchFilters,
+  SearchMode,
   SatelliteSearchFilters,
 } from './types.ts';
 
@@ -99,6 +101,45 @@ searchRoutes.get('/earth-stations', async (c) => {
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
     const result = await searchEarthStations(conn, filters, pagination);
+    return c.json(result);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// GET /api/search/content
+searchRoutes.get('/content', async (c) => {
+  const q = c.req.query();
+  const contentQuery = {
+    q: q.q ?? '',
+    mode: (q.mode as SearchMode | undefined) ?? 'keyword',
+  };
+
+  // Reuse existing filter parsing
+  const filters: FilingSearchFilters = {};
+  if (q.callsign != null) filters.callsign = q.callsign;
+  if (q.applicant != null) filters.applicant = q.applicant;
+  if (q.company != null) filters.company = q.company;
+  const subsystems = parseList(q.subsystem_code);
+  if (subsystems != null) filters.subsystem_code = subsystems;
+  const appTypes = parseList(q.app_type_code);
+  if (appTypes != null) filters.app_type_code = appTypes;
+  const statuses = parseList(q.status_code);
+  if (statuses != null) filters.status_code = statuses;
+  if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
+  if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
+
+  const pagination: PaginatedRequest = parsePagination(q);
+
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    const result = await searchFilingContent(
+      conn,
+      contentQuery,
+      filters,
+      pagination,
+    );
     return c.json(result);
   } finally {
     conn.closeSync();

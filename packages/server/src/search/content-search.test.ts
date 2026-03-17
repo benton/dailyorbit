@@ -92,12 +92,14 @@ describe('searchFilingContent', () => {
     const fileNumbers: string[] = result.data.map((h) => h.file_number);
     expect(fileNumbers).toContain('SAT-LOA-20240101-00001');
     // Results should have snippets
-    expect(result.data[0].snippet).toContain('<mark>');
+    const firstHit = result.data[0];
+    expect(firstHit).toBeDefined();
+    expect(firstHit!.snippet).toContain('<mark>');
     // Results should be sorted by score descending
     for (let i: number = 1; i < result.data.length; i++) {
-      expect(result.data[i - 1].score).toBeGreaterThanOrEqual(
-        result.data[i].score,
-      );
+      const prev = result.data[i - 1]!;
+      const curr = result.data[i]!;
+      expect(prev.score).toBeGreaterThanOrEqual(curr.score);
     }
   });
 
