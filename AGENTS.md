@@ -25,6 +25,8 @@ For specific TypeScript and React best practices (only as a reference), see:
 
 3. **THE BRONZE RULE**:
    All application data except for binary files should be stored in the DuckDB database, including secrets and other configuration data. The default database path should be `data/daily-orbit.duckdb`. Binary files are stored at a URL that points either to a local directory or to an S3-compatible storage service endpoint.
+   **DuckDB is a single-process DB**
+   When using worktrees, multiple agents, or other forms of parallel work that touches the database, look for a secondary copy of the default DB if it is locked. If the default DB is small, consider making a separate copy for each parallel path, or initializing new ones with the `./daily-orbit` CLI. DuckDB uses a write-ahead-log so it's safe to copy while locked.
 
 ---
 
