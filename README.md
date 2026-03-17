@@ -9,7 +9,7 @@ It aggregates data from several sources, but most of the information comes from 
 
 The main purpose of this software is to provide its users deep insights into the competitive landscape of the satellite communications industry, and the legal issues that inform it. To that end, the tool offers a personalized, web-based interface for exploring the data provided by IBFS: the content of the FCC-submitted Applications, the entities who filed or commented on them, and the documents associated with them. Specific web pages for individial Applications, Applicants, and other entities are provided to help the user understand the overall picture and provide actionable data. The metadata and content of all the Filings that have ever been submitted to the IBFS are indexed by keyword and vector indexing for a fast, flexible, unified search interface.
 
-Additionally, this tool provides LLM-driven summaries of all the Filings that have ever been submitted to the IBFS, timeline summaries for each Application,
+Additionally, this tool provides LLM-driven summaries of all document content, timeline summaries for each Application Filing, and analysis of the mergers and acquisitions landscape.
 
 ## 2. IBFS Application Types
 

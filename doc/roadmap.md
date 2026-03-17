@@ -19,9 +19,10 @@
 
 - v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [x] Full text search via DuckDB BM25
-- v1.2.0 [ ] Vector-DB search
+- v1.2.0 [ ] Vector-DB search via Bedrock embeddings
 - v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
-- v1.4.0 [ ]
+- v1.4.0 [ ] News items Entity and RSS ingest of relevant news sources
+- v1.5.0 [ ] RAG Search module
 
 ## Medium Term: The Daily Orbit Newspaper
 
@@ -43,3 +44,4 @@
 - v?.x.x [ ] Backup PDF text extraction tool
 - v?.x.x [ ] Admin ingest control UI
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
+- v?.x.x [ ] Parse GXT files

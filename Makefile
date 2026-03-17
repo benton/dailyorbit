@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-validate attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -50,7 +50,10 @@ attachments-extract-cookies: ## Extract ICFS session cookies via browser login
 attachments-download-auth: ## Download ServiceNow attachments with auth cookies
 	$(CLI) attachments download --auth-cookies data/icfs-cookies.json --retry-failed $(ARGS)
 
-attachments-extract: ## Extract text from downloaded PDF attachments
+attachments-validate: ## Validate content types of downloaded attachments via file magic
+	$(CLI) attachments validate $(ARGS)
+
+attachments-extract: ## Extract text from downloaded attachments (PDF, text, CSV)
 	$(CLI) attachments extract $(ARGS)
 
 attachments-reset: ## Delete all downloaded attachments and reset DB status to pending

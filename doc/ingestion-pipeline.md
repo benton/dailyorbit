@@ -4,7 +4,7 @@
 
 ## Overview
 
-Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries of attachment text via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
+Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, validates their actual content types via file-magic detection, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
 
 All pipeline stages are **idempotent** and designed to run nightly.
 
@@ -33,9 +33,10 @@ flowchart TD
         ATT_DISCOVER["2a. Attachment Discovery\n./daily-orbit attachments discover\nScrape filing pages → extract URLs"]
         ATT_DOWNLOAD["2b. Attachment Download (public)\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
         ATT_AUTH["2b′. Authenticated Download\n./daily-orbit attachments download --auth-cookies\nServiceNow URLs via session cookies"]
-        ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF/HTML/text/CSV → full text"]
-        ATT_SUMMARIZE["2d. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
-        FTS_REBUILD["2e. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
+        ATT_VALIDATE["2c. Content-Type Validation\n./daily-orbit attachments validate\nfile magic → correct MIME type"]
+        ATT_EXTRACT["2d. Text Extraction\n./daily-orbit attachments extract\nPDF/HTML/text/CSV → full text"]
+        ATT_SUMMARIZE["2e. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
+        FTS_REBUILD["2f. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -68,6 +69,8 @@ flowchart TD
     ATT_DOWNLOAD --> DISK
     ATT_AUTH --> DB
     ATT_AUTH --> DISK
+    DISK --> ATT_VALIDATE
+    ATT_VALIDATE --> DB
     DISK --> ATT_EXTRACT
     ATT_EXTRACT --> DB
     DB --> ATT_SUMMARIZE
@@ -252,7 +255,29 @@ make attachments-download-auth
 make attachments-extract
 ```
 
-### 2c. Text Extraction
+### 2c. Content-Type Validation
+
+| | |
+|---|---|
+| **Command** | `make attachments-validate` |
+| **CLI** | `./daily-orbit attachments validate [OPTIONS]` |
+| **Source** | Downloaded files on disk |
+| **Writes to** | `attachment` table: `content_type`, `content_type_source` |
+
+**Why:** The FCC serves ~778 non-PDF files with `Content-Type: application/pdf` — mostly plain-text Schedule S cross-references, plus some zip archives and CSV files. Without validation, the extraction pipeline wastes time trying to parse non-PDFs, and legitimate text content never gets ingested.
+
+**Flow:**
+
+1. Query attachments where `download_status = 'downloaded'` and `content_type_source` is `'http_header'` or NULL
+2. For each file, run `file --brief --mime-type` to detect actual MIME type
+3. Update `content_type` to the detected type and set `content_type_source = 'file_magic'`
+4. Corrected content types change which files reach the extraction stage (e.g. zip archives are excluded, text files are read directly)
+
+**Integration:** Validation runs automatically before text extraction in both the main pipeline (`attachments sync`) and the standalone extraction pipeline (`attachments extract`). It can also be run standalone.
+
+**Key options:** `--limit`, `--verbose`
+
+### 2d. Text Extraction
 
 | | |
 |---|---|
@@ -272,21 +297,22 @@ make attachments-extract
 
 **Flow:**
 
-1. Query attachments where `download_status = 'downloaded'`, `content_type IN ('application/pdf', 'text/plain', 'text/csv', 'text/html')`, and `extract_status = 'pending'`
-2. Dispatch by content type:
+1. Run content-type validation on any unvalidated downloaded files (see 2c)
+2. Query attachments where `download_status = 'downloaded'`, `content_type IN ('application/pdf', 'text/plain', 'text/csv', 'text/html')`, and `extract_status = 'pending'`
+3. Dispatch by content type:
    - **PDF** — read bytes, extract per-page markdown via `pdf-oxide-wasm`
    - **Text/CSV** — read as UTF-8 text
    - **HTML** — check for auth-failure stub (< 500 bytes + error pattern), then parse DOM and extract text
-3. Classify result:
+4. Classify result:
    - **extracted** — ≥ 50 non-whitespace chars (PDF/HTML) or ≥ 10 chars (text/CSV) → store `full_text` + `text_length`
    - **skipped_no_text** — below threshold (scanned/image-only PDF, empty HTML) → mark skipped
    - **skipped_auth_error** — HTML auth-failure stub (download error page) → mark skipped for potential re-download
    - **failed** — parse error or file not found → mark failed
-4. Progress bar shown on stderr
+5. Progress bar shown on stderr
 
 **Key options:** `--limit`, `--retry-failed`, `--verbose`
 
-### 2d. Summarization
+### 2e. Summarization
 
 | | |
 |---|---|
@@ -302,7 +328,7 @@ make attachments-extract
 3. Send to AWS Bedrock via the app's `InferenceService` abstraction
 4. Write the LLM-generated summary back to `attachment.summary`
 
-**Integration:** Summarization also runs as Stage 6 of `./daily-orbit attachments sync`, after text extraction. The sync pipeline uses the same idempotent query (skips already-summarized rows).
+**Integration:** Summarization also runs as a later stage of `./daily-orbit attachments sync`, after text extraction. The sync pipeline uses the same idempotent query (skips already-summarized rows).
 
 **Prompt configuration:** System and user prompt templates are configurable via the admin UI (AI Settings page) and stored as config keys `summarizationSystemPrompt` and `summarizationUserPrompt`. Blank values fall back to built-in defaults defined in `packages/server/src/inference/prompts.ts`.
 
@@ -310,7 +336,7 @@ make attachments-extract
 
 ---
 
-### 2e. Full-Text Search Index Rebuild
+### 2f. Full-Text Search Index Rebuild
 
 | | |
 |---|---|
@@ -485,7 +511,8 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
 | Attachment Download (public) | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
 | Attachment Download (auth) | Stops gracefully on session expiry; leaves remaining items `pending` | Re-extract cookies and re-run; resumes from where it stopped |
-| Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped PDFs stay skipped; auth-error stubs flagged for potential re-download |
+| Content-Type Validation | Non-fatal per-file; unvalidated files retried next run | Re-run `attachments validate`; idempotent |
+| Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped files stay skipped; auth-error stubs flagged for potential re-download |
 | Summarization | Per-attachment errors isolated, continues | Re-run; only processes `summary IS NULL` rows |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
