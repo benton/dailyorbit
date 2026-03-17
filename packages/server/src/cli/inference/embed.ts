@@ -94,7 +94,12 @@ async function saveEmbedding(
        SET embedding = EXCLUDED.embedding,
            model_id = EXCLUDED.model_id,
            created_at = current_timestamp`,
-    [sourceTable, sourceKey, JSON.stringify(embedding), modelId] as DuckDBValue[],
+    [
+      sourceTable,
+      sourceKey,
+      JSON.stringify(embedding),
+      modelId,
+    ] as DuckDBValue[],
   );
 }
 
@@ -137,7 +142,7 @@ async function processWithConcurrency<T, R>(
   concurrency: number,
   fn: (item: T) => Promise<R>,
 ): Promise<R[]> {
-  const results: R[] = new Array(items.length);
+  const results: R[] = Array.from<R>({ length: items.length });
   let nextIndex: number = 0;
 
   async function worker(): Promise<void> {
@@ -300,7 +305,11 @@ export const embedCommand = defineCommand({
                   modelId,
                 );
                 await updateAttribution(conn, cfg, row.sourceKey, modelId);
-                return { ok: true as const, tokens: resp.inputTokenCount, latencyMs: resp.latencyMs };
+                return {
+                  ok: true as const,
+                  tokens: resp.inputTokenCount,
+                  latencyMs: resp.latencyMs,
+                };
               } catch (err: unknown) {
                 const msg: string =
                   err instanceof Error ? err.message : String(err);
@@ -336,7 +345,9 @@ export const embedCommand = defineCommand({
         const wallSec: number = Math.round(
           (performance.now() - startTime) / 1000,
         );
-        console.log(`\n  Done: ${String(processed)} rows, ${String(totalTokens)} tokens, ${formatDuration(wallSec)}, ${String(errors)} errors`);
+        console.log(
+          `\n  Done: ${String(processed)} rows, ${String(totalTokens)} tokens, ${formatDuration(wallSec)}, avg latency ${processed > 0 ? String(Math.round(totalLatencyMs / processed)) : '0'}ms, ${String(errors)} errors`,
+        );
       }
     } finally {
       conn.closeSync();

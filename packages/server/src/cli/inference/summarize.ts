@@ -264,7 +264,7 @@ async function processWithConcurrency<T, R>(
   concurrency: number,
   fn: (item: T) => Promise<R>,
 ): Promise<R[]> {
-  const results: R[] = new Array(items.length);
+  const results: R[] = Array.from<R>({ length: items.length });
   let nextIndex: number = 0;
 
   async function worker(): Promise<void> {

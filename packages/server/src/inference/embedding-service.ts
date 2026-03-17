@@ -2,7 +2,9 @@ import type { BedrockClient } from './bedrock-client.ts';
 import type { EmbeddingRequest, EmbeddingResponse } from './types.ts';
 
 /** Function signature for embedding a single text — allows test injection. */
-export type EmbedFunction = (req: EmbeddingRequest) => Promise<EmbeddingResponse>;
+export type EmbedFunction = (
+  req: EmbeddingRequest,
+) => Promise<EmbeddingResponse>;
 
 /**
  * Service for generating text embeddings via Bedrock.
@@ -36,7 +38,7 @@ export class EmbeddingService {
     normalize: boolean,
     concurrency: number,
   ): Promise<EmbeddingResponse[]> {
-    const results: EmbeddingResponse[] = new Array(texts.length);
+    const results: EmbeddingResponse[] = Array.from<EmbeddingResponse>({ length: texts.length });
     let nextIndex: number = 0;
 
     async function worker(fn: EmbedFunction): Promise<void> {
