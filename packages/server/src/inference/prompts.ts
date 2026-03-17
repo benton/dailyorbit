@@ -104,7 +104,7 @@ Application type: {{appTypeCode}}
 Subsystem: {{subsystemCode}}
 
 --- Begin extracted text ---
-{{fullText}}
+{{{fullText}}}
 --- End extracted text ---`;
 
 // ---------------------------------------------------------------------------
@@ -117,7 +117,7 @@ Filing: {{fileNumber}} | Filed by: {{applicantName}} | Date: {{dateFiled}}
 Type: {{appTypeCode}} | Subsystem: {{subsystemCode}}
 
 --- Begin section {{chunkIndex}} of {{totalChunks}} ---
-{{fullText}}
+{{{fullText}}}
 --- End section ---`;
 
 export const REDUCE_USER_PROMPT: string = `The following are partial summaries of different sections of a single FCC filing attachment. Combine them into one cohesive summary of one to two paragraphs. Focus on: what is being requested or proposed, by whom, and any notable technical parameters or regulatory conditions.
@@ -126,5 +126,5 @@ Filing: {{fileNumber}} | Filed by: {{applicantName}} | Date: {{dateFiled}}
 Type: {{appTypeCode}} | Subsystem: {{subsystemCode}}
 
 --- Partial summaries ---
-{{subSummaries}}
+{{{subSummaries}}}
 --- End partial summaries ---`;
