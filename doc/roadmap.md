@@ -20,8 +20,8 @@
 - v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [x] Full text search via DuckDB BM25
 - v1.2.0 [ ] Vector-DB search via Bedrock embeddings
-- v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
-- v1.4.0 [ ] News items Entity and RSS ingest of relevant news sources
+- v1.3.0 [ ] News items Entity and RSS ingest of relevant news sources
+- v1.4.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
 - v1.5.0 [ ] RAG Search module
 
 ## Medium Term: The Daily Orbit Newspaper
