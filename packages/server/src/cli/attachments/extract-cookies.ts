@@ -43,7 +43,9 @@ export const extractCookiesCommand = defineCommand({
       process.exit(1);
     }
 
-    console.log('Launching browser — log in to ICFS, then press Enter here to extract cookies.\n');
+    console.log(
+      'Launching browser — log in to ICFS, then press Enter here to extract cookies.\n',
+    );
 
     const browser = await chromium.launch({ headless: false });
     const context = await browser.newContext();
