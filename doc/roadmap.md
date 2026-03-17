@@ -18,8 +18,8 @@
 ## Medium Term - LLM-driven features
 
 - v1.0.0 [x] Summarizations: per Application, per Attachment
-- v1.1.0 [ ] Full text search
-- v1.2.0 [ ] Vector-DB search?
+- v1.1.0 [x] Full text search via DuckDB BM25
+- v1.2.0 [x] Vector-DB search via Bedrock-driven embeddings
 - v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
 - v1.4.0 [ ]
 
@@ -39,7 +39,7 @@
 
 ## Off the Wall Ideas or Nice to have
 
-- v?.x.x [ ] Premium feature: Voice in/out
+- v?.x.x [ ] Bug fix: large attachment text has too many tokensto summarize
 - v?.x.x [ ] Backup PDF text extraction tool
 - v?.x.x [ ] Admin ingest control UI
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
