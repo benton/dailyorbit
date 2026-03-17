@@ -34,6 +34,7 @@ flowchart TD
         ATT_AUTH["2b′. Authenticated Download\n./daily-orbit attachments download --auth-cookies\nServiceNow URLs via session cookies"]
         ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF → markdown via pdf-oxide-wasm"]
         ATT_SUMMARIZE["2d. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
+        FTS_REBUILD["2e. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -71,6 +72,8 @@ flowchart TD
     DB --> ATT_SUMMARIZE
     BEDROCK --> ATT_SUMMARIZE
     ATT_SUMMARIZE --> DB
+    DB --> FTS_REBUILD
+    FTS_REBUILD --> DB
 
     SEED --> DB
     DB --> ATTRIBUTE
@@ -290,6 +293,29 @@ make attachments-extract
 **Prompt configuration:** System and user prompt templates are configurable via the admin UI (AI Settings page) and stored as config keys `summarizationSystemPrompt` and `summarizationUserPrompt`. Blank values fall back to built-in defaults defined in `packages/server/src/inference/prompts.ts`.
 
 **Key options:** `--model` (default: `us.amazon.nova-pro-v1:0`), `--region` (default: `us-east-2`), `--concurrency` (default: 10), `--batch` (default: 100), `--limit`, `--dry-run`
+
+---
+
+### 2e. Full-Text Search Index Rebuild
+
+| | |
+|---|---|
+| **Command** | `make search-rebuild-index` |
+| **CLI** | `./daily-orbit search rebuild-index` |
+| **Source** | `filing.description`, `filing.brief_description`, `attachment.full_text`, `attachment.summary`, `pleading.filer_name`, `pleading.exhibit_attachment_html` |
+| **Writes to** | DuckDB FTS virtual tables (`fts_main_filing`, `fts_main_attachment`, `fts_main_pleading`) |
+
+**Flow:**
+
+1. Load DuckDB `fts` extension
+2. For each indexed table (filing, attachment, pleading):
+   - Create BM25 full-text search index with `overwrite=1` (idempotent)
+   - Uses English stemmer and stopwords, case-insensitive matching
+3. Skip tables whose columns don't exist (graceful degradation in test environments)
+
+**Integration:** FTS rebuild runs automatically as the final step of `./daily-orbit attachments sync`, after summarization completes. Can also be triggered standalone via `make search-rebuild-index`.
+
+**Cost:** Zero — FTS indexes are built entirely from local data already in the database. No external API calls.
 
 ---
 
