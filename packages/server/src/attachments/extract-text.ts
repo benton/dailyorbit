@@ -130,29 +130,40 @@ export function extractTextFromPdf(
 ): ExtractionResult {
   const wasmResult: ExtractionResult = extractWithWasm(bytes);
 
-  // If WASM succeeded but returned binary content, try pdftotext fallback
-  if (wasmResult.status === 'extracted' && looksLikeBinary(wasmResult.text)) {
-    if (filePath) {
-      const fallbackResult: ExtractionResult = extractWithPdftotext(filePath);
-      if (fallbackResult.status !== 'failed') {
-        return fallbackResult;
-      }
-      // Both methods failed — report both errors
-      return {
-        status: 'failed',
-        text: null,
-        textLength: 0,
-        pageCount: 0,
-        error: `WASM returned binary content; pdftotext fallback failed: ${fallbackResult.error}`,
-      };
+  const needsFallback: boolean =
+    (wasmResult.status === 'extracted' && looksLikeBinary(wasmResult.text)) ||
+    wasmResult.status === 'failed';
+
+  if (needsFallback && filePath) {
+    const fallbackResult: ExtractionResult = extractWithPdftotext(filePath);
+    if (fallbackResult.status !== 'failed') {
+      return fallbackResult;
     }
+    // Both methods failed — report both errors
+    const wasmError: string =
+      wasmResult.status === 'failed'
+        ? wasmResult.error
+        : 'returned binary content';
     return {
       status: 'failed',
       text: null,
       textLength: 0,
       pageCount: 0,
-      error:
-        'WASM returned binary content and no filePath provided for pdftotext fallback',
+      error: `WASM ${wasmError}; pdftotext fallback failed: ${fallbackResult.error}`,
+    };
+  }
+
+  if (needsFallback && !filePath) {
+    const reason: string =
+      wasmResult.status === 'failed'
+        ? wasmResult.error
+        : 'returned binary content';
+    return {
+      status: 'failed',
+      text: null,
+      textLength: 0,
+      pageCount: 0,
+      error: `WASM ${reason} and no filePath provided for pdftotext fallback`,
     };
   }
 
