@@ -30,6 +30,7 @@ type SourceConfig = {
   readonly keyColumn: string;
   readonly textColumn: string;
   readonly joinClause: string;
+  readonly orderClause: string;
 };
 
 const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
@@ -37,19 +38,22 @@ const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
     table: 'attachment',
     keyColumn: 'attachment_key',
     textColumn: 'full_text',
-    joinClause: '',
+    joinClause: 'JOIN filing f ON t.file_number = f.file_number',
+    orderClause: 'ORDER BY f.date_filed DESC, t.attachment_key',
   },
   filing: {
     table: 'filing',
     keyColumn: 'file_number',
     textColumn: 'description',
     joinClause: '',
+    orderClause: 'ORDER BY t.date_filed DESC, t.file_number',
   },
   pleading: {
     table: 'pleading',
     keyColumn: 'pleading_key',
     textColumn: 'exhibit_attachment_html',
-    joinClause: '',
+    joinClause: 'JOIN filing f ON t.filing_key = f.filing_key',
+    orderClause: 'ORDER BY f.date_filed DESC, t.pleading_key',
   },
 };
 
@@ -79,6 +83,7 @@ async function fetchBatch(
     FROM ${cfg.table} t
     ${cfg.joinClause}
     WHERE t.${cfg.textColumn} IS NOT NULL
+      AND LENGTH(TRIM(t.${cfg.textColumn})) > 0
       AND NOT EXISTS (
         SELECT 1 FROM embedding e
         WHERE e.source_table = ?
@@ -87,7 +92,7 @@ async function fetchBatch(
           AND e.text_checksum IS NOT NULL
           AND e.text_checksum = md5(t.${cfg.textColumn})
       )
-    ORDER BY t.${cfg.keyColumn}
+    ${cfg.orderClause}
     LIMIT ?
   `;
   const reader = await conn.runAndReadAll(sql, [
@@ -106,6 +111,17 @@ async function fetchBatch(
   return rows;
 }
 
+async function deleteExistingChunks(
+  conn: DuckDBConnection,
+  sourceTable: string,
+  sourceKey: string,
+): Promise<void> {
+  await conn.run(
+    `DELETE FROM embedding WHERE source_table = ? AND source_key = ?`,
+    [sourceTable, sourceKey] as DuckDBValue[],
+  );
+}
+
 async function saveEmbedding(
   conn: DuckDBConnection,
   sourceTable: string,
@@ -117,12 +133,7 @@ async function saveEmbedding(
 ): Promise<void> {
   await conn.run(
     `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id, text_checksum)
-     VALUES (?, ?, ?, ?::FLOAT[512], ?, ?)
-     ON CONFLICT (source_table, source_key, chunk_index) DO UPDATE
-       SET embedding = EXCLUDED.embedding,
-           model_id = EXCLUDED.model_id,
-           text_checksum = EXCLUDED.text_checksum,
-           created_at = current_timestamp`,
+     VALUES (?, ?, ?, ?::FLOAT[512], ?, ?)`,
     [
       sourceTable,
       sourceKey,
@@ -131,23 +142,6 @@ async function saveEmbedding(
       modelId,
       textChecksum,
     ] as DuckDBValue[],
-  );
-}
-
-/**
- * Delete any stale chunk rows for a source key that have a higher chunk_index
- * than the current number of chunks (e.g. text got shorter on re-embed).
- */
-async function deleteStaleChunks(
-  conn: DuckDBConnection,
-  sourceTable: string,
-  sourceKey: string,
-  maxChunkIndex: number,
-): Promise<void> {
-  await conn.run(
-    `DELETE FROM embedding
-     WHERE source_table = ? AND source_key = ? AND chunk_index > ?`,
-    [sourceTable, sourceKey, maxChunkIndex] as DuckDBValue[],
   );
 }
 
@@ -173,6 +167,7 @@ async function countRemaining(
   const sql: string = `
     SELECT COUNT(*) FROM ${cfg.table} t
     WHERE t.${cfg.textColumn} IS NOT NULL
+      AND LENGTH(TRIM(t.${cfg.textColumn})) > 0
       AND NOT EXISTS (
         SELECT 1 FROM embedding e
         WHERE e.source_table = ?
@@ -317,6 +312,9 @@ export const embedCommand = defineCommand({
                 let rowTokens: number = 0;
                 let rowLatencyMs: number = 0;
 
+                // Delete any existing embeddings before inserting new chunks
+                await deleteExistingChunks(conn, source, row.sourceKey);
+
                 for (let ci = 0; ci < chunks.length; ci++) {
                   const resp = await service.embedQuery(
                     chunks[ci]!,
@@ -336,14 +334,6 @@ export const embedCommand = defineCommand({
                   rowTokens += resp.inputTokenCount;
                   rowLatencyMs += resp.latencyMs;
                 }
-
-                // Clean up any leftover chunks from a previous run with more chunks
-                await deleteStaleChunks(
-                  conn,
-                  source,
-                  row.sourceKey,
-                  chunks.length - 1,
-                );
 
                 await updateAttribution(conn, cfg, row.sourceKey, modelId);
                 return {
