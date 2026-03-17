@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { defineCommand } from 'citty';
 import {
   databaseArg,
@@ -43,6 +44,11 @@ export const downloadCommand = defineCommand({
         'Skip attachments whose files already exist on disk (default: true)',
       default: true,
     },
+    'auth-cookies': {
+      type: 'string',
+      description:
+        'Path to JSON file with session cookies for authenticated ServiceNow downloads',
+    },
     verbose: {
       type: 'boolean',
       description: 'Log per-filing details',
@@ -52,6 +58,18 @@ export const downloadCommand = defineCommand({
   async run({ args }) {
     const { runAttachmentPipeline } =
       await import('../../attachments/pipeline.ts');
+
+    // Load auth cookies from JSON file if provided
+    let authCookies: string | undefined;
+    if (args['auth-cookies'] != null) {
+      const cookiePath: string = resolveFromRoot(args['auth-cookies']);
+      const raw: string = readFileSync(cookiePath, 'utf-8');
+      const parsed: { cookies: string } = JSON.parse(raw) as {
+        cookies: string;
+      };
+      authCookies = parsed.cookies;
+      console.log(`Loaded auth cookies from ${cookiePath}`);
+    }
 
     const result = await runAttachmentPipeline({
       databaseUrl: resolveFromRoot(args.database),
@@ -72,6 +90,7 @@ export const downloadCommand = defineCommand({
       delayMs: Number(args.delay),
       concurrency: Number(args.concurrency),
       verbose: args.verbose,
+      authCookies,
     });
 
     console.log('\nSummary:');

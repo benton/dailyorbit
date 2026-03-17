@@ -34,6 +34,7 @@ import {
   attachmentStoragePath,
   downloadFile,
   findExistingAttachment,
+  SessionExpiredError,
 } from './storage.ts';
 import type {
   AttachmentMetadata,
@@ -176,11 +177,19 @@ export async function runAttachmentPipeline(
 
   if (options.discoverOnly !== true) {
     const filingKeys: number[] = filings.map((f) => f.filingKey);
-    const pending: AttachmentRow[] = await getPendingDownloads(
+    const allPending: AttachmentRow[] = await getPendingDownloads(
       conn,
       filingKeys,
       options.retryFailed ?? false,
     );
+
+    // When authCookies is provided, filter to only ServiceNow URLs
+    const pending: AttachmentRow[] =
+      options.authCookies != null
+        ? allPending.filter((a) =>
+            a.downloadUrl.includes('servicenowservices.com'),
+          )
+        : allPending;
     log(`${String(pending.length)} attachments pending download`);
 
     const filingByKey: Map<number, FilingRow> = new Map(
@@ -231,10 +240,16 @@ export async function runAttachmentPipeline(
     }
 
     const downloadErrors: Set<number> = new Set();
+    let sessionExpired: boolean = false;
 
     const downloadResults: (DownloadResult | undefined)[] = await processQueue(
       toDownload,
       async (att: AttachmentRow): Promise<DownloadResult> => {
+        // Stop downloading once session has expired — leave remaining items pending
+        if (sessionExpired) {
+          throw new SessionExpiredError(att.downloadUrl);
+        }
+
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
 
         // Download to a temporary path first, then derive final path from content-type
@@ -249,6 +264,9 @@ export async function runAttachmentPipeline(
         const { fileSizeBytes, contentType } = await downloadFile(
           att.downloadUrl,
           tmpPath,
+          options.authCookies != null
+            ? { cookies: options.authCookies }
+            : undefined,
         );
 
         const ext: string = extensionForContentType(
@@ -279,6 +297,11 @@ export async function runAttachmentPipeline(
         concurrency,
         delayMs,
         onError: (error: unknown, att: AttachmentRow, index: number) => {
+          if (error instanceof SessionExpiredError) {
+            sessionExpired = true;
+            // Don't mark as failed — leave pending for next session
+            return;
+          }
           downloadErrors.add(index);
           const msg: string =
             error instanceof Error ? error.message : String(error);
@@ -295,7 +318,7 @@ export async function runAttachmentPipeline(
       if (downloadErrors.has(i)) {
         await markFailed(conn, att.attachmentKey);
         attachmentsFailed++;
-      } else {
+      } else if (downloadResults[i] != null) {
         const dl: DownloadResult = downloadResults[i]!;
         await markDownloaded(
           conn,
@@ -306,6 +329,15 @@ export async function runAttachmentPipeline(
         );
         attachmentsDownloaded++;
       }
+      // else: session expired — item left pending, not counted as failed
+    }
+
+    if (sessionExpired) {
+      const remaining: number =
+        toDownload.length - attachmentsDownloaded - attachmentsFailed;
+      log(
+        `Session expired — downloaded ${String(attachmentsDownloaded)} before expiry, ${String(remaining)} remaining`,
+      );
     }
   }
 

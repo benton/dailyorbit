@@ -206,8 +206,11 @@ storing and managing FCC session tokens in the pipeline.
 - [x] Run `make attachments-extract` to extract text from the 129k
       already-downloaded PDFs (~3.5 hours)
 - [x] Browser-test ICFS portal to determine public vs. auth-gated content
-- [ ] Investigate FOIA or bulk data request options
+- [x] **Verify authenticated download via session cookies** — confirmed working
+      2026-03-16. See [authenticated-attachment-downloads.md](2026-03-16-authenticated-attachment-downloads.md)
+- [ ] Implement semi-automated auth download pipeline (plan written, impl pending)
+- [ ] Investigate FOIA or bulk data request options (fallback if auth approach
+      hits rate limits or account issues)
 - [ ] Check Internet Archive for historical IBFS attachment snapshots
-- [ ] Evaluate whether authenticated ICFS access is feasible/appropriate
 - [ ] Ingest EDOCS Public Notice documents (PDF + text) as a supplementary
       data source — these are publicly available and cover regulatory actions

@@ -2,6 +2,10 @@ export type FetchRetryOptions = {
   maxRetries?: number | undefined;
   initialDelayMs?: number | undefined;
   maxDelayMs?: number | undefined;
+  /** Extra headers to include in the request */
+  headers?: Record<string, string> | undefined;
+  /** When false, do not follow redirects (default: true) */
+  followRedirects?: boolean | undefined;
 };
 
 const DEFAULT_MAX_RETRIES: number = 4;
@@ -20,6 +24,8 @@ export async function fetchWithRetry(
   const initialDelayMs: number =
     options?.initialDelayMs ?? DEFAULT_INITIAL_DELAY_MS;
   const maxDelayMs: number = options?.maxDelayMs ?? DEFAULT_MAX_DELAY_MS;
+  const headers: Record<string, string> | undefined = options?.headers;
+  const followRedirects: boolean = options?.followRedirects !== false;
 
   let lastError: Error | undefined;
 
@@ -33,7 +39,14 @@ export async function fetchWithRetry(
 
     let response: Response;
     try {
-      response = await fetch(url);
+      const fetchInit: RequestInit = {};
+      if (headers != null) {
+        fetchInit.headers = headers;
+      }
+      if (!followRedirects) {
+        fetchInit.redirect = 'manual';
+      }
+      response = await fetch(url, fetchInit);
     } catch (error: unknown) {
       lastError = error instanceof Error ? error : new Error(String(error));
       continue;

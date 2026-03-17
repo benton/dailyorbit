@@ -44,6 +44,12 @@ attachments-discover: ## Discover attachment metadata only (pass ARGS for option
 attachments-download: ## Download pending attachments only, skip discovery (pass ARGS for options)
 	$(CLI) attachments download $(ARGS)
 
+attachments-extract-cookies: ## Extract ICFS session cookies via browser login
+	$(CLI) attachments extract-cookies $(ARGS)
+
+attachments-download-auth: ## Download ServiceNow attachments with auth cookies
+	$(CLI) attachments download --auth-cookies data/icfs-cookies.json --retry-failed $(ARGS)
+
 attachments-extract: ## Extract text from downloaded PDF attachments
 	$(CLI) attachments extract $(ARGS)
 

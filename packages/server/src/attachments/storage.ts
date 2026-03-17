@@ -4,6 +4,19 @@ import { stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fetchWithRetry } from './fetch-retry.ts';
 
+/** Thrown when an authenticated ServiceNow session has expired (HTTP 302 to login). */
+export class SessionExpiredError extends Error {
+  constructor(url: string) {
+    super(`Session expired (HTTP 302 redirect) for ${url}`);
+    this.name = 'SessionExpiredError';
+  }
+}
+
+export type DownloadFileOptions = {
+  /** Cookie header string for authenticated downloads */
+  cookies?: string | undefined;
+};
+
 /**
  * Build a deterministic local path for an attachment file.
  * Pattern: {basePath}/{subsystem}/{hyphenatedFileNumber}/{attachmentKey}.{ext}
@@ -34,17 +47,33 @@ export function normalizeDownloadUrl(url: string): string {
 /**
  * Download a file from a URL and save it to destPath.
  * Creates parent directories as needed.
- * Normalizes the URL to append `.pdf` for raw file retrieval from fcc.report.
+ * Normalizes the URL to append `.pdf` for raw file retrieval from fcc.report
+ * (skipped for authenticated ServiceNow downloads).
+ * Throws SessionExpiredError if an authenticated request gets a 302 redirect.
  * Throws if the response is an FCC "Access Denied" error page.
  */
 export async function downloadFile(
   url: string,
   destPath: string,
+  options?: DownloadFileOptions | undefined,
 ): Promise<{ fileSizeBytes: number; contentType: string | null }> {
   await mkdir(dirname(destPath), { recursive: true });
 
-  const fetchUrl: string = normalizeDownloadUrl(url);
-  const response: Response = await fetchWithRetry(fetchUrl);
+  const isAuthenticated: boolean = options?.cookies != null;
+
+  // Skip .pdf normalization for authenticated ServiceNow URLs
+  const fetchUrl: string = isAuthenticated ? url : normalizeDownloadUrl(url);
+
+  const response: Response = await fetchWithRetry(fetchUrl, {
+    headers: isAuthenticated ? { Cookie: options!.cookies! } : undefined,
+    followRedirects: !isAuthenticated,
+  });
+
+  // For authenticated requests, a 302 means session expired
+  if (isAuthenticated && (response.status === 302 || response.status === 301)) {
+    throw new SessionExpiredError(fetchUrl);
+  }
+
   if (!response.ok) {
     throw new Error(
       `Download failed: ${String(response.status)} ${response.statusText} for ${fetchUrl}`,

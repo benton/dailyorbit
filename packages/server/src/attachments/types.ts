@@ -59,6 +59,8 @@ export type AttachmentPipelineOptions = {
   summarizationModel?: string;
   /** Concurrency for Bedrock inference calls (default: 10) */
   summarizationConcurrency?: number;
+  /** Cookie header string for authenticated ServiceNow downloads */
+  authCookies?: string | undefined;
 };
 
 /** Result summary from a pipeline run */

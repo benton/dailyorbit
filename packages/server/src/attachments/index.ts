@@ -17,7 +17,9 @@ export {
   downloadFile,
   fileExists,
   getFileSize,
+  SessionExpiredError,
 } from './storage.ts';
+export type { DownloadFileOptions } from './storage.ts';
 export { createProvider } from './provider.ts';
 export { createFccReportProvider } from './fcc-report.ts';
 export { fccGovProvider } from './fcc-gov.ts';
