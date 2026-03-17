@@ -2,13 +2,19 @@ import { DuckDBConnection } from '@duckdb/node-api';
 import { Hono } from 'hono';
 import type { PaginatedRequest } from '../lib/pagination.ts';
 import { getDb } from '../lib/db.ts';
+import { getConfigService } from '../lib/config.ts';
+import { BedrockClient } from '../inference/bedrock-client.ts';
+import { EmbeddingService } from '../inference/embedding-service.ts';
 import {
   autocomplete,
   searchEarthStations,
   searchFilings,
   searchSatellites,
 } from './repository.ts';
-import { searchFilingContent } from './content-search.ts';
+import {
+  searchFilingContent,
+  type EmbeddingContext,
+} from './content-search.ts';
 import type {
   EarthStationSearchFilters,
   FilingSearchFilters,
@@ -35,6 +41,30 @@ function parseList(value: string | undefined): string[] | undefined {
     .split(',')
     .map((s) => s.trim())
     .filter((s) => s !== '');
+}
+
+/**
+ * Build an EmbeddingContext from the app config, if embedding config is present.
+ * Returns undefined if the config service is not available (graceful fallback).
+ */
+function getEmbeddingContext(): EmbeddingContext | undefined {
+  try {
+    const config = getConfigService();
+    const modelId: string =
+      (config.get('embeddingModel') as string) || 'amazon.titan-embed-text-v2:0';
+    const dimensions: number =
+      parseInt(config.get('embeddingDimensions') as string, 10) || 512;
+    const normalize: boolean =
+      (config.get('embeddingNormalize') as string) !== 'false';
+    const region: string =
+      (config.get('bedrockRegion') as string) || 'us-east-2';
+
+    const client = new BedrockClient(region);
+    const service = new EmbeddingService(client);
+    return { service, modelId, dimensions, normalize };
+  } catch {
+    return undefined;
+  }
 }
 
 // GET /api/search/filings
@@ -131,6 +161,10 @@ searchRoutes.get('/content', async (c) => {
 
   const pagination: PaginatedRequest = parsePagination(q);
 
+  // Provide embedding context for semantic/hybrid modes
+  const embeddingCtx: EmbeddingContext | undefined =
+    contentQuery.mode !== 'keyword' ? getEmbeddingContext() : undefined;
+
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
@@ -139,6 +173,7 @@ searchRoutes.get('/content', async (c) => {
       contentQuery,
       filters,
       pagination,
+      embeddingCtx,
     );
     return c.json(result);
   } finally {

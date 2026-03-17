@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index user-create user-disable user-delete user-reset-password
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -85,6 +85,12 @@ companies-enrich: ## Enrich company data from GLEIF and Wikidata
 
 search-rebuild-index: ## Rebuild all full-text search indexes
 	$(CLI) search rebuild-index $(ARGS)
+
+embed: ## Generate vector embeddings for a single source (requires SOURCE=filing|attachment|pleading)
+	$(CLI) inference embed --source $(SOURCE) $(ARGS)
+
+embed-all: ## Generate vector embeddings for all sources
+	$(CLI) inference embed --source all $(ARGS)
 
 user-create: ## Create a new user account (pass ARGS for options)
 	$(CLI) user create $(ARGS)

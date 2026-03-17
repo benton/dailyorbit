@@ -5,6 +5,8 @@ import { ensureCompanyTables, ensureCompanyFk } from '../companies/schema.ts';
 import { ensureAuthTables } from '../user/schema.ts';
 import { ensureUserSettingsTables } from '../user-settings/schema.ts';
 import { ensureViewingHistoryTables } from '../viewing-history/schema.ts';
+import { ensureAttributionColumns } from './attribution-schema.ts';
+import { ensureEmbeddingSchema } from '../search/embedding-schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -27,6 +29,8 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
   await ensureViewingHistoryTables(conn);
   await ensureCompanyTables(conn);
   await ensureCompanyFk(conn);
+  await ensureAttributionColumns(conn);
+  await ensureEmbeddingSchema(conn);
 
   conn.closeSync();
 }

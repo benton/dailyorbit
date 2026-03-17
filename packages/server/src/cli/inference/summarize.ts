@@ -102,10 +102,15 @@ async function saveSummary(
   conn: DuckDBConnection,
   attachmentKey: number,
   summary: string,
+  modelId: string,
 ): Promise<void> {
   await conn.run(
-    `UPDATE attachment SET summary = $1 WHERE attachment_key = $2`,
-    [summary, attachmentKey] as DuckDBValue[],
+    `UPDATE attachment
+       SET summary = $1,
+           summarized_by = $2,
+           summarized_at = current_timestamp
+     WHERE attachment_key = $3`,
+    [summary, modelId, attachmentKey] as DuckDBValue[],
   );
 }
 
@@ -399,7 +404,7 @@ export const summarizeCommand = defineCommand({
                 row,
                 chunkSize,
               );
-              await saveSummary(conn, row.attachmentKey, resp.content);
+              await saveSummary(conn, row.attachmentKey, resp.content, modelId);
               return { ok: true as const, resp };
             } catch (err: unknown) {
               const errName: string =

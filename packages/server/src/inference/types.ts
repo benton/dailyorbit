@@ -56,3 +56,25 @@ export type ModelInfo = {
   readonly modelName: string;
   readonly provider: string;
 };
+
+/** A request to embed text via Bedrock. */
+export type EmbeddingRequest = {
+  /** Bedrock embedding model ID. */
+  readonly modelId: string;
+  /** The text to embed. */
+  readonly inputText: string;
+  /** Output vector dimensions. */
+  readonly dimensions: number;
+  /** Whether to L2-normalize the output vector. */
+  readonly normalize: boolean;
+};
+
+/** The response from an embedding call. */
+export type EmbeddingResponse = {
+  /** The embedding vector. */
+  readonly embedding: number[];
+  /** Number of input tokens consumed. */
+  readonly inputTokenCount: number;
+  /** Wall-clock latency in milliseconds. */
+  readonly latencyMs: number;
+};
