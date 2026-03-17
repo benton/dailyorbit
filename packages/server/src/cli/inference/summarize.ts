@@ -2,6 +2,7 @@ import { defineCommand } from 'citty';
 import { DuckDBConnection, type DuckDBValue } from '@duckdb/node-api';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
+import { findExistingSummaryByChecksum } from '../../attachments/repository.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
 import { InferenceService } from '../../inference/inference-service.ts';
 import {
@@ -31,6 +32,7 @@ type AttachmentRow = {
   readonly subsystemCode: string;
   readonly textLength: number;
   readonly fullText: string;
+  readonly textChecksum: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -66,12 +68,13 @@ const FETCH_BATCH_SQL: string = `
     COALESCE(f.app_type_code, '(unknown)') AS app_type_code,
     COALESCE(f.subsystem_code, '(unknown)') AS subsystem_code,
     a.text_length,
-    a.full_text
+    a.full_text,
+    a.text_checksum
   FROM attachment a
   JOIN filing f ON a.file_number = f.file_number
   WHERE a.full_text IS NOT NULL
     AND a.summary IS NULL
-  ORDER BY a.text_length ASC
+  ORDER BY f.date_filed DESC, a.text_length ASC
   LIMIT ?
 `;
 
@@ -93,6 +96,7 @@ async function fetchBatch(
       subsystemCode: String(row[5]),
       textLength: Number(row[6]),
       fullText: String(row[7]),
+      textChecksum: row[8] != null ? String(row[8]) : null,
     });
   }
   return rows;
@@ -380,6 +384,7 @@ export const summarizeCommand = defineCommand({
       }
 
       let processed: number = 0;
+      let copied: number = 0;
       let totalInputTokens: number = 0;
       let totalOutputTokens: number = 0;
       let totalLatencyMs: number = 0;
@@ -396,6 +401,21 @@ export const summarizeCommand = defineCommand({
           concurrency,
           async (row) => {
             try {
+              // Dedup: check if another attachment with the same text already has a summary
+              if (row.textChecksum != null) {
+                const existing: string | null =
+                  await findExistingSummaryByChecksum(conn, row.textChecksum);
+                if (existing != null) {
+                  await saveSummary(
+                    conn,
+                    row.attachmentKey,
+                    existing,
+                    'copied',
+                  );
+                  return { ok: 'copied' as const };
+                }
+              }
+
               const resp: InferenceResponse = await summarizeOne(
                 service,
                 modelId,
@@ -405,7 +425,7 @@ export const summarizeCommand = defineCommand({
                 chunkSize,
               );
               await saveSummary(conn, row.attachmentKey, resp.content, modelId);
-              return { ok: true as const, resp };
+              return { ok: 'generated' as const, resp };
             } catch (err: unknown) {
               const errName: string =
                 err != null &&
@@ -425,10 +445,12 @@ export const summarizeCommand = defineCommand({
         );
 
         for (const r of results) {
-          if (r.ok) {
-            totalInputTokens += r.resp.usage.inputTokens;
-            totalOutputTokens += r.resp.usage.outputTokens;
-            totalLatencyMs += r.resp.latencyMs;
+          if (r.ok === 'generated') {
+            totalInputTokens += r.resp!.usage.inputTokens;
+            totalOutputTokens += r.resp!.usage.outputTokens;
+            totalLatencyMs += r.resp!.latencyMs;
+          } else if (r.ok === 'copied') {
+            copied++;
           } else {
             errors++;
           }
@@ -451,6 +473,7 @@ export const summarizeCommand = defineCommand({
       console.log('\n');
       console.log('=== Summarization Complete ===');
       console.log(`  Processed:      ${String(processed)}`);
+      console.log(`  Copied (dedup): ${String(copied)}`);
       console.log(`  Errors:         ${String(errors)}`);
       console.log(`  Input tokens:   ${String(totalInputTokens)}`);
       console.log(`  Output tokens:  ${String(totalOutputTokens)}`);

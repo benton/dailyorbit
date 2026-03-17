@@ -70,11 +70,13 @@ export type AttachmentPipelineResult = {
   attachmentsDownloaded: number;
   attachmentsFailed: number;
   attachmentsSkipped: number;
+  downloadsSkipped: number;
   textsExtracted: number;
   textsSkippedNoText: number;
   textsSkippedAuthError: number;
   textsFailed: number;
   summariesGenerated: number;
+  summariesCopied: number;
   summariesFailed: number;
   durationMs: number;
 };

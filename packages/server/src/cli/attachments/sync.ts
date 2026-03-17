@@ -84,6 +84,11 @@ export const syncCommand = defineCommand({
     console.log(
       `  Attachments failed:     ${String(result.attachmentsFailed)}`,
     );
+    if (result.downloadsSkipped > 0) {
+      console.log(
+        `  Downloads skipped (bad URL):${String(result.downloadsSkipped).padStart(1)}`,
+      );
+    }
     console.log(`  Texts extracted:        ${String(result.textsExtracted)}`);
     console.log(
       `  Texts skipped (no text):${String(result.textsSkippedNoText).padStart(2)}`,
@@ -91,6 +96,9 @@ export const syncCommand = defineCommand({
     console.log(`  Texts failed:           ${String(result.textsFailed)}`);
     console.log(
       `  Summaries generated:    ${String(result.summariesGenerated)}`,
+    );
+    console.log(
+      `  Summaries copied (dedup):${String(result.summariesCopied).padStart(1)}`,
     );
     console.log(`  Summaries failed:       ${String(result.summariesFailed)}`);
     console.log(

@@ -184,9 +184,10 @@ flowchart TD
 **Flow:**
 
 1. Query pending attachments (`download_status = 'pending'` or `'failed'` with `--retry-failed`)
-2. Pre-flight: check if file already on disk → reconcile DB without re-downloading
-3. Download to temp path → detect content type → rename with correct extension
-4. Update DB: `local_path`, `file_size_bytes`, `content_type`, `downloaded_at`, `download_status`
+2. Filter out undownloadable URLs (empty, `/ibfs?` form links, `/nav_to` navigation links) → mark as `download_status = 'skipped'`
+3. Pre-flight: check if file already on disk → reconcile DB without re-downloading
+4. Download to temp path → detect content type → rename with correct extension
+5. Update DB: `local_path`, `file_size_bytes`, `content_type`, `downloaded_at`, `download_status`
 
 **Combined command:** `make attachments` runs discover + download + text extraction in one pass.
 
@@ -284,7 +285,7 @@ make attachments-extract
 | **Command** | `make attachments-extract` |
 | **CLI** | `./daily-orbit attachments extract [OPTIONS]` |
 | **Source** | Downloaded files in `data/attachments/` (PDF, text, CSV, HTML) |
-| **Writes to** | `attachment` table: `full_text`, `text_length`, `extract_status` |
+| **Writes to** | `attachment` table: `full_text`, `text_length`, `text_checksum`, `extract_status` |
 
 **Supported content types:**
 
@@ -304,7 +305,7 @@ make attachments-extract
    - **Text/CSV** — read as UTF-8 text
    - **HTML** — check for auth-failure stub (< 500 bytes + error pattern), then parse DOM and extract text
 4. Classify result:
-   - **extracted** — ≥ 50 non-whitespace chars (PDF/HTML) or ≥ 10 chars (text/CSV) → store `full_text` + `text_length`
+   - **extracted** — ≥ 50 non-whitespace chars (PDF/HTML) or ≥ 10 chars (text/CSV) → store `full_text` + `text_length` + `text_checksum` (MD5 of full text)
    - **skipped_no_text** — below threshold (scanned/image-only PDF, empty HTML) → mark skipped
    - **skipped_auth_error** — HTML auth-failure stub (download error page) → mark skipped for potential re-download
    - **failed** — parse error or file not found → mark failed
@@ -319,14 +320,15 @@ make attachments-extract
 | **Command** | `make summarize` or via `./daily-orbit attachments sync` |
 | **CLI** | `./daily-orbit inference summarize [OPTIONS]` |
 | **Source** | `attachment` table (rows where `full_text IS NOT NULL AND summary IS NULL`) |
-| **Writes to** | `attachment.summary` |
+| **Writes to** | `attachment.summary`, `attachment.summarized_by`, `attachment.summarized_at` |
 
 **Flow:**
 
-1. Query attachments with extracted text but no summary, joined with `filing` for metadata
-2. For each attachment, render a Mustache prompt template with filing context variables (`fileNumber`, `applicantName`, `dateFiled`, `appTypeCode`, `subsystemCode`, `attachmentName`, `fullText`, `companyName`)
-3. Send to AWS Bedrock via the app's `InferenceService` abstraction
-4. Write the LLM-generated summary back to `attachment.summary`
+1. Query attachments with extracted text but no summary, joined with `filing` for metadata (includes `text_checksum`)
+2. **Deduplication check:** Before calling the LLM, look up `text_checksum` in the attachment table. If another attachment with the same checksum already has a summary, copy it directly and set `summarized_by = 'copied'`. This saves ~27% of API calls on the current dataset (boilerplate FCC forms filed identically across hundreds of applications).
+3. For remaining attachments, render a Mustache prompt template with filing context variables (`fileNumber`, `applicantName`, `dateFiled`, `appTypeCode`, `subsystemCode`, `attachmentName`, `fullText`, `companyName`)
+4. Send to AWS Bedrock via the app's `InferenceService` abstraction
+5. Write the LLM-generated summary back to `attachment.summary` with `summarized_by = {modelId}`
 
 **Integration:** Summarization also runs as a later stage of `./daily-orbit attachments sync`, after text extraction. The sync pipeline uses the same idempotent query (skips already-summarized rows).
 
@@ -509,11 +511,11 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | IBFS Ingest | Logs failure to `ingest_log` table | Re-run; `--dry-run` to validate |
 | ICFS Ingest | Per-filing error tracking, continues others | Re-run with `--file-numbers` for specific failures |
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
-| Attachment Download (public) | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
+| Attachment Download (public) | Marks individual attachments as `'failed'`; undownloadable URLs (empty, `/ibfs?`, `/nav_to`) marked `'skipped'` | `--retry-failed` retries failed; `--skip-existing` reconciles disk; skipped URLs stay skipped |
 | Attachment Download (auth) | Stops gracefully on session expiry; leaves remaining items `pending` | Re-extract cookies and re-run; resumes from where it stopped |
 | Content-Type Validation | Non-fatal per-file; unvalidated files retried next run | Re-run `attachments validate`; idempotent |
 | Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped files stay skipped; auth-error stubs flagged for potential re-download |
-| Summarization | Per-attachment errors isolated, continues | Re-run; only processes `summary IS NULL` rows |
+| Summarization | Per-attachment errors isolated, continues; dedup copies existing summaries for identical text | Re-run; only processes `summary IS NULL` rows; dedup is automatic |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
 | External Enrichment | API failures are non-fatal, per-company | Re-run; only retries companies missing data |
