@@ -71,7 +71,7 @@ export async function runExtractionPipeline(
 
     try {
       const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
-      const result = extractTextFromPdf(bytes);
+      const result = extractTextFromPdf(bytes, row.localPath);
 
       if (result.status === 'extracted') {
         await markExtracted(
