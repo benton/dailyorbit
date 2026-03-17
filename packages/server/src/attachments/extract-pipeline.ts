@@ -10,6 +10,8 @@ import { printProgress } from './progress.ts';
 import {
   createAttachmentTable,
   getPendingExtractions,
+  getPendingValidations,
+  markContentTypeValidated,
   markExtracted,
   markExtractionFailed,
   markExtractionSkipped,
@@ -17,7 +19,9 @@ import {
 import type {
   ExtractionQueryOptions,
   PendingExtractionRow,
+  PendingValidationRow,
 } from './repository.ts';
+import { detectContentType } from './validate-content-type.ts';
 
 export type ExtractionPipelineOptions = {
   databaseUrl?: string | undefined;
@@ -51,6 +55,33 @@ export async function runExtractionPipeline(
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   trackConnection(conn);
   await createAttachmentTable(conn);
+
+  // Pre-validate content types so extraction only sees real PDFs
+  const unvalidated: PendingValidationRow[] = await getPendingValidations(conn);
+  if (unvalidated.length > 0) {
+    log(
+      `Validating content types for ${String(unvalidated.length)} attachments...`,
+    );
+    let validationCorrected: number = 0;
+    for (const row of unvalidated) {
+      try {
+        const detected = detectContentType(row.localPath, row.contentType);
+        await markContentTypeValidated(
+          conn,
+          row.attachmentKey,
+          detected.mimeType,
+        );
+        if (detected.isDifferent) {
+          validationCorrected++;
+        }
+      } catch {
+        // Validation failure is non-fatal — row will be retried next run
+      }
+    }
+    if (validationCorrected > 0) {
+      log(`Content-type validation: ${String(validationCorrected)} corrected`);
+    }
+  }
 
   const queryOptions: ExtractionQueryOptions = {
     retryFailed: options.retryFailed,

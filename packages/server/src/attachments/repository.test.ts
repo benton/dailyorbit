@@ -8,6 +8,8 @@ import {
   getFilingsForScope,
   getPendingDownloads,
   getPendingExtractions,
+  getPendingValidations,
+  markContentTypeValidated,
   markDownloaded,
   markExtracted,
   markExtractionFailed,
@@ -534,6 +536,66 @@ describe('attachment repository', () => {
     it('no staleness filters returns all filings', async () => {
       const filings: FilingRow[] = await getFilingsForScope(conn, {});
       expect(filings).toHaveLength(3);
+    });
+  });
+
+  describe('getPendingValidations', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, content_type, local_path, content_type_source)
+         VALUES
+          (300, 1, 'SAT-STA-20230614-00142', 'Doc A', 'https://example.com/300',
+           'downloaded', 'application/pdf', '/tmp/300.pdf', 'http_header'),
+          (301, 1, 'SAT-STA-20230614-00142', 'Doc B', 'https://example.com/301',
+           'downloaded', 'application/pdf', '/tmp/301.pdf', 'file_magic'),
+          (302, 1, 'SAT-STA-20230614-00142', 'Doc C', 'https://example.com/302',
+           'pending', 'application/pdf', NULL, 'http_header'),
+          (303, 1, 'SAT-STA-20230614-00142', 'Doc D', 'https://example.com/303',
+           'downloaded', 'text/html', '/tmp/303.html', NULL)`,
+      );
+    });
+
+    it('returns only downloaded rows with http_header or NULL content_type_source', async () => {
+      const rows = await getPendingValidations(conn);
+      const keys: number[] = rows.map((r) => r.attachmentKey);
+      // 300 (http_header) and 303 (NULL) — not 301 (file_magic) or 302 (not downloaded)
+      expect(keys).toEqual([300, 303]);
+    });
+
+    it('respects limit parameter', async () => {
+      const rows = await getPendingValidations(conn, { limit: 1 });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.attachmentKey).toEqual(300);
+    });
+  });
+
+  describe('markContentTypeValidated', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, content_type, local_path, content_type_source)
+         VALUES (400, 1, 'SAT-STA-20230614-00142', 'Mistyped', 'https://example.com/400',
+           'downloaded', 'application/pdf', '/tmp/400.pdf', 'http_header')`,
+      );
+    });
+
+    it('updates content_type and sets content_type_source to file_magic', async () => {
+      await markContentTypeValidated(conn, 400, 'text/plain');
+      const reader = await conn.runAndReadAll(
+        `SELECT content_type, content_type_source FROM attachment WHERE attachment_key = 400`,
+      );
+      const row = reader.getRowObjectsJS()[0]!;
+      expect(String(row.content_type)).toEqual('text/plain');
+      expect(String(row.content_type_source)).toEqual('file_magic');
+    });
+
+    it('is excluded from getPendingValidations after marking', async () => {
+      await markContentTypeValidated(conn, 400, 'text/plain');
+      const rows = await getPendingValidations(conn);
+      expect(rows).toHaveLength(0);
     });
   });
 });

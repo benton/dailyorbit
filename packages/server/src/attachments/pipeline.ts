@@ -17,6 +17,8 @@ import {
   getPendingDownloads,
   getPendingExtractions,
   getPendingSummarizations,
+  getPendingValidations,
+  markContentTypeValidated,
   markDownloaded,
   markExtracted,
   markExtractionFailed,
@@ -29,7 +31,9 @@ import {
 import type {
   PendingExtractionRow,
   PendingSummarizationRow,
+  PendingValidationRow,
 } from './repository.ts';
+import { detectContentType } from './validate-content-type.ts';
 import {
   attachmentStoragePath,
   downloadFile,
@@ -337,6 +341,51 @@ export async function runAttachmentPipeline(
         toDownload.length - attachmentsDownloaded - attachmentsFailed;
       log(
         `Session expired — downloaded ${String(attachmentsDownloaded)} before expiry, ${String(remaining)} remaining`,
+      );
+    }
+  }
+
+  // Stage 4.5: Validate content types of downloaded files
+  if (options.discoverOnly !== true) {
+    const validationPending: PendingValidationRow[] =
+      await getPendingValidations(conn);
+
+    if (validationPending.length > 0) {
+      log(
+        `${String(validationPending.length)} attachments pending content-type validation`,
+      );
+
+      let validated: number = 0;
+      let validationCorrected: number = 0;
+
+      for (let i: number = 0; i < validationPending.length; i++) {
+        const row: PendingValidationRow = validationPending[i]!;
+        try {
+          const detected = detectContentType(row.localPath, row.contentType);
+          await markContentTypeValidated(
+            conn,
+            row.attachmentKey,
+            detected.mimeType,
+          );
+          validated++;
+          if (detected.isDifferent) {
+            validationCorrected++;
+            if (verbose) {
+              log(
+                `  ${String(row.attachmentKey)}: ${row.contentType ?? '(null)'} → ${detected.mimeType}`,
+              );
+            }
+          }
+        } catch (e: unknown) {
+          const msg: string = e instanceof Error ? e.message : String(e);
+          log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
+        }
+
+        printProgress(i + 1, validationPending.length, 'Validating');
+      }
+
+      log(
+        `Validation: ${String(validated)} validated, ${String(validationCorrected)} corrected`,
       );
     }
   }

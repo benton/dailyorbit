@@ -27,7 +27,8 @@ const CREATE_TABLE_SQL: string = `
     full_text TEXT,
     text_length INTEGER,
     summary TEXT,
-    extract_status VARCHAR NOT NULL DEFAULT 'pending'
+    extract_status VARCHAR NOT NULL DEFAULT 'pending',
+    content_type_source VARCHAR DEFAULT 'http_header'
   )`;
 
 const MIGRATE_COLUMNS_SQL: string[] = [
@@ -37,6 +38,7 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summary TEXT`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'attachment'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS extract_status VARCHAR DEFAULT 'pending'`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS content_type_source VARCHAR DEFAULT 'http_header'`,
 ];
 
 async function migratePrimaryKeyConstraint(
@@ -531,4 +533,56 @@ export async function markFilingsDiscovered(
       [fk] as DuckDBValue[],
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Content-type validation
+// ---------------------------------------------------------------------------
+
+export type PendingValidationRow = {
+  attachmentKey: number;
+  localPath: string;
+  contentType: string | null;
+};
+
+export type ValidationQueryOptions = {
+  limit?: number | undefined;
+};
+
+export async function getPendingValidations(
+  conn: DuckDBConnection,
+  options: ValidationQueryOptions = {},
+): Promise<PendingValidationRow[]> {
+  const limitClause: string =
+    options.limit != null ? `LIMIT ${String(options.limit)}` : '';
+
+  const sql: string = `
+    SELECT attachment_key, local_path, content_type
+    FROM attachment
+    WHERE download_status = 'downloaded'
+      AND local_path IS NOT NULL
+      AND (content_type_source IS NULL OR content_type_source = 'http_header')
+    ORDER BY attachment_key
+    ${limitClause}`;
+
+  const reader = await conn.runAndReadAll(sql);
+  return reader.getRowObjectsJS().map((r) => ({
+    attachmentKey: Number(r.attachment_key),
+    localPath: String(r.local_path),
+    contentType: r.content_type != null ? String(r.content_type) : null,
+  }));
+}
+
+export async function markContentTypeValidated(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+  detectedMimeType: string,
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment
+      SET content_type = $1,
+          content_type_source = 'file_magic'
+      WHERE attachment_key = $2`,
+    [detectedMimeType, attachmentKey] as DuckDBValue[],
+  );
 }

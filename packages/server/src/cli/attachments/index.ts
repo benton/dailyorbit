@@ -5,6 +5,7 @@ import { extractCommand } from './extract.ts';
 import { extractCookiesCommand } from './extract-cookies.ts';
 import { resetCommand } from './reset.ts';
 import { syncCommand } from './sync.ts';
+import { validateCommand } from './validate.ts';
 
 export const attachmentsCommand = defineCommand({
   meta: {
@@ -17,6 +18,7 @@ export const attachmentsCommand = defineCommand({
     extract: extractCommand,
     'extract-cookies': extractCookiesCommand,
     sync: syncCommand,
+    validate: validateCommand,
     reset: resetCommand,
   },
 });

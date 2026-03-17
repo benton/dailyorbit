@@ -30,10 +30,23 @@ export type {
   ExtractionPipelineOptions,
   ExtractionPipelineResult,
 } from './extract-pipeline.ts';
+export { runValidationPipeline } from './validate-pipeline.ts';
+export type {
+  ValidationPipelineOptions,
+  ValidationPipelineResult,
+} from './validate-pipeline.ts';
+export { detectContentType } from './validate-content-type.ts';
+export type { DetectedContentType } from './validate-content-type.ts';
 export type { ExtractionResult } from './extract-text.ts';
 export type {
   ExtractionQueryOptions,
   PendingExtractionRow,
+  PendingValidationRow,
+  ValidationQueryOptions,
+} from './repository.ts';
+export {
+  getPendingValidations,
+  markContentTypeValidated,
 } from './repository.ts';
 export type {
   AttachmentMetadata,
