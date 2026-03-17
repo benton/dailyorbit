@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
+import DOMPurify from 'dompurify';
 import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -523,6 +524,86 @@ const earthStationColumns: Array<ColumnDef<EarthStationSearchResult, unknown>> =
   },
 ];
 
+// ── Content search result type & columns ────────────────────────────
+
+type ContentSearchResult = {
+  address_attention: string | null;
+  app_type_code: string;
+  callsign: string | null;
+  company_name: string | null;
+  date_filed: string | null;
+  file_number: string;
+  score: number;
+  snippet: string;
+  source: 'filing' | 'attachment' | 'pleading';
+  source_key: string | null;
+  status_code: string | null;
+  subsystem_code: string;
+};
+
+const contentColumns: Array<ColumnDef<ContentSearchResult, unknown>> = [
+  {
+    accessorKey: 'file_number',
+    cell: ({ getValue }) => (
+      <span className="font-mono text-sm">{getValue() as string}</span>
+    ),
+    header: 'File Number',
+    size: 220,
+  },
+  {
+    accessorKey: 'source',
+    cell: ({ getValue }) => {
+      const source: string = getValue() as string;
+      const label: string =
+        source === 'filing'
+          ? 'Filing'
+          : source === 'attachment'
+            ? 'Attachment'
+            : 'Comment';
+      return (
+        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-700">
+          {label}
+        </span>
+      );
+    },
+    header: 'Source',
+    size: 90,
+  },
+  { accessorKey: 'address_attention', header: 'Applicant', size: 160 },
+  { accessorKey: 'subsystem_code', header: 'Subsystem', size: 80 },
+  {
+    accessorKey: 'snippet',
+    cell: ({ getValue }) => {
+      const sanitized: string = DOMPurify.sanitize(getValue() as string);
+      return (
+        <span
+          className="line-clamp-2 text-sm"
+          // Safe: server escapes source text, only <mark> tags are present;
+          // DOMPurify.sanitize() applied as defense-in-depth
+          dangerouslySetInnerHTML={{ __html: sanitized }}
+        />
+      );
+    },
+    header: 'Match',
+    size: 350,
+  },
+  {
+    accessorKey: 'date_filed',
+    cell: ({ getValue }) => {
+      const v: string | null = getValue() as string | null;
+      return v != null ? new Date(v).toLocaleDateString() : '';
+    },
+    header: 'Date Filed',
+    size: 100,
+  },
+  {
+    accessorKey: 'score',
+    cell: ({ getValue }) => (getValue() as number).toFixed(2),
+    header: 'Relevance',
+    size: 80,
+  },
+];
+
 // ── Filter forms ─────────────────────────────────────────────────────
 
 type FilingFilters = {
@@ -896,6 +977,11 @@ export default function SearchPage() {
   // Filter panel collapsed state
   const [filtersOpen, setFiltersOpen] = useState<boolean>(true);
 
+  // Content search state
+  const [contentQuery, setContentQuery] = useState<string>('');
+  const [searchMode, setSearchMode] = useState<'keyword' | 'semantic' | 'hybrid'>('keyword');
+  const isContentSearch: boolean = contentQuery.trim() !== '';
+
   // Filter state per tab
   const [filingFilters, setFilingFilters] = useState<FilingFilters>(emptyFilingFilters);
   const [satelliteFilters, setSatelliteFilters] = useState<SatelliteFilters>(emptySatelliteFilters);
@@ -929,6 +1015,7 @@ export default function SearchPage() {
   }, [setSearchParams]);
 
   const handleClear = useCallback(() => {
+    setContentQuery('');
     if (activeTab === 'filings') {
       setFilingFilters(emptyFilingFilters());
     } else if (activeTab === 'satellites') {
@@ -969,6 +1056,46 @@ export default function SearchPage() {
     [earthStationFilters, searchTrigger],
   );
 
+  // Content search fetch
+  const fetchContent = useCallback(
+    (params: DataTableFetchParams): Promise<PaginatedResponse<ContentSearchResult>> => {
+      const parts: Array<string> = [
+        `q=${encodeURIComponent(contentQuery.trim())}`,
+        `mode=${searchMode}`,
+        `page=${params.page}`,
+        `pageSize=${params.pageSize}`,
+      ];
+      if (params.sort != null) {
+        parts.push(`sort=${params.sort}`);
+      }
+      if (params.order != null) {
+        parts.push(`order=${params.order}`);
+      }
+      // Pass through active filing filters
+      if (filingFilters.subsystem_code.length > 0) {
+        parts.push(`subsystem_code=${filingFilters.subsystem_code.join(',')}`);
+      }
+      if (filingFilters.app_type_code.length > 0) {
+        parts.push(`app_type_code=${filingFilters.app_type_code.join(',')}`);
+      }
+      if (filingFilters.status_code.length > 0) {
+        parts.push(`status_code=${filingFilters.status_code.join(',')}`);
+      }
+      if (filingFilters.date_filed_from !== '') {
+        parts.push(`date_filed_from=${filingFilters.date_filed_from}`);
+      }
+      if (filingFilters.date_filed_to !== '') {
+        parts.push(`date_filed_to=${filingFilters.date_filed_to}`);
+      }
+      if (filingFilters.company.trim() !== '') {
+        parts.push(`company=${encodeURIComponent(filingFilters.company.trim())}`);
+      }
+      return apiFetch<PaginatedResponse<ContentSearchResult>>(`/api/search/content?${parts.join('&')}`);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contentQuery, searchMode, filingFilters, searchTrigger],
+  );
+
   // Row click handlers
   const onFilingClick = useCallback(
     (row: FilingSearchResult) => {
@@ -995,11 +1122,45 @@ export default function SearchPage() {
   const filingCols = useMemo(() => filingColumns, []);
   const satelliteCols = useMemo(() => satelliteColumns, []);
   const earthStationCols = useMemo(() => earthStationColumns, []);
+  const contentCols = useMemo(() => contentColumns, []);
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 p-6">
       {/* Page heading */}
       <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Search</h1>
+
+      {/* Content search bar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <Input
+            className="pl-10"
+            onChange={(e) => setContentQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              }
+            }}
+            placeholder="Search filing content, attachments, and comments..."
+            value={contentQuery}
+          />
+        </div>
+        <select
+          className="h-9 rounded-md border border-neutral-200 bg-transparent px-2 text-sm dark:border-neutral-700"
+          onChange={(e) =>
+            setSearchMode(e.target.value as 'keyword' | 'semantic' | 'hybrid')
+          }
+          value={searchMode}
+        >
+          <option value="keyword">Keyword</option>
+          <option disabled value="semantic">
+            Semantic (coming soon)
+          </option>
+          <option disabled value="hybrid">
+            Hybrid (coming soon)
+          </option>
+        </select>
+      </div>
 
       {/* Tab bar */}
       <div className="flex border-b border-neutral-200 dark:border-neutral-700">
@@ -1059,36 +1220,51 @@ export default function SearchPage() {
         )}
       </div>
 
-      {/* Results table */}
-      {activeTab === 'filings' && (
-        <DataTable<FilingSearchResult>
-          columns={filingCols}
+      {/* Results table — content search replaces tab tables when active */}
+      {isContentSearch ? (
+        <DataTable<ContentSearchResult>
+          columns={contentCols}
           defaultOrder="desc"
-          defaultSort="date_filed"
-          fetchData={fetchFilings}
-          onRowClick={onFilingClick}
-          paramPrefix="f_"
+          defaultSort="score"
+          fetchData={fetchContent}
+          onRowClick={(row: ContentSearchResult) =>
+            void navigate(`/filings/${encodeURIComponent(row.file_number)}`)
+          }
+          paramPrefix="c_"
         />
-      )}
-      {activeTab === 'satellites' && (
-        <DataTable<SatelliteSearchResult>
-          columns={satelliteCols}
-          defaultOrder="asc"
-          defaultSort="us_name"
-          fetchData={fetchSatellites}
-          onRowClick={onSatelliteClick}
-          paramPrefix="s_"
-        />
-      )}
-      {activeTab === 'earth-stations' && (
-        <DataTable<EarthStationSearchResult>
-          columns={earthStationCols}
-          defaultOrder="asc"
-          defaultSort="callsign"
-          fetchData={fetchEarthStations}
-          onRowClick={onEarthStationClick}
-          paramPrefix="e_"
-        />
+      ) : (
+        <>
+          {activeTab === 'filings' && (
+            <DataTable<FilingSearchResult>
+              columns={filingCols}
+              defaultOrder="desc"
+              defaultSort="date_filed"
+              fetchData={fetchFilings}
+              onRowClick={onFilingClick}
+              paramPrefix="f_"
+            />
+          )}
+          {activeTab === 'satellites' && (
+            <DataTable<SatelliteSearchResult>
+              columns={satelliteCols}
+              defaultOrder="asc"
+              defaultSort="us_name"
+              fetchData={fetchSatellites}
+              onRowClick={onSatelliteClick}
+              paramPrefix="s_"
+            />
+          )}
+          {activeTab === 'earth-stations' && (
+            <DataTable<EarthStationSearchResult>
+              columns={earthStationCols}
+              defaultOrder="asc"
+              defaultSort="callsign"
+              fetchData={fetchEarthStations}
+              onRowClick={onEarthStationClick}
+              paramPrefix="e_"
+            />
+          )}
+        </>
       )}
     </div>
   );
