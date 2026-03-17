@@ -73,7 +73,7 @@ type SourceConfig = {
   readonly keyColumn: string;
   readonly textColumn: string;
   readonly joinClause: string;
-  readonly orderClause: string;
+  readonly sortExpr: string;
 };
 
 const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
@@ -81,22 +81,22 @@ const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
     table: 'attachment',
     keyColumn: 'attachment_key',
     textColumn: 'full_text',
-    joinClause: 'JOIN filing f ON t.file_number = f.file_number',
-    orderClause: 'ORDER BY f.date_filed DESC, t.attachment_key',
+    joinClause: 'LEFT JOIN filing f ON t.file_number = f.file_number',
+    sortExpr: "COALESCE(f.date_filed, DATE '1970-01-01')",
   },
   filing: {
     table: 'filing',
     keyColumn: 'file_number',
     textColumn: 'description',
     joinClause: '',
-    orderClause: 'ORDER BY t.date_filed DESC, t.file_number',
+    sortExpr: "COALESCE(t.date_filed, DATE '1970-01-01')",
   },
   pleading: {
     table: 'pleading',
     keyColumn: 'pleading_key',
     textColumn: 'exhibit_attachment_html',
-    joinClause: 'JOIN filing f ON t.filing_key = f.filing_key',
-    orderClause: 'ORDER BY f.date_filed DESC, t.pleading_key',
+    joinClause: 'LEFT JOIN filing f ON t.filing_key = f.filing_key',
+    sortExpr: "COALESCE(f.date_filed, DATE '1970-01-01')",
   },
 };
 
@@ -135,7 +135,8 @@ async function fetchBatch(
           AND e.text_checksum IS NOT NULL
           AND e.text_checksum = md5(t.${cfg.textColumn})
       )
-    ${cfg.orderClause}
+    GROUP BY t.${cfg.keyColumn}, t.${cfg.textColumn}
+    ORDER BY MAX(${cfg.sortExpr}) DESC, t.${cfg.keyColumn}
     LIMIT ?
   `;
   const reader = await conn.runAndReadAll(sql, [
