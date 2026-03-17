@@ -19,7 +19,7 @@
 
 - v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [x] Full text search via DuckDB BM25
-- v1.2.0 [x] Vector-DB search via Bedrock-driven embeddings
+- v1.2.0 [ ] Vector-DB search via Bedrock-driven embeddings
 - v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
 - v1.4.0 [ ]
 
