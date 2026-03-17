@@ -534,6 +534,20 @@ export async function runAttachmentPipeline(
   untrackConnection(conn);
   conn.closeSync();
 
+  // Rebuild FTS indexes so new/updated content is searchable
+  const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
+  const ftsConn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    log('Rebuilding FTS indexes...');
+    const ftsStart: number = Date.now();
+    await rebuildAllFtsIndexes(ftsConn);
+    log(
+      `FTS indexes rebuilt in ${((Date.now() - ftsStart) / 1000).toFixed(1)}s`,
+    );
+  } finally {
+    ftsConn.closeSync();
+  }
+
   const durationMs: number = Date.now() - start;
   const skippedSuffix: string =
     attachmentsSkipped > 0
