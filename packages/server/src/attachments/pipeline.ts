@@ -14,8 +14,11 @@ import {
   countDuplicateKeys,
   createAttachmentTable,
   createDiscoveryLogTable,
+  findExistingSummaryByChecksum,
   getFilingsForScope,
   getPendingDownloads,
+  isUndownloadableUrl,
+  markDownloadSkipped,
   getPendingExtractions,
   getPendingSummarizations,
   getPendingValidations,
@@ -178,6 +181,7 @@ export async function runAttachmentPipeline(
   let attachmentsDownloaded: number = 0;
   let attachmentsFailed: number = 0;
   let attachmentsSkipped: number = 0;
+  let downloadSkipped: number = 0;
   const skipExisting: boolean = options.skipExisting !== false;
 
   if (options.discoverOnly !== true) {
@@ -189,12 +193,28 @@ export async function runAttachmentPipeline(
     );
 
     // When authCookies is provided, filter to only ServiceNow URLs
-    const pending: AttachmentRow[] =
+    const afterAuthFilter: AttachmentRow[] =
       options.authCookies != null
         ? allPending.filter((a) =>
             a.downloadUrl.includes('servicenowservices.com'),
           )
         : allPending;
+
+    // Filter out undownloadable URLs (empty, /ibfs? form links, /nav_to nav links)
+    const pending: AttachmentRow[] = [];
+    for (const att of afterAuthFilter) {
+      if (isUndownloadableUrl(att.downloadUrl)) {
+        await markDownloadSkipped(conn, att.attachmentKey);
+        downloadSkipped++;
+      } else {
+        pending.push(att);
+      }
+    }
+    if (downloadSkipped > 0) {
+      log(
+        `Skipped ${String(downloadSkipped)} attachments with undownloadable URLs`,
+      );
+    }
     log(`${String(pending.length)} attachments pending download`);
 
     const filingByKey: Map<number, FilingRow> = new Map(
@@ -544,6 +564,7 @@ export async function runAttachmentPipeline(
 
   // Stage 6: Summarize extracted text via Bedrock
   let summariesGenerated: number = 0;
+  let summariesCopied: number = 0;
   let summariesFailed: number = 0;
 
   if (options.discoverOnly !== true && options.skipSummarization !== true) {
@@ -605,59 +626,81 @@ export async function runAttachmentPipeline(
         `Summarizing with ${modelId} (concurrency: ${String(summConcurrency)})`,
       );
 
-      const summResults: (boolean | undefined)[] = await processQueue(
-        pendingSummarizations,
-        async (row: PendingSummarizationRow): Promise<boolean> => {
-          const vars: Record<string, string> = {
-            fileNumber: row.fileNumber,
-            applicantName: row.applicantName,
-            dateFiled: row.dateFiled,
-            appTypeCode: row.appTypeCode,
-            subsystemCode: row.subsystemCode,
-            attachmentName: row.attachmentName,
-            fullText: row.fullText,
-            companyName: '',
-          };
+      const summResults: ('generated' | 'copied' | undefined)[] =
+        await processQueue(
+          pendingSummarizations,
+          async (
+            row: PendingSummarizationRow,
+          ): Promise<'generated' | 'copied'> => {
+            // Dedup: check if another attachment with the same text already has a summary
+            if (row.textChecksum != null) {
+              const existing: string | null =
+                await findExistingSummaryByChecksum(conn, row.textChecksum);
+              if (existing != null) {
+                await saveSummary(conn, row.attachmentKey, existing, 'copied');
+                return 'copied';
+              }
+            }
 
-          const resp = await service.complete({
-            modelId,
-            messages: [
-              { role: 'user', content: renderPrompt(userPromptTemplate, vars) },
-            ],
-            params: {
-              systemPrompt,
-              maxTokens: 512,
-              temperature: 0.3,
+            const vars: Record<string, string> = {
+              fileNumber: row.fileNumber,
+              applicantName: row.applicantName,
+              dateFiled: row.dateFiled,
+              appTypeCode: row.appTypeCode,
+              subsystemCode: row.subsystemCode,
+              attachmentName: row.attachmentName,
+              fullText: row.fullText,
+              companyName: '',
+            };
+
+            const resp = await service.complete({
+              modelId,
+              messages: [
+                {
+                  role: 'user',
+                  content: renderPrompt(userPromptTemplate, vars),
+                },
+              ],
+              params: {
+                systemPrompt,
+                maxTokens: 512,
+                temperature: 0.3,
+              },
+            });
+
+            await saveSummary(conn, row.attachmentKey, resp.content, modelId);
+            return 'generated';
+          },
+          {
+            concurrency: summConcurrency,
+            delayMs: 0,
+            onError: (error: unknown, row: PendingSummarizationRow) => {
+              const msg: string =
+                error instanceof Error ? error.message : String(error);
+              log(`Summarization error [${row.fileNumber}]: ${msg}`);
             },
-          });
-
-          await saveSummary(conn, row.attachmentKey, resp.content);
-          return true;
-        },
-        {
-          concurrency: summConcurrency,
-          delayMs: 0,
-          onError: (error: unknown, row: PendingSummarizationRow) => {
-            const msg: string =
-              error instanceof Error ? error.message : String(error);
-            log(`Summarization error [${row.fileNumber}]: ${msg}`);
+            onItemComplete: (completed: number, total: number) => {
+              printProgress(completed, total, 'Summarizing');
+            },
           },
-          onItemComplete: (completed: number, total: number) => {
-            printProgress(completed, total, 'Summarizing');
-          },
-        },
-      );
+        );
 
       for (const r of summResults) {
-        if (r === true) {
+        if (r === 'generated') {
           summariesGenerated++;
+        } else if (r === 'copied') {
+          summariesCopied++;
         } else {
           summariesFailed++;
         }
       }
 
+      const copiedSuffix: string =
+        summariesCopied > 0
+          ? `, ${String(summariesCopied)} copied (dedup)`
+          : '';
       log(
-        `Summarization: ${String(summariesGenerated)} generated, ${String(summariesFailed)} failed`,
+        `Summarization: ${String(summariesGenerated)} generated${copiedSuffix}, ${String(summariesFailed)} failed`,
       );
     }
   }
@@ -694,11 +737,13 @@ export async function runAttachmentPipeline(
     attachmentsDownloaded,
     attachmentsFailed,
     attachmentsSkipped,
+    downloadsSkipped: downloadSkipped,
     textsExtracted,
     textsSkippedNoText,
     textsSkippedAuthError,
     textsFailed,
     summariesGenerated,
+    summariesCopied,
     summariesFailed,
     durationMs,
   };

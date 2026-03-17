@@ -2,20 +2,26 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import type { FileNumber } from '../lib/file-number.ts';
 import {
+  computeTextChecksum,
   countDuplicateKeys,
   createAttachmentTable,
   createDiscoveryLogTable,
+  findExistingSummaryByChecksum,
   getFilingsForScope,
   getPendingDownloads,
   getPendingExtractions,
+  getPendingSummarizations,
   getPendingValidations,
   markContentTypeValidated,
   markDownloaded,
   markExtracted,
   markExtractionFailed,
   markExtractionSkipped,
+  markDownloadSkipped,
   markFailed,
   markFilingsDiscovered,
+  isUndownloadableUrl,
+  saveSummary,
   upsertAttachments,
 } from './repository.ts';
 import type {
@@ -634,6 +640,210 @@ describe('attachment repository', () => {
       await markContentTypeValidated(conn, 400, 'text/plain');
       const rows = await getPendingValidations(conn);
       expect(rows).toHaveLength(0);
+    });
+  });
+
+  describe('computeTextChecksum', () => {
+    it('is deterministic — same text produces same hash', () => {
+      const text: string =
+        'FCC Form 312 Application for Satellite Space Station';
+      expect(computeTextChecksum(text)).toEqual(computeTextChecksum(text));
+    });
+
+    it('produces different hashes for different text', () => {
+      const a: string = 'Application for earth station license';
+      const b: string = 'Application for space station license';
+      expect(computeTextChecksum(a)).not.toEqual(computeTextChecksum(b));
+    });
+
+    it('returns a 32-character hex string', () => {
+      const checksum: string = computeTextChecksum('test content');
+      expect(checksum).toMatch(/^[0-9a-f]{32}$/);
+    });
+  });
+
+  describe('markExtracted with checksum', () => {
+    beforeEach(async () => {
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, local_path, extract_status)
+         VALUES (500, 1, 'SAT-STA-20230614-00142', 'Doc', 'https://example.com/500.pdf',
+           'downloaded', '/tmp/500.pdf', 'pending')`,
+      );
+    });
+
+    it('populates text_checksum when extracting text', async () => {
+      const text: string = 'This is a test document with some content.';
+      await markExtracted(conn, 500, text, text.length);
+      const reader = await conn.runAndReadAll(
+        `SELECT text_checksum FROM attachment WHERE attachment_key = 500`,
+      );
+      const checksum: string = String(
+        reader.getRowObjectsJS()[0]!.text_checksum,
+      );
+      expect(checksum).toEqual(computeTextChecksum(text));
+    });
+  });
+
+  describe('findExistingSummaryByChecksum', () => {
+    const SHARED_TEXT: string = 'Identical boilerplate FCC form content';
+
+    beforeEach(async () => {
+      // Two attachments with the same text, one already summarized
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, extract_status, full_text, text_length, text_checksum, summary)
+         VALUES
+          (600, 1, 'SAT-STA-20230614-00142', 'Form A', 'https://example.com/600',
+           'downloaded', 'extracted', $1, $2, $3, 'This is a boilerplate FCC form.'),
+          (601, 1, 'SAT-STA-20230614-00142', 'Form B', 'https://example.com/601',
+           'downloaded', 'extracted', $1, $2, $3, NULL)`,
+        [SHARED_TEXT, SHARED_TEXT.length, computeTextChecksum(SHARED_TEXT)],
+      );
+    });
+
+    it('returns existing summary when checksum matches', async () => {
+      const result: string | null = await findExistingSummaryByChecksum(
+        conn,
+        computeTextChecksum(SHARED_TEXT),
+      );
+      expect(result).toEqual('This is a boilerplate FCC form.');
+    });
+
+    it('returns null when no checksum match exists', async () => {
+      const result: string | null = await findExistingSummaryByChecksum(
+        conn,
+        'deadbeef00000000deadbeef00000000',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns null when checksum matches but no summary exists', async () => {
+      // Remove the summarized row, leaving only the unsummarized one
+      await conn.run(`DELETE FROM attachment WHERE attachment_key = 600`);
+      const result: string | null = await findExistingSummaryByChecksum(
+        conn,
+        computeTextChecksum(SHARED_TEXT),
+      );
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getPendingSummarizations with textChecksum', () => {
+    beforeEach(async () => {
+      await conn.run(`
+        CREATE TABLE IF NOT EXISTS filing (
+          filing_key INTEGER NOT NULL,
+          file_number VARCHAR NOT NULL,
+          subsystem_code VARCHAR NOT NULL,
+          app_type_code VARCHAR NOT NULL,
+          date_filed DATE,
+          signer_name VARCHAR
+        )
+      `);
+      await conn.run(
+        `INSERT INTO filing VALUES (1, 'SAT-STA-20230614-00142', 'SAT', 'STA', '2023-06-14', 'Test Signer')`,
+      );
+
+      const text: string = 'Document text for summarization test';
+      const checksum: string = computeTextChecksum(text);
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, extract_status, full_text, text_length, text_checksum)
+         VALUES (700, 1, 'SAT-STA-20230614-00142', 'Narrative', 'https://example.com/700',
+           'downloaded', 'extracted', $1, $2, $3)`,
+        [text, text.length, checksum],
+      );
+    });
+
+    it('includes textChecksum in results', async () => {
+      const rows = await getPendingSummarizations(conn);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.textChecksum).toEqual(
+        computeTextChecksum('Document text for summarization test'),
+      );
+    });
+  });
+
+  describe('saveSummary with summarizedBy', () => {
+    beforeEach(async () => {
+      // Ensure attribution columns exist (as they would in production)
+      await conn.run(
+        `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summarized_by VARCHAR`,
+      );
+      await conn.run(
+        `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS summarized_at TIMESTAMP`,
+      );
+      await conn.run(
+        `INSERT INTO attachment
+          (attachment_key, filing_key, file_number, attachment_name, download_url,
+           download_status, extract_status, full_text, text_length)
+         VALUES (800, 1, 'SAT-STA-20230614-00142', 'Form', 'https://example.com/800',
+           'downloaded', 'extracted', 'Some text', 9)`,
+      );
+    });
+
+    it('sets summarized_by when provided', async () => {
+      await saveSummary(conn, 800, 'A summary', 'copied');
+      const reader = await conn.runAndReadAll(
+        `SELECT summary, summarized_by, summarized_at FROM attachment WHERE attachment_key = 800`,
+      );
+      const row = reader.getRowObjectsJS()[0]!;
+      expect(String(row.summary)).toEqual('A summary');
+      expect(String(row.summarized_by)).toEqual('copied');
+      expect(row.summarized_at).not.toBeNull();
+    });
+
+    it('does not set summarized_by when not provided', async () => {
+      await saveSummary(conn, 800, 'A summary');
+      const reader = await conn.runAndReadAll(
+        `SELECT summary, summarized_by FROM attachment WHERE attachment_key = 800`,
+      );
+      const row = reader.getRowObjectsJS()[0]!;
+      expect(String(row.summary)).toEqual('A summary');
+      expect(row.summarized_by).toBeNull();
+    });
+  });
+
+  describe('isUndownloadableUrl', () => {
+    it.each([
+      { url: '', label: 'empty string' },
+      { url: '   ', label: 'whitespace only' },
+      { url: '/ibfs?IBFS_ID=123', label: '/ibfs? form link' },
+      { url: '/ibfs?mode=edit&id=456', label: '/ibfs? with params' },
+      { url: '/nav_to.do?uri=page.do', label: '/nav_to navigation link' },
+    ])('returns true for $label', ({ url }) => {
+      expect(isUndownloadableUrl(url)).toBe(true);
+    });
+
+    it.each([
+      {
+        url: 'https://fcc.report/IBFS/SAT-STA-20230614-00142/100',
+        label: 'fcc.report URL',
+      },
+      {
+        url: 'https://servicenowservices.com/download/123',
+        label: 'ServiceNow URL',
+      },
+      { url: 'http://example.com/file.pdf', label: 'generic HTTP URL' },
+    ])('returns false for $label', ({ url }) => {
+      expect(isUndownloadableUrl(url)).toBe(false);
+    });
+  });
+
+  describe('markDownloadSkipped', () => {
+    it('sets download_status to skipped', async () => {
+      await upsertAttachments(conn, [ATTACHMENT_A]);
+      await markDownloadSkipped(conn, ATTACHMENT_A.attachmentKey);
+      const reader = await conn.runAndReadAll(
+        `SELECT download_status FROM attachment WHERE attachment_key = $1`,
+        [ATTACHMENT_A.attachmentKey],
+      );
+      const row = reader.getRowObjectsJS()[0]!;
+      expect(String(row.download_status)).toEqual('skipped');
     });
   });
 });

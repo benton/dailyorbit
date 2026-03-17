@@ -1,4 +1,5 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
+import { createHash } from 'node:crypto';
 import type { FileNumber } from '../lib/file-number.ts';
 import { parseDuration } from './duration.ts';
 import type {
@@ -28,7 +29,8 @@ const CREATE_TABLE_SQL: string = `
     text_length INTEGER,
     summary TEXT,
     extract_status VARCHAR NOT NULL DEFAULT 'pending',
-    content_type_source VARCHAR DEFAULT 'http_header'
+    content_type_source VARCHAR DEFAULT 'http_header',
+    text_checksum VARCHAR
   )`;
 
 const MIGRATE_COLUMNS_SQL: string[] = [
@@ -39,6 +41,11 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'attachment'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS extract_status VARCHAR DEFAULT 'pending'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS content_type_source VARCHAR DEFAULT 'http_header'`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_checksum VARCHAR`,
+];
+
+const MIGRATE_INDEXES_SQL: string[] = [
+  `CREATE INDEX IF NOT EXISTS idx_attachment_text_checksum ON attachment(text_checksum)`,
 ];
 
 async function migratePrimaryKeyConstraint(
@@ -82,6 +89,9 @@ export async function createAttachmentTable(
   }
   await migratePrimaryKeyConstraint(conn);
   await migrateFileNumberNormalization(conn);
+  for (const sql of MIGRATE_INDEXES_SQL) {
+    await conn.run(sql);
+  }
 }
 
 /**
@@ -325,6 +335,31 @@ export async function markFailed(
   );
 }
 
+/**
+ * Returns true if the download URL is not an actual downloadable file.
+ * Matches empty URLs, ICFS form editor pages (/ibfs?), and ICFS nav links (/nav_to).
+ */
+export function isUndownloadableUrl(downloadUrl: string): boolean {
+  const trimmed: string = downloadUrl.trim();
+  return (
+    trimmed === '' ||
+    trimmed.startsWith('/ibfs?') ||
+    trimmed.startsWith('/nav_to')
+  );
+}
+
+export async function markDownloadSkipped(
+  conn: DuckDBConnection,
+  attachmentKey: number,
+): Promise<void> {
+  await conn.run(
+    `UPDATE attachment
+      SET download_status = 'skipped'
+      WHERE attachment_key = $1`,
+    [attachmentKey] as DuckDBValue[],
+  );
+}
+
 const CREATE_DISCOVERY_LOG_SQL: string = `
   CREATE TABLE IF NOT EXISTS attachment_discovery (
     filing_key INTEGER NOT NULL,
@@ -396,19 +431,25 @@ export async function getPendingExtractions(
   }));
 }
 
+export function computeTextChecksum(text: string): string {
+  return createHash('md5').update(text).digest('hex');
+}
+
 export async function markExtracted(
   conn: DuckDBConnection,
   attachmentKey: number,
   fullText: string,
   textLength: number,
 ): Promise<void> {
+  const checksum: string = computeTextChecksum(fullText);
   await conn.run(
     `UPDATE attachment
       SET full_text = $1,
           text_length = $2,
+          text_checksum = $3,
           extract_status = 'extracted'
-      WHERE attachment_key = $3`,
-    [fullText, textLength, attachmentKey] as DuckDBValue[],
+      WHERE attachment_key = $4`,
+    [fullText, textLength, checksum, attachmentKey] as DuckDBValue[],
   );
 }
 
@@ -450,6 +491,7 @@ export type PendingSummarizationRow = {
   subsystemCode: string;
   attachmentName: string;
   fullText: string;
+  textChecksum: string | null;
 };
 
 export async function getPendingSummarizations(
@@ -477,13 +519,14 @@ export async function getPendingSummarizations(
       COALESCE(f.app_type_code, '(unknown)') AS app_type_code,
       COALESCE(f.subsystem_code, '(unknown)') AS subsystem_code,
       COALESCE(a.attachment_name, '') AS attachment_name,
-      a.full_text
+      a.full_text,
+      a.text_checksum
     FROM attachment a
     JOIN filing f ON a.file_number = f.file_number
     WHERE a.full_text IS NOT NULL
       AND a.summary IS NULL
       ${filingFilter}
-    ORDER BY a.text_length ASC
+    ORDER BY f.date_filed DESC, a.text_length ASC
     ${limitClause}`;
 
   const params: number[] =
@@ -502,18 +545,45 @@ export async function getPendingSummarizations(
     subsystemCode: String(r.subsystem_code),
     attachmentName: String(r.attachment_name),
     fullText: String(r.full_text),
+    textChecksum: r.text_checksum != null ? String(r.text_checksum) : null,
   }));
+}
+
+export async function findExistingSummaryByChecksum(
+  conn: DuckDBConnection,
+  textChecksum: string,
+): Promise<string | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT summary FROM attachment
+     WHERE text_checksum = $1 AND summary IS NOT NULL
+     LIMIT 1`,
+    [textChecksum] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  return rows.length > 0 ? String(rows[0]!.summary) : null;
 }
 
 export async function saveSummary(
   conn: DuckDBConnection,
   attachmentKey: number,
   summary: string,
+  summarizedBy?: string | undefined,
 ): Promise<void> {
-  await conn.run(
-    `UPDATE attachment SET summary = $1 WHERE attachment_key = $2`,
-    [summary, attachmentKey] as DuckDBValue[],
-  );
+  if (summarizedBy != null) {
+    await conn.run(
+      `UPDATE attachment
+        SET summary = $1,
+            summarized_by = $2,
+            summarized_at = current_timestamp
+        WHERE attachment_key = $3`,
+      [summary, summarizedBy, attachmentKey] as DuckDBValue[],
+    );
+  } else {
+    await conn.run(
+      `UPDATE attachment SET summary = $1 WHERE attachment_key = $2`,
+      [summary, attachmentKey] as DuckDBValue[],
+    );
+  }
 }
 
 export async function markFilingsDiscovered(
