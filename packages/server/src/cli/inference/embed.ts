@@ -4,6 +4,7 @@ import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
 import { EmbeddingService } from '../../inference/embedding-service.ts';
+import type { EmbeddingResponse } from '../../inference/types.ts';
 import { splitText } from '../../inference/text-chunker.ts';
 import { processWithConcurrency } from '../../lib/concurrency.ts';
 import { computeTextChecksum } from '../../lib/text-utils.ts';
@@ -22,6 +23,44 @@ const EMBEDDING_MAX_CHARS: number = 20_000;
 
 /** Overlap chars between consecutive chunks for context continuity. */
 const EMBEDDING_OVERLAP: number = 500;
+
+/** Titan V2 hard token limit. */
+const TOKEN_LIMIT: number = 8192;
+
+/** Matches the token count from Bedrock's "Too many input tokens" error. */
+const TOKEN_LIMIT_RE: RegExp = /request input token count: (\d+)/;
+
+// ---------------------------------------------------------------------------
+// Embedding with truncation retry
+// ---------------------------------------------------------------------------
+
+/**
+ * Embed a chunk of text, retrying once with truncation if it exceeds the
+ * token limit. Uses the reported token count to estimate the chars-per-token
+ * ratio and truncates to fit within the limit with 10% headroom.
+ */
+async function embedChunk(
+  service: EmbeddingService,
+  text: string,
+  modelId: string,
+  dimensions: number,
+): Promise<EmbeddingResponse> {
+  try {
+    return await service.embedQuery(text, modelId, dimensions, true);
+  } catch (err: unknown) {
+    const msg: string = err instanceof Error ? err.message : String(err);
+    const match: RegExpMatchArray | null = msg.match(TOKEN_LIMIT_RE);
+    if (match == null) throw err;
+
+    // Calculate actual chars/token ratio and truncate with 10% headroom
+    const actualTokens: number = parseInt(match[1]!, 10);
+    const charsPerToken: number = text.length / actualTokens;
+    const safeChars: number = Math.floor(TOKEN_LIMIT * 0.9 * charsPerToken);
+    const truncated: string = text.slice(0, safeChars);
+
+    return service.embedQuery(truncated, modelId, dimensions, true);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -320,11 +359,11 @@ export const embedCommand = defineCommand({
                 await deleteExistingChunks(conn, source, row.sourceKey);
 
                 for (let ci = 0; ci < chunks.length; ci++) {
-                  const resp = await service.embedQuery(
+                  const resp: EmbeddingResponse = await embedChunk(
+                    service,
                     chunks[ci]!,
                     modelId,
                     dimensions,
-                    true,
                   );
                   await saveEmbedding(
                     conn,
