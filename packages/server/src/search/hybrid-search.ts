@@ -19,10 +19,7 @@ export function mergeWithRRF(
   k: number = 60,
 ): ContentSearchHit[] {
   // Map file_number -> { hit, rrfScore }
-  const merged = new Map<
-    string,
-    { hit: ContentSearchHit; rrfScore: number }
-  >();
+  const merged = new Map<string, { hit: ContentSearchHit; rrfScore: number }>();
 
   // Add BM25 scores
   for (let rank = 0; rank < bm25Hits.length; rank++) {

@@ -3,9 +3,7 @@ import { EmbeddingService } from './embedding-service.ts';
 import type { EmbeddingRequest, EmbeddingResponse } from './types.ts';
 
 /** Create a mock embed function that returns a deterministic embedding. */
-function createMockEmbedFn(
-  expectedDimensions: number = 512,
-): {
+function createMockEmbedFn(expectedDimensions: number = 512): {
   embedFn: (req: EmbeddingRequest) => Promise<EmbeddingResponse>;
   calls: EmbeddingRequest[];
 } {
@@ -86,7 +84,9 @@ describe('EmbeddingService', () => {
       let maxConcurrent: number = 0;
       let currentConcurrent: number = 0;
 
-      const embedFn = async (_req: EmbeddingRequest): Promise<EmbeddingResponse> => {
+      const embedFn = async (
+        _req: EmbeddingRequest,
+      ): Promise<EmbeddingResponse> => {
         currentConcurrent++;
         maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
         await new Promise((r) => setTimeout(r, 10));
@@ -99,7 +99,10 @@ describe('EmbeddingService', () => {
       };
 
       const service = new EmbeddingService({ embed: embedFn });
-      const texts: string[] = Array.from({ length: 10 }, (_, i) => `text ${String(i)}`);
+      const texts: string[] = Array.from(
+        { length: 10 },
+        (_, i) => `text ${String(i)}`,
+      );
 
       await service.embedTexts(texts, 'model', 512, true, 3);
 

@@ -26,15 +26,11 @@ function hit(
 
 describe('mergeWithRRF', () => {
   it('merges hits from both lists, boosting items present in both', () => {
-    const bm25: ContentSearchHit[] = [
-      hit('A', 10),
-      hit('B', 8),
-      hit('C', 5),
-    ];
+    const bm25: ContentSearchHit[] = [hit('A', 10), hit('B', 8), hit('C', 5)];
     const vector: ContentSearchHit[] = [
       hit('B', 0.95),
-      hit('D', 0.90),
-      hit('A', 0.80),
+      hit('D', 0.9),
+      hit('A', 0.8),
     ];
 
     const merged = mergeWithRRF(bm25, vector, 60);

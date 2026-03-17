@@ -154,10 +154,7 @@ async function searchHybrid(
     0,
   );
 
-  const merged: ContentSearchHit[] = mergeWithRRF(
-    bm25Result.data,
-    vectorHits,
-  );
+  const merged: ContentSearchHit[] = mergeWithRRF(bm25Result.data, vectorHits);
 
   // Paginate the merged results
   const paged: ContentSearchHit[] = merged.slice(offset, offset + pageSize);

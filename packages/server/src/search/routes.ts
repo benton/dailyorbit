@@ -51,7 +51,8 @@ function getEmbeddingContext(): EmbeddingContext | undefined {
   try {
     const config = getConfigService();
     const modelId: string =
-      (config.get('embeddingModel') as string) || 'amazon.titan-embed-text-v2:0';
+      (config.get('embeddingModel') as string) ||
+      'amazon.titan-embed-text-v2:0';
     const dimensions: number =
       parseInt(config.get('embeddingDimensions') as string, 10) || 512;
     const normalize: boolean =
