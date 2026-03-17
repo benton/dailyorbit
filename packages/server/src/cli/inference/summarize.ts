@@ -5,10 +5,13 @@ import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
 import { InferenceService } from '../../inference/inference-service.ts';
 import {
+  CHUNK_USER_PROMPT,
   DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
   DEFAULT_SUMMARIZATION_USER_PROMPT,
+  REDUCE_USER_PROMPT,
   renderPrompt,
 } from '../../inference/prompts.ts';
+import { splitText } from '../../inference/text-chunker.ts';
 import { setConfigService } from '../../lib/config.ts';
 import type {
   InferenceRequest,
@@ -123,7 +126,12 @@ async function summarizeOne(
   systemPrompt: string,
   userPromptTemplate: string,
   row: AttachmentRow,
+  chunkSize: number,
 ): Promise<InferenceResponse> {
+  if (row.fullText.length > chunkSize) {
+    return summarizeChunked(service, modelId, systemPrompt, row, chunkSize);
+  }
+
   const vars: Record<string, string> = {
     fileNumber: row.fileNumber,
     applicantName: row.applicantName,
@@ -147,6 +155,99 @@ async function summarizeOne(
     },
   };
   return service.complete(request);
+}
+
+// ---------------------------------------------------------------------------
+// Map-reduce chunked summarization for large documents
+// ---------------------------------------------------------------------------
+
+async function summarizeChunked(
+  service: InferenceService,
+  modelId: string,
+  systemPrompt: string,
+  row: AttachmentRow,
+  chunkSize: number,
+): Promise<InferenceResponse> {
+  const chunks: string[] = splitText(row.fullText, chunkSize);
+
+  const baseVars: Record<string, string> = {
+    fileNumber: row.fileNumber,
+    applicantName: row.applicantName,
+    dateFiled: row.dateFiled,
+    appTypeCode: row.appTypeCode,
+    subsystemCode: row.subsystemCode,
+    attachmentName: '',
+    companyName: '',
+  };
+
+  // MAP: summarize each chunk independently
+  const subSummaries: string[] = [];
+  let totalInputTokens: number = 0;
+  let totalOutputTokens: number = 0;
+  let totalLatencyMs: number = 0;
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkVars: Record<string, string> = {
+      ...baseVars,
+      fullText: chunks[i]!,
+      chunkIndex: String(i + 1),
+      totalChunks: String(chunks.length),
+    };
+
+    const mapRequest: InferenceRequest = {
+      modelId,
+      messages: [
+        { role: 'user', content: renderPrompt(CHUNK_USER_PROMPT, chunkVars) },
+      ],
+      params: {
+        systemPrompt,
+        maxTokens: 512,
+        temperature: 0.3,
+      },
+    };
+
+    const mapResp: InferenceResponse = await service.complete(mapRequest);
+    subSummaries.push(mapResp.content);
+    totalInputTokens += mapResp.usage.inputTokens;
+    totalOutputTokens += mapResp.usage.outputTokens;
+    totalLatencyMs += mapResp.latencyMs;
+  }
+
+  // REDUCE: merge sub-summaries into one coherent summary
+  const reduceVars: Record<string, string> = {
+    ...baseVars,
+    subSummaries: subSummaries.join('\n\n'),
+  };
+
+  const reduceRequest: InferenceRequest = {
+    modelId,
+    messages: [
+      { role: 'user', content: renderPrompt(REDUCE_USER_PROMPT, reduceVars) },
+    ],
+    params: {
+      systemPrompt,
+      maxTokens: 512,
+      temperature: 0.3,
+    },
+  };
+
+  const reduceResp: InferenceResponse = await service.complete(reduceRequest);
+
+  return {
+    content: reduceResp.content,
+    modelId: reduceResp.modelId,
+    usage: {
+      inputTokens: totalInputTokens + reduceResp.usage.inputTokens,
+      outputTokens: totalOutputTokens + reduceResp.usage.outputTokens,
+      totalTokens:
+        totalInputTokens +
+        totalOutputTokens +
+        reduceResp.usage.inputTokens +
+        reduceResp.usage.outputTokens,
+    },
+    stopReason: reduceResp.stopReason,
+    latencyMs: totalLatencyMs + reduceResp.latencyMs,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -213,6 +314,11 @@ export const summarizeCommand = defineCommand({
       description: 'Max total attachments to summarize (0 = unlimited)',
       default: '0',
     },
+    'chunk-size': {
+      type: 'string',
+      description: 'Max chars per chunk for large documents (0 = no chunking)',
+      default: '80000',
+    },
     'dry-run': {
       type: 'boolean',
       description: 'Count remaining work without calling Bedrock',
@@ -223,6 +329,7 @@ export const summarizeCommand = defineCommand({
     const concurrency: number = parseInt(args.concurrency, 10);
     const batchSize: number = parseInt(args.batch, 10);
     const maxLimit: number = parseInt(args.limit, 10);
+    const chunkSize: number = parseInt(args['chunk-size'], 10);
     const modelId: string = args.model;
     const region: string = args.region;
     const dryRun: boolean = args['dry-run'] as boolean;
@@ -290,6 +397,7 @@ export const summarizeCommand = defineCommand({
                 systemPrompt,
                 userPromptTemplate,
                 row,
+                chunkSize,
               );
               await saveSummary(conn, row.attachmentKey, resp.content);
               return { ok: true as const, resp };

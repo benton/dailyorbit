@@ -106,3 +106,25 @@ Subsystem: {{subsystemCode}}
 --- Begin extracted text ---
 {{fullText}}
 --- End extracted text ---`;
+
+// ---------------------------------------------------------------------------
+// Map-reduce chunked summarization prompts
+// ---------------------------------------------------------------------------
+
+export const CHUNK_USER_PROMPT: string = `Summarize part {{chunkIndex}} of {{totalChunks}} of the following FCC filing attachment. This is a section of a larger document, so focus on capturing all substantive content in this section. Do not introduce or conclude the overall filing — just summarize what this section contains.
+
+Filing: {{fileNumber}} | Filed by: {{applicantName}} | Date: {{dateFiled}}
+Type: {{appTypeCode}} | Subsystem: {{subsystemCode}}
+
+--- Begin section {{chunkIndex}} of {{totalChunks}} ---
+{{fullText}}
+--- End section ---`;
+
+export const REDUCE_USER_PROMPT: string = `The following are partial summaries of different sections of a single FCC filing attachment. Combine them into one cohesive summary of one to two paragraphs. Focus on: what is being requested or proposed, by whom, and any notable technical parameters or regulatory conditions.
+
+Filing: {{fileNumber}} | Filed by: {{applicantName}} | Date: {{dateFiled}}
+Type: {{appTypeCode}} | Subsystem: {{subsystemCode}}
+
+--- Partial summaries ---
+{{subSummaries}}
+--- End partial summaries ---`;
