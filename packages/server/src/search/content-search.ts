@@ -5,7 +5,10 @@ import {
   type PaginatedRequest,
   type PaginatedResponse,
 } from '../lib/pagination.ts';
+import type { EmbeddingService } from '../inference/embedding-service.ts';
 import { extractSnippet } from './snippet.ts';
+import { mergeWithRRF } from './hybrid-search.ts';
+import { searchByVector } from './vector-search.ts';
 import type {
   ContentSearchHit,
   ContentSearchQuery,
@@ -27,14 +30,145 @@ function escapeSqlString(value: string): string {
   return value.replace(/'/g, "''");
 }
 
+/** Optional embedding context for semantic/hybrid modes. */
+export type EmbeddingContext = {
+  readonly service: EmbeddingService;
+  readonly modelId: string;
+  readonly dimensions: number;
+  readonly normalize: boolean;
+};
+
 /**
- * Search across filing descriptions, attachment full_text, and pleading content
- * using BM25 full-text search, with optional metadata filters.
+ * Dispatch content search based on mode:
+ * - keyword  → BM25 full-text search
+ * - semantic → embed query, then vector similarity search
+ * - hybrid   → run both in parallel, merge with RRF
  *
- * Results are deduplicated by file_number (best score per filing wins) and
- * returned in descending relevance order.
+ * For semantic/hybrid modes, an EmbeddingContext must be provided.
+ * If not provided and mode is semantic/hybrid, falls back to keyword.
  */
 export async function searchFilingContent(
+  conn: DuckDBConnection,
+  query: ContentSearchQuery,
+  filters: FilingSearchFilters,
+  pagination: PaginatedRequest,
+  embeddingCtx?: EmbeddingContext,
+): Promise<PaginatedResponse<ContentSearchHit>> {
+  const mode = query.mode ?? 'keyword';
+  const q: string = query.q.trim();
+
+  if (q === '') {
+    return buildPaginatedResponse([], 0, pagination);
+  }
+
+  // Fall back to keyword if no embedding context for semantic/hybrid
+  if ((mode === 'semantic' || mode === 'hybrid') && embeddingCtx == null) {
+    return searchByKeyword(conn, query, filters, pagination);
+  }
+
+  if (mode === 'semantic' && embeddingCtx != null) {
+    return searchBySemantic(conn, q, filters, pagination, embeddingCtx);
+  }
+
+  if (mode === 'hybrid' && embeddingCtx != null) {
+    return searchHybrid(conn, query, filters, pagination, embeddingCtx);
+  }
+
+  return searchByKeyword(conn, query, filters, pagination);
+}
+
+// ---------------------------------------------------------------------------
+// Semantic search
+// ---------------------------------------------------------------------------
+
+async function searchBySemantic(
+  conn: DuckDBConnection,
+  q: string,
+  filters: FilingSearchFilters,
+  pagination: PaginatedRequest,
+  ctx: EmbeddingContext,
+): Promise<PaginatedResponse<ContentSearchHit>> {
+  const { page, pageSize } = normalizePaginatedRequest(pagination);
+  const offset: number = (page - 1) * pageSize;
+
+  const embeddingResp = await ctx.service.embedQuery(
+    q,
+    ctx.modelId,
+    ctx.dimensions,
+    ctx.normalize,
+  );
+
+  const { hits, total } = await searchByVector(
+    conn,
+    embeddingResp.embedding,
+    filters,
+    q,
+    pageSize,
+    offset,
+  );
+
+  return buildPaginatedResponse(hits, total, pagination);
+}
+
+// ---------------------------------------------------------------------------
+// Hybrid search (BM25 + Vector → RRF)
+// ---------------------------------------------------------------------------
+
+async function searchHybrid(
+  conn: DuckDBConnection,
+  query: ContentSearchQuery,
+  filters: FilingSearchFilters,
+  pagination: PaginatedRequest,
+  ctx: EmbeddingContext,
+): Promise<PaginatedResponse<ContentSearchHit>> {
+  const { page, pageSize } = normalizePaginatedRequest(pagination);
+  const offset: number = (page - 1) * pageSize;
+  const q: string = query.q.trim();
+
+  // Fetch a generous window from both backends for RRF merging
+  const fetchSize: number = (offset + pageSize) * 2;
+  const broadPagination: PaginatedRequest = {
+    page: 1,
+    pageSize: fetchSize,
+  };
+
+  // Run BM25 and vector searches in parallel
+  const embeddingPromise = ctx.service.embedQuery(
+    q,
+    ctx.modelId,
+    ctx.dimensions,
+    ctx.normalize,
+  );
+
+  const [bm25Result, embeddingResp] = await Promise.all([
+    searchByKeyword(conn, query, filters, broadPagination),
+    embeddingPromise,
+  ]);
+
+  const { hits: vectorHits } = await searchByVector(
+    conn,
+    embeddingResp.embedding,
+    filters,
+    q,
+    fetchSize,
+    0,
+  );
+
+  const merged: ContentSearchHit[] = mergeWithRRF(
+    bm25Result.data,
+    vectorHits,
+  );
+
+  // Paginate the merged results
+  const paged: ContentSearchHit[] = merged.slice(offset, offset + pageSize);
+  return buildPaginatedResponse(paged, merged.length, pagination);
+}
+
+// ---------------------------------------------------------------------------
+// BM25 keyword search (original implementation)
+// ---------------------------------------------------------------------------
+
+export async function searchByKeyword(
   conn: DuckDBConnection,
   query: ContentSearchQuery,
   filters: FilingSearchFilters,

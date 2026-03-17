@@ -56,6 +56,24 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'User prompt template for attachment summarization (blank = built-in default)',
   },
+  embeddingModel: {
+    key: 'embeddingModel',
+    defaultValue: 'amazon.titan-embed-text-v2:0',
+    encrypted: false,
+    description: 'Bedrock model ID for text embeddings',
+  },
+  embeddingDimensions: {
+    key: 'embeddingDimensions',
+    defaultValue: '512',
+    encrypted: false,
+    description: 'Embedding vector dimensions (Titan V2 supports 256/512/1024)',
+  },
+  embeddingNormalize: {
+    key: 'embeddingNormalize',
+    defaultValue: 'true',
+    encrypted: false,
+    description: 'Whether to L2-normalize embeddings (for cosine similarity)',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

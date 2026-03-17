@@ -1,10 +1,16 @@
 import {
   BedrockRuntimeClient,
   ConverseCommand,
+  InvokeModelCommand,
   type ConverseCommandInput,
   type ConverseCommandOutput,
 } from '@aws-sdk/client-bedrock-runtime';
-import type { InferenceRequest, InferenceResponse } from './types.ts';
+import type {
+  EmbeddingRequest,
+  EmbeddingResponse,
+  InferenceRequest,
+  InferenceResponse,
+} from './types.ts';
 
 /** Build a Bedrock ConverseCommandInput from our internal request type. */
 export function buildConverseInput(
@@ -73,5 +79,33 @@ export class BedrockClient {
 
   async converse(input: ConverseCommandInput): Promise<ConverseCommandOutput> {
     return this.client.send(new ConverseCommand(input));
+  }
+
+  /** Embed text using a Titan-compatible embedding model via InvokeModel. */
+  async embed(req: EmbeddingRequest): Promise<EmbeddingResponse> {
+    const body: string = JSON.stringify({
+      inputText: req.inputText,
+      dimensions: req.dimensions,
+      normalize: req.normalize,
+    });
+
+    const start: number = performance.now();
+    const command = new InvokeModelCommand({
+      modelId: req.modelId,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: new TextEncoder().encode(body),
+    });
+
+    const response = await this.client.send(command);
+    const latencyMs: number = Math.round(performance.now() - start);
+    const parsed: { embedding: number[]; inputTextTokenCount: number } =
+      JSON.parse(new TextDecoder().decode(response.body));
+
+    return {
+      embedding: parsed.embedding,
+      inputTokenCount: parsed.inputTextTokenCount,
+      latencyMs,
+    };
   }
 }
