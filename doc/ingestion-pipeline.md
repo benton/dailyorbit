@@ -30,7 +30,8 @@ flowchart TD
 
     subgraph attachments["Stage 2 — Attachment Pipeline"]
         ATT_DISCOVER["2a. Attachment Discovery\n./daily-orbit attachments discover\nScrape filing pages → extract URLs"]
-        ATT_DOWNLOAD["2b. Attachment Download\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
+        ATT_DOWNLOAD["2b. Attachment Download (public)\n./daily-orbit attachments download\nDownload pending → detect type → store on disk"]
+        ATT_AUTH["2b′. Authenticated Download\n./daily-orbit attachments download --auth-cookies\nServiceNow URLs via session cookies"]
         ATT_EXTRACT["2c. Text Extraction\n./daily-orbit attachments extract\nPDF → markdown via pdf-oxide-wasm"]
         ATT_SUMMARIZE["2d. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
     end
@@ -63,6 +64,8 @@ flowchart TD
     ATT_DISCOVER --> DB
     ATT_DOWNLOAD --> DB
     ATT_DOWNLOAD --> DISK
+    ATT_AUTH --> DB
+    ATT_AUTH --> DISK
     DISK --> ATT_EXTRACT
     ATT_EXTRACT --> DB
     DB --> ATT_SUMMARIZE
@@ -162,7 +165,7 @@ flowchart TD
 
 **Key options:** `--filing`, `--subsystem`, `--date-from`, `--date-to`, `--limit`, `--stale-after`
 
-### 2b. Attachment Download
+### 2b. Attachment Download (public)
 
 | | |
 |---|---|
@@ -180,20 +183,70 @@ flowchart TD
 
 **Combined command:** `make attachments` runs discover + download + text extraction in one pass.
 
-#### Known Gap: ServiceNow Attachment Downloads
+### 2b′. Authenticated Attachment Download (ServiceNow)
 
-As of 2026-03-15, **43,755 attachment records** (17% of total) have download URLs pointing to `fccprod.servicenowservices.com/sys_attachment.do`. These URLs are behind FCC's Okta SSO (SAML authentication) and cannot be fetched without credentials, despite being listed on the public ICFS portal.
+Attachments hosted at `fccprod.servicenowservices.com` require FCC Okta SSO
+authentication. The pipeline supports a semi-automated workflow: a human logs
+in once via browser, session cookies are extracted, and the download pipeline
+uses those cookies to fetch ServiceNow-hosted attachments.
 
-| Metric | Count |
+#### One-time setup
+
+Install the Playwright browser used for cookie extraction:
+
+```bash
+pnpx playwright install chromium
+```
+
+#### Cookie extraction
+
+| | |
 |---|---|
-| ServiceNow URLs (inaccessible) | 43,755 |
-| Likely duplicates of fcc.report downloads | ~30,528 |
-| Genuinely missing (no alternative source) | ~13,227 |
-| Filings with zero accessible attachments | 1,186 |
+| **Command** | `make attachments-extract-cookies` |
+| **CLI** | `./daily-orbit attachments extract-cookies [--output PATH]` |
+| **Output** | `data/icfs-cookies.json` |
 
-**Root cause:** The ICFS migration (June 2025) moved attachments to ServiceNow's `sys_attachment.do` endpoint, which requires authentication. The predecessor IBFS system served these same documents without auth. The fcc.report mirror still hosts copies of ~70% of the affected documents under slightly different names (e.g., "Attachment Application" on fcc.report vs. "Application.pdf" on ServiceNow).
+The command opens a Chromium browser to the ICFS login page. The operator
+completes SSO login (email + password + 2FA if prompted), then returns to
+the terminal and presses **Enter**. The CLI extracts all ServiceNow session
+cookies from the browser and writes them to a JSON file.
 
-**Status:** A formal comment has been drafted for GN Docket No. 25-194 (ICFS Modernization) requesting the FCC restore public access. See `doc/fcc-icfs-attachment-access-complaint.md` and `doc/plans/2026-03-15-servicenow-attachment-gap.md` for details.
+#### Authenticated download
+
+| | |
+|---|---|
+| **Command** | `make attachments-download-auth` |
+| **CLI** | `./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed` |
+| **Source** | `attachment` rows where `download_url LIKE '%servicenowservices.com%'` |
+| **Writes to** | `data/attachments/{subsystem}/{file_number}/` + updates `attachment` table |
+
+When `--auth-cookies` is provided, the pipeline:
+
+- Filters to only ServiceNow-hosted attachment URLs
+- Sends the session cookie with each download request
+- Does **not** follow HTTP redirects (a 302 means the session expired)
+- On session expiry, stops gracefully and logs the count of successful
+  downloads — remaining attachments stay `pending` for the next run
+- Skips the `.pdf` URL suffix normalization used for fcc.report URLs
+
+**Session lifetime:** ServiceNow sessions expire after roughly 30 minutes
+(governed by the `glide_session_store` cookie). For daily operations this is
+more than enough — a typical day's new filings produce only a handful of
+attachments. If a large backlog run outlasts the session, re-extract cookies
+and re-run; the pipeline picks up where it left off.
+
+#### Daily procedure
+
+```bash
+# 1. Extract cookies (opens browser — log in, then press Enter)
+make attachments-extract-cookies
+
+# 2. Download authenticated attachments
+make attachments-download-auth
+
+# 3. Extract text from newly downloaded PDFs
+make attachments-extract
+```
 
 ### 2c. Text Extraction
 
@@ -326,30 +379,41 @@ Only queries companies missing `gleif_lei` or `wikidata_id` — already-enriched
 
 ---
 
-## Nightly Run Sequence
+## Daily Run Sequence
 
-The recommended nightly pipeline order:
+The recommended daily pipeline order. Steps 1–2 are fully automated. Steps
+3–5 require a human to log in once for ServiceNow authentication; the rest
+is automated.
 
 ```bash
 # 1. Ingest new filings from ICFS (includes auto-attribution)
 make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
 
-# 2. Discover, download, extract text, and summarize attachments
+# 2. Discover and download public attachments, extract text, summarize
 make attachments
 
-# 3. Ensure company seed data is current (no-ops if unchanged)
+# 3. Extract ICFS session cookies (opens browser — log in, press Enter)
+make attachments-extract-cookies
+
+# 4. Download ServiceNow-hosted attachments using session cookies
+make attachments-download-auth
+
+# 5. Extract text from newly downloaded authenticated attachments
+make attachments-extract
+
+# 6. Ensure company seed data is current (no-ops if unchanged)
 make companies-seed
 
-# 4. Attribute any remaining unattributed filings
+# 7. Attribute any remaining unattributed filings
 make companies-attribute
 
-# 5. Extract ownership events from new T/C and ASG filings
+# 8. Extract ownership events from new T/C and ASG filings
 make companies-extract-ownership
 
-# 6. Enrich any companies missing external data
+# 9. Enrich any companies missing external data
 make companies-enrich
 
-# 7. (Optional) Report attribution coverage
+# 10. (Optional) Report attribution coverage
 make companies-stats
 ```
 
@@ -362,7 +426,8 @@ make companies-stats
 | ICFS Discovery | 500ms | 4 | Per discovery query batch |
 | ICFS Fetch | 500ms | 4 | Per filing detail fetch |
 | Attachment Discovery | 500ms | 1 | Per filing page scrape |
-| Attachment Download | 500ms | 1 | Per file download |
+| Attachment Download (public) | 500ms | 1 | Per file download |
+| Attachment Download (auth) | 500ms | 1 | Start conservative; increase gradually |
 | Summarization (Bedrock) | 0ms | 10 | Bedrock handles throttling; concurrency configurable |
 | GLEIF API | 300ms | 1 | Built-in rate limiter |
 | Wikidata SPARQL | 1000ms | 1 | Per Wikidata policy |
@@ -378,7 +443,8 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | IBFS Ingest | Logs failure to `ingest_log` table | Re-run; `--dry-run` to validate |
 | ICFS Ingest | Per-filing error tracking, continues others | Re-run with `--file-numbers` for specific failures |
 | Attachment Discovery | Per-filing errors isolated, continues | Re-run; `--stale-after` re-discovers stale entries |
-| Attachment Download | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
+| Attachment Download (public) | Marks individual attachments as `'failed'` | `--retry-failed` retries; `--skip-existing` reconciles disk |
+| Attachment Download (auth) | Stops gracefully on session expiry; leaves remaining items `pending` | Re-extract cookies and re-run; resumes from where it stopped |
 | Text Extraction | Marks individual attachments as `'failed'` or `'skipped_no_text'` | `--retry-failed` retries failed; skipped PDFs stay skipped |
 | Summarization | Per-attachment errors isolated, continues | Re-run; only processes `summary IS NULL` rows |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
@@ -400,6 +466,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | IBFS pipeline | `packages/server/src/ingest/` |
 | ICFS pipeline | `packages/server/src/icfs/` |
 | Attachments pipeline | `packages/server/src/attachments/` |
+| ICFS session cookies | `data/icfs-cookies.json` (gitignored) |
 | Inference module | `packages/server/src/inference/` |
 | Prompt templates | `packages/server/src/inference/prompts.ts` |
 | Companies module | `packages/server/src/companies/` |
