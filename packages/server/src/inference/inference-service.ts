@@ -20,9 +20,11 @@ export class InferenceService {
 
   /** Run a completion request through Bedrock Converse. */
   async complete(req: InferenceRequest): Promise<InferenceResponse> {
-    const config = getConfigService();
-    const modelId: string =
-      req.modelId ?? (config.get('bedrockDefaultModel') as string);
+    let modelId: string | undefined = req.modelId;
+    if (!modelId) {
+      const config = getConfigService();
+      modelId = config.get('bedrockDefaultModel') as string;
+    }
 
     const input: ConverseCommandInput = buildConverseInput({ ...req, modelId });
 

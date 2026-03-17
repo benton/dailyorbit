@@ -1,6 +1,6 @@
 # Product Roadmap
 
-## Short Term
+## Short Term - Accessing all the data
 
 - v0.1.0 [x] Data modeling and download
 - v0.1.5 [x] Attachment discovery and download
@@ -15,11 +15,11 @@
 - v0.7.0 [x] User home page, preferences, and viewing history
 - v0.8.0 [x] AI foundations: internal multi-model inference API w/cost accounting
 
-## Medium Term - LLM-driven features
+## Medium Term - ML-driven features
 
 - v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [x] Full text search via DuckDB BM25
-- v1.2.0 [ ] Vector-DB search via Bedrock-driven embeddings
+- v1.2.0 [ ] Vector-DB search
 - v1.3.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
 - v1.4.0 [ ]
 
