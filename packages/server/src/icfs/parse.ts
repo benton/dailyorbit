@@ -1,3 +1,4 @@
+import { htmlToMarkdown } from '../lib/html-to-markdown.ts';
 import type {
   IcfsAttachment,
   IcfsAttachmentLink,
@@ -251,7 +252,7 @@ function parsePleadings(data: unknown): IcfsPleading[] {
       pleadingType: dv(get(item, 'pleading_type')),
       filerName: dv(get(item, 'filer_name')),
       createdOn: dv(get(item, 'sys_created_on')),
-      exhibitAttachmentHtml: dv(get(item, 'extra_exhibit_attachment_list')),
+      exhibitAttachmentHtml: htmlToMarkdown(dv(get(item, 'extra_exhibit_attachment_list'))),
     }),
   );
 }

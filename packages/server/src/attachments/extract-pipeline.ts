@@ -7,6 +7,7 @@ import {
 } from '../lib/graceful-shutdown.ts';
 import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
+import { htmlToMarkdown } from '../lib/html-to-markdown.ts';
 import { printProgress } from './progress.ts';
 import {
   createAttachmentTable,
@@ -142,16 +143,18 @@ export async function runExtractionPipeline(
         } else {
           const result = extractTextFromHtml(html);
           if (result.status === 'extracted') {
+            const cleanText: string = htmlToMarkdown(result.text);
+            const cleanLength: number = cleanText.replace(/\s/g, '').length;
             await markExtracted(
               conn,
               row.attachmentKey,
-              result.text,
-              result.textLength,
+              cleanText,
+              cleanLength,
             );
             extracted++;
             if (options.verbose) {
               log(
-                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (html)`,
+                `  ${String(row.attachmentKey)}: extracted ${String(cleanLength)} chars (html→md)`,
               );
             }
           } else if (result.status === 'skipped_no_text') {

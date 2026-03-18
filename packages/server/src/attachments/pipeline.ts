@@ -10,6 +10,7 @@ import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
 import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
+import { htmlToMarkdown } from '../lib/html-to-markdown.ts';
 import {
   countDuplicateKeys,
   createAttachmentTable,
@@ -478,16 +479,18 @@ export async function runAttachmentPipeline(
             } else {
               const result = extractTextFromHtml(html);
               if (result.status === 'extracted') {
+                const cleanText: string = htmlToMarkdown(result.text);
+                const cleanLength: number = cleanText.replace(/\s/g, '').length;
                 await markExtracted(
                   conn,
                   row.attachmentKey,
-                  result.text,
-                  result.textLength,
+                  cleanText,
+                  cleanLength,
                 );
                 textsExtracted++;
                 if (verbose) {
                   log(
-                    `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (html)`,
+                    `  ${String(row.attachmentKey)}: extracted ${String(cleanLength)} chars (html→md)`,
                   );
                 }
               } else if (result.status === 'skipped_no_text') {

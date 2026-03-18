@@ -37,7 +37,7 @@ export const icfsCommand = defineCommand({
     concurrency: {
       type: 'string',
       description: 'Number of concurrent HTTP requests',
-      default: '4',
+      default: '20',
     },
   },
   async run({ args }) {

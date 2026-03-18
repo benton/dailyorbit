@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-validate attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-validate attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query db-remediate-html config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -67,6 +67,9 @@ icfs-ingest-filing: ## Ingest specific filings from ICFS (requires FILE_NUMBERS)
 
 db-query: ## Run ad-hoc SQL query (requires SQL="...")
 	$(CLI) db query "$(SQL)"
+
+db-remediate-html: ## Convert HTML strings to Markdown in pleadings/filings/attachments
+	$(CLI) db remediate-html $(ARGS)
 
 config-list: ## Show all config keys and values
 	$(CLI) config list

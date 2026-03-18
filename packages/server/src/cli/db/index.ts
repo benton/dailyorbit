@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { queryCommand } from './query.ts';
+import { remediateHtmlCommand } from './remediate-html.ts';
 
 export const dbCommand = defineCommand({
   meta: {
@@ -8,5 +9,6 @@ export const dbCommand = defineCommand({
   },
   subCommands: {
     query: queryCommand,
+    'remediate-html': remediateHtmlCommand,
   },
 });

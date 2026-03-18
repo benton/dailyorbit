@@ -1,10 +1,10 @@
-import { defineConfig } from 'tsdown';
+import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/bin.ts'],
-  format: 'esm',
-  target: 'node23',
-  outDir: 'dist',
+  entry: ["src/index.ts", "src/bin.ts"],
+  format: "esm",
+  target: "node23",
+  outDir: "dist",
   clean: true,
-  external: ['playwright'],
+  external: ["playwright"],
 });
