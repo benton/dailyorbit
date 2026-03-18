@@ -363,11 +363,14 @@ export const summarizeCommand = defineCommand({
       let totalOutputTokens: number = 0;
       let totalLatencyMs: number = 0;
       let errors: number = 0;
+      const failedKeys: Set<number> = new Set();
       const startTime: number = performance.now();
 
       while (processed < target) {
         const fetchSize: number = Math.min(batchSize, target - processed);
-        const rows: AttachmentRow[] = await fetchBatch(conn, fetchSize);
+        const rows: AttachmentRow[] = (
+          await fetchBatch(conn, fetchSize + failedKeys.size)
+        ).filter((r: AttachmentRow) => !failedKeys.has(r.attachmentKey)).slice(0, fetchSize);
         if (rows.length === 0) break;
 
         const results = await processWithConcurrency(
@@ -413,6 +416,7 @@ export const summarizeCommand = defineCommand({
               process.stderr.write(
                 `\nERROR [${row.fileNumber}] (${errName}, ${String(row.textLength)} chars): ${msg}\n`,
               );
+              failedKeys.add(row.attachmentKey);
               return { ok: false as const };
             }
           },

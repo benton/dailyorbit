@@ -1147,12 +1147,8 @@ export default function SearchPage() {
           value={searchMode}
         >
           <option value="keyword">Keyword</option>
-          <option disabled value="semantic">
-            Semantic (coming soon)
-          </option>
-          <option disabled value="hybrid">
-            Hybrid (coming soon)
-          </option>
+          <option value="semantic">Semantic</option>
+          <option value="hybrid">Hybrid</option>
         </select>
       </div>
 

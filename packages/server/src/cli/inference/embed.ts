@@ -335,11 +335,16 @@ export const embedCommand = defineCommand({
         let totalTokens: number = 0;
         let totalLatencyMs: number = 0;
         let errors: number = 0;
+        const failedKeys: Set<string> = new Set();
         const startTime: number = performance.now();
 
         while (processed < target) {
           const fetchSize: number = Math.min(batchSize, target - processed);
-          const rows: EmbeddableRow[] = await fetchBatch(conn, cfg, fetchSize);
+          const rows: EmbeddableRow[] = (
+            await fetchBatch(conn, cfg, fetchSize + failedKeys.size)
+          )
+            .filter((r: EmbeddableRow) => !failedKeys.has(r.sourceKey))
+            .slice(0, fetchSize);
           if (rows.length === 0) break;
 
           const results = await processWithConcurrency(
@@ -392,6 +397,7 @@ export const embedCommand = defineCommand({
                 process.stderr.write(
                   `\n  ERROR [${source}:${row.sourceKey}]: ${msg}\n`,
                 );
+                failedKeys.add(row.sourceKey);
                 return {
                   ok: false as const,
                   tokens: 0,

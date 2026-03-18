@@ -87,9 +87,9 @@ By default, content search results are sorted by relevance score (highest first)
 
 The search bar includes a mode selector:
 
-- **Keyword** (active) — BM25 full-text search as described above
-- **Semantic** (coming soon) — vector similarity search using embeddings
-- **Hybrid** (coming soon) — combines keyword and semantic ranking
+- **Keyword** — BM25 full-text search as described above
+- **Semantic** — vector similarity search using embeddings (Bedrock Titan V2, 512-dim cosine)
+- **Hybrid** — combines keyword and semantic ranking via Reciprocal Rank Fusion
 
 ---
 

@@ -114,7 +114,7 @@ describe('splitText', () => {
   describe('overlap', () => {
     it('prepends overlap from previous chunk to subsequent chunks', () => {
       const p1: string = makeText(80, 'a');
-      const p2: string = makeText(80, 'b');
+      const p2: string = makeText(40, 'b');
       const text: string = p1 + '\n\n' + p2;
       const overlap: number = 20;
       const result: string[] = splitText(text, 90, overlap);
@@ -123,6 +123,19 @@ describe('splitText', () => {
       // Second chunk should start with the last 20 chars of the first chunk
       const expectedOverlap: string = result[0]!.slice(-overlap);
       expect(result[1]!.startsWith(expectedOverlap)).toBe(true);
+    });
+
+    it('caps overlap to keep chunks within maxChars', () => {
+      const p1: string = makeText(80, 'a');
+      const p2: string = makeText(80, 'b');
+      const text: string = p1 + '\n\n' + p2;
+      const result: string[] = splitText(text, 90, 20);
+
+      expect(result.length).toBe(2);
+      // Only 10 chars of overlap can fit (maxChars 90 - paragraph 80)
+      expect(result[1]!.length).toBeLessThanOrEqual(90);
+      expect(result[1]!.startsWith('a'.repeat(10))).toBe(true);
+      expect(result[1]!).toContain('b'.repeat(80));
     });
 
     it('does not add overlap to the first chunk', () => {
@@ -150,7 +163,7 @@ describe('splitText', () => {
       const maxChars: number = 80;
       const result: string[] = splitText(text, maxChars, 10);
       result.forEach((chunk: string) => {
-        expect(chunk.length).toBeLessThanOrEqual(maxChars + 10);
+        expect(chunk.length).toBeLessThanOrEqual(maxChars);
       });
     });
 
@@ -176,12 +189,13 @@ describe('splitText', () => {
 
     it('uses the default 500-char overlap when not specified', () => {
       const p1: string = makeText(1000, 'a');
-      const p2: string = makeText(1000, 'b');
+      const p2: string = makeText(600, 'b');
       const text: string = p1 + '\n\n' + p2;
-      const result: string[] = splitText(text, 1100);
+      const result: string[] = splitText(text, 1200);
       expect(result.length).toBe(2);
-      // Second chunk should start with 500 'a' chars from overlap
+      // Second chunk should start with 500 'a' chars from overlap (600+500 ≤ 1200)
       expect(result[1]!.slice(0, 500)).toBe('a'.repeat(500));
+      expect(result[1]!.length).toBeLessThanOrEqual(1200);
     });
   });
 });

@@ -35,7 +35,12 @@ export function splitText(
     // Current accumulator is non-empty — flush it as a chunk
     if (current.length > 0) {
       chunks.push(current);
-      const overlapText: string = extractOverlap(current, overlap);
+      // Cap overlap so the next chunk stays within maxChars
+      const availOverlap: number = Math.max(0, maxChars - para.length);
+      const overlapText: string = extractOverlap(
+        current,
+        Math.min(overlap, availOverlap),
+      );
       current = overlapText + para;
     } else {
       // Single paragraph exceeds maxChars — split at sentence boundaries
@@ -78,7 +83,12 @@ function splitBySentence(
 
     if (current.length > 0) {
       chunks.push(current);
-      const overlapText: string = extractOverlap(current, overlap);
+      // Cap overlap so the next chunk stays within maxChars
+      const availOverlap: number = Math.max(0, maxChars - sentence.length);
+      const overlapText: string = extractOverlap(
+        current,
+        Math.min(overlap, availOverlap),
+      );
       current = overlapText + sentence;
     } else {
       // Single sentence exceeds maxChars — hard split
