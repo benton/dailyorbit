@@ -56,6 +56,26 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'User prompt template for attachment summarization (blank = built-in default)',
   },
+  newsSummarizationModel: {
+    key: 'newsSummarizationModel',
+    defaultValue: 'us.amazon.nova-pro-v1:0',
+    encrypted: false,
+    description: 'Bedrock model ID used for news article summarization',
+  },
+  newsSummarizationSystemPrompt: {
+    key: 'newsSummarizationSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for news summarization (blank = built-in default)',
+  },
+  newsSummarizationUserPrompt: {
+    key: 'newsSummarizationUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt template for news summarization (blank = built-in default)',
+  },
   embeddingModel: {
     key: 'embeddingModel',
     defaultValue: 'amazon.titan-embed-text-v2:0',

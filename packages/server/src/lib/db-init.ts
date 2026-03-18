@@ -7,6 +7,7 @@ import { ensureUserSettingsTables } from '../user-settings/schema.ts';
 import { ensureViewingHistoryTables } from '../viewing-history/schema.ts';
 import { ensureAttributionColumns } from './attribution-schema.ts';
 import { ensureEmbeddingSchema } from '../search/embedding-schema.ts';
+import { ensureNewsTables } from '../news/schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -31,6 +32,7 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
   await ensureCompanyFk(conn);
   await ensureAttributionColumns(conn);
   await ensureEmbeddingSchema(conn);
+  await ensureNewsTables(conn);
 
   conn.closeSync();
 }

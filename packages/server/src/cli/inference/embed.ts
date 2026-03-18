@@ -66,7 +66,7 @@ async function embedChunk(
 // Types
 // ---------------------------------------------------------------------------
 
-type SourceTable = 'attachment' | 'filing' | 'pleading';
+type SourceTable = 'attachment' | 'filing' | 'pleading' | 'news_item';
 
 type SourceConfig = {
   readonly table: SourceTable;
@@ -97,6 +97,13 @@ const SOURCE_CONFIGS: Record<SourceTable, SourceConfig> = {
     textColumn: 'exhibit_attachment_html',
     joinClause: 'LEFT JOIN filing f ON t.filing_key = f.filing_key',
     sortExpr: "COALESCE(f.date_filed, DATE '1970-01-01')",
+  },
+  news_item: {
+    table: 'news_item',
+    keyColumn: 'id',
+    textColumn: 'full_text',
+    joinClause: '',
+    sortExpr: "COALESCE(t.published_at, DATE '1970-01-01')",
   },
 };
 
@@ -270,7 +277,7 @@ export const embedCommand = defineCommand({
     source: {
       type: 'string',
       description:
-        'Source table to embed: attachment, filing, pleading, or all',
+        'Source table to embed: attachment, filing, pleading, news_item, or all',
       default: 'all',
     },
     'dry-run': {
@@ -291,7 +298,7 @@ export const embedCommand = defineCommand({
 
     const sources: SourceTable[] =
       sourceArg === 'all'
-        ? ['filing', 'attachment', 'pleading']
+        ? ['filing', 'attachment', 'pleading', 'news_item']
         : [sourceArg as SourceTable];
 
     const dbInstance = await createDb(args.database);

@@ -11,6 +11,7 @@ import { requireAuth, requireAdmin } from './lib/auth-middleware.ts';
 import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
+import { newsRoutes, newsAdminRoutes } from './news/routes.ts';
 import { buildInferenceRoutes } from './inference/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
 import { publicStatsRoutes, statsRoutes } from './stats/routes.ts';
@@ -71,6 +72,7 @@ app.route('/api/admin/config', configRoutes);
 app.route('/api/admin/stats', statsRoutes);
 app.route('/api/admin/companies', companyAdminRoutes);
 app.route('/api/admin/inference', buildInferenceRoutes());
+app.route('/api/admin/news', newsAdminRoutes);
 app.route('/api/admin/users', userAdminRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
@@ -78,6 +80,7 @@ app.route('/api/earth-stations', earthStationRoutes);
 app.route('/api/search', searchRoutes);
 app.route('/api/autocomplete', autocompleteRoutes);
 app.route('/api/companies', companyRoutes);
+app.route('/api/news', newsRoutes);
 app.route('/api/stats', publicStatsRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).

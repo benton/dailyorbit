@@ -4,7 +4,7 @@
 
 ## Overview
 
-Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, validates their actual content types via file-magic detection, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, and enriches company records from external registries.
+Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data and industry news into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, validates their actual content types via file-magic detection, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, enriches company records from external registries, and ingests industry news articles from RSS/Atom feeds.
 
 All pipeline stages are **idempotent** and designed to run nightly.
 
@@ -22,6 +22,7 @@ flowchart TD
         BEDROCK["AWS Bedrock\n(LLM inference)"]
         GLEIF["GLEIF LEI API\n(Legal Entity Identifiers)"]
         WIKIDATA["Wikidata SPARQL\n(Corporate metadata)"]
+        RSS_FEEDS["RSS/Atom Feeds\n(Industry news sources)"]
     end
 
     subgraph ingest["Stage 1 — Filing Ingest"]
@@ -53,8 +54,16 @@ flowchart TD
         ENRICH["5. Company Enrichment\n./daily-orbit companies enrich\nGLEIF LEI + Wikidata metadata"]
     end
 
+    subgraph news["Stage 6 — News Pipeline"]
+        NEWS_SEED["6a. Seed News Sources\n./daily-orbit news seed\nLoad built-in RSS feed list"]
+        NEWS_FETCH["6b. Fetch RSS Feeds\n./daily-orbit news fetch\nParse feeds → upsert news items"]
+        NEWS_EXTRACT["6c. Extract Article Text\n./daily-orbit news extract\nFetch URL → HTML to markdown"]
+        NEWS_SUMMARIZE["6d. Summarize Articles\n./daily-orbit news summarize\nLLM summary via Bedrock"]
+        NEWS_ATTRIBUTE["6e. Attribute to Companies\n./daily-orbit news attribute\nAlias matching on title + text"]
+    end
+
     subgraph storage["Persistence"]
-        DB[("DuckDB\ndata/daily-orbit.duckdb\n\nfiling · attachment · company\ncompany_alias · ownership_event")]
+        DB[("DuckDB\ndata/daily-orbit.duckdb\n\nfiling · attachment · company\ncompany_alias · ownership_event\nnews_source · news_item")]
         DISK["Attachment Files\ndata/attachments/"]
     end
 
@@ -94,6 +103,18 @@ flowchart TD
     WIKIDATA --> ENRICH
     DB --> ENRICH
     ENRICH --> DB
+
+    NEWS_SEED --> DB
+    RSS_FEEDS --> NEWS_FETCH
+    DB --> NEWS_FETCH
+    NEWS_FETCH --> DB
+    DB --> NEWS_EXTRACT
+    NEWS_EXTRACT --> DB
+    DB --> NEWS_SUMMARIZE
+    BEDROCK --> NEWS_SUMMARIZE
+    NEWS_SUMMARIZE --> DB
+    DB --> NEWS_ATTRIBUTE
+    NEWS_ATTRIBUTE --> DB
 ```
 
 ---
@@ -348,12 +369,12 @@ make attachments-extract
 |---|---|
 | **Command** | `make embed-all` or `make embed SOURCE=attachment` |
 | **CLI** | `./daily-orbit inference embed [OPTIONS]` |
-| **Source** | `attachment.full_text`, `filing.description`, `pleading.exhibit_attachment_html` |
+| **Source** | `attachment.full_text`, `filing.description`, `pleading.exhibit_attachment_html`, `news_item.full_text` |
 | **Writes to** | `embedding` table (one row per chunk per source document) |
 
 **Flow:**
 
-1. For each source table (attachment, filing, pleading):
+1. For each source table (attachment, filing, pleading, news_item):
    - Query rows with non-NULL text that have no embedding, or whose text has changed (MD5 checksum mismatch)
 2. For each row:
    - Compute `text_checksum` (MD5 of source text)
@@ -368,7 +389,7 @@ make attachments-extract
 
 **Vector search integration:** The existing vector search query deduplicates by `file_number` keeping the best cosine similarity across all chunks, so multi-chunk documents work transparently.
 
-**Key options:** `--source` (attachment|filing|pleading|all, default: all), `--model` (default: `amazon.titan-embed-text-v2:0`), `--dimensions` (default: 512), `--region` (default: `us-east-2`), `--concurrency` (default: 10), `--batch` (default: 100), `--limit`, `--dry-run`
+**Key options:** `--source` (attachment|filing|pleading|news_item|all, default: all), `--model` (default: `amazon.titan-embed-text-v2:0`), `--dimensions` (default: 512), `--region` (default: `us-east-2`), `--concurrency` (default: 10), `--batch` (default: 100), `--limit`, `--dry-run`
 
 ---
 
@@ -378,13 +399,13 @@ make attachments-extract
 |---|---|
 | **Command** | `make search-rebuild-index` |
 | **CLI** | `./daily-orbit search rebuild-index` |
-| **Source** | `filing.description`, `filing.brief_description`, `attachment.full_text`, `attachment.summary`, `pleading.filer_name`, `pleading.exhibit_attachment_html` |
-| **Writes to** | DuckDB FTS virtual tables (`fts_main_filing`, `fts_main_attachment`, `fts_main_pleading`) |
+| **Source** | `filing.description`, `filing.brief_description`, `attachment.full_text`, `attachment.summary`, `pleading.filer_name`, `pleading.exhibit_attachment_html`, `news_item.title`, `news_item.full_text`, `news_item.summary` |
+| **Writes to** | DuckDB FTS virtual tables (`fts_main_filing`, `fts_main_attachment`, `fts_main_pleading`, `fts_main_news_item`) |
 
 **Flow:**
 
 1. Load DuckDB `fts` extension
-2. For each indexed table (filing, attachment, pleading):
+2. For each indexed table (filing, attachment, pleading, news_item):
    - Create BM25 full-text search index with `overwrite=1` (idempotent)
    - Uses English stemmer and stopwords, case-insensitive matching
 3. Skip tables whose columns don't exist (graceful degradation in test environments)
@@ -392,6 +413,96 @@ make attachments-extract
 **Integration:** FTS rebuild runs automatically as the final step of `./daily-orbit attachments sync`, after summarization completes. Can also be triggered standalone via `make search-rebuild-index`.
 
 **Cost:** Zero — FTS indexes are built entirely from local data already in the database. No external API calls.
+
+---
+
+## Stage 6 — News Pipeline
+
+### 6a. Seed News Sources
+
+| | |
+|---|---|
+| **Command** | `make news-seed` |
+| **CLI** | `./daily-orbit news seed` |
+| **Source** | Built-in `seed-data.ts` (~10 RSS/Atom feeds) |
+| **Writes to** | `news_source` table |
+
+Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (SpaceNews, Via Satellite, SatNews, FCC Federal Register) are enabled by default. Tier 2 (company investor feeds) and Tier 3 (general space/tech) are seeded disabled for admin opt-in.
+
+### 6b. Fetch RSS Feeds
+
+| | |
+|---|---|
+| **Command** | `make news-fetch` |
+| **CLI** | `./daily-orbit news fetch` |
+| **Source** | RSS/Atom feed URLs from enabled `news_source` rows due for fetch |
+| **Writes to** | `news_item` table (upsert by `source_url`), updates `news_source.last_fetched_at` |
+
+**Flow:**
+
+1. Query enabled sources where `last_fetched_at` is NULL or older than `fetch_interval_minutes`
+2. For each source, parse RSS/Atom via `rss-parser`
+3. Upsert each feed item into `news_item` (deduplicated by `source_url`)
+4. Update source fetch status and timestamp
+
+### 6c. Extract Article Text
+
+| | |
+|---|---|
+| **Command** | `make news-extract` |
+| **CLI** | `./daily-orbit news extract [--limit N] [--concurrency N]` |
+| **Source** | `news_item` rows where `extract_status = 'pending'` |
+| **Writes to** | `news_item.full_text`, `news_item.text_checksum`, `news_item.extract_status` |
+
+**Flow:**
+
+1. Query news items with `extract_status = 'pending'`
+2. For each item, fetch the article URL via `@extractus/article-extractor`
+3. Convert extracted HTML to markdown via `htmlToMarkdown()`
+4. Compute MD5 checksum of the markdown text
+5. Store `full_text`, `text_checksum`, mark `extract_status = 'extracted'`
+6. On failure: mark `extract_status = 'failed'`, log error
+
+**Key options:** `--limit` (default: 100), `--concurrency` (default: 5)
+
+### 6d. Summarize Articles
+
+| | |
+|---|---|
+| **Command** | `make news-summarize` |
+| **CLI** | `./daily-orbit news summarize [OPTIONS]` |
+| **Source** | `news_item` rows where `full_text IS NOT NULL AND summary IS NULL` |
+| **Writes to** | `news_item.summary`, `news_item.summarized_by`, `news_item.summarized_at` |
+
+**Flow:**
+
+1. Query news items with extracted text but no summary
+2. **Deduplication:** Check `text_checksum` — if another news item with the same checksum already has a summary, copy it directly (`summarized_by = 'copied'`)
+3. Render prompt template with article context (source, title, author, date, tags, full text)
+4. Send to AWS Bedrock via `InferenceService`
+5. For articles exceeding 60k chars: map-reduce chunked summarization (chunk → sub-summaries → final reduce)
+
+**Prompt configuration:** System and user prompts are configurable via admin config keys `newsSummarizationSystemPrompt` and `newsSummarizationUserPrompt`. The news-specific prompts focus on satellite industry impact for attorneys and strategists.
+
+**Key options:** `--model`, `--region`, `--concurrency` (default: 5), `--limit`, `--dry-run`
+
+### 6e. Attribute to Companies
+
+| | |
+|---|---|
+| **Command** | `make news-attribute` |
+| **CLI** | `./daily-orbit news attribute [--limit N]` |
+| **Source** | `news_item` rows where `company_id IS NULL AND full_text IS NOT NULL` |
+| **Writes to** | `news_item.company_id` |
+
+**Flow:**
+
+1. Load all company aliases, sorted by length descending (longest match wins)
+2. For each unattributed news item with extracted text:
+   - Scan title + first 500 chars of full_text (case-insensitive)
+   - Count alias matches per company
+   - Single match → assign; multiple → pick company with most alias hits
+   - Zero matches → leave unattributed (skipped)
 
 ---
 
@@ -483,9 +594,9 @@ Only queries companies missing `gleif_lei` or `wikidata_id` — already-enriched
 
 ## Daily Run Sequence
 
-The recommended daily pipeline order. Steps 1–2 are fully automated. Steps
-3–5 require a human to log in once for ServiceNow authentication; the rest
-is automated.
+The recommended daily pipeline order. Steps 1–2 and 12–16 are fully
+automated. Steps 3–5 require a human to log in once for ServiceNow
+authentication; the rest is automated.
 
 ```bash
 # 1. Ingest new filings from ICFS (includes auto-attribution)
@@ -520,6 +631,21 @@ make companies-enrich
 
 # 11. (Optional) Report attribution coverage
 make companies-stats
+
+# 12. Seed news sources (no-ops if unchanged)
+make news-seed
+
+# 13. Fetch RSS feeds for new articles
+make news-fetch
+
+# 14. Extract article full text (HTML → markdown)
+make news-extract
+
+# 15. Summarize new articles via Bedrock
+make news-summarize
+
+# 16. Attribute articles to companies
+make news-attribute
 ```
 
 ---
@@ -535,6 +661,9 @@ make companies-stats
 | Attachment Download (auth) | 500ms | 1 | Start conservative; increase gradually |
 | Summarization (Bedrock) | 0ms | 10 | Bedrock handles throttling; concurrency configurable |
 | Embedding (Bedrock) | 0ms | 10 | Bedrock handles throttling; multiple chunks per row |
+| News RSS Fetch | 0ms | 1 | Sequential per-source |
+| News Article Extraction | 0ms | 5 | Per article URL fetch |
+| News Summarization (Bedrock) | 0ms | 5 | Same InferenceService as attachment summarization |
 | GLEIF API | 300ms | 1 | Built-in rate limiter |
 | Wikidata SPARQL | 1000ms | 1 | Per Wikidata policy |
 
@@ -555,6 +684,10 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Text Extraction | Marks individual attachments as `'failed'`, `'skipped_no_text'`, or `'skipped_auth_error'` | `--retry-failed` retries failed; skipped files stay skipped; auth-error stubs flagged for potential re-download |
 | Summarization | Per-attachment errors isolated, continues; dedup copies existing summaries for identical text | Re-run; only processes `summary IS NULL` rows; dedup is automatic |
 | Embedding | Per-row errors isolated, continues; checksum dedup skips unchanged text | Re-run; only processes rows with missing or stale checksums; fully idempotent |
+| News RSS Fetch | Per-source errors isolated, continues; updates `last_fetch_status` | Re-run; only fetches sources past their interval |
+| News Article Extraction | Per-item errors → `extract_status = 'failed'`, continues | Re-run; only processes `extract_status = 'pending'` |
+| News Summarization | Per-item errors isolated, continues; checksum dedup copies existing | Re-run; only processes `summary IS NULL` rows |
+| News Attribution | Pure DB operation, no external calls | Re-run; processes `company_id IS NULL AND full_text IS NOT NULL` |
 | Company Attribution | Pure DB operation, no external calls | Re-run; always processes only `company_id IS NULL` rows |
 | Ownership Extraction | Skips unmatched parties, continues | Add missing company aliases, then re-run |
 | External Enrichment | API failures are non-fatal, per-company | Re-run; only retries companies missing data |
@@ -578,5 +711,6 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Inference module | `packages/server/src/inference/` |
 | Prompt templates | `packages/server/src/inference/prompts.ts` |
 | Companies module | `packages/server/src/companies/` |
+| News module | `packages/server/src/news/` |
 | Enrichment module | `packages/server/src/enrichment/` |
 | Makefile | `Makefile` |

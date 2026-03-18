@@ -1,6 +1,14 @@
 import Mustache from 'mustache';
 
 // ---------------------------------------------------------------------------
+// Re-exports from summarizer configs (modular summarization)
+// ---------------------------------------------------------------------------
+
+export { FCC_ATTACHMENT_SUMMARIZER } from './summarizers/fcc-attachment.ts';
+export { NEWS_ARTICLE_SUMMARIZER } from './summarizers/news-article.ts';
+export type { SummarizerConfig } from './summarizers/types.ts';
+
+// ---------------------------------------------------------------------------
 // Template rendering
 // ---------------------------------------------------------------------------
 

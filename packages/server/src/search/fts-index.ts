@@ -22,6 +22,11 @@ const FTS_INDEXES: ReadonlyArray<FtsIndexDef> = [
     keyColumn: 'pleading_key',
     textColumns: ['filer_name', 'exhibit_attachment_html'],
   },
+  {
+    table: 'news_item',
+    keyColumn: 'id',
+    textColumns: ['title', 'full_text', 'summary'],
+  },
 ];
 
 /**

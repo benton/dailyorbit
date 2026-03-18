@@ -2,7 +2,7 @@
 
 CLI := node --no-warnings packages/server/src/bin.ts
 
-.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-validate attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query db-remediate-html config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password
+.PHONY: help setup dev test build format clean ingest ingest-dry-run ingest-download attachments attachments-discover attachments-download attachments-validate attachments-extract attachments-reset icfs-ingest icfs-ingest-filing db-query db-remediate-html config-list companies-seed companies-attribute companies-stats companies-extract-ownership companies-enrich search-rebuild-index embed embed-all user-create user-disable user-delete user-reset-password news-seed news-fetch news-extract news-summarize news-attribute news
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -109,6 +109,28 @@ user-delete: ## Delete a user account permanently (pass ARGS for options)
 
 user-reset-password: ## Reset a user's password (pass ARGS for options)
 	$(CLI) user reset-password $(ARGS)
+
+news-seed: ## Seed default RSS feed sources
+	$(CLI) news seed $(ARGS)
+
+news-fetch: ## Fetch RSS feeds and store new items
+	$(CLI) news fetch $(ARGS)
+
+news-extract: ## Download and extract article text
+	$(CLI) news extract $(ARGS)
+
+news-summarize: ## Summarize extracted news articles
+	$(CLI) news summarize $(ARGS)
+
+news-attribute: ## Match news items to companies
+	$(CLI) news attribute $(ARGS)
+
+news: ## Run full news pipeline (seed + fetch + extract + summarize + attribute)
+	$(CLI) news seed $(ARGS)
+	$(CLI) news fetch $(ARGS)
+	$(CLI) news extract $(ARGS)
+	$(CLI) news summarize $(ARGS)
+	$(CLI) news attribute $(ARGS)
 
 clean: ## Remove node_modules, build artifacts, and DB files
 	rm -rf node_modules packages/*/node_modules packages/*/dist coverage data/*.duckdb

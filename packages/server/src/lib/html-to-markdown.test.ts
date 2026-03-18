@@ -25,7 +25,9 @@ describe('htmlToMarkdown', () => {
   describe('anchor tags', () => {
     it('converts a single anchor tag to markdown link', () => {
       const html = '<a href="https://example.com/file.pdf">file.pdf</a>';
-      expect(htmlToMarkdown(html)).toBe('[file.pdf](https://example.com/file.pdf)');
+      expect(htmlToMarkdown(html)).toBe(
+        '[file.pdf](https://example.com/file.pdf)',
+      );
     });
 
     it('converts multiple anchors in one string (common pleading pattern)', () => {

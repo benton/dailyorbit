@@ -137,7 +137,9 @@ export const remediateHtmlCommand = defineCommand({
 
       // Delete stale embeddings for converted filings
       if (filingFileNumbers.length > 0) {
-        const placeholders: string = filingFileNumbers.map(() => '?').join(', ');
+        const placeholders: string = filingFileNumbers
+          .map(() => '?')
+          .join(', ');
         const deleteResult = await conn.runAndReadAll(
           `DELETE FROM embedding
            WHERE source_table = 'filing'
@@ -233,6 +235,5 @@ export const remediateHtmlCommand = defineCommand({
         'Run `daily-orbit inference embed` to re-embed affected rows.',
       );
     }
-
   },
 });

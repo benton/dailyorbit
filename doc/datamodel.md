@@ -227,7 +227,7 @@ Fields:
 
 The OwnershipEvent table enables point-in-time hierarchy reconstruction. To determine who owned a given Company on a specific date, query the most recent OwnershipEvent for that target Company with an effective date on or before the query date. The acquirer in that event is the Company's parent at that point in time.
 
-### 8.2. Source Priority
+### 8.2. Source Priority (OwnershipEvent)
 
 When multiple sources report conflicting ownership for the same target and time period, the following priority order applies:
 
@@ -235,5 +235,67 @@ When multiple sources report conflicting ownership for the same target and time 
 2. GLEIF (audited financial registry)
 3. Wikidata (community-maintained structured data)
 4. Manual entry (admin-supplied, reviewed)
+
+---
+
+## 9. NewsSource
+
+Represents an RSS/Atom feed endpoint from which the system fetches industry news articles. Each NewsSource is a configured feed that the pipeline polls on a schedule.
+
+Fields:
+
+- ID (auto-increment integer, primary key)
+- Name (display name, e.g., "SpaceNews")
+- Feed URL (RSS/Atom endpoint URL, unique)
+- Category (one of: 'industry', 'regulatory', 'company', 'general')
+- Enabled (boolean, controls whether the feed is polled)
+- Fetch Interval Minutes (polling interval, default 60)
+- Last Fetched At (timestamp of last successful fetch)
+- Last Fetch Status (one of: 'success', 'failed', 'pending')
+- Last Fetch Error (error message from last failed fetch, nullable)
+- Created At
+- Updated At
+
+### 9.1. Seed Sources
+
+The system ships with a built-in set of ~10 seed sources covering satellite industry news (SpaceNews, Via Satellite, SatNews), regulatory feeds (FCC Federal Register), and company investor feeds. Seed sources are loaded via `./daily-orbit news seed` and are idempotent (skipped if feed_url already exists).
+
+---
+
+## 10. NewsItem
+
+Represents an individual news article fetched from a NewsSource feed. Articles progress through a multi-stage pipeline: fetch → extract full text → summarize → attribute to company.
+
+Fields:
+
+- ID (auto-increment integer, primary key)
+- News Source ID (foreign key to NewsSource)
+- Title
+- Source URL (original article URL, unique)
+- Author (nullable)
+- Published At (from RSS feed, nullable)
+- Full Text (extracted article content as markdown, nullable)
+- Text Checksum (MD5 of full_text for dedup, nullable)
+- Summary (LLM-generated summary, nullable)
+- Summarized By (model ID or 'copied', nullable)
+- Summarized At (timestamp, nullable)
+- Extract Status (one of: 'pending', 'extracted', 'failed', 'skipped')
+- Tags (VARCHAR array from RSS categories)
+- Company ID (foreign key to Company, nullable — set by attribution)
+- Indexed By (embedding model ID, nullable)
+- Indexed At (timestamp of last vector embedding, nullable)
+- Created At
+- Updated At
+
+### 10.1. Pipeline Stages
+
+1. **Fetch** — RSS parser reads the feed, upserts items by `source_url` (dedup)
+2. **Extract** — `@extractus/article-extractor` fetches the article URL, HTML is converted to markdown via `htmlToMarkdown()`, stored as `full_text`
+3. **Summarize** — LLM summarization via AWS Bedrock, with checksum-based dedup to skip identical articles
+4. **Attribute** — Heuristic company matching: scans title + first 500 chars of full_text against company aliases
+
+### 10.2. Search Integration
+
+NewsItem full text is indexed for both BM25 full-text search (via DuckDB FTS extension on `title`, `full_text`, `summary`) and vector similarity search (via Titan V2 embeddings in the `embedding` table).
 
 ---

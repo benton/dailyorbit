@@ -370,7 +370,9 @@ export const summarizeCommand = defineCommand({
         const fetchSize: number = Math.min(batchSize, target - processed);
         const rows: AttachmentRow[] = (
           await fetchBatch(conn, fetchSize + failedKeys.size)
-        ).filter((r: AttachmentRow) => !failedKeys.has(r.attachmentKey)).slice(0, fetchSize);
+        )
+          .filter((r: AttachmentRow) => !failedKeys.has(r.attachmentKey))
+          .slice(0, fetchSize);
         if (rows.length === 0) break;
 
         const results = await processWithConcurrency(

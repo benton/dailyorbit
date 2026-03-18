@@ -5,6 +5,7 @@ import { configCommand } from './config/index.ts';
 import { dbCommand } from './db/index.ts';
 import { inferenceCommand } from './inference/index.ts';
 import { ingestCommand } from './ingest/index.ts';
+import { newsCommand } from './news/index.ts';
 import { searchCommand } from './search/index.ts';
 import { serveCommand } from './serve/index.ts';
 import { userCommand } from './user/index.ts';
@@ -21,6 +22,7 @@ export const main = defineCommand({
     db: dbCommand,
     inference: inferenceCommand,
     ingest: ingestCommand,
+    news: newsCommand,
     search: searchCommand,
     serve: serveCommand,
     user: userCommand,
