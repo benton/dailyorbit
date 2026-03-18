@@ -22,6 +22,7 @@ import {
 } from './user/routes.ts';
 import { userSettingsRoutes } from './user-settings/routes.ts';
 import { viewingHistoryRoutes } from './viewing-history/routes.ts';
+import { pipelineRoutes } from './pipeline/routes.ts';
 
 const app = new Hono();
 
@@ -74,6 +75,7 @@ app.route('/api/admin/companies', companyAdminRoutes);
 app.route('/api/admin/inference', buildInferenceRoutes());
 app.route('/api/admin/news', newsAdminRoutes);
 app.route('/api/admin/users', userAdminRoutes);
+app.route('/api/admin/pipeline', pipelineRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
 app.route('/api/earth-stations', earthStationRoutes);

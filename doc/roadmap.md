@@ -40,8 +40,6 @@
 
 ## Off the Wall Ideas or Nice to have
 
-- v?.x.x [ ] Bug fix: large attachment text has too many tokensto summarize
-- v?.x.x [ ] Backup PDF text extraction tool
 - v?.x.x [ ] Admin ingest control UI
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
 - v?.x.x [ ] Parse GXT files

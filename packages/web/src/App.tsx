@@ -20,6 +20,7 @@ const UserHomePage = lazy(() => import('./home/UserHomePage.tsx'));
 const Companies = lazy(() => import('./admin/Companies.tsx'));
 const Users = lazy(() => import('./admin/Users.tsx'));
 const AiSettings = lazy(() => import('./admin/AiSettings.tsx'));
+const PipelinePage = lazy(() => import('./admin/pipeline/PipelinePage.tsx'));
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 
@@ -139,6 +140,14 @@ export default function App() {
                 </Suspense>
               }
               path="ai"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <PipelinePage />
+                </Suspense>
+              }
+              path="pipeline"
             />
           </Route>
         </Routes>
