@@ -116,13 +116,13 @@ export async function searchByVector(
         vh.source_table, vh.source_key, vh.similarity,
         CASE
           WHEN vh.source_table = 'filing' THEN vh.source_key
-          WHEN vh.source_table = 'attachment' THEN (SELECT a.file_number FROM attachment a WHERE CAST(a.attachment_key AS VARCHAR) = vh.source_key)
-          WHEN vh.source_table = 'pleading' THEN (SELECT f2.file_number FROM pleading p JOIN filing f2 ON p.filing_key = f2.filing_key WHERE CAST(p.pleading_key AS VARCHAR) = vh.source_key)
+          WHEN vh.source_table = 'attachment' THEN (SELECT a.file_number FROM attachment a WHERE CAST(a.attachment_key AS VARCHAR) = vh.source_key LIMIT 1)
+          WHEN vh.source_table = 'pleading' THEN (SELECT f2.file_number FROM pleading p JOIN filing f2 ON p.filing_key = f2.filing_key WHERE CAST(p.pleading_key AS VARCHAR) = vh.source_key LIMIT 1)
         END AS file_number,
         CASE
-          WHEN vh.source_table = 'filing' THEN (SELECT f3.description FROM filing f3 WHERE f3.file_number = vh.source_key)
-          WHEN vh.source_table = 'attachment' THEN (SELECT a2.summary FROM attachment a2 WHERE CAST(a2.attachment_key AS VARCHAR) = vh.source_key)
-          WHEN vh.source_table = 'pleading' THEN (SELECT p2.exhibit_attachment_html FROM pleading p2 WHERE CAST(p2.pleading_key AS VARCHAR) = vh.source_key)
+          WHEN vh.source_table = 'filing' THEN (SELECT f3.description FROM filing f3 WHERE f3.file_number = vh.source_key LIMIT 1)
+          WHEN vh.source_table = 'attachment' THEN (SELECT a2.summary FROM attachment a2 WHERE CAST(a2.attachment_key AS VARCHAR) = vh.source_key LIMIT 1)
+          WHEN vh.source_table = 'pleading' THEN (SELECT p2.exhibit_attachment_html FROM pleading p2 WHERE CAST(p2.pleading_key AS VARCHAR) = vh.source_key LIMIT 1)
         END AS matched_text
       FROM vector_hits vh
     ),
