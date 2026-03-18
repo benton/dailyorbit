@@ -6,7 +6,7 @@ The `daily-orbit` CLI is the single entry point for all server-side operations. 
 node --no-warnings packages/server/src/bin.ts <command> [options]
 ```
 
-Most common operations also have Makefile targets (run `make help` to list them).
+Run `./daily-orbit --help` to list all available commands.
 
 ---
 
@@ -53,8 +53,6 @@ List all config keys and their current values.
 ```
 daily-orbit config list [--database <path>] [--key-file <path>]
 ```
-
-**Make target:** `make config-list`
 
 ### `config get <key>`
 
@@ -103,11 +101,6 @@ daily-orbit ingest ibfs [OPTIONS]
 | `--download` | `false` | Download and extract IBFS.zip before ingesting |
 | `--source-url` | _(FCC FTP)_ | Override the default FTP URL for the zip download |
 
-**Make targets:**
-- `make ingest` — load from local files
-- `make ingest-dry-run` — validate only
-- `make ingest-download` — download and load
-
 ### `ingest icfs`
 
 Ingest filings from the ICFS ServiceNow API. This is the current FCC data source (active since June 2025).
@@ -125,11 +118,6 @@ daily-orbit ingest icfs [OPTIONS]
 | `--app-types` | `LOA,MOD,STA,AMD,T/C,ASG,LIC,RWL` | Comma-separated application types |
 | `--file-numbers` | _(none)_ | Comma-separated specific file numbers (skips discovery) |
 | `--delay` | `500` | Delay between API requests in ms |
-
-**Make targets:**
-- `make icfs-ingest DATE_FROM=2025-12` — ingest a month of filings
-- `make icfs-ingest DATE_FROM=2025-07 DATE_TO=2025-12` — ingest a date range
-- `make icfs-ingest-filing FILE_NUMBERS=SAT-LOA-20250221-00050` — ingest specific filings
 
 **Examples:**
 
@@ -158,8 +146,6 @@ Discover attachment metadata for filings (does not download files).
 daily-orbit attachments discover [OPTIONS]
 ```
 
-**Make target:** `make attachments-discover`
-
 ### `attachments download`
 
 Download pending attachments that have already been discovered.
@@ -167,8 +153,6 @@ Download pending attachments that have already been discovered.
 ```
 daily-orbit attachments download [OPTIONS]
 ```
-
-**Make target:** `make attachments-download`
 
 ### `attachments sync`
 
@@ -178,8 +162,6 @@ Discover and download attachments in one pass.
 daily-orbit attachments sync [OPTIONS]
 ```
 
-**Make target:** `make attachments`
-
 ### `attachments reset`
 
 Delete downloaded attachment files and reset DB status to pending.
@@ -187,8 +169,6 @@ Delete downloaded attachment files and reset DB status to pending.
 ```
 daily-orbit attachments reset [OPTIONS]
 ```
-
-**Make target:** `make attachments-reset`
 
 **Common options for `discover`, `download`, and `sync`:**
 
@@ -226,8 +206,6 @@ daily-orbit db query <sql>
 | Argument | Description |
 |---|---|
 | `sql` | SQL query to execute (required) |
-
-**Make target:** `make db-query SQL="SELECT COUNT(*) FROM filing"`
 
 **Examples:**
 

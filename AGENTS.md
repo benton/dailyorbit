@@ -89,7 +89,7 @@ These rules ensure maintainability, safety, and developer velocity.
 
 ### 5 — Code Organization
 
-- **O-0 (MUST)** Any complex command that needs to be run repeatedly should be wrapped in a `make` target.
+- **O-0 (MUST)** Any complex command that needs to be run repeatedly should be a `./daily-orbit` CLI subcommand.
 - **O-1 (MUST)** Place code in `src/[module name]` as per the standard ES modules layout.
 - **O-2 (MUST)** Place deployment-related code in `deploy`
 - **O-3 (MUST)** Place documentation in `doc`
@@ -100,12 +100,12 @@ These rules ensure maintainability, safety, and developer velocity.
 ### 6 — Tooling
 
 - Use `./daily-orbit serve api --watch` to run the API server - it should hot-reload changes
-- Use `./daily-orbit serve html` to run the VITE fontend server - it should hot-reload changes
-- The DUckDB CLI is available. Before running the API server, consider making a copy of the default DB: `cp -pv data/daily-orbit.duckdb data/daily-orbit-query.duckdb`. Then you can use the DuckDB CLI to query the copy while the API server uses the locked default DB.
+- Use `./daily-orbit serve html` to run the Vite frontend server - it should hot-reload changes
+- Use `make dev` to start both servers together, `make test` to run all tests, `make build` for production builds
+- The DuckDB CLI is available. Before running the API server, consider making a copy of the default DB: `cp -pv data/daily-orbit.duckdb data/daily-orbit-query.duckdb`. Then you can use the DuckDB CLI to query the copy while the API server uses the locked default DB.
 - `uv` is installed and a Python virtual env is at `.venv`. This is for debugging only, so use `uv` and create scripts as needed in `scripts`
 - when using Typescript test scripts _check the current dir before executing_ - otherwise imports will likely fail
-- Use `pnpm test` to run tests.
-- `pnpm build` for production builds.
+- All operational commands (ingest, attachments, companies, news, search, inference, user, config, db) are available via the `./daily-orbit` CLI. Run `./daily-orbit --help` for the full list.
 - Use [`npm-run-all2`](https://github.com/bcomnes/npm-run-all2) to parallelize local test runs.
 - Use `oxlint` for linting and `oxfmt` for formatting.
 

@@ -125,8 +125,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Command** | `make ingest` or `make ingest-download` |
-| **CLI** | `./daily-orbit ingest ibfs [--download] [--dry-run]` |
+| **Command** | `./daily-orbit ingest ibfs [--download] [--dry-run]` |
 | **Source** | `ftp://ftp.fcc.gov/pub/Bureaus/International/databases/IBFS.zip` |
 | **Status** | **Frozen** — FCC replaced IBFS with ICFS on 2025-06-24 |
 | **Writes to** | `filing` table + related lookup tables |
@@ -152,8 +151,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Command** | `make icfs-ingest DATE_FROM=YYYY-MM` |
-| **CLI** | `./daily-orbit ingest icfs --date-from YYYY-MM [--date-to YYYY-MM]` |
+| **Command** | `./daily-orbit ingest icfs --date-from YYYY-MM [--date-to YYYY-MM]` |
 | **Source** | FCC ICFS ServiceNow REST API |
 | **Default scope** | Subsystems: SAT, SES; App types: LOA, MOD, STA, AMD, T/C, ASG, LIC, RWL, REG |
 | **Writes to** | `filing` table (upsert), sets `company_id` via auto-attribution |
@@ -181,8 +179,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Command** | `make attachments-discover` |
-| **CLI** | `./daily-orbit attachments discover [OPTIONS]` |
+| **Command** | `./daily-orbit attachments discover [OPTIONS]` |
 | **Source** | FCC legacy report HTML pages |
 | **Writes to** | `attachment` table (metadata rows with `download_status = 'pending'`) |
 
@@ -201,8 +198,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Command** | `make attachments-download` |
-| **CLI** | `./daily-orbit attachments download [OPTIONS]` |
+| **Command** | `./daily-orbit attachments download [OPTIONS]` |
 | **Source** | FCC download URLs stored in `attachment` table |
 | **Writes to** | `data/attachments/{subsystem}/{file_number}/` + updates `attachment` table |
 
@@ -214,7 +210,7 @@ flowchart TD
 4. Download to temp path → detect content type → rename with correct extension
 5. Update DB: `local_path`, `file_size_bytes`, `content_type`, `downloaded_at`, `download_status`
 
-**Combined command:** `make attachments` runs discover + download + text extraction in one pass.
+**Combined command:** `./daily-orbit attachments sync` runs discover + download + text extraction in one pass.
 
 ### 2b′. Authenticated Attachment Download (ServiceNow)
 
@@ -235,8 +231,7 @@ pnpx playwright install chromium
 
 | | |
 |---|---|
-| **Command** | `make attachments-extract-cookies` |
-| **CLI** | `./daily-orbit attachments extract-cookies [--output PATH]` |
+| **Command** | `./daily-orbit attachments extract-cookies [--output PATH]` |
 | **Output** | `data/icfs-cookies.json` |
 
 The command opens a Chromium browser to the ICFS login page. The operator
@@ -248,8 +243,7 @@ cookies from the browser and writes them to a JSON file.
 
 | | |
 |---|---|
-| **Command** | `make attachments-download-auth` |
-| **CLI** | `./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed` |
+| **Command** | `./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed` |
 | **Source** | `attachment` rows where `download_url LIKE '%servicenowservices.com%'` |
 | **Writes to** | `data/attachments/{subsystem}/{file_number}/` + updates `attachment` table |
 
@@ -272,21 +266,20 @@ and re-run; the pipeline picks up where it left off.
 
 ```bash
 # 1. Extract cookies (opens browser — log in, then press Enter)
-make attachments-extract-cookies
+./daily-orbit attachments extract-cookies
 
 # 2. Download authenticated attachments
-make attachments-download-auth
+./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed
 
 # 3. Extract text from newly downloaded PDFs
-make attachments-extract
+./daily-orbit attachments extract
 ```
 
 ### 2c. Content-Type Validation
 
 | | |
 |---|---|
-| **Command** | `make attachments-validate` |
-| **CLI** | `./daily-orbit attachments validate [OPTIONS]` |
+| **Command** | `./daily-orbit attachments validate [OPTIONS]` |
 | **Source** | Downloaded files on disk |
 | **Writes to** | `attachment` table: `content_type`, `content_type_source` |
 
@@ -307,8 +300,7 @@ make attachments-extract
 
 | | |
 |---|---|
-| **Command** | `make attachments-extract` |
-| **CLI** | `./daily-orbit attachments extract [OPTIONS]` |
+| **Command** | `./daily-orbit attachments extract [OPTIONS]` |
 | **Source** | Downloaded files in `data/attachments/` (PDF, text, CSV, HTML) |
 | **Writes to** | `attachment` table: `full_text`, `text_length`, `text_checksum`, `extract_status` |
 
@@ -342,8 +334,7 @@ make attachments-extract
 
 | | |
 |---|---|
-| **Command** | `make summarize` or via `./daily-orbit attachments sync` |
-| **CLI** | `./daily-orbit inference summarize [OPTIONS]` |
+| **Command** | `./daily-orbit inference summarize [OPTIONS]` |
 | **Source** | `attachment` table (rows where `full_text IS NOT NULL AND summary IS NULL`) |
 | **Writes to** | `attachment.summary`, `attachment.summarized_by`, `attachment.summarized_at` |
 
@@ -367,8 +358,7 @@ make attachments-extract
 
 | | |
 |---|---|
-| **Command** | `make embed-all` or `make embed SOURCE=attachment` |
-| **CLI** | `./daily-orbit inference embed [OPTIONS]` |
+| **Command** | `./daily-orbit inference embed [OPTIONS]` |
 | **Source** | `attachment.full_text`, `filing.description`, `pleading.exhibit_attachment_html`, `news_item.full_text` |
 | **Writes to** | `embedding` table (one row per chunk per source document) |
 
@@ -397,8 +387,7 @@ make attachments-extract
 
 | | |
 |---|---|
-| **Command** | `make search-rebuild-index` |
-| **CLI** | `./daily-orbit search rebuild-index` |
+| **Command** | `./daily-orbit search rebuild-index` |
 | **Source** | `filing.description`, `filing.brief_description`, `attachment.full_text`, `attachment.summary`, `pleading.filer_name`, `pleading.exhibit_attachment_html`, `news_item.title`, `news_item.full_text`, `news_item.summary` |
 | **Writes to** | DuckDB FTS virtual tables (`fts_main_filing`, `fts_main_attachment`, `fts_main_pleading`, `fts_main_news_item`) |
 
@@ -410,7 +399,7 @@ make attachments-extract
    - Uses English stemmer and stopwords, case-insensitive matching
 3. Skip tables whose columns don't exist (graceful degradation in test environments)
 
-**Integration:** FTS rebuild runs automatically as the final step of `./daily-orbit attachments sync`, after summarization completes. Can also be triggered standalone via `make search-rebuild-index`.
+**Integration:** FTS rebuild runs automatically as the final step of `./daily-orbit attachments sync`, after summarization completes. Can also be triggered standalone via `./daily-orbit search rebuild-index`.
 
 **Cost:** Zero — FTS indexes are built entirely from local data already in the database. No external API calls.
 
@@ -422,8 +411,7 @@ make attachments-extract
 
 | | |
 |---|---|
-| **Command** | `make news-seed` |
-| **CLI** | `./daily-orbit news seed` |
+| **Command** | `./daily-orbit news seed` |
 | **Source** | Built-in `seed-data.ts` (~10 RSS/Atom feeds) |
 | **Writes to** | `news_source` table |
 
@@ -433,8 +421,7 @@ Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (Space
 
 | | |
 |---|---|
-| **Command** | `make news-fetch` |
-| **CLI** | `./daily-orbit news fetch` |
+| **Command** | `./daily-orbit news fetch` |
 | **Source** | RSS/Atom feed URLs from enabled `news_source` rows due for fetch |
 | **Writes to** | `news_item` table (upsert by `source_url`), updates `news_source.last_fetched_at` |
 
@@ -449,8 +436,7 @@ Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (Space
 
 | | |
 |---|---|
-| **Command** | `make news-extract` |
-| **CLI** | `./daily-orbit news extract [--limit N] [--concurrency N]` |
+| **Command** | `./daily-orbit news extract [--limit N] [--concurrency N]` |
 | **Source** | `news_item` rows where `extract_status = 'pending'` |
 | **Writes to** | `news_item.full_text`, `news_item.text_checksum`, `news_item.extract_status` |
 
@@ -469,8 +455,7 @@ Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (Space
 
 | | |
 |---|---|
-| **Command** | `make news-summarize` |
-| **CLI** | `./daily-orbit news summarize [OPTIONS]` |
+| **Command** | `./daily-orbit news summarize [OPTIONS]` |
 | **Source** | `news_item` rows where `full_text IS NOT NULL AND summary IS NULL` |
 | **Writes to** | `news_item.summary`, `news_item.summarized_by`, `news_item.summarized_at` |
 
@@ -490,8 +475,7 @@ Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (Space
 
 | | |
 |---|---|
-| **Command** | `make news-attribute` |
-| **CLI** | `./daily-orbit news attribute [--limit N]` |
+| **Command** | `./daily-orbit news attribute [--limit N]` |
 | **Source** | `news_item` rows where `company_id IS NULL AND full_text IS NOT NULL` |
 | **Writes to** | `news_item.company_id` |
 
@@ -512,8 +496,7 @@ Idempotent: skips sources whose `feed_url` already exists. Tier 1 sources (Space
 
 | | |
 |---|---|
-| **Command** | `make companies-seed` |
-| **CLI** | `./daily-orbit companies seed` |
+| **Command** | `./daily-orbit companies seed` |
 | **Source** | Built-in `seed-data.ts` (~80 companies, 300+ aliases including prefix patterns) |
 | **Writes to** | `company` + `company_alias` tables |
 
@@ -523,8 +506,7 @@ Idempotent: skips companies whose canonical name already exists as an alias. Add
 
 | | |
 |---|---|
-| **Command** | `make companies-attribute` |
-| **CLI** | `./daily-orbit companies attribute` |
+| **Command** | `./daily-orbit companies attribute` |
 | **Source** | `filing` table (rows where `company_id IS NULL`) |
 | **Writes to** | `filing.company_id` |
 
@@ -543,8 +525,7 @@ No match → filing stays unattributed (company_id remains NULL).
 
 | | |
 |---|---|
-| **Command** | `make companies-stats` |
-| **CLI** | `./daily-orbit companies stats` |
+| **Command** | `./daily-orbit companies stats` |
 
 Read-only report: total/attributed/unattributed counts, coverage %, and top 25 unattributed applicant names.
 
@@ -554,8 +535,7 @@ Read-only report: total/attributed/unattributed counts, coverage %, and top 25 u
 
 | | |
 |---|---|
-| **Command** | `make companies-extract-ownership` |
-| **CLI** | `./daily-orbit companies extract-ownership` |
+| **Command** | `./daily-orbit companies extract-ownership` |
 | **Source** | `filing` table (rows where `app_type_code IN ('T/C', 'ASG')`) |
 | **Writes to** | `ownership_event` table |
 
@@ -574,8 +554,7 @@ Read-only report: total/attributed/unattributed counts, coverage %, and top 25 u
 
 | | |
 |---|---|
-| **Command** | `make companies-enrich` |
-| **CLI** | `./daily-orbit companies enrich` |
+| **Command** | `./daily-orbit companies enrich` |
 | **Sources** | GLEIF LEI API + Wikidata SPARQL endpoint |
 | **Writes to** | `company` table fields: `gleif_lei`, `wikidata_id`, `stock_ticker`, `stock_exchange`, `industry` |
 
@@ -600,52 +579,52 @@ authentication; the rest is automated.
 
 ```bash
 # 1. Ingest new filings from ICFS (includes auto-attribution)
-make icfs-ingest DATE_FROM=$(date -v-1m +%Y-%m)
+./daily-orbit ingest icfs --date-from $(date -v-1m +%Y-%m)
 
 # 2. Discover and download public attachments, extract text, summarize
-make attachments
+./daily-orbit attachments sync
 
 # 3. Generate vector embeddings for semantic search
-make embed-all
+./daily-orbit inference embed --source all
 
 # 4. Extract ICFS session cookies (opens browser — log in, press Enter)
-make attachments-extract-cookies
+./daily-orbit attachments extract-cookies
 
 # 5. Download ServiceNow-hosted attachments using session cookies
-make attachments-download-auth
+./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed
 
 # 6. Extract text from newly downloaded authenticated attachments
-make attachments-extract
+./daily-orbit attachments extract
 
 # 7. Ensure company seed data is current (no-ops if unchanged)
-make companies-seed
+./daily-orbit companies seed
 
 # 8. Attribute any remaining unattributed filings
-make companies-attribute
+./daily-orbit companies attribute
 
 # 9. Extract ownership events from new T/C and ASG filings
-make companies-extract-ownership
+./daily-orbit companies extract-ownership
 
 # 10. Enrich any companies missing external data
-make companies-enrich
+./daily-orbit companies enrich
 
 # 11. (Optional) Report attribution coverage
-make companies-stats
+./daily-orbit companies stats
 
 # 12. Seed news sources (no-ops if unchanged)
-make news-seed
+./daily-orbit news seed
 
 # 13. Fetch RSS feeds for new articles
-make news-fetch
+./daily-orbit news fetch
 
 # 14. Extract article full text (HTML → markdown)
-make news-extract
+./daily-orbit news extract
 
 # 15. Summarize new articles via Bedrock
-make news-summarize
+./daily-orbit news summarize
 
 # 16. Attribute articles to companies
-make news-attribute
+./daily-orbit news attribute
 ```
 
 ---
@@ -713,4 +692,3 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Companies module | `packages/server/src/companies/` |
 | News module | `packages/server/src/news/` |
 | Enrichment module | `packages/server/src/enrichment/` |
-| Makefile | `Makefile` |

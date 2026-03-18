@@ -51,14 +51,14 @@ All application configuration is stored in the DuckDB database and managed via t
 
 ## 6. CLI
 
-The `daily-orbit` CLI provides commands for server operation, data ingestion, attachment management, configuration, and ad-hoc database queries. Run it directly via Node or through Make targets:
+The `daily-orbit` CLI is the single entry point for all operational tasks: server operation, data ingestion, attachment management, configuration, company enrichment, news processing, and ad-hoc database queries.
 
 ```bash
 # Direct invocation
-node --no-warnings packages/server/src/bin.ts --help
+./daily-orbit --help
 
-# Or via Makefile (most common tasks have targets)
-make help
+# Or via Node
+node --no-warnings packages/server/src/bin.ts --help
 ```
 
 Top-level commands:
@@ -68,13 +68,18 @@ daily-orbit serve          Start the HTTP server
 daily-orbit config         Manage application configuration
 daily-orbit ingest         Data ingestion (ibfs, icfs)
 daily-orbit attachments    Attachment discovery and download
+daily-orbit companies      Company entity management and attribution
+daily-orbit news           News article ingestion and processing
+daily-orbit inference      Inference and summarization commands
+daily-orbit search         Search index management
+daily-orbit user           User account management
 daily-orbit db             Database utilities
 ```
 
 Every command and subcommand supports `--help` for usage details:
 
 ```bash
-node --no-warnings packages/server/src/bin.ts ingest icfs --help
+./daily-orbit ingest icfs --help
 ```
 
 For the full CLI reference, see [doc/CLI.md](doc/CLI.md).

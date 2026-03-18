@@ -110,10 +110,10 @@ Content search results always navigate to the filing detail page.
 The full-text search index must be rebuilt after data ingestion. This happens automatically at the end of the attachment sync pipeline, or can be triggered manually:
 
 ```bash
-make search-rebuild-index
+./daily-orbit search rebuild-index
 ```
 
-This runs `./daily-orbit search rebuild-index`, which creates BM25 indexes on all three tables. The operation is idempotent — running it multiple times is safe and always produces a fresh index from the current data.
+This creates BM25 indexes on all three tables. The operation is idempotent — running it multiple times is safe and always produces a fresh index from the current data.
 
 ---
 

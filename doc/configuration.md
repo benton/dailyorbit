@@ -6,21 +6,21 @@ All application configuration is stored in the DuckDB database's `config` table.
 
 ```bash
 # Fresh start — creates DB, key file, and seeds defaults automatically
-make serve
+./daily-orbit serve api
 
 # View current config
-make config-list
+./daily-orbit config list
 
 # Change a value
-node --no-warnings packages/server/src/bin.ts config set clientDomain https://my-domain.com
+./daily-orbit config set clientDomain https://my-domain.com
 
 # Read a single value (decrypts secrets for display)
-node --no-warnings packages/server/src/bin.ts config get betterAuthUrl
+./daily-orbit config get betterAuthUrl
 ```
 
 ## How it works
 
-On first launch (`make serve`), the server:
+On first launch (`./daily-orbit serve api`), the server:
 
 1. Creates `data/daily-orbit.duckdb` and `data/daily-orbit.key`
 2. Generates a 256-bit AES encryption key and writes it to the key file (mode `0600`)

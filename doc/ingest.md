@@ -6,16 +6,16 @@ The ingest pipeline loads FCC IBFS bulk data into the application's DuckDB datab
 
 ```bash
 # Download, extract, and load all tables in one command
-make ingest-download
+./daily-orbit ingest ibfs --download
 
 # Load from already-extracted data in tmp/IBFS/
-make ingest
+./daily-orbit ingest ibfs
 
 # Dry run — validate data without writing to DB
-make ingest-dry-run
+./daily-orbit ingest ibfs --dry-run
 
 # Load specific tables
-make ingest ARGS="--tables filing,status_code,frequency"
+./daily-orbit ingest ibfs --tables filing,status_code,frequency
 ```
 
 ## Prerequisites
@@ -24,7 +24,7 @@ The pipeline needs IBFS data in `tmp/IBFS/`. Two options:
 
 **Option A: Automatic download** (recommended)
 ```bash
-make ingest-download
+./daily-orbit ingest ibfs --download
 ```
 This fetches `IBFS.zip` via FTP, extracts it, and runs the full ingest.
 
@@ -32,7 +32,7 @@ This fetches `IBFS.zip` via FTP, extracts it, and runs the full ingest.
 1. Download `IBFS.zip` from `ftp://ftp.fcc.gov/pub/Bureaus/International/databases/IBFS.zip`
 2. Unzip to `tmp/IBFS/`
 3. Ensure `tmp/ibfs-schema.txt` exists (the Sybase DDL from the same FTP directory)
-4. Run `make ingest`
+4. Run `./daily-orbit ingest ibfs`
 
 ## CLI Options
 
@@ -89,7 +89,7 @@ runIngest(options)          — top-level orchestrator (pipeline.ts)
 ```
 
 `runIngest()` is a standalone function with no server dependency. It can be called from:
-- The CLI (`make ingest` or `make ingest-download`)
+- The CLI (`./daily-orbit ingest ibfs` or `./daily-orbit ingest ibfs --download`)
 - The server process (admin UI), using the shared DuckDB instance:
 
 ```typescript

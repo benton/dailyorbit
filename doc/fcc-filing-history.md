@@ -36,14 +36,14 @@ A government shutdown ran from **October 1 through November 13, 2025**. During t
 - **URL:** `ftp://ftp.fcc.gov/pub/Bureaus/International/databases/IBFS.zip`
 - **Format:** Pipe-delimited `.dat` files with Sybase DDL schema, 67+ tables
 - **Status: Frozen.** Last filing dated 2025-06-18. No new data since ICFS migration.
-- **Used by:** `packages/server/src/ingest/` pipeline (`make ingest`)
+- **Used by:** `packages/server/src/ingest/` pipeline (`./daily-orbit ingest ibfs`)
 
 ### 2. fcc.report Mirror
 
 - **URL:** `https://fcc.report/IBFS/`
 - **Format:** HTML pages per filing, with attachment links; RSS feed available
 - **Status: Stale since June 2023.** The mirror stopped ingesting IBFS data ~2 years before the ICFS migration. RSS feed last build date is June 14, 2023.
-- **Used by:** `packages/server/src/attachments/` pipeline for attachment discovery (`make attachments`)
+- **Used by:** `packages/server/src/attachments/` pipeline for attachment discovery (`./daily-orbit attachments discover`)
 
 ### 3. FCC Open Data (Socrata)
 
@@ -60,8 +60,8 @@ A government shutdown ran from **October 1 through November 13, 2025**. During t
 - **Portal ID:** `6865628b1bd2625069c154e2604bcbf2`
 - **Notes:** `robots.txt` disallows all crawlers. No official API documentation. FCC help available at ICFSInfo@fcc.gov. Public comment docket: GN Docket No. 25-194.
 - **Ingest pipeline:** `packages/server/src/icfs/` — operational as of v0.1.6
-  - `make icfs-ingest DATE_FROM=2025-07` — discover and ingest filings for a date range
-  - `make icfs-ingest-filing FILE_NUMBERS=SAT-LOA-20250221-00050` — ingest specific filings
+  - `./daily-orbit ingest icfs --date-from 2025-07` — discover and ingest filings for a date range
+  - `./daily-orbit ingest icfs --file-numbers SAT-LOA-20250221-00050` — ingest specific filings
   - Adds 28 enrichment columns: transfer parties, service types, red light status, full addresses, DA numbers
 
 #### 4.1 ICFS Search API (confirmed working, unauthenticated)
