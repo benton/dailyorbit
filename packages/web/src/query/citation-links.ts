@@ -21,7 +21,7 @@ export function resolveSourceUrl(source: RetrievedSource): string {
  * The generator uses `[Source N: type — id]` format, so we index by both the
  * full citation tag and the bare source ID for flexible matching.
  */
-export function buildCitationMap(sources: RetrievedSource[]): Map<string, RetrievedSource> {
+export function buildCitationMap(sources: Array<RetrievedSource>): Map<string, RetrievedSource> {
   const map = new Map<string, RetrievedSource>();
   for (let i = 0; i < sources.length; i++) {
     const s: RetrievedSource = sources[i];

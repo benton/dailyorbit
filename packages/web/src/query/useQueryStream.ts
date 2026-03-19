@@ -5,7 +5,7 @@ import env from '../lib/env.tsx';
 export type QueryStreamState = {
   answer: string;
   error: string | null;
-  sources: RetrievedSource[];
+  sources: Array<RetrievedSource>;
   status: 'idle' | 'rewriting' | 'retrieving' | 'generating' | 'done' | 'error';
   statusMessage: string;
   usage: QueryUsage | null;
@@ -23,7 +23,9 @@ const INITIAL_STATE: QueryStreamState = {
 /** Parse a single SSE `data:` line into a QuerySSEEvent, or null on failure. */
 function parseSSEData(line: string): QuerySSEEvent | null {
   const trimmed: string = line.startsWith('data:') ? line.slice(5).trim() : '';
-  if (trimmed === '') return null;
+  if (trimmed === '') {
+    return null;
+  }
   try {
     return JSON.parse(trimmed) as QuerySSEEvent;
   } catch {
@@ -88,16 +90,20 @@ export function useQueryStream(): {
 
           for (;;) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              break;
+            }
 
             buffer += decoder.decode(value, { stream: true });
-            const lines: string[] = buffer.split('\n');
+            const lines: Array<string> = buffer.split('\n');
             // Keep the last potentially incomplete line in the buffer
             buffer = lines.pop() ?? '';
 
             for (const line of lines) {
               const event: QuerySSEEvent | null = parseSSEData(line);
-              if (event == null) continue;
+              if (event == null) {
+                continue;
+              }
 
               switch (event.type) {
                 case 'status':
@@ -143,8 +149,8 @@ export function useQueryStream(): {
               }
             }
           }
-        } catch (err: unknown) {
-          if (err instanceof DOMException && err.name === 'AbortError') {
+        } catch (error: unknown) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
             // User cancelled — keep current state but mark idle
             setState((prev) => ({
               ...prev,
@@ -154,7 +160,7 @@ export function useQueryStream(): {
             return;
           }
           const message: string =
-            err instanceof Error ? err.message : 'An unexpected error occurred';
+            error instanceof Error ? error.message : 'An unexpected error occurred';
           setState((prev) => ({
             ...prev,
             error: message,

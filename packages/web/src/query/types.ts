@@ -19,12 +19,12 @@ export type QueryUsage = {
 
 export type QuerySSEEvent =
   | {
-      type: 'status';
-      stage: 'rewriting' | 'retrieving' | 'generating';
       message: string;
+      stage: 'rewriting' | 'retrieving' | 'generating';
+      type: 'status';
     }
-  | { type: 'sources'; sources: RetrievedSource[] }
-  | { type: 'delta'; text: string }
+  | { sources: Array<RetrievedSource>; type: 'sources' }
+  | { text: string; type: 'delta' }
   | { type: 'usage'; usage: QueryUsage }
   | { type: 'done' }
-  | { type: 'error'; message: string };
+  | { message: string; type: 'error' };

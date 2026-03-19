@@ -93,7 +93,9 @@ function StatusBar({ message, status }: { message: string; status: QueryStreamSt
   const isActive: boolean =
     status === 'rewriting' || status === 'retrieving' || status === 'generating';
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   return (
     <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
@@ -116,8 +118,10 @@ function SourceIcon({ type }: { type: RetrievedSource['type'] }): ReactNode {
   }
 }
 
-function SourcesList({ sources }: { sources: RetrievedSource[] }) {
-  if (sources.length === 0) return null;
+function SourcesList({ sources }: { sources: Array<RetrievedSource> }) {
+  if (sources.length === 0) {
+    return null;
+  }
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
@@ -170,13 +174,15 @@ function SourcesList({ sources }: { sources: RetrievedSource[] }) {
 }
 
 /** Render streamed markdown answer with citation links. */
-function AnswerDisplay({ answer, sources }: { answer: string; sources: RetrievedSource[] }) {
+function AnswerDisplay({ answer, sources }: { answer: string; sources: Array<RetrievedSource> }) {
   const citationMap = useMemo(() => buildCitationMap(sources), [sources]);
 
-  if (answer === '') return null;
+  if (answer === '') {
+    return null;
+  }
 
   // Replace [citation] patterns with markdown links
-  const processed: string = answer.replace(/\[([^\]]+)\]/g, (_match: string, inner: string) => {
+  const processed: string = answer.replaceAll(/\[([^\]]+)\]/g, (_match: string, inner: string) => {
     const source: RetrievedSource | undefined = citationMap.get(inner);
     if (source != null) {
       const url: string = resolveSourceUrl(source);

@@ -5,7 +5,9 @@ import type { QuerySSEEvent } from './types.ts';
 // needing React rendering (the web package has no jsdom setup).
 function parseSSEData(line: string): QuerySSEEvent | null {
   const trimmed: string = line.startsWith('data:') ? line.slice(5).trim() : '';
-  if (trimmed === '') return null;
+  if (trimmed === '') {
+    return null;
+  }
   try {
     return JSON.parse(trimmed) as QuerySSEEvent;
   } catch {
@@ -19,45 +21,45 @@ describe('parseSSEData', () => {
       'data: {"type":"status","stage":"rewriting","message":"Analyzing your question..."}',
     );
     expect(event).toEqual({
-      type: 'status',
-      stage: 'rewriting',
       message: 'Analyzing your question...',
+      stage: 'rewriting',
+      type: 'status',
     });
   });
 
   it('parses a delta event', () => {
     const event: QuerySSEEvent | null = parseSSEData('data: {"type":"delta","text":"The Hughes"}');
-    expect(event).toEqual({ type: 'delta', text: 'The Hughes' });
+    expect(event).toEqual({ text: 'The Hughes', type: 'delta' });
   });
 
   it('parses a sources event with multiple sources', () => {
     const sources = [
       {
-        type: 'filing' as const,
         id: 'SAT-LOA-20240701-00011',
-        title: 'Hughes Ka-band',
-        snippet: 'Application for Ka-band...',
         score: 0.85,
+        snippet: 'Application for Ka-band...',
+        title: 'Hughes Ka-band',
+        type: 'filing' as const,
       },
       {
-        type: 'news' as const,
         id: '42',
-        title: 'SpaceNews article',
-        snippet: 'Hughes files new...',
         score: 0.72,
+        snippet: 'Hughes files new...',
+        title: 'SpaceNews article',
+        type: 'news' as const,
         url: 'https://spacenews.com/hughes',
       },
     ];
-    const line: string = `data: ${JSON.stringify({ type: 'sources', sources })}`;
+    const line: string = `data: ${JSON.stringify({ sources, type: 'sources' })}`;
     const event: QuerySSEEvent | null = parseSSEData(line);
-    expect(event).toEqual({ type: 'sources', sources });
+    expect(event).toEqual({ sources, type: 'sources' });
   });
 
   it('parses a usage event', () => {
     const usage = {
-      rewriteTokens: { input: 142, output: 87 },
       generateTokens: { input: 3201, output: 412 },
       retrievalMs: 300,
+      rewriteTokens: { input: 142, output: 87 },
       totalMs: 2800,
     };
     const event: QuerySSEEvent | null = parseSSEData(
@@ -75,7 +77,7 @@ describe('parseSSEData', () => {
     const event: QuerySSEEvent | null = parseSSEData(
       'data: {"type":"error","message":"Rate limit exceeded"}',
     );
-    expect(event).toEqual({ type: 'error', message: 'Rate limit exceeded' });
+    expect(event).toEqual({ message: 'Rate limit exceeded', type: 'error' });
   });
 
   it('returns null for empty data line', () => {
