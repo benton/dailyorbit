@@ -30,8 +30,14 @@ export function SummaryTooltip({ children, summary }: SummaryTooltipProps) {
       const spaceAbove: number = rect.top;
       const useBelow: boolean = spaceAbove < 200;
       setPlacement(useBelow ? 'below' : 'above');
+      const tooltipHalfWidth: number = 224; // max-w-md / 2
+      const rawLeft: number = rect.left + window.scrollX + rect.width / 2;
+      const clampedLeft: number = Math.max(
+        tooltipHalfWidth + 16,
+        Math.min(rawLeft, window.innerWidth - tooltipHalfWidth - 16),
+      );
       setPosition({
-        left: rect.left + window.scrollX + rect.width / 2,
+        left: clampedLeft,
         top: useBelow ? rect.bottom + window.scrollY + 8 : rect.top + window.scrollY - 8,
       });
       setVisible(true);
