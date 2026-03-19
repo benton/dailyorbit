@@ -31,6 +31,10 @@ describe('news repository', () => {
   beforeEach(async () => {
     db = await DuckDBInstance.create(':memory:');
     conn = await DuckDBConnection.create(db);
+    // Minimal company table needed for LEFT JOIN in news queries
+    await conn.run(
+      `CREATE TABLE IF NOT EXISTS company (id INTEGER PRIMARY KEY, name VARCHAR, parent_company_id INTEGER)`,
+    );
     await ensureNewsTables(conn);
   });
 
