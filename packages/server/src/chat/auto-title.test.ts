@@ -4,7 +4,10 @@ import { buildTitlePrompt, parseTitleResponse } from './auto-title.ts';
 describe('auto-title', () => {
   describe('buildTitlePrompt', () => {
     it('includes the question and answer in the prompt', () => {
-      const prompt = buildTitlePrompt('What is STA?', 'STA stands for Special Temporary Authority.');
+      const prompt = buildTitlePrompt(
+        'What is STA?',
+        'STA stands for Special Temporary Authority.',
+      );
       expect(prompt).toContain('What is STA?');
       expect(prompt).toContain('STA stands for Special Temporary Authority.');
     });

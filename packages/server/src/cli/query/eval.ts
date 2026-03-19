@@ -29,15 +29,11 @@ export const evalCommand = defineCommand({
   async run({ args }) {
     const duckdb = await import('@duckdb/node-api');
     const { setDbPath, getDb } = await import('../../lib/db.ts');
-    const { BedrockClient } = await import(
-      '../../inference/bedrock-client.ts'
-    );
-    const { EmbeddingService } = await import(
-      '../../inference/embedding-service.ts'
-    );
-    const { runEvaluation, printSummary } = await import(
-      '../../query/eval/evaluate.ts'
-    );
+    const { BedrockClient } = await import('../../inference/bedrock-client.ts');
+    const { EmbeddingService } =
+      await import('../../inference/embedding-service.ts');
+    const { runEvaluation, printSummary } =
+      await import('../../query/eval/evaluate.ts');
 
     setDbPath(resolveFromRoot(args.database));
     const db = await getDb();
@@ -58,9 +54,7 @@ export const evalCommand = defineCommand({
 
     try {
       const summary = await runEvaluation(conn, client, embeddingCtx, {
-        datasetPath: args.dataset
-          ? resolveFromRoot(args.dataset)
-          : undefined,
+        datasetPath: args.dataset ? resolveFromRoot(args.dataset) : undefined,
         rewriteModelId: args.model ?? undefined,
         generateModelId: args.model ?? undefined,
         judgeModelId: args.model ?? undefined,
@@ -70,8 +64,7 @@ export const evalCommand = defineCommand({
       printSummary(summary);
 
       // Exit with non-zero if too many failures
-      const failRate: number =
-        summary.failures.length / summary.totalCases;
+      const failRate: number = summary.failures.length / summary.totalCases;
       if (failRate > 0.3) {
         console.error(
           `\nFail rate ${(failRate * 100).toFixed(0)}% exceeds 30% threshold`,

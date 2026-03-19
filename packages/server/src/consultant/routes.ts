@@ -41,12 +41,11 @@ consultantAdminRoutes.post('/', async (c) => {
     return c.json({ error: 'name, slug, and systemPrompt are required' }, 400);
   }
   try {
-    const consultant = await withConn((conn) =>
-      createConsultant(conn, body),
-    );
+    const consultant = await withConn((conn) => createConsultant(conn, body));
     return c.json(consultant, 201);
   } catch (err: unknown) {
-    const message: string = err instanceof Error ? err.message : 'Unknown error';
+    const message: string =
+      err instanceof Error ? err.message : 'Unknown error';
     if (message.includes('UNIQUE') || message.includes('Duplicate')) {
       return c.json({ error: `Slug "${body.slug}" already exists` }, 409);
     }
@@ -59,9 +58,7 @@ consultantAdminRoutes.put('/:id', async (c) => {
   if (isNaN(id)) return c.json({ error: 'Invalid ID' }, 400);
 
   const body = await c.req.json();
-  const updated = await withConn((conn) =>
-    updateConsultant(conn, id, body),
-  );
+  const updated = await withConn((conn) => updateConsultant(conn, id, body));
   if (updated == null) return c.json({ error: 'Consultant not found' }, 404);
   return c.json(updated);
 });

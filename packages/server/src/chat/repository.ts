@@ -9,9 +9,12 @@ function rowToConversation(r: Record<string, unknown>): Conversation {
     id: String(r.id),
     userId: String(r.user_id),
     consultantId: Number(r.consultant_id),
-    consultantName: r.consultant_name != null ? String(r.consultant_name) : null,
-    consultantIcon: r.consultant_icon != null ? String(r.consultant_icon) : null,
-    consultantColor: r.consultant_color != null ? String(r.consultant_color) : null,
+    consultantName:
+      r.consultant_name != null ? String(r.consultant_name) : null,
+    consultantIcon:
+      r.consultant_icon != null ? String(r.consultant_icon) : null,
+    consultantColor:
+      r.consultant_color != null ? String(r.consultant_color) : null,
     title: r.title != null ? String(r.title) : null,
     totalInputTokens: Number(r.total_input_tokens),
     totalOutputTokens: Number(r.total_output_tokens),
@@ -125,14 +128,12 @@ export async function deleteConversation(
   const count: number = Number(before.getRowObjectsJS()[0]!.cnt);
   if (count === 0) return false;
 
-  await conn.run(
-    `DELETE FROM message WHERE conversation_id = $1`,
-    [id] as DuckDBValue[],
-  );
-  await conn.run(
-    `DELETE FROM conversation WHERE id = $1`,
-    [id] as DuckDBValue[],
-  );
+  await conn.run(`DELETE FROM message WHERE conversation_id = $1`, [
+    id,
+  ] as DuckDBValue[]);
+  await conn.run(`DELETE FROM conversation WHERE id = $1`, [
+    id,
+  ] as DuckDBValue[]);
   return true;
 }
 

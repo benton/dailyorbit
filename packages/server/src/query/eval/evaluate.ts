@@ -276,7 +276,12 @@ async function evaluateCase(
 
     // 4. Generate answer
     let answerText: string = '';
-    const gen = generateAnswer(evalCase.question, sources, client, generateModelId);
+    const gen = generateAnswer(
+      evalCase.question,
+      sources,
+      client,
+      generateModelId,
+    );
     let result = await gen.next();
     while (!result.done) {
       const event: QuerySSEEvent = result.value;
@@ -317,8 +322,7 @@ async function evaluateCase(
     };
   } catch (err: unknown) {
     const latencyMs: number = Math.round(performance.now() - start);
-    const errorMsg: string =
-      err instanceof Error ? err.message : String(err);
+    const errorMsg: string = err instanceof Error ? err.message : String(err);
     return {
       id: evalCase.id,
       category: evalCase.category,
@@ -396,9 +400,7 @@ export async function runEvaluation(
   // Aggregate
   const totalCases: number = results.length;
   const meanRecall: number = mean(results.map((r) => r.recall));
-  const meanReciprocalRank: number = mean(
-    results.map((r) => r.reciprocalRank),
-  );
+  const meanReciprocalRank: number = mean(results.map((r) => r.reciprocalRank));
   const meanFaithfulness: number = mean(results.map((r) => r.faithfulness));
   const meanCompleteness: number = mean(results.map((r) => r.completeness));
 

@@ -86,7 +86,11 @@ chatRoutes.post('/', async (c) => {
 
   const conversation = await withConn(async (conn) => {
     const consultant = await getConsultantById(conn, consultantId);
-    if (consultant == null || !consultant.enabled || consultant.archivedAt != null) {
+    if (
+      consultant == null ||
+      !consultant.enabled ||
+      consultant.archivedAt != null
+    ) {
       return null;
     }
     return createConversation(conn, { userId, consultantId });
@@ -173,7 +177,8 @@ chatRoutes.post('/:id/messages', async (c) => {
     (config.get('queryRewriteSystemPrompt') as string) || '';
 
   const client = new BedrockClient(region);
-  const embeddingCtx: EmbeddingContext | undefined = getEmbeddingContext(region);
+  const embeddingCtx: EmbeddingContext | undefined =
+    getEmbeddingContext(region);
 
   return streamSSE(c, async (stream) => {
     const startMs: number = performance.now();
@@ -202,13 +207,21 @@ chatRoutes.post('/:id/messages', async (c) => {
 
         // 2. Load history + consultant + team
         const history: Message[] = await listMessages(conn, conversationId);
-        const consultant = await getConsultantById(conn, conversation.consultantId);
+        const consultant = await getConsultantById(
+          conn,
+          conversation.consultantId,
+        );
         if (consultant == null) {
           await emit({ type: 'error', message: 'Consultant not found' });
           return;
         }
-        const allConsultants = await listConsultants(conn, { enabledOnly: true });
-        const teamPreamble: string = buildTeamPreamble(consultant.name, allConsultants);
+        const allConsultants = await listConsultants(conn, {
+          enabledOnly: true,
+        });
+        const teamPreamble: string = buildTeamPreamble(
+          consultant.name,
+          allConsultants,
+        );
 
         // 3. Rewrite
         await emit({
@@ -260,7 +273,10 @@ chatRoutes.post('/:id/messages', async (c) => {
         const genUsage = result.value;
 
         // 6. Persist assistant message
-        const assistantSeq: number = await getNextSequence(conn, conversationId);
+        const assistantSeq: number = await getNextSequence(
+          conn,
+          conversationId,
+        );
         await createMessage(conn, {
           conversationId,
           role: 'assistant',

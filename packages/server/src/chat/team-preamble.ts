@@ -5,7 +5,9 @@ export function buildTeamPreamble(
   allConsultants: Consultant[],
 ): string {
   const memberList: string = allConsultants
-    .map((c: Consultant) => `- **${c.name}** — ${c.description ?? 'Team member'}`)
+    .map(
+      (c: Consultant) => `- **${c.name}** — ${c.description ?? 'Team member'}`,
+    )
     .join('\n');
 
   return `You are **${currentName}**, a member of the Daily Orbit analyst team. Your team includes:

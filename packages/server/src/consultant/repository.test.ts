@@ -42,17 +42,19 @@ describe('consultant repository', () => {
     it('creates and returns a consultant with all fields', async () => {
       const result = await createConsultant(conn, SEED_DATA);
 
-      expect(result).toEqual(expect.objectContaining({
-        name: 'General Analyst',
-        slug: 'general-analyst',
-        description: 'Balanced FCC filing Q&A',
-        systemPrompt: 'You are a general analyst.',
-        icon: '🔍',
-        color: '#3B82F6',
-        sortOrder: 0,
-        enabled: true,
-        archivedAt: null,
-      }));
+      expect(result).toEqual(
+        expect.objectContaining({
+          name: 'General Analyst',
+          slug: 'general-analyst',
+          description: 'Balanced FCC filing Q&A',
+          systemPrompt: 'You are a general analyst.',
+          icon: '🔍',
+          color: '#3B82F6',
+          sortOrder: 0,
+          enabled: true,
+          archivedAt: null,
+        }),
+      );
       expect(result.id).toBeGreaterThan(0);
       expect(result.createdAt).toBeTruthy();
     });
@@ -82,7 +84,12 @@ describe('consultant repository', () => {
   describe('listConsultants', () => {
     it('returns only enabled, non-archived by default', async () => {
       await createConsultant(conn, SEED_DATA);
-      await createConsultant(conn, { ...SEED_DATA, name: 'Disabled', slug: 'disabled', enabled: false });
+      await createConsultant(conn, {
+        ...SEED_DATA,
+        name: 'Disabled',
+        slug: 'disabled',
+        enabled: false,
+      });
       const result = await listConsultants(conn, { enabledOnly: true });
       expect(result).toHaveLength(1);
       expect(result[0]!.slug).toEqual('general-analyst');
@@ -90,7 +97,12 @@ describe('consultant repository', () => {
 
     it('returns all when enabledOnly is false', async () => {
       await createConsultant(conn, SEED_DATA);
-      await createConsultant(conn, { ...SEED_DATA, name: 'Disabled', slug: 'disabled', enabled: false });
+      await createConsultant(conn, {
+        ...SEED_DATA,
+        name: 'Disabled',
+        slug: 'disabled',
+        enabled: false,
+      });
       const result = await listConsultants(conn, { enabledOnly: false });
       expect(result).toHaveLength(2);
     });
@@ -99,7 +111,9 @@ describe('consultant repository', () => {
   describe('updateConsultant', () => {
     it('updates specified fields only', async () => {
       const created = await createConsultant(conn, SEED_DATA);
-      const updated = await updateConsultant(conn, created.id, { name: 'Updated Name' });
+      const updated = await updateConsultant(conn, created.id, {
+        name: 'Updated Name',
+      });
       expect(updated!.name).toEqual('Updated Name');
       expect(updated!.slug).toEqual('general-analyst'); // unchanged
     });

@@ -24,7 +24,10 @@ import { userSettingsRoutes } from './user-settings/routes.ts';
 import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
 import { queryRoutes } from './query/routes.ts';
-import { consultantRoutes, consultantAdminRoutes } from './consultant/routes.ts';
+import {
+  consultantRoutes,
+  consultantAdminRoutes,
+} from './consultant/routes.ts';
 import { chatRoutes } from './chat/routes.ts';
 
 const app = new Hono();

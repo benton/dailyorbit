@@ -16,9 +16,8 @@ const seedCommand = defineCommand({
     const conn: DuckDBConnection = await DuckDBConnection.create(db);
 
     try {
-      const { ensureConsultantTables } = await import(
-        '../../consultant/schema.ts'
-      );
+      const { ensureConsultantTables } =
+        await import('../../consultant/schema.ts');
       await ensureConsultantTables(conn);
 
       const { seedConsultants } = await import('../../consultant/seed.ts');

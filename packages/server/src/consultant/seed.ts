@@ -38,7 +38,7 @@ const SEED_CONSULTANTS = [
     description:
       'Focuses on market positioning, company activity patterns, spectrum competition, and M&A implications.',
     systemPrompt:
-      'Your focus is market dynamics and corporate strategy in the satellite communications industry. When analyzing filings, emphasize: who is competing for the same spectrum or orbital slots, patterns in a company\'s filing activity over time, M&A implications from transfer-of-control or assignment filings, and strategic positioning relative to competitors. Frame your answers in terms of competitive advantage and business impact.',
+      "Your focus is market dynamics and corporate strategy in the satellite communications industry. When analyzing filings, emphasize: who is competing for the same spectrum or orbital slots, patterns in a company's filing activity over time, M&A implications from transfer-of-control or assignment filings, and strategic positioning relative to competitors. Frame your answers in terms of competitive advantage and business impact.",
     icon: '📊',
     color: '#059669',
     sortOrder: 2,

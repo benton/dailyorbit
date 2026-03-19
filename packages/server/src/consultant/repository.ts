@@ -12,7 +12,8 @@ function rowToConsultant(r: Record<string, unknown>): Consultant {
     systemPrompt: String(r.system_prompt),
     modelId: r.model_id != null ? String(r.model_id) : null,
     temperature: r.temperature != null ? Number(r.temperature) : null,
-    maxResponseTokens: r.max_response_tokens != null ? Number(r.max_response_tokens) : null,
+    maxResponseTokens:
+      r.max_response_tokens != null ? Number(r.max_response_tokens) : null,
     icon: r.icon != null ? String(r.icon) : null,
     color: r.color != null ? String(r.color) : null,
     sortOrder: Number(r.sort_order),

@@ -75,7 +75,10 @@ describe('chat repository', () => {
 
   describe('updateConversationTitle', () => {
     it('updates the title', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
       const updated = await updateConversationTitle(conn, conv.id, 'New Title');
       expect(updated!.title).toEqual('New Title');
     });
@@ -83,7 +86,10 @@ describe('chat repository', () => {
 
   describe('deleteConversation', () => {
     it('deletes conversation and its messages', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
       await createMessage(conn, {
         conversationId: conv.id,
         role: 'user',
@@ -104,7 +110,10 @@ describe('chat repository', () => {
 
   describe('messages', () => {
     it('creates and lists messages in sequence order', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
 
       await createMessage(conn, {
         conversationId: conv.id,
@@ -116,7 +125,15 @@ describe('chat repository', () => {
         conversationId: conv.id,
         role: 'assistant',
         content: 'STA stands for Special Temporary Authority.',
-        sources: [{ type: 'filing', id: 'SAT-STA-123', title: 'Test', snippet: 'test', score: 1.0 }],
+        sources: [
+          {
+            type: 'filing',
+            id: 'SAT-STA-123',
+            title: 'Test',
+            snippet: 'test',
+            score: 1.0,
+          },
+        ],
         inputTokens: 100,
         outputTokens: 50,
         costCents: 0.02,
@@ -136,14 +153,25 @@ describe('chat repository', () => {
 
   describe('getNextSequence', () => {
     it('returns 1 for empty conversation', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
       const seq = await getNextSequence(conn, conv.id);
       expect(seq).toEqual(1);
     });
 
     it('returns max + 1 after messages exist', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
-      await createMessage(conn, { conversationId: conv.id, role: 'user', content: 'Hi', sequence: 1 });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
+      await createMessage(conn, {
+        conversationId: conv.id,
+        role: 'user',
+        content: 'Hi',
+        sequence: 1,
+      });
       const seq = await getNextSequence(conn, conv.id);
       expect(seq).toEqual(2);
     });
@@ -151,7 +179,10 @@ describe('chat repository', () => {
 
   describe('updateConversationTotals', () => {
     it('increments token and cost totals', async () => {
-      const conv = await createConversation(conn, { userId: 'user-1', consultantId });
+      const conv = await createConversation(conn, {
+        userId: 'user-1',
+        consultantId,
+      });
       await updateConversationTotals(conn, conv.id, {
         inputTokens: 100,
         outputTokens: 50,

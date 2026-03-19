@@ -1,6 +1,8 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 
-export async function ensureConsultantTables(conn: DuckDBConnection): Promise<void> {
+export async function ensureConsultantTables(
+  conn: DuckDBConnection,
+): Promise<void> {
   await conn.run(`CREATE SEQUENCE IF NOT EXISTS consultant_id_seq START 1`);
 
   await conn.run(`
