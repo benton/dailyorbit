@@ -53,6 +53,7 @@ const publicPrefixes: string[] = [
   '/api/search',
   '/api/autocomplete',
   '/api/companies',
+  '/api/news',
 ];
 app.use('/api/*', async (c, next) => {
   const path: string = c.req.path;
