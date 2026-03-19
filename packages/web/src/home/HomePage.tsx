@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { ChevronDown, ChevronRight, Search } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { cn } from '../lib/cn.ts';
@@ -125,7 +125,7 @@ const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
   { accessorKey: 'status_code', header: 'Status', size: 100 },
 ];
 
-const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
+const baseNewsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
   {
     accessorKey: 'publishedAt',
     cell: ({ getValue }) => {
@@ -147,13 +147,14 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
     header: 'Source',
     size: 120,
   },
-  {
-    accessorKey: 'companyName',
-    cell: ({ getValue }) => (getValue() as string | null) ?? '',
-    header: 'Company',
-    size: 150,
-  },
 ];
+
+const companyNewsColumn: ColumnDef<NewsListItem, unknown> = {
+  accessorKey: 'companyName',
+  cell: ({ getValue }) => (getValue() as string | null) ?? '',
+  header: 'Company',
+  size: 150,
+};
 
 // ── Client-side sortable data table (no pagination needed) ──────────
 
@@ -319,6 +320,11 @@ export default function HomePage() {
 
   const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
   const [newsLoading, setNewsLoading] = useState<boolean>(true);
+
+  const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = useMemo(() => {
+    const hasCompany: boolean = newsItems.some((item: NewsListItem) => item.companyName != null);
+    return hasCompany ? [...baseNewsColumns, companyNewsColumn] : baseNewsColumns;
+  }, [newsItems]);
 
   const fetchStats = useCallback(async () => {
     try {
