@@ -13,10 +13,17 @@ type TimelineEvent = {
 
 /** Map from event category (used as colorDomain key) to hex color. */
 const CATEGORY_COLORS: Record<string, string> = {
+  // Filing milestones
+  filed: '#2563eb', // blue-600
+  signed: '#7c3aed', // violet-600
+  granted: '#16a34a', // green-600
+  effective: '#059669', // emerald-600
+  expired: '#dc2626', // red-600
+  last_action: '#b45309', // amber-700
+  // Pleading types
   comment: '#525252', // neutral-600
   decision: '#9333ea', // purple-600
   letter: '#2563eb', // blue-600
-  milestone: '#b45309', // amber-700
   other: '#737373', // neutral-500
   petition: '#d97706', // amber-600
   supplement: '#0d9488', // teal-600
@@ -25,7 +32,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 /** Derive a color category from a timeline event. */
 function eventCategory(e: TimelineEvent): string {
   if (e.source === 'filing_field') {
-    return 'milestone';
+    return CATEGORY_COLORS[e.type] != null ? e.type : 'last_action';
   }
   return CATEGORY_COLORS[e.type] != null ? e.type : 'other';
 }
