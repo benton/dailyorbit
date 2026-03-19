@@ -25,6 +25,7 @@ const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 const OwnershipEventsPage = lazy(() => import('./companies/OwnershipEventsPage.tsx'));
 const NewsSourcesAdmin = lazy(() => import('./admin/NewsSourcesAdmin.tsx'));
+const ConsultantAdmin = lazy(() => import('./admin/ConsultantAdmin.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const QueryPage = lazy(() => import('./query/QueryPage.tsx'));
@@ -206,6 +207,14 @@ export default function App() {
                 </Suspense>
               }
               path="news"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <ConsultantAdmin />
+                </Suspense>
+              }
+              path="consultants"
             />
           </Route>
         </Routes>
