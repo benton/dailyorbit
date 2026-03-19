@@ -4,14 +4,13 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
-import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { APP_TYPE_CODES, SUBSYSTEM_OPTIONS } from '../lib/subsystems.ts';
 import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
-
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -409,9 +408,7 @@ function AutocompleteMultiSelect({
 const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   {
     accessorKey: 'file_number',
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.file_number}</span>
-    ),
+    cell: ({ row }) => <span className="font-mono text-sm">{row.original.file_number}</span>,
     header: 'File Number',
     size: 240,
   },
@@ -1216,9 +1213,7 @@ export default function SearchPage() {
           defaultOrder="desc"
           defaultSort="score"
           fetchData={fetchContent}
-          onRowClick={(row: ContentSearchResult) =>
-            void navigate(filingUrl(row.file_number))
-          }
+          onRowClick={(row: ContentSearchResult) => void navigate(filingUrl(row.file_number))}
           paramPrefix="c_"
         />
       ) : (

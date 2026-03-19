@@ -8,8 +8,8 @@ import {
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
-import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type CompanyAlias = {

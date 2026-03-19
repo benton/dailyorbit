@@ -1,4 +1,11 @@
-import { type MouseEvent, type ReactNode, type ReactPortal, useCallback, useRef, useState } from 'react';
+import {
+  type MouseEvent,
+  type ReactNode,
+  type ReactPortal,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 type SummaryTooltipProps = {
@@ -18,7 +25,11 @@ type TooltipState = {
 const TOOLTIP_CLASSES: string =
   'pointer-events-none fixed z-[9999] max-w-md rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
 
-function computePosition(rect: DOMRect): { left: number; placement: 'above' | 'below'; top: number } {
+function computePosition(rect: DOMRect): {
+  left: number;
+  placement: 'above' | 'below';
+  top: number;
+} {
   const useBelow: boolean = rect.top < 200;
   const tooltipHalfWidth: number = 224; // max-w-md ≈ 448px / 2
   const rawLeft: number = rect.left + rect.width / 2;
@@ -101,9 +112,7 @@ export function SummaryTooltip({ children, summary }: SummaryTooltipProps) {
  *   <TableRow {...getRowTooltipProps(row)}> ... </TableRow>
  *   {tooltipPortal}
  */
-export function useRowTooltip<TData>(
-  rowTooltip?: (row: TData) => string | null,
-): {
+export function useRowTooltip<TData>(rowTooltip?: (row: TData) => string | null): {
   getRowTooltipProps: (row: TData) => {
     onMouseEnter: (e: MouseEvent<HTMLElement>) => void;
     onMouseLeave: () => void;

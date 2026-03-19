@@ -9,8 +9,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { cn } from '../lib/cn.ts';
-import { useRowTooltip } from './SummaryTooltip.tsx';
 import { Button } from './button.tsx';
+import { useRowTooltip } from './SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table.tsx';
 
 /** Matches the server-side PaginatedResponse envelope */
