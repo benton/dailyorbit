@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { cn } from '../lib/cn.ts';
+import { useRowTooltip } from './SummaryTooltip.tsx';
 import { Button } from './button.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table.tsx';
 
@@ -50,6 +51,8 @@ export type DataTableProps<TData> = {
   onRowClick?: (row: TData) => void;
   /** Available page size options */
   pageSizeOptions?: Array<number>;
+  /** Optional function to extract tooltip text from a row (shown on row hover) */
+  rowTooltip?: (row: TData) => string | null;
   /** Optional prefix for URL query params to avoid collisions between multiple tables */
   paramPrefix?: string;
 };
@@ -76,6 +79,7 @@ export function DataTable<TData>({
   onRowClick,
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   paramPrefix = '',
+  rowTooltip,
 }: DataTableProps<TData>) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -198,6 +202,8 @@ export function DataTable<TData>({
     [updateParams],
   );
 
+  const { getRowTooltipProps, tooltipPortal } = useRowTooltip<TData>(rowTooltip);
+
   // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<TData>({
     columnResizeMode,
@@ -301,6 +307,7 @@ export function DataTable<TData>({
                   className={cn(onRowClick && 'cursor-pointer')}
                   key={row.id}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  {...getRowTooltipProps(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
@@ -313,6 +320,7 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
+      {tooltipPortal}
 
       {/* Pagination controls */}
       <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">

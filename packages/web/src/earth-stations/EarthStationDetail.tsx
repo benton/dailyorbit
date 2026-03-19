@@ -2,9 +2,9 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
-import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 // ── Types matching server-side models (camelCase) ────────────────────────────
@@ -100,14 +100,12 @@ const filingColumns: Array<ColumnDef<EarthStationFiling, unknown>> = [
   {
     accessorKey: 'fileNumber',
     cell: ({ row }) => (
-      <SummaryTooltip summary={row.original.summary}>
-        <Link
-          className="text-blue-600 hover:underline dark:text-blue-400"
-          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
-        >
-          {row.original.fileNumber}
-        </Link>
-      </SummaryTooltip>
+      <Link
+        className="text-blue-600 hover:underline dark:text-blue-400"
+        to={filingUrl(row.original.fileNumber)}
+      >
+        {row.original.fileNumber}
+      </Link>
     ),
     header: 'File Number',
     size: 240,
@@ -266,13 +264,14 @@ export default function EarthStationDetail() {
             <h2 className="mb-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
               Associated Filings
             </h2>
-            <DataTable
+            <DataTable<EarthStationFiling>
               columns={columns}
               defaultOrder="desc"
               defaultPageSize={10}
               defaultSort="date_filed"
               fetchData={fetchFilings}
               paramPrefix="f_"
+              rowTooltip={(row: EarthStationFiling) => row.summary}
             />
           </section>
 

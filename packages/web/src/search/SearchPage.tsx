@@ -4,13 +4,14 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
 import { APP_TYPE_CODES, SUBSYSTEM_OPTIONS } from '../lib/subsystems.ts';
 import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
-import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
+
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -409,9 +410,7 @@ const filingColumns: Array<ColumnDef<FilingSearchResult, unknown>> = [
   {
     accessorKey: 'file_number',
     cell: ({ row }) => (
-      <SummaryTooltip summary={row.original.summary}>
-        <span className="font-mono text-sm">{row.original.file_number}</span>
-      </SummaryTooltip>
+      <span className="font-mono text-sm">{row.original.file_number}</span>
     ),
     header: 'File Number',
     size: 240,
@@ -1095,7 +1094,7 @@ export default function SearchPage() {
   // Row click handlers
   const onFilingClick = useCallback(
     (row: FilingSearchResult) => {
-      void navigate(`/filings/${encodeURIComponent(row.file_number)}`);
+      void navigate(filingUrl(row.file_number));
     },
     [navigate],
   );
@@ -1218,7 +1217,7 @@ export default function SearchPage() {
           defaultSort="score"
           fetchData={fetchContent}
           onRowClick={(row: ContentSearchResult) =>
-            void navigate(`/filings/${encodeURIComponent(row.file_number)}`)
+            void navigate(filingUrl(row.file_number))
           }
           paramPrefix="c_"
         />
@@ -1232,6 +1231,7 @@ export default function SearchPage() {
               fetchData={fetchFilings}
               onRowClick={onFilingClick}
               paramPrefix="f_"
+              rowTooltip={(row: FilingSearchResult) => row.summary}
             />
           )}
           {activeTab === 'satellites' && (

@@ -6,13 +6,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
-import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
+import { useRowTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type SubsystemCount = { count: number; subsystem_code: string };
@@ -86,9 +87,7 @@ const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
   {
     accessorKey: 'file_number',
     cell: ({ row }) => (
-      <SummaryTooltip summary={row.original.summary}>
-        <span className="font-mono">{row.original.file_number}</span>
-      </SummaryTooltip>
+      <span className="font-mono">{row.original.file_number}</span>
     ),
     header: 'File Number',
     size: 220,
@@ -114,6 +113,7 @@ type SimpleDataTableProps<TData> = {
   defaultOrder?: 'asc' | 'desc';
   defaultSort?: string;
   onRowClick?: (row: TData) => void;
+  rowTooltip?: (row: TData) => string | null;
 };
 
 function SimpleDataTable<TData>({
@@ -122,10 +122,12 @@ function SimpleDataTable<TData>({
   defaultOrder = 'asc',
   defaultSort,
   onRowClick,
+  rowTooltip,
 }: SimpleDataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort != null ? [{ desc: defaultOrder === 'desc', id: defaultSort }] : [],
   );
+  const { getRowTooltipProps, tooltipPortal } = useRowTooltip<TData>(rowTooltip);
 
   // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<TData>({
@@ -189,6 +191,7 @@ function SimpleDataTable<TData>({
                 className={cn(onRowClick && 'cursor-pointer')}
                 key={row.id}
                 onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                {...getRowTooltipProps(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
@@ -200,6 +203,7 @@ function SimpleDataTable<TData>({
           )}
         </TableBody>
       </Table>
+      {tooltipPortal}
     </div>
   );
 }
@@ -447,7 +451,7 @@ export default function HomePage() {
   // Row click handler for recent filings
   const onRecentFilingClick = useCallback(
     (row: RecentFiling) => {
-      void navigate(`/filings/${encodeURIComponent(row.file_number)}`);
+      void navigate(filingUrl(row.file_number));
     },
     [navigate],
   );
@@ -480,9 +484,18 @@ export default function HomePage() {
         {/* Total Filings */}
         <div className={cardClass}>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Filings</p>
-          <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {stats.filing_count.toLocaleString()}
-          </p>
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+              {stats.filing_count.toLocaleString()}
+            </p>
+            <Link
+              className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              to="/search"
+            >
+              <Search className="h-3.5 w-3.5" />
+              Search
+            </Link>
+          </div>
           <div className="mt-2 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
             <span>{stats.comment_count.toLocaleString()} comments</span>
             <span>{stats.attachment_count.toLocaleString()} attachments</span>
@@ -517,7 +530,7 @@ export default function HomePage() {
                 <li className="flex items-center justify-between text-xs" key={f.file_number}>
                   <button
                     className="truncate font-mono text-blue-600 hover:underline dark:text-blue-400"
-                    onClick={() => navigate(`/filings/${encodeURIComponent(f.file_number)}`)}
+                    onClick={() => navigate(filingUrl(f.file_number))}
                     type="button"
                   >
                     {f.file_number}
@@ -553,6 +566,7 @@ export default function HomePage() {
               data={recentFilings}
               defaultOrder="asc"
               defaultSort="file_number"
+              rowTooltip={(row: RecentFiling) => row.summary}
               onRowClick={onRecentFilingClick}
             />
           )}

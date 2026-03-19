@@ -2,9 +2,9 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { Badge } from '../ui/badge.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
-import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 
 // ── Types mirroring server-side models ──────────────────────────────
 
@@ -49,14 +49,12 @@ const filingColumns: Array<ColumnDef<SatelliteFiling, unknown>> = [
   {
     accessorKey: 'fileNumber',
     cell: ({ row }) => (
-      <SummaryTooltip summary={row.original.summary}>
-        <Link
-          className="text-blue-600 hover:underline dark:text-blue-400"
-          to={`/filings/${encodeURIComponent(row.original.fileNumber)}`}
-        >
-          {row.original.fileNumber}
-        </Link>
-      </SummaryTooltip>
+      <Link
+        className="text-blue-600 hover:underline dark:text-blue-400"
+        to={filingUrl(row.original.fileNumber)}
+      >
+        {row.original.fileNumber}
+      </Link>
     ),
     header: 'File Number',
     size: 240,
@@ -205,6 +203,7 @@ export default function SatelliteDetail() {
               defaultOrder="desc"
               defaultSort="date_filed"
               fetchData={fetchFilings}
+              rowTooltip={(row: SatelliteFiling) => row.summary}
             />
           </section>
 
