@@ -47,6 +47,43 @@ describe('retrieveContext', () => {
     await conn.run(
       `CREATE TABLE company (id UUID PRIMARY KEY, name VARCHAR, parent_company_id UUID)`,
     );
+    await conn.run(`
+      CREATE TABLE news_source (
+        id INTEGER PRIMARY KEY,
+        name VARCHAR NOT NULL,
+        feed_url VARCHAR NOT NULL UNIQUE,
+        category VARCHAR NOT NULL DEFAULT 'industry',
+        enabled BOOLEAN NOT NULL DEFAULT TRUE,
+        fetch_interval_minutes INTEGER NOT NULL DEFAULT 60,
+        last_fetched_at TIMESTAMP,
+        last_fetch_status VARCHAR,
+        last_fetch_error VARCHAR,
+        created_at TIMESTAMP DEFAULT current_timestamp,
+        updated_at TIMESTAMP DEFAULT current_timestamp
+      )
+    `);
+    await conn.run(`
+      CREATE TABLE news_item (
+        id INTEGER PRIMARY KEY,
+        news_source_id INTEGER NOT NULL,
+        source_url VARCHAR NOT NULL UNIQUE,
+        title VARCHAR NOT NULL,
+        author VARCHAR,
+        published_at TIMESTAMP,
+        full_text VARCHAR,
+        text_length INTEGER,
+        text_checksum VARCHAR,
+        summary VARCHAR,
+        summarized_by VARCHAR,
+        summarized_at TIMESTAMP,
+        extract_status VARCHAR NOT NULL DEFAULT 'pending',
+        company_id INTEGER,
+        tags VARCHAR[],
+        indexed_by VARCHAR,
+        indexed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT current_timestamp
+      )
+    `);
 
     // Seed test data
     await conn.run(`INSERT INTO filing VALUES (

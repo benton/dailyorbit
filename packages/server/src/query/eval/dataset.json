@@ -1,0 +1,352 @@
+[
+  {
+    "id": "factual-001",
+    "category": "single-filing-lookup",
+    "question": "What is SAT-LOA-20260316-00129 about?",
+    "expected_sources": ["SAT-LOA-20260316-00129"],
+    "notes": "Direct file number lookup — should retrieve Intelsat Astra 1L filing"
+  },
+  {
+    "id": "factual-002",
+    "category": "single-filing-lookup",
+    "question": "Tell me about the ICEYE X81 satellite application",
+    "expected_sources": ["SAT-LOA-20260128-00047"],
+    "notes": "Should match ICEYE X81 filing by description"
+  },
+  {
+    "id": "factual-003",
+    "category": "single-filing-lookup",
+    "question": "What is the Impulse Space Part 25 filing?",
+    "expected_sources": ["SAT-LOA-20251230-00409"],
+    "notes": "Should match Impulse-4 Part 25 application"
+  },
+  {
+    "id": "factual-004",
+    "category": "single-filing-lookup",
+    "question": "Find the GNOMES-10 and GNOMES-11 FCC application",
+    "expected_sources": ["SAT-LOA-20260219-00090"],
+    "notes": "Should match Space Sciences & Engineering filing by satellite name"
+  },
+  {
+    "id": "factual-005",
+    "category": "single-filing-lookup",
+    "question": "What is the CesiumAstro Element-1 smallsat filing?",
+    "expected_sources": ["SAT-LOA-20250701-00127"],
+    "notes": "Should match CesiumAstro Part 25 Smallsat application"
+  },
+  {
+    "id": "factual-006",
+    "category": "single-filing-lookup",
+    "question": "Describe the SES Americom renewal application filed in March 2026",
+    "expected_sources": ["SES-RWL-20260317-00992"],
+    "notes": "Should match by company name and date"
+  },
+  {
+    "id": "factual-007",
+    "category": "single-filing-lookup",
+    "question": "What is the Scripps Broadcasting STA about?",
+    "expected_sources": ["SES-STA-20260318-00999"],
+    "notes": "Should find the Scripps Broadcasting Holdings LLC STA filing"
+  },
+  {
+    "id": "cross-001",
+    "category": "cross-filing",
+    "question": "What satellite launch and operate applications has Intelsat filed recently?",
+    "expected_sources": ["SAT-LOA-*"],
+    "notes": "Should retrieve multiple Intelsat SAT-LOA filings"
+  },
+  {
+    "id": "cross-002",
+    "category": "cross-filing",
+    "question": "Which companies have filed for earth station licenses recently?",
+    "expected_sources": ["SES-LIC-*"],
+    "notes": "Should retrieve multiple SES-LIC filings across different companies"
+  },
+  {
+    "id": "cross-003",
+    "category": "cross-filing",
+    "question": "What special temporary authority requests have been filed for satellite operations?",
+    "expected_sources": ["SAT-STA-*"],
+    "notes": "Should retrieve multiple SAT-STA filings"
+  },
+  {
+    "id": "cross-004",
+    "category": "cross-filing",
+    "question": "Show me recent transfer of control applications in the satellite subsystem",
+    "expected_sources": ["SAT-T/C-*", "SAT-ASG-*"],
+    "notes": "Should retrieve SAT transfer/assignment filings"
+  },
+  {
+    "id": "cross-005",
+    "category": "cross-filing",
+    "question": "What modification requests have been submitted for earth stations?",
+    "expected_sources": ["SES-MOD-*"],
+    "notes": "Should find SES-MOD filings"
+  },
+  {
+    "id": "temporal-001",
+    "category": "temporal",
+    "question": "What satellite applications were filed in the first quarter of 2026?",
+    "expected_sources": ["SAT-*-2026*"],
+    "notes": "Should apply date filter to retrieve 2026 Q1 SAT filings"
+  },
+  {
+    "id": "temporal-002",
+    "category": "temporal",
+    "question": "What new filings appeared in March 2026?",
+    "expected_sources": ["*-202603*"],
+    "notes": "Should retrieve filings with March 2026 dates"
+  },
+  {
+    "id": "temporal-003",
+    "category": "temporal",
+    "question": "Have there been any recent ICEYE filings?",
+    "expected_sources": ["SAT-*-*ICEYE*"],
+    "notes": "Should find ICEYE filings by company name, most recent first"
+  },
+  {
+    "id": "temporal-004",
+    "category": "temporal",
+    "question": "What happened with Intelsat applications in early 2026?",
+    "expected_sources": ["SAT-*-2026*"],
+    "notes": "Should retrieve Intelsat filings from January-March 2026"
+  },
+  {
+    "id": "temporal-005",
+    "category": "temporal",
+    "question": "What satellite STAs were filed this month?",
+    "expected_sources": ["SAT-STA-202603*"],
+    "notes": "Should understand 'this month' as March 2026 and filter accordingly"
+  },
+  {
+    "id": "company-001",
+    "category": "company-centric",
+    "question": "What is SpaceX's filing activity with the FCC?",
+    "expected_sources": ["*SpaceX*"],
+    "notes": "Should retrieve SpaceX-attributed filings"
+  },
+  {
+    "id": "company-002",
+    "category": "company-centric",
+    "question": "Tell me about Viasat's FCC applications",
+    "expected_sources": ["*Viasat*"],
+    "notes": "Should retrieve Viasat filings — company has ~1900 filings"
+  },
+  {
+    "id": "company-003",
+    "category": "company-centric",
+    "question": "What has SES filed with the FCC?",
+    "expected_sources": ["*SES*"],
+    "notes": "Should retrieve SES S.A. and SES Americom filings"
+  },
+  {
+    "id": "company-004",
+    "category": "company-centric",
+    "question": "How active is EchoStar at the FCC?",
+    "expected_sources": ["*EchoStar*"],
+    "notes": "Should retrieve EchoStar-attributed filings"
+  },
+  {
+    "id": "company-005",
+    "category": "company-centric",
+    "question": "What has Comcast filed in the satellite and earth station subsystems?",
+    "expected_sources": ["*Comcast*"],
+    "notes": "Should retrieve Comcast filings across SAT and SES subsystems"
+  },
+  {
+    "id": "company-006",
+    "category": "company-centric",
+    "question": "Show me Charter Communications FCC filings",
+    "expected_sources": ["*Charter*"],
+    "notes": "Should find Charter Communications filings"
+  },
+  {
+    "id": "attachment-001",
+    "category": "attachment-content",
+    "question": "Which filings discuss Ka-band frequency coordination?",
+    "expected_sources": ["SAT-*"],
+    "notes": "Should match attachment text about Ka-band frequency coordination"
+  },
+  {
+    "id": "attachment-002",
+    "category": "attachment-content",
+    "question": "Find filings with technical narratives about interference analysis",
+    "expected_sources": [],
+    "notes": "Should match attachment full_text containing interference analysis"
+  },
+  {
+    "id": "attachment-003",
+    "category": "attachment-content",
+    "question": "Which applications mention orbit debris mitigation plans?",
+    "expected_sources": [],
+    "notes": "Should match attachment content discussing debris mitigation"
+  },
+  {
+    "id": "attachment-004",
+    "category": "attachment-content",
+    "question": "Find filings with power flux density calculations",
+    "expected_sources": [],
+    "notes": "Should match attachment text about PFD analysis"
+  },
+  {
+    "id": "attachment-005",
+    "category": "attachment-content",
+    "question": "What applications discuss non-geostationary orbit constellations?",
+    "expected_sources": [],
+    "notes": "Should match NGSO-related content in attachments"
+  },
+  {
+    "id": "news-001",
+    "category": "news-related",
+    "question": "What's the latest news about Rocket Lab?",
+    "expected_sources": ["news:*Rocket Lab*"],
+    "notes": "Should retrieve news articles mentioning Rocket Lab"
+  },
+  {
+    "id": "news-002",
+    "category": "news-related",
+    "question": "Has there been any news about Ligado and interference concerns?",
+    "expected_sources": ["news:*Ligado*"],
+    "notes": "Should find the Ligado/SkyTerra FCC interference article"
+  },
+  {
+    "id": "news-003",
+    "category": "news-related",
+    "question": "What satellite industry news is there about military space?",
+    "expected_sources": ["news:*Space Force*", "news:*Space Command*"],
+    "notes": "Should retrieve defense/military space articles"
+  },
+  {
+    "id": "news-004",
+    "category": "news-related",
+    "question": "Tell me about recent satellite connectivity news",
+    "expected_sources": ["news:*satcom*", "news:*connectivity*"],
+    "notes": "Should find connectivity-related news articles"
+  },
+  {
+    "id": "news-005",
+    "category": "news-related",
+    "question": "What's happening with earth observation satellite companies?",
+    "expected_sources": ["news:*Satellogic*", "news:*ICEYE*"],
+    "notes": "Should find EO/SAR constellation news"
+  },
+  {
+    "id": "news-006",
+    "category": "news-related",
+    "question": "Any news about new satellite constellations being planned?",
+    "expected_sources": ["news:*constellation*"],
+    "notes": "Should find articles about new constellation plans"
+  },
+  {
+    "id": "news-007",
+    "category": "news-related",
+    "question": "What is SATShow Week 2026?",
+    "expected_sources": ["news:*SATShow*"],
+    "notes": "Should find the SATShow Week 2026 article"
+  },
+  {
+    "id": "news-008",
+    "category": "news-related",
+    "question": "Tell me about the TransAstra asteroid mining plans",
+    "expected_sources": ["news:*TransAstra*"],
+    "notes": "Should find the TransAstra asteroid article from SpaceNews"
+  },
+  {
+    "id": "decline-001",
+    "category": "should-decline",
+    "question": "What is the weather forecast for Washington DC?",
+    "expected_sources": [],
+    "notes": "Off-topic — should return insufficient data"
+  },
+  {
+    "id": "decline-002",
+    "category": "should-decline",
+    "question": "Who won the Super Bowl this year?",
+    "expected_sources": [],
+    "notes": "Off-topic sports question — should decline"
+  },
+  {
+    "id": "decline-003",
+    "category": "should-decline",
+    "question": "Write me a poem about satellites",
+    "expected_sources": [],
+    "notes": "Creative writing request — not an analytical question"
+  },
+  {
+    "id": "decline-004",
+    "category": "should-decline",
+    "question": "What is the capital of France?",
+    "expected_sources": [],
+    "notes": "General knowledge — no relevant sources"
+  },
+  {
+    "id": "decline-005",
+    "category": "should-decline",
+    "question": "How do I invest in satellite stocks?",
+    "expected_sources": [],
+    "notes": "Financial advice — outside corpus scope"
+  },
+  {
+    "id": "mixed-001",
+    "category": "cross-filing",
+    "question": "Compare recent SpaceX and Intelsat satellite filings",
+    "expected_sources": ["SAT-*SpaceX*", "SAT-*Intelsat*"],
+    "notes": "Should retrieve filings from both companies for comparison"
+  },
+  {
+    "id": "mixed-002",
+    "category": "cross-filing",
+    "question": "What earth station and satellite applications mention Ka-band?",
+    "expected_sources": ["SES-*", "SAT-*"],
+    "notes": "Should search across both subsystems for Ka-band references"
+  },
+  {
+    "id": "mixed-003",
+    "category": "news-related",
+    "question": "What FCC filings and news are there about Ligado?",
+    "expected_sources": ["*Ligado*", "news:*Ligado*"],
+    "notes": "Should retrieve both filings and news about Ligado"
+  },
+  {
+    "id": "mixed-004",
+    "category": "company-centric",
+    "question": "What is Intelsat doing in terms of both new applications and satellite operations?",
+    "expected_sources": ["SAT-LOA-*Intelsat*", "SAT-STA-*Intelsat*"],
+    "notes": "Should find both LOA and STA filings for Intelsat"
+  },
+  {
+    "id": "factual-008",
+    "category": "single-filing-lookup",
+    "question": "SAT-STA-20260312-00122",
+    "expected_sources": ["SAT-STA-20260312-00122"],
+    "notes": "Bare file number as query — should find the ICEYE STA filing directly"
+  },
+  {
+    "id": "factual-009",
+    "category": "single-filing-lookup",
+    "question": "What is the DISH Satellite Services STA application from August 2019?",
+    "expected_sources": ["SES-STA-20190812-01095"],
+    "notes": "Should find by company name + date + app type"
+  },
+  {
+    "id": "temporal-006",
+    "category": "temporal",
+    "question": "What FCC filings were submitted in the last week of December 2025?",
+    "expected_sources": ["SAT-LOA-20251230-00409"],
+    "notes": "Should find the Impulse Space filing from Dec 30, 2025"
+  },
+  {
+    "id": "attachment-006",
+    "category": "attachment-content",
+    "question": "Which satellite applications include a discussion of spectrum sharing?",
+    "expected_sources": [],
+    "notes": "Should match attachment text about spectrum sharing between operators"
+  },
+  {
+    "id": "news-009",
+    "category": "news-related",
+    "question": "What's happening in cislunar space policy?",
+    "expected_sources": ["news:*cislunar*"],
+    "notes": "Should find the Space Force Cislunar Strategy article"
+  }
+]
