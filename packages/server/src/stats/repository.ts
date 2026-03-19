@@ -220,7 +220,7 @@ export async function getRecentFilingVolumeByCompany(
      FROM filing f
      LEFT JOIN company c ON c.id = f.company_id
      WHERE f.date_filed IS NOT NULL
-       AND f.date_filed >= date_trunc('month', CURRENT_DATE) - INTERVAL '2 months'
+       AND f.date_filed >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
        AND f.date_filed <= CURRENT_DATE
      GROUP BY 1, 2
      ORDER BY 1, count DESC`,

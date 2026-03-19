@@ -520,10 +520,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Last 3 Months Filing Volume by Company */}
+      {/* Last 6 Months Filing Volume by Company */}
       <div className={cardClass}>
         <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Last 3 Months Filing Volume by Company
+          Last 6 Months Filing Volume by Company
         </p>
         <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
           Monthly filing counts by company over the last 3 months.
