@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
 import { getFilingStatus } from '../lib/filing-status.ts';
@@ -236,6 +236,37 @@ export default function FilingDetailPage() {
   const subsystem = getSubsystem(filing.subsystemCode);
   const hasTransferInfo: boolean = filing.transferorName != null || filing.transfereeName != null;
 
+  const [attSort, setAttSort] = useState<{
+    col: 'attachmentName' | 'description' | 'fileSizeBytes';
+    dir: 'asc' | 'desc';
+  }>({ col: 'attachmentName', dir: 'asc' });
+
+  const sortedAttachments = useMemo(() => {
+    const sorted: Array<FilingAttachment> = [...filing.attachments];
+    sorted.sort((a: FilingAttachment, b: FilingAttachment) => {
+      const aVal = a[attSort.col];
+      const bVal = b[attSort.col];
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      const cmp: number =
+        typeof aVal === 'string'
+          ? aVal.localeCompare(bVal as string)
+          : (aVal as number) - (bVal as number);
+      return attSort.dir === 'asc' ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filing.attachments, attSort]);
+
+  const toggleAttSort = (col: 'attachmentName' | 'description' | 'fileSizeBytes'): void => {
+    setAttSort((prev) =>
+      prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' },
+    );
+  };
+
+  const sortIndicator = (col: string): string =>
+    attSort.col === col ? (attSort.dir === 'asc' ? ' \u25B2' : ' \u25BC') : '';
+
   return (
     <div className="space-y-6">
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -408,19 +439,28 @@ export default function FilingDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                        Name
+                      <th
+                        className="cursor-pointer select-none px-4 py-2 text-left font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        onClick={() => toggleAttSort('attachmentName')}
+                      >
+                        Name{sortIndicator('attachmentName')}
                       </th>
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
-                        Description
+                      <th
+                        className="cursor-pointer select-none px-4 py-2 text-left font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        onClick={() => toggleAttSort('description')}
+                      >
+                        Description{sortIndicator('description')}
                       </th>
-                      <th className="px-4 py-2 text-right font-medium text-neutral-500 dark:text-neutral-400">
-                        Size
+                      <th
+                        className="cursor-pointer select-none px-4 py-2 text-right font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        onClick={() => toggleAttSort('fileSizeBytes')}
+                      >
+                        Size{sortIndicator('fileSizeBytes')}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filing.attachments.map((att: FilingAttachment) => (
+                    {sortedAttachments.map((att: FilingAttachment) => (
                       <tr
                         className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
                         key={att.attachmentKey}
