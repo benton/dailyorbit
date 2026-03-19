@@ -10,8 +10,8 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
-import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
 import { useRowTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
@@ -70,23 +70,23 @@ const COMPANY_COLORS: Array<string> = [
 ];
 
 type NewsListItem = {
-  id: number;
-  title: string;
   author: string | null;
-  publishedAt: string | null;
-  summary: string | null;
   extractStatus: string;
+  id: number;
   newsSourceId: number;
+  publishedAt: string | null;
   sourceUrl: string;
-  tags: string[];
+  summary: string | null;
+  tags: Array<string>;
+  title: string;
 };
 
 type PaginatedResponse<T> = {
-  data: T[];
+  data: Array<T>;
   page: number;
   pageSize: number;
-  totalRows: number;
   totalPages: number;
+  totalRows: number;
 };
 
 type ActiveFiling = {
@@ -106,9 +106,7 @@ type TopLineStats = {
 const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
   {
     accessorKey: 'file_number',
-    cell: ({ row }) => (
-      <span className="font-mono">{row.original.file_number}</span>
-    ),
+    cell: ({ row }) => <span className="font-mono">{row.original.file_number}</span>,
     header: 'File Number',
     size: 220,
   },
@@ -137,11 +135,9 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
   },
   {
     accessorKey: 'title',
+    cell: ({ getValue }) => <span className="line-clamp-1">{getValue() as string}</span>,
     header: 'Title',
     size: 400,
-    cell: ({ getValue }) => (
-      <span className="line-clamp-1">{getValue() as string}</span>
-    ),
   },
   {
     accessorKey: 'author',
@@ -313,7 +309,7 @@ export default function HomePage() {
 
   const [topLine, setTopLine] = useState<TopLineStats | null>(null);
 
-  const [newsItems, setNewsItems] = useState<NewsListItem[]>([]);
+  const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
   const [newsLoading, setNewsLoading] = useState<boolean>(true);
 
   const fetchStats = useCallback(async () => {
@@ -370,17 +366,21 @@ export default function HomePage() {
   // Recent news
   useEffect(() => {
     let cancelled: boolean = false;
-    apiFetch<PaginatedResponse<NewsListItem>>(
-      '/api/news?pageSize=10&sort=published_at&order=desc',
-    )
+    apiFetch<PaginatedResponse<NewsListItem>>('/api/news?pageSize=10&sort=published_at&order=desc')
       .then((data: PaginatedResponse<NewsListItem>) => {
-        if (!cancelled) setNewsItems(data.data);
+        if (!cancelled) {
+          setNewsItems(data.data);
+        }
       })
       .catch(() => {})
       .finally(() => {
-        if (!cancelled) setNewsLoading(false);
+        if (!cancelled) {
+          setNewsLoading(false);
+        }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Company volume chart (last 3 months)
@@ -631,8 +631,8 @@ export default function HomePage() {
               data={recentFilings}
               defaultOrder="asc"
               defaultSort="file_number"
-              rowTooltip={(row: RecentFiling) => row.summary}
               onRowClick={onRecentFilingClick}
+              rowTooltip={(row: RecentFiling) => row.summary}
             />
           )}
         </div>
@@ -649,10 +649,7 @@ export default function HomePage() {
               Latest satellite industry news from RSS feeds.
             </p>
           </div>
-          <Link
-            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-            to="/news"
-          >
+          <Link className="text-xs text-blue-600 hover:underline dark:text-blue-400" to="/news">
             View all →
           </Link>
         </div>

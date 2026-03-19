@@ -5,13 +5,14 @@ import { apiFetch } from '../lib/api.ts';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 
 type NewsListItem = {
-  id: number;
-  title: string;
   author: string | null;
-  publishedAt: string | null;
   extractStatus: string;
+  id: number;
   newsSourceId: number;
+  publishedAt: string | null;
+  sourceName: string | null;
   sourceUrl: string;
+  title: string;
 };
 
 const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
@@ -26,11 +27,15 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
   },
   {
     accessorKey: 'title',
+    cell: ({ getValue }) => <span className="line-clamp-1">{getValue() as string}</span>,
     header: 'Title',
     size: 450,
-    cell: ({ getValue }) => (
-      <span className="line-clamp-1">{getValue() as string}</span>
-    ),
+  },
+  {
+    accessorKey: 'sourceName',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
+    header: 'Source',
+    size: 130,
   },
   {
     accessorKey: 'author',
@@ -54,11 +59,13 @@ export default function NewsPage() {
         `page=${String(params.page)}`,
         `pageSize=${String(params.pageSize)}`,
       ];
-      if (params.sort != null) parts.push(`sort=${params.sort}`);
-      if (params.order != null) parts.push(`order=${params.order}`);
-      return apiFetch<PaginatedResponse<NewsListItem>>(
-        `/api/news?${parts.join('&')}`,
-      );
+      if (params.sort != null) {
+        parts.push(`sort=${params.sort}`);
+      }
+      if (params.order != null) {
+        parts.push(`order=${params.order}`);
+      }
+      return apiFetch<PaginatedResponse<NewsListItem>>(`/api/news?${parts.join('&')}`);
     },
     [],
   );

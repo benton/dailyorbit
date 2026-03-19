@@ -3,21 +3,22 @@ import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
 
 type NewsItem = {
-  id: number;
-  newsSourceId: number;
-  sourceUrl: string;
-  title: string;
   author: string | null;
-  publishedAt: string | null;
+  companyId: number | null;
+  createdAt: string;
+  extractStatus: string;
   fetchedAt: string;
   fullText: string | null;
-  summary: string | null;
-  summarizedBy: string | null;
+  id: number;
+  newsSourceId: number;
+  publishedAt: string | null;
+  sourceName: string | null;
+  sourceUrl: string;
   summarizedAt: string | null;
-  extractStatus: string;
-  companyId: number | null;
-  tags: string[];
-  createdAt: string;
+  summarizedBy: string | null;
+  summary: string | null;
+  tags: Array<string>;
+  title: string;
 };
 
 export default function NewsDetail() {
@@ -27,23 +28,29 @@ export default function NewsDetail() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id == null) return;
+    if (id == null) {
+      return;
+    }
     let cancelled: boolean = false;
     apiFetch<NewsItem>(`/api/news/${id}`)
       .then((data: NewsItem) => {
-        if (!cancelled) setItem(data);
-      })
-      .catch((err: unknown) => {
         if (!cancelled) {
-          setError(
-            err instanceof ApiError ? err.message : 'Failed to load news item',
-          );
+          setItem(data);
+        }
+      })
+      .catch((error_: unknown) => {
+        if (!cancelled) {
+          setError(error_ instanceof ApiError ? error_.message : 'Failed to load news item');
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {
@@ -51,18 +58,16 @@ export default function NewsDetail() {
   }
   if (error != null || item == null) {
     return (
-      <p className="text-sm text-red-600 dark:text-red-400">
-        {error ?? 'News item not found'}
-      </p>
+      <p className="text-sm text-red-600 dark:text-red-400">{error ?? 'News item not found'}</p>
     );
   }
 
   const publishedDate: string | null =
     item.publishedAt != null
       ? new Date(item.publishedAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
           day: 'numeric',
+          month: 'long',
+          year: 'numeric',
         })
       : null;
 
@@ -79,21 +84,26 @@ export default function NewsDetail() {
         </Link>
         {' / '}
         <span className="text-neutral-600 dark:text-neutral-300">
-          {item.title.slice(0, 60)}{item.title.length > 60 ? '…' : ''}
+          {item.title.slice(0, 60)}
+          {item.title.length > 60 ? '…' : ''}
         </span>
       </nav>
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          {item.title}
-        </h1>
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{item.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
           {publishedDate != null && <span>{publishedDate}</span>}
           {item.author != null && (
             <>
               <span className="text-neutral-300 dark:text-neutral-600">·</span>
               <span>{item.author}</span>
+            </>
+          )}
+          {item.sourceName != null && (
+            <>
+              <span className="text-neutral-300 dark:text-neutral-600">·</span>
+              <span>{item.sourceName}</span>
             </>
           )}
           <span className="text-neutral-300 dark:text-neutral-600">·</span>
@@ -123,7 +133,7 @@ export default function NewsDetail() {
       {/* Summary */}
       {item.summary != null && (
         <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+          <p className="mb-1 text-xs font-semibold tracking-wide text-blue-600 uppercase dark:text-blue-400">
             Summary
           </p>
           <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
@@ -138,7 +148,7 @@ export default function NewsDetail() {
           <h2 className="mb-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
             Full Text
           </h2>
-          <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
             {item.fullText}
           </div>
         </div>

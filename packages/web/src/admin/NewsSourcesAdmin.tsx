@@ -2,37 +2,37 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 
 type NewsSource = {
-  id: number;
-  name: string;
-  feedUrl: string;
   category: string;
-  enabled: boolean;
-  fetchIntervalMinutes: number;
-  lastFetchedAt: string | null;
-  lastFetchStatus: string | null;
-  lastFetchError: string | null;
   createdAt: string;
+  enabled: boolean;
+  feedUrl: string;
+  fetchIntervalMinutes: number;
+  id: number;
+  lastFetchError: string | null;
+  lastFetchStatus: string | null;
+  lastFetchedAt: string | null;
+  name: string;
   updatedAt: string;
 };
 
 type NewSourceForm = {
-  name: string;
-  feedUrl: string;
   category: string;
   enabled: boolean;
+  feedUrl: string;
   fetchIntervalMinutes: number;
+  name: string;
 };
 
 const EMPTY_FORM: NewSourceForm = {
-  name: '',
-  feedUrl: '',
   category: 'industry',
   enabled: true,
+  feedUrl: '',
   fetchIntervalMinutes: 60,
+  name: '',
 };
 
 export default function NewsSourcesAdmin() {
-  const [sources, setSources] = useState<NewsSource[]>([]);
+  const [sources, setSources] = useState<Array<NewsSource>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState<boolean>(false);
@@ -44,12 +44,10 @@ export default function NewsSourcesAdmin() {
 
   const fetchSources = useCallback(async () => {
     try {
-      const data: NewsSource[] = await apiFetch<NewsSource[]>(
-        '/api/admin/news/sources',
-      );
+      const data: Array<NewsSource> = await apiFetch<Array<NewsSource>>('/api/admin/news/sources');
       setSources(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load sources');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to load sources');
     } finally {
       setLoading(false);
     }
@@ -63,14 +61,14 @@ export default function NewsSourcesAdmin() {
     setSaving(true);
     try {
       await apiFetch<NewsSource>('/api/admin/news/sources', {
-        method: 'POST',
         body: JSON.stringify(addForm),
+        method: 'POST',
       });
       setShowAdd(false);
       setAddForm(EMPTY_FORM);
       await fetchSources();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to add source');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to add source');
     } finally {
       setSaving(false);
     }
@@ -80,37 +78,39 @@ export default function NewsSourcesAdmin() {
     setSaving(true);
     try {
       await apiFetch<NewsSource>(`/api/admin/news/sources/${String(id)}`, {
-        method: 'PUT',
         body: JSON.stringify(editForm),
+        method: 'PUT',
       });
       setEditId(null);
       await fetchSources();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to update source');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to update source');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number): Promise<void> => {
-    if (!confirm('Delete this source? All its news items will remain.')) return;
+    if (!confirm('Delete this source? All its news items will remain.')) {
+      return;
+    }
     try {
       await apiFetch(`/api/admin/news/sources/${String(id)}`, { method: 'DELETE' });
       await fetchSources();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to delete source');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to delete source');
     }
   };
 
   const handleToggleEnabled = async (source: NewsSource): Promise<void> => {
     try {
       await apiFetch<NewsSource>(`/api/admin/news/sources/${String(source.id)}`, {
-        method: 'PUT',
         body: JSON.stringify({ enabled: !source.enabled }),
+        method: 'PUT',
       });
       await fetchSources();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle source');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to toggle source');
     }
   };
 
@@ -119,8 +119,8 @@ export default function NewsSourcesAdmin() {
     try {
       await apiFetch(`/api/admin/news/sources/${String(id)}/fetch`, { method: 'POST' });
       await fetchSources();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Fetch failed');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Fetch failed');
     } finally {
       setFetchingId(null);
     }
@@ -129,11 +129,11 @@ export default function NewsSourcesAdmin() {
   const startEdit = (source: NewsSource): void => {
     setEditId(source.id);
     setEditForm({
-      name: source.name,
-      feedUrl: source.feedUrl,
       category: source.category,
       enabled: source.enabled,
+      feedUrl: source.feedUrl,
       fetchIntervalMinutes: source.fetchIntervalMinutes,
+      name: source.name,
     });
   };
 
@@ -144,9 +144,7 @@ export default function NewsSourcesAdmin() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-          News Sources
-        </h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">News Sources</h2>
         <button
           className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
           onClick={() => setShowAdd(!showAdd)}
@@ -156,9 +154,7 @@ export default function NewsSourcesAdmin() {
         </button>
       </div>
 
-      {error != null && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error != null && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Add form */}
       {showAdd && (
@@ -189,7 +185,9 @@ export default function NewsSourcesAdmin() {
             <input
               className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
               min="5"
-              onChange={(e) => setAddForm({ ...addForm, fetchIntervalMinutes: Number(e.target.value) })}
+              onChange={(e) =>
+                setAddForm({ ...addForm, fetchIntervalMinutes: Number(e.target.value) })
+              }
               placeholder="Fetch interval (min)"
               type="number"
               value={addForm.fetchIntervalMinutes}

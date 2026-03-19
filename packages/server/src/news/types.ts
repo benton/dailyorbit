@@ -31,6 +31,7 @@ export type NewsSource = {
 export type NewsItem = {
   id: number;
   newsSourceId: number;
+  sourceName: string | null;
   sourceUrl: string;
   title: string;
   author: string | null;

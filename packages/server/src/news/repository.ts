@@ -56,6 +56,7 @@ function rowToNewsItem(r: Record<string, unknown>): NewsItem {
   return {
     id: Number(r.id),
     newsSourceId: Number(r.news_source_id),
+    sourceName: r.source_name != null ? String(r.source_name) : null,
     sourceUrl: String(r.source_url),
     title: String(r.title),
     author: r.author != null ? String(r.author) : null,
@@ -294,7 +295,7 @@ export async function getNewsItemById(
   id: number,
 ): Promise<NewsItem | null> {
   const reader = await conn.runAndReadAll(
-    `SELECT * FROM news_item WHERE id = $1`,
+    `SELECT ni.*, ns.name AS source_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id WHERE ni.id = $1`,
     [id] as DuckDBValue[],
   );
   const rows = reader.getRowObjectsJS();
@@ -334,7 +335,7 @@ export async function listNewsItems(
   const whereClause: string =
     conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const baseSql: string = `SELECT ni.* FROM news_item ni ${whereClause}`;
+  const baseSql: string = `SELECT ni.*, ns.name AS source_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id ${whereClause}`;
 
   const {
     sql,
