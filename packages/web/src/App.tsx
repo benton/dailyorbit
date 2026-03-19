@@ -24,6 +24,7 @@ const PipelinePage = lazy(() => import('./admin/pipeline/PipelinePage.tsx'));
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 const OwnershipEventsPage = lazy(() => import('./companies/OwnershipEventsPage.tsx'));
+const NewsSourcesAdmin = lazy(() => import('./admin/NewsSourcesAdmin.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 
@@ -175,6 +176,14 @@ export default function App() {
                 </Suspense>
               }
               path="pipeline"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <NewsSourcesAdmin />
+                </Suspense>
+              }
+              path="news"
             />
           </Route>
         </Routes>
