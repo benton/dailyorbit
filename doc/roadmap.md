@@ -60,4 +60,3 @@
 - Can we Link M&A Activity on Home page to some visualization or list of events?
 - Last 3 Months Filing Volume by Company should be Last 6 Months Filing Volume by Company (it looks too blocky and needs more data)
 - On the home page, make the 3 lower full-width cards collapsable but open by default
--

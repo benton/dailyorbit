@@ -12,11 +12,11 @@ export type FilingStatusCategory =
   | 'other';
 
 export type FilingStatusInfo = {
+  bg: string;
   category: FilingStatusCategory;
   label: string;
-  bg: string;
-  text: string;
   terminal: boolean;
+  text: string;
 };
 
 type StatusStyle = Omit<FilingStatusInfo, 'label'>;
@@ -25,218 +25,218 @@ type StatusStyle = Omit<FilingStatusInfo, 'label'>;
 const EXACT_STATUS_MAP: Record<string, StatusStyle> = {
   // ICFS free-text statuses
   Closed: {
-    category: 'closed',
     bg: 'bg-neutral-200 dark:bg-neutral-700',
-    text: 'text-neutral-700 dark:text-neutral-300',
+    category: 'closed',
     terminal: true,
+    text: 'text-neutral-700 dark:text-neutral-300',
   },
   Current: {
-    category: 'active',
     bg: 'bg-green-100 dark:bg-green-900',
+    category: 'active',
+    terminal: false,
     text: 'text-green-800 dark:text-green-200',
-    terminal: false,
-  },
-  'Pending Review': {
-    category: 'pending',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
-  },
-  'Pending Payment': {
-    category: 'pending',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
   },
   'Pending Consummation': {
-    category: 'pending',
     bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
+    category: 'pending',
     terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  'Pending Payment': {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'pending',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  'Pending Review': {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'pending',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
   },
   // IBFS lookup-table codes
   'A/C': {
-    category: 'action_taken',
     bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-800 dark:text-blue-200',
+    category: 'action_taken',
     terminal: true,
-  },
-  ATPN: {
-    category: 'action_taken',
-    bg: 'bg-blue-100 dark:bg-blue-900',
     text: 'text-blue-800 dark:text-blue-200',
-    terminal: false,
-  },
-  AFPN: {
-    category: 'accepted',
-    bg: 'bg-sky-100 dark:bg-sky-900',
-    text: 'text-sky-800 dark:text-sky-200',
-    terminal: false,
-  },
-  AFSL: {
-    category: 'accepted',
-    bg: 'bg-sky-100 dark:bg-sky-900',
-    text: 'text-sky-800 dark:text-sky-200',
-    terminal: false,
   },
   AFP: {
-    category: 'accepted',
     bg: 'bg-sky-100 dark:bg-sky-900',
+    category: 'accepted',
+    terminal: false,
     text: 'text-sky-800 dark:text-sky-200',
+  },
+  AFPN: {
+    bg: 'bg-sky-100 dark:bg-sky-900',
+    category: 'accepted',
     terminal: false,
+    text: 'text-sky-800 dark:text-sky-200',
   },
-  INP: {
-    category: 'other',
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
-    text: 'text-neutral-600 dark:text-neutral-400',
+  AFSL: {
+    bg: 'bg-sky-100 dark:bg-sky-900',
+    category: 'accepted',
     terminal: false,
-  },
-  BLOK: {
-    category: 'blocked',
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
-    terminal: false,
-  },
-  UNBLK: {
-    category: 'active',
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
-    terminal: false,
-  },
-  DREC: {
-    category: 'denied',
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
-    terminal: true,
-  },
-  DSTAY: {
-    category: 'denied',
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
-    terminal: true,
-  },
-  GREC: {
-    category: 'action_taken',
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
-    terminal: false,
-  },
-  GSTAY: {
-    category: 'action_taken',
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
-    terminal: false,
-  },
-  HEAR: {
-    category: 'hearing',
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-800 dark:text-purple-200',
-    terminal: false,
-  },
-  SFH: {
-    category: 'hearing',
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-800 dark:text-purple-200',
-    terminal: false,
-  },
-  RFH: {
-    category: 'hearing',
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-800 dark:text-purple-200',
-    terminal: false,
-  },
-  SUSP: {
-    category: 'blocked',
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
-    terminal: false,
-  },
-  RECON: {
-    category: 'review',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
+    text: 'text-sky-800 dark:text-sky-200',
   },
   AREV: {
-    category: 'review',
     bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
-  },
-  TREV: {
     category: 'review',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
     terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
   },
-  TRC: {
-    category: 'review',
+  ATPN: {
     bg: 'bg-blue-100 dark:bg-blue-900',
+    category: 'action_taken',
+    terminal: false,
     text: 'text-blue-800 dark:text-blue-200',
-    terminal: false,
   },
-  LRC: {
-    category: 'review',
-    bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-800 dark:text-blue-200',
+  BLOK: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    category: 'blocked',
     terminal: false,
-  },
-  LREV: {
-    category: 'review',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
-  },
-  INFO: {
-    category: 'review',
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
-  },
-  COR: {
-    category: 'other',
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
-    text: 'text-neutral-600 dark:text-neutral-400',
-    terminal: false,
-  },
-  DFT: {
-    category: 'other',
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
-    text: 'text-neutral-600 dark:text-neutral-400',
-    terminal: false,
+    text: 'text-red-800 dark:text-red-200',
   },
   COOR: {
-    category: 'review',
     bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'review',
+    terminal: false,
     text: 'text-amber-800 dark:text-amber-200',
-    terminal: false,
   },
-  STAY: {
-    category: 'blocked',
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
+  COR: {
+    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    category: 'other',
     terminal: false,
+    text: 'text-neutral-600 dark:text-neutral-400',
+  },
+  DFT: {
+    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    category: 'other',
+    terminal: false,
+    text: 'text-neutral-600 dark:text-neutral-400',
+  },
+  DREC: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    category: 'denied',
+    terminal: true,
+    text: 'text-red-800 dark:text-red-200',
+  },
+  DSTAY: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    category: 'denied',
+    terminal: true,
+    text: 'text-red-800 dark:text-red-200',
+  },
+  GREC: {
+    bg: 'bg-green-100 dark:bg-green-900',
+    category: 'action_taken',
+    terminal: false,
+    text: 'text-green-800 dark:text-green-200',
+  },
+  GSTAY: {
+    bg: 'bg-green-100 dark:bg-green-900',
+    category: 'action_taken',
+    terminal: false,
+    text: 'text-green-800 dark:text-green-200',
+  },
+  HEAR: {
+    bg: 'bg-purple-100 dark:bg-purple-900',
+    category: 'hearing',
+    terminal: false,
+    text: 'text-purple-800 dark:text-purple-200',
+  },
+  INFO: {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  INP: {
+    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    category: 'other',
+    terminal: false,
+    text: 'text-neutral-600 dark:text-neutral-400',
+  },
+  LRC: {
+    bg: 'bg-blue-100 dark:bg-blue-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-blue-800 dark:text-blue-200',
+  },
+  LREV: {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  RECON: {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  RFH: {
+    bg: 'bg-purple-100 dark:bg-purple-900',
+    category: 'hearing',
+    terminal: false,
+    text: 'text-purple-800 dark:text-purple-200',
   },
   RMD: {
-    category: 'review',
     bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-800 dark:text-amber-200',
+    category: 'review',
     terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  SFH: {
+    bg: 'bg-purple-100 dark:bg-purple-900',
+    category: 'hearing',
+    terminal: false,
+    text: 'text-purple-800 dark:text-purple-200',
+  },
+  STAY: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    category: 'blocked',
+    terminal: false,
+    text: 'text-red-800 dark:text-red-200',
+  },
+  SUSP: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    category: 'blocked',
+    terminal: false,
+    text: 'text-red-800 dark:text-red-200',
+  },
+  TRC: {
+    bg: 'bg-blue-100 dark:bg-blue-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-blue-800 dark:text-blue-200',
+  },
+  TREV: {
+    bg: 'bg-amber-100 dark:bg-amber-900',
+    category: 'review',
+    terminal: false,
+    text: 'text-amber-800 dark:text-amber-200',
+  },
+  UNBLK: {
+    bg: 'bg-green-100 dark:bg-green-900',
+    category: 'active',
+    terminal: false,
+    text: 'text-green-800 dark:text-green-200',
   },
 };
 
 const TRANSFERRED_STYLE: StatusStyle = {
-  category: 'transferred',
   bg: 'bg-violet-100 dark:bg-violet-900',
-  text: 'text-violet-800 dark:text-violet-200',
+  category: 'transferred',
   terminal: false,
+  text: 'text-violet-800 dark:text-violet-200',
 };
 
 const FALLBACK_STYLE: StatusStyle = {
-  category: 'other',
   bg: 'bg-neutral-100 dark:bg-neutral-800',
-  text: 'text-neutral-600 dark:text-neutral-400',
+  category: 'other',
   terminal: false,
+  text: 'text-neutral-600 dark:text-neutral-400',
 };
 
 /**
@@ -247,7 +247,9 @@ export function getFilingStatus(
   statusCode: string | null,
   statusText: string | null,
 ): FilingStatusInfo | null {
-  if (statusCode == null && statusText == null) return null;
+  if (statusCode == null && statusText == null) {
+    return null;
+  }
 
   // Try exact match on statusCode first
   if (statusCode != null) {

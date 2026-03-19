@@ -61,14 +61,23 @@ publicStatsRoutes.get('/', async (c) => {
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   trackConnection(conn);
   try {
-    const [filing_count, filings_by_subsystem, comment_count, attachment_count] =
-      await Promise.all([
-        getFilingCount(conn),
-        getFilingsBySubsystem(conn),
-        getCommentCount(conn),
-        getAttachmentCount(conn),
-      ]);
-    return c.json({ filing_count, filings_by_subsystem, comment_count, attachment_count });
+    const [
+      filing_count,
+      filings_by_subsystem,
+      comment_count,
+      attachment_count,
+    ] = await Promise.all([
+      getFilingCount(conn),
+      getFilingsBySubsystem(conn),
+      getCommentCount(conn),
+      getAttachmentCount(conn),
+    ]);
+    return c.json({
+      filing_count,
+      filings_by_subsystem,
+      comment_count,
+      attachment_count,
+    });
   } finally {
     conn.closeSync();
   }

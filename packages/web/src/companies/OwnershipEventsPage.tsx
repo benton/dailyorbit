@@ -80,9 +80,7 @@ const columns: Array<ColumnDef<OwnershipEventItem, unknown>> = [
 export default function OwnershipEventsPage() {
   const [events, setEvents] = useState<Array<OwnershipEventItem>>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'effectiveDate', desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ desc: true, id: 'effectiveDate' }]);
 
   useEffect(() => {
     apiFetch<Array<OwnershipEventItem>>('/api/companies/ownership-events/recent?limit=100')
@@ -133,9 +131,8 @@ export default function OwnershipEventsPage() {
                       style={{ width: header.getSize() }}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{ asc: ' \u25B2', desc: ' \u25BC' }[
-                        header.column.getIsSorted() as string
-                      ] ?? ''}
+                      {{ asc: ' \u25B2', desc: ' \u25BC' }[header.column.getIsSorted() as string] ??
+                        ''}
                     </TableHead>
                   ))}
                 </TableRow>

@@ -14,12 +14,12 @@ type TimelineEvent = {
 /** Map from event category (used as colorDomain key) to hex color. */
 const CATEGORY_COLORS: Record<string, string> = {
   // Filing milestones
-  filed: '#2563eb', // blue-600
-  signed: '#7c3aed', // violet-600
-  granted: '#16a34a', // green-600
   effective: '#059669', // emerald-600
   expired: '#dc2626', // red-600
+  filed: '#2563eb', // blue-600
+  granted: '#16a34a', // green-600
   last_action: '#b45309', // amber-700
+  signed: '#7c3aed', // violet-600
   // Pleading types
   comment: '#525252', // neutral-600
   decision: '#9333ea', // purple-600

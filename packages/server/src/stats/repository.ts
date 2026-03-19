@@ -27,7 +27,9 @@ export async function getCommentCount(conn: DuckDBConnection): Promise<number> {
   return Number(rows[0]?.cnt ?? 0);
 }
 
-export async function getAttachmentCount(conn: DuckDBConnection): Promise<number> {
+export async function getAttachmentCount(
+  conn: DuckDBConnection,
+): Promise<number> {
   const result = await conn.runAndReadAll(
     'SELECT count(*)::INTEGER AS cnt FROM attachment',
   );

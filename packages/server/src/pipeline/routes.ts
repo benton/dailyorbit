@@ -43,7 +43,8 @@ pipelineRoutes.get('/status', (c) => {
 pipelineRoutes.post('/run', async (c) => {
   const body = await c.req.json<{ stages: string[]; concurrency?: number }>();
   const stageIds: string[] = body.stages;
-  const concurrency: number = typeof body.concurrency === 'number' ? body.concurrency : 0;
+  const concurrency: number =
+    typeof body.concurrency === 'number' ? body.concurrency : 0;
 
   if (!Array.isArray(stageIds) || stageIds.length === 0) {
     return c.json({ error: 'stages array is required' }, 400);

@@ -85,13 +85,13 @@ type TopLineStats = {
 const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
   {
     accessorKey: 'file_number',
-    header: 'File Number',
-    size: 220,
     cell: ({ row }) => (
       <SummaryTooltip summary={row.original.summary}>
         <span className="font-mono">{row.original.file_number}</span>
       </SummaryTooltip>
     ),
+    header: 'File Number',
+    size: 220,
   },
   { accessorKey: 'subsystem_code', header: 'Subsystem', size: 80 },
   { accessorKey: 'app_type_code', header: 'App Type', size: 80 },
@@ -492,7 +492,9 @@ export default function HomePage() {
         {/* M&A Activity */}
         {topLine != null && (
           <Link className="block" to="/ownership-events">
-            <div className={`${cardClass} transition-colors hover:border-blue-300 dark:hover:border-blue-700`}>
+            <div
+              className={`${cardClass} transition-colors hover:border-blue-300 dark:hover:border-blue-700`}
+            >
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 M&amp;A Activity (Last Quarter)
               </p>
@@ -621,25 +623,25 @@ export default function HomePage() {
         {volumeLoading && (
           <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
         )}
-          <div ref={volumeRef} />
-          {volumeCodes.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
-              {volumeCodes.map((code: string) => {
-                const info = getSubsystem(code);
-                return (
-                  <div className="flex items-center gap-1.5" key={code}>
-                    <span
-                      className="inline-block h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: info.hex }}
-                    />
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      <span className="font-semibold">{code}</span> {info.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <div ref={volumeRef} />
+        {volumeCodes.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+            {volumeCodes.map((code: string) => {
+              const info = getSubsystem(code);
+              return (
+                <div className="flex items-center gap-1.5" key={code}>
+                  <span
+                    className="inline-block h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: info.hex }}
+                  />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                    <span className="font-semibold">{code}</span> {info.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </CollapsibleCard>
     </div>
   );

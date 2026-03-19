@@ -58,7 +58,10 @@ const STAGES: PipelineStage[] = [
       const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const dateFrom: string = `${String(oneMonthAgo.getFullYear())}-${String(oneMonthAgo.getMonth() + 1).padStart(2, '0')}`;
       const dateTo: string = `${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      ctx.log('info', `ICFS ingest: ${dateFrom} to ${dateTo} (concurrency=${String(ctx.concurrency)})`);
+      ctx.log(
+        'info',
+        `ICFS ingest: ${dateFrom} to ${dateTo} (concurrency=${String(ctx.concurrency)})`,
+      );
       const result = await runIcfsIngest({
         dbInstance: ctx.db,
         dateFrom,
@@ -83,9 +86,8 @@ const STAGES: PipelineStage[] = [
     description: 'Discover attachment metadata and download files',
     defaultConcurrency: 5,
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { runAttachmentPipeline } = await import(
-        '../attachments/pipeline.ts'
-      );
+      const { runAttachmentPipeline } =
+        await import('../attachments/pipeline.ts');
       const start: number = Date.now();
       const result = await runAttachmentPipeline({
         dbInstance: ctx.db,
@@ -95,7 +97,8 @@ const STAGES: PipelineStage[] = [
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
-        itemsProcessed: result.attachmentsDiscovered + result.attachmentsDownloaded,
+        itemsProcessed:
+          result.attachmentsDiscovered + result.attachmentsDownloaded,
         itemsFailed: result.attachmentsFailed,
         durationMs: Date.now() - start,
         summary: `Discovered ${String(result.attachmentsDiscovered)}, downloaded ${String(result.attachmentsDownloaded)}`,
@@ -108,9 +111,8 @@ const STAGES: PipelineStage[] = [
     name: 'Extract Text',
     description: 'Extract text content from downloaded PDF/HTML attachments',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { runExtractionPipeline } = await import(
-        '../attachments/extract-pipeline.ts'
-      );
+      const { runExtractionPipeline } =
+        await import('../attachments/extract-pipeline.ts');
       const start: number = Date.now();
       const result = await runExtractionPipeline({
         dbInstance: ctx.db,
@@ -128,11 +130,11 @@ const STAGES: PipelineStage[] = [
     id: 'attachments.validate',
     group: 'attachments',
     name: 'Validate Content Types',
-    description: 'Verify content types of downloaded attachments via magic bytes',
+    description:
+      'Verify content types of downloaded attachments via magic bytes',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { runValidationPipeline } = await import(
-        '../attachments/validate-pipeline.ts'
-      );
+      const { runValidationPipeline } =
+        await import('../attachments/validate-pipeline.ts');
       const start: number = Date.now();
       const result = await runValidationPipeline({
         dbInstance: ctx.db,
@@ -156,12 +158,14 @@ const STAGES: PipelineStage[] = [
       // This stage mirrors the CLI summarize command logic inline
       // because there's no single pipeline function for it
       const { DuckDBConnection } = await import('@duckdb/node-api');
-      const { getPendingSummarizations, findExistingSummaryByChecksum, saveSummary } =
-        await import('../attachments/repository.ts');
+      const {
+        getPendingSummarizations,
+        findExistingSummaryByChecksum,
+        saveSummary,
+      } = await import('../attachments/repository.ts');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      const { InferenceService } = await import(
-        '../inference/inference-service.ts'
-      );
+      const { InferenceService } =
+        await import('../inference/inference-service.ts');
       const {
         DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
         DEFAULT_SUMMARIZATION_USER_PROMPT,
@@ -174,7 +178,11 @@ const STAGES: PipelineStage[] = [
         const rows = await getPendingSummarizations(conn, {});
         if (rows.length === 0) {
           ctx.log('info', 'No attachments pending summarization');
-          return { itemsProcessed: 0, itemsFailed: 0, durationMs: Date.now() - start };
+          return {
+            itemsProcessed: 0,
+            itemsFailed: 0,
+            durationMs: Date.now() - start,
+          };
         }
 
         const region: string = process.env.AWS_REGION ?? 'us-east-2';
@@ -188,7 +196,10 @@ const STAGES: PipelineStage[] = [
           try {
             // Dedup check
             if (row.textChecksum != null) {
-              const existing = await findExistingSummaryByChecksum(conn, row.textChecksum);
+              const existing = await findExistingSummaryByChecksum(
+                conn,
+                row.textChecksum,
+              );
               if (existing != null) {
                 await saveSummary(conn, row.attachmentKey, existing, 'copied');
                 processed++;
@@ -208,15 +219,30 @@ const STAGES: PipelineStage[] = [
             };
             const resp = await service.complete({
               modelId,
-              messages: [{ role: 'user', content: renderPrompt(DEFAULT_SUMMARIZATION_USER_PROMPT, vars) }],
-              params: { systemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT, maxTokens: 512, temperature: 0.3 },
+              messages: [
+                {
+                  role: 'user',
+                  content: renderPrompt(
+                    DEFAULT_SUMMARIZATION_USER_PROMPT,
+                    vars,
+                  ),
+                },
+              ],
+              params: {
+                systemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
+                maxTokens: 512,
+                temperature: 0.3,
+              },
             });
             await saveSummary(conn, row.attachmentKey, resp.content, modelId);
             processed++;
             ctx.onProgress(processed, rows.length);
           } catch (err: unknown) {
             failed++;
-            ctx.log('error', `Failed to summarize attachment ${String(row.attachmentKey)}: ${err instanceof Error ? err.message : String(err)}`);
+            ctx.log(
+              'error',
+              `Failed to summarize attachment ${String(row.attachmentKey)}: ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
         }
 
@@ -241,12 +267,10 @@ const STAGES: PipelineStage[] = [
       // Mirrors the CLI embed command for source=attachment
       const { DuckDBConnection } = await import('@duckdb/node-api');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      const { EmbeddingService } = await import(
-        '../inference/embedding-service.ts'
-      );
-      const { ensureEmbeddingSchema } = await import(
-        '../search/embedding-schema.ts'
-      );
+      const { EmbeddingService } =
+        await import('../inference/embedding-service.ts');
+      const { ensureEmbeddingSchema } =
+        await import('../search/embedding-schema.ts');
       const { splitText } = await import('../inference/text-chunker.ts');
       const { computeTextChecksum } = await import('../lib/text-utils.ts');
 
@@ -277,7 +301,11 @@ const STAGES: PipelineStage[] = [
 
         if (rows.length === 0) {
           ctx.log('info', 'No attachments pending embedding');
-          return { itemsProcessed: 0, itemsFailed: 0, durationMs: Date.now() - start };
+          return {
+            itemsProcessed: 0,
+            itemsFailed: 0,
+            durationMs: Date.now() - start,
+          };
         }
 
         let processed: number = 0;
@@ -297,11 +325,23 @@ const STAGES: PipelineStage[] = [
             );
 
             for (let ci: number = 0; ci < chunks.length; ci++) {
-              const resp = await service.embedQuery(chunks[ci]!, modelId, dimensions, true);
+              const resp = await service.embedQuery(
+                chunks[ci]!,
+                modelId,
+                dimensions,
+                true,
+              );
               await conn.run(
                 `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id, text_checksum)
                  VALUES (?, ?, ?, ?::FLOAT[512], ?, ?)`,
-                ['attachment', sourceKey, ci, JSON.stringify(resp.embedding), modelId, textChecksum] as import('@duckdb/node-api').DuckDBValue[],
+                [
+                  'attachment',
+                  sourceKey,
+                  ci,
+                  JSON.stringify(resp.embedding),
+                  modelId,
+                  textChecksum,
+                ] as import('@duckdb/node-api').DuckDBValue[],
               );
             }
 
@@ -313,7 +353,10 @@ const STAGES: PipelineStage[] = [
             ctx.onProgress(processed, rows.length);
           } catch (err: unknown) {
             failed++;
-            ctx.log('error', `Embed failed: ${err instanceof Error ? err.message : String(err)}`);
+            ctx.log(
+              'error',
+              `Embed failed: ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
         }
 
@@ -336,9 +379,8 @@ const STAGES: PipelineStage[] = [
     name: 'Seed Companies',
     description: 'Load built-in satellite industry company dataset',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { ensureCompanyTables, ensureCompanyFk } = await import(
-        '../companies/schema.ts'
-      );
+      const { ensureCompanyTables, ensureCompanyFk } =
+        await import('../companies/schema.ts');
       const { seedCompanies } = await import('../companies/attribution.ts');
       const { COMPANY_SEED_DATA } = await import('../companies/seed-data.ts');
       const start: number = Date.now();
@@ -359,19 +401,16 @@ const STAGES: PipelineStage[] = [
     name: 'Attribute Filings',
     description: 'Match unattributed filings to company entities',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { ensureCompanyTables, ensureCompanyFk } = await import(
-        '../companies/schema.ts'
-      );
-      const { runBatchAttribution } = await import(
-        '../companies/attribution.ts'
-      );
+      const { ensureCompanyTables, ensureCompanyFk } =
+        await import('../companies/schema.ts');
+      const { runBatchAttribution } =
+        await import('../companies/attribution.ts');
       const start: number = Date.now();
       await ensureCompanyTables(ctx.conn);
       await ensureCompanyFk(ctx.conn);
       const result = await runBatchAttribution(
         ctx.conn,
-        (processed: number, total: number) =>
-          ctx.onProgress(processed, total),
+        (processed: number, total: number) => ctx.onProgress(processed, total),
       );
       return {
         itemsProcessed: result.attributed,
@@ -387,19 +426,16 @@ const STAGES: PipelineStage[] = [
     name: 'Extract Ownership',
     description: 'Derive ownership events from T/C and ASG filings',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { ensureCompanyTables, ensureCompanyFk } = await import(
-        '../companies/schema.ts'
-      );
-      const { extractOwnershipEvents } = await import(
-        '../companies/repository.ts'
-      );
+      const { ensureCompanyTables, ensureCompanyFk } =
+        await import('../companies/schema.ts');
+      const { extractOwnershipEvents } =
+        await import('../companies/repository.ts');
       const start: number = Date.now();
       await ensureCompanyTables(ctx.conn);
       await ensureCompanyFk(ctx.conn);
       const result = await extractOwnershipEvents(
         ctx.conn,
-        (processed: number, total: number) =>
-          ctx.onProgress(processed, total),
+        (processed: number, total: number) => ctx.onProgress(processed, total),
       );
       return {
         itemsProcessed: result.created,
@@ -415,14 +451,11 @@ const STAGES: PipelineStage[] = [
     name: 'Enrich Companies',
     description: 'Enrich company data from GLEIF and Wikidata',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { enrichAllCompanies } = await import(
-        '../enrichment/pipeline.ts'
-      );
+      const { enrichAllCompanies } = await import('../enrichment/pipeline.ts');
       const start: number = Date.now();
       const result = await enrichAllCompanies(
         ctx.conn,
-        (processed: number, total: number) =>
-          ctx.onProgress(processed, total),
+        (processed: number, total: number) => ctx.onProgress(processed, total),
       );
       return {
         itemsProcessed: result.enriched,
@@ -470,7 +503,10 @@ const STAGES: PipelineStage[] = [
           if (result.error != null) {
             ctx.log('error', `${result.sourceName}: ${result.error}`);
           } else {
-            ctx.log('info', `${result.sourceName}: ${String(result.itemsInserted)} new, ${String(result.itemsSkipped)} skipped`);
+            ctx.log(
+              'info',
+              `${result.sourceName}: ${String(result.itemsInserted)} new, ${String(result.itemsSkipped)} skipped`,
+            );
           }
         },
       );
@@ -511,9 +547,7 @@ const STAGES: PipelineStage[] = [
     defaultConcurrency: 5,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
-      const { summarizeNewsItems } = await import(
-        '../news/summarize-news.ts'
-      );
+      const { summarizeNewsItems } = await import('../news/summarize-news.ts');
       const start: number = Date.now();
       await ensureNewsTables(ctx.conn);
 
@@ -521,8 +555,13 @@ const STAGES: PipelineStage[] = [
       const countSql: string =
         'SELECT COUNT(*) AS cnt FROM news_item WHERE full_text IS NOT NULL AND summary IS NULL';
       const beforeReader = await ctx.conn.runAndReadAll(countSql);
-      const pendingBefore: number = Number(beforeReader.getRowObjectsJS()[0]!.cnt);
-      ctx.log('info', `${String(pendingBefore)} articles pending summarization`);
+      const pendingBefore: number = Number(
+        beforeReader.getRowObjectsJS()[0]!.cnt,
+      );
+      ctx.log(
+        'info',
+        `${String(pendingBefore)} articles pending summarization`,
+      );
 
       await summarizeNewsItems(ctx.conn, {
         region: process.env.AWS_REGION ?? 'us-east-2',
@@ -533,7 +572,9 @@ const STAGES: PipelineStage[] = [
       });
 
       const afterReader = await ctx.conn.runAndReadAll(countSql);
-      const pendingAfter: number = Number(afterReader.getRowObjectsJS()[0]!.cnt);
+      const pendingAfter: number = Number(
+        afterReader.getRowObjectsJS()[0]!.cnt,
+      );
       const processed: number = pendingBefore - pendingAfter;
       return {
         itemsProcessed: processed,
@@ -551,9 +592,7 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { ensureCompanyTables } = await import('../companies/schema.ts');
-      const { attributeNewsItems } = await import(
-        '../news/attribute-news.ts'
-      );
+      const { attributeNewsItems } = await import('../news/attribute-news.ts');
       const start: number = Date.now();
       await ensureNewsTables(ctx.conn);
       await ensureCompanyTables(ctx.conn);
@@ -574,9 +613,7 @@ const STAGES: PipelineStage[] = [
     name: 'Rebuild FTS Index',
     description: 'Rebuild all full-text search indexes',
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { rebuildAllFtsIndexes } = await import(
-        '../search/fts-index.ts'
-      );
+      const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
       const start: number = Date.now();
       ctx.log('info', 'Rebuilding FTS indexes...');
       await rebuildAllFtsIndexes(ctx.conn);

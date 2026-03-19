@@ -1,7 +1,17 @@
 import { DuckDBInstance } from '@duckdb/node-api';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PipelineContext, PipelineStage, StageResult } from './registry.ts';
-import { ConflictError, getRunner, resetRunner, type LogLine, type RunSummary } from './runner.ts';
+import type {
+  PipelineContext,
+  PipelineStage,
+  StageResult,
+} from './registry.ts';
+import {
+  ConflictError,
+  getRunner,
+  resetRunner,
+  type LogLine,
+  type RunSummary,
+} from './runner.ts';
 
 // ── Mock DB + shutdown so the runner never touches real resources ────
 
@@ -14,7 +24,9 @@ vi.mock('../lib/db.ts', () => {
       }
       return db;
     },
-    __resetDb: () => { db = null; },
+    __resetDb: () => {
+      db = null;
+    },
   };
 });
 
@@ -36,12 +48,13 @@ vi.mock('./registry.ts', async (importOriginal) => {
   };
 });
 
-const { __registerFake, __clearFakes } = await import('./registry.ts') as unknown as {
-  __registerFake: (stage: PipelineStage) => void;
-  __clearFakes: () => void;
-};
+const { __registerFake, __clearFakes } =
+  (await import('./registry.ts')) as unknown as {
+    __registerFake: (stage: PipelineStage) => void;
+    __clearFakes: () => void;
+  };
 
-const { __resetDb } = await import('../lib/db.ts') as unknown as {
+const { __resetDb } = (await import('../lib/db.ts')) as unknown as {
   __resetDb: () => void;
 };
 
@@ -49,7 +62,11 @@ const { __resetDb } = await import('../lib/db.ts') as unknown as {
 
 function makeFakeStage(
   id: string,
-  opts: { durationMs?: number; shouldFail?: boolean; defaultConcurrency?: number } = {},
+  opts: {
+    durationMs?: number;
+    shouldFail?: boolean;
+    defaultConcurrency?: number;
+  } = {},
 ): PipelineStage {
   return {
     id,
@@ -124,8 +141,12 @@ describe('PipelineRunner', () => {
     const stageMessages: string[] = logs
       .filter((l: LogLine) => l.stage === 'test.logged')
       .map((l: LogLine) => l.message);
-    expect(stageMessages.some((m: string) => m.startsWith('Starting:'))).toEqual(true);
-    expect(stageMessages.some((m: string) => m.startsWith('Completed in'))).toEqual(true);
+    expect(
+      stageMessages.some((m: string) => m.startsWith('Starting:')),
+    ).toEqual(true);
+    expect(
+      stageMessages.some((m: string) => m.startsWith('Completed in')),
+    ).toEqual(true);
 
     const buffered: LogLine[] = runner.getReplayBuffer(runId);
     expect(buffered.length).toBeGreaterThanOrEqual(2);
@@ -235,7 +256,8 @@ describe('PipelineRunner', () => {
       description: 'Blocks until released',
       run: (_ctx: PipelineContext): Promise<StageResult> => {
         return new Promise<StageResult>((resolve) => {
-          resolveStage = () => resolve({ itemsProcessed: 0, itemsFailed: 0, durationMs: 0 });
+          resolveStage = () =>
+            resolve({ itemsProcessed: 0, itemsFailed: 0, durationMs: 0 });
         });
       },
     };

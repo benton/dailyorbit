@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, Loader2, Send } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
@@ -123,18 +123,30 @@ function AiSettingsInner() {
       const newsSummModelEntry = entries.find((e) => e.key === 'newsSummarizationModel');
       const newsSummSysEntry = entries.find((e) => e.key === 'newsSummarizationSystemPrompt');
       const newsSummUserEntry = entries.find((e) => e.key === 'newsSummarizationUserPrompt');
-      if (newsSummModelEntry) setNewsSummModel(newsSummModelEntry.value);
-      if (newsSummSysEntry) setNewsSummSystemPrompt(newsSummSysEntry.value);
-      if (newsSummUserEntry) setNewsSummUserPrompt(newsSummUserEntry.value);
+      if (newsSummModelEntry) {
+        setNewsSummModel(newsSummModelEntry.value);
+      }
+      if (newsSummSysEntry) {
+        setNewsSummSystemPrompt(newsSummSysEntry.value);
+      }
+      if (newsSummUserEntry) {
+        setNewsSummUserPrompt(newsSummUserEntry.value);
+      }
       setNewsSummMeta(templates.newsSummarization);
 
       // Embedding config
       const embModelEntry = entries.find((e) => e.key === 'embeddingModel');
       const embDimEntry = entries.find((e) => e.key === 'embeddingDimensions');
       const embNormEntry = entries.find((e) => e.key === 'embeddingNormalize');
-      if (embModelEntry) setEmbeddingModel(embModelEntry.value);
-      if (embDimEntry) setEmbeddingDimensions(embDimEntry.value);
-      if (embNormEntry) setEmbeddingNormalize(embNormEntry.value === 'true');
+      if (embModelEntry) {
+        setEmbeddingModel(embModelEntry.value);
+      }
+      if (embDimEntry) {
+        setEmbeddingDimensions(embDimEntry.value);
+      }
+      if (embNormEntry) {
+        setEmbeddingNormalize(embNormEntry.value === 'true');
+      }
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Failed to load config', 'error');
     }
@@ -197,9 +209,18 @@ function AiSettingsInner() {
       setSavingConfig(false);
     }
   }, [
-    region, defaultModel, summarizationModel, summSystemPrompt, summUserPrompt,
-    newsSummModel, newsSummSystemPrompt, newsSummUserPrompt,
-    embeddingModel, embeddingDimensions, embeddingNormalize, toast,
+    region,
+    defaultModel,
+    summarizationModel,
+    summSystemPrompt,
+    summUserPrompt,
+    newsSummModel,
+    newsSummSystemPrompt,
+    newsSummUserPrompt,
+    embeddingModel,
+    embeddingDimensions,
+    embeddingNormalize,
+    toast,
   ]);
 
   const handleTest = useCallback(async () => {

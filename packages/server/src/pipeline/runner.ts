@@ -7,7 +7,10 @@ import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { getDb } from '../lib/db.ts';
-import { trackConnection, untrackConnection } from '../lib/graceful-shutdown.ts';
+import {
+  trackConnection,
+  untrackConnection,
+} from '../lib/graceful-shutdown.ts';
 import type { PipelineContext, StageResult } from './registry.ts';
 import { getStage } from './registry.ts';
 
@@ -131,12 +134,20 @@ class PipelineRunner {
     }
 
     // Run asynchronously — don't await
-    this.executeRun(runId, stageIds, buffer, concurrency).catch((err: unknown) => {
-      const msg: string = err instanceof Error ? err.message : String(err);
-      this.emitLog(buffer, runId, 'runner', 'error', `Unhandled error: ${msg}`);
-      this.running = false;
-      this.currentStageId = null;
-    });
+    this.executeRun(runId, stageIds, buffer, concurrency).catch(
+      (err: unknown) => {
+        const msg: string = err instanceof Error ? err.message : String(err);
+        this.emitLog(
+          buffer,
+          runId,
+          'runner',
+          'error',
+          `Unhandled error: ${msg}`,
+        );
+        this.running = false;
+        this.currentStageId = null;
+      },
+    );
 
     return runId;
   }
@@ -161,10 +172,21 @@ class PipelineRunner {
       trackConnection(conn);
     } catch (err: unknown) {
       const msg: string = err instanceof Error ? err.message : String(err);
-      this.emitLog(buffer, runId, 'runner', 'error', `DB connection failed: ${msg}`);
+      this.emitLog(
+        buffer,
+        runId,
+        'runner',
+        'error',
+        `DB connection failed: ${msg}`,
+      );
       this.running = false;
       this.currentRunId = null;
-      this.emitter.emit('done', { runId, stagesCompleted: 0, stagesFailed: 0, totalDurationMs: 0 } satisfies RunSummary);
+      this.emitter.emit('done', {
+        runId,
+        stagesCompleted: 0,
+        stagesFailed: 0,
+        totalDurationMs: 0,
+      } satisfies RunSummary);
       return;
     }
 
@@ -172,7 +194,13 @@ class PipelineRunner {
       for (const stageId of stageIds) {
         const stage = getStage(stageId);
         if (stage == null) {
-          this.emitLog(buffer, runId, stageId, 'error', `Unknown stage: ${stageId}`);
+          this.emitLog(
+            buffer,
+            runId,
+            stageId,
+            'error',
+            `Unknown stage: ${stageId}`,
+          );
           failed++;
           continue;
         }
@@ -200,8 +228,15 @@ class PipelineRunner {
             this.emitLog(buffer, runId, stageId, level, message);
           },
           onProgress: (processed: number, total: number) => {
-            const pct: string = total > 0 ? ((processed / total) * 100).toFixed(1) : '0';
-            this.emitLog(buffer, runId, stageId, 'progress', `${String(processed)}/${String(total)} (${pct}%)`);
+            const pct: string =
+              total > 0 ? ((processed / total) * 100).toFixed(1) : '0';
+            this.emitLog(
+              buffer,
+              runId,
+              stageId,
+              'progress',
+              `${String(processed)}/${String(total)} (${pct}%)`,
+            );
           },
         };
 
@@ -272,7 +307,8 @@ class PipelineRunner {
     };
     buffer.push(line);
     this.emitter.emit('log', line);
-    const fn: (msg: string) => void = level === 'error' ? console.error : console.log;
+    const fn: (msg: string) => void =
+      level === 'error' ? console.error : console.log;
     fn(`[pipeline:${stage}] ${message}`);
   }
 }

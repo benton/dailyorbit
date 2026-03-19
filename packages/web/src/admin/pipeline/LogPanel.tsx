@@ -1,6 +1,6 @@
+import { Trash2, ArrowDownToLine } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../ui/button.tsx';
-import { Trash2, ArrowDownToLine } from 'lucide-react';
 
 export type LogLine = {
   stage: string;
@@ -22,7 +22,12 @@ const LEVEL_CLASSES: Record<string, string> = {
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return d.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 export default function LogPanel({ lines, onClear }: LogPanelProps) {
@@ -67,13 +72,7 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
           >
             <ArrowDownToLine className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            onClick={onClear}
-            size="sm"
-            title="Clear log"
-            type="button"
-            variant="ghost"
-          >
+          <Button onClick={onClear} size="sm" title="Clear log" type="button" variant="ghost">
             <Trash2 className="h-3.5 w-3.5 text-neutral-500" />
           </Button>
         </div>
@@ -90,11 +89,8 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
         )}
         {lines.map((line: LogLine, i: number) => (
           <div className={LEVEL_CLASSES[line.level] ?? 'text-neutral-200'} key={i}>
-            <span className="text-neutral-600">{formatTime(line.timestamp)}</span>
-            {' '}
-            <span className="text-neutral-400">[{line.stage}]</span>
-            {' '}
-            {line.message}
+            <span className="text-neutral-600">{formatTime(line.timestamp)}</span>{' '}
+            <span className="text-neutral-400">[{line.stage}]</span> {line.message}
           </div>
         ))}
       </pre>

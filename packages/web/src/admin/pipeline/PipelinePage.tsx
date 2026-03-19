@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch } from '../../lib/api.ts';
-import env from '../../lib/env.tsx';
-import PipelineGroup from './PipelineGroup.tsx';
-import LogPanel from './LogPanel.tsx';
 import type { LogLine } from './LogPanel.tsx';
 import type { StageStatus } from './PipelineStep.tsx';
+import { apiFetch } from '../../lib/api.ts';
+import env from '../../lib/env.tsx';
+import LogPanel from './LogPanel.tsx';
+import PipelineGroup from './PipelineGroup.tsx';
 
 // ── API response types ──────────────────────────────────────────────
 
@@ -187,15 +187,11 @@ export default function PipelinePage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Pipeline
-        </h1>
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Pipeline</h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Data ingestion pipeline stages. Run steps individually or by group.
         </p>
-        {error != null && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
       {/* Pipeline stages */}

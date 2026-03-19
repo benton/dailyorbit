@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { ChevronDown, ChevronRight, PlayCircle } from 'lucide-react';
+import { useState } from 'react';
+import type { StageStatus } from './PipelineStep.tsx';
 import { Button } from '../../ui/button.tsx';
 import PipelineStep from './PipelineStep.tsx';
-import type { StageStatus } from './PipelineStep.tsx';
 
 type StageInfo = {
   id: string;
@@ -41,9 +41,11 @@ export default function PipelineGroup({
           onClick={() => setExpanded(!expanded)}
           type="button"
         >
-          {expanded
-            ? <ChevronDown className="h-4 w-4 text-neutral-400" />
-            : <ChevronRight className="h-4 w-4 text-neutral-400" />}
+          {expanded ? (
+            <ChevronDown className="h-4 w-4 text-neutral-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-neutral-400" />
+          )}
           {name}
           <span className="ml-1 text-xs font-normal text-neutral-400">
             ({String(stages.length)} steps)
@@ -65,7 +67,7 @@ export default function PipelineGroup({
 
       {/* Stages */}
       {expanded && (
-        <div className="ml-3 mt-1 space-y-1 border-l-2 border-neutral-200 pl-4 dark:border-neutral-700">
+        <div className="mt-1 ml-3 space-y-1 border-l-2 border-neutral-200 pl-4 dark:border-neutral-700">
           {stages.map((stage: StageInfo) => (
             <PipelineStep
               description={stage.description}

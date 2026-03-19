@@ -1,6 +1,6 @@
 import { Play, Loader2, CheckCircle2, XCircle, Circle } from 'lucide-react';
-import { Button } from '../../ui/button.tsx';
 import { Badge } from '../../ui/badge.tsx';
+import { Button } from '../../ui/button.tsx';
 
 export type StageStatus = 'idle' | 'running' | 'success' | 'failed';
 
@@ -13,7 +13,14 @@ type PipelineStepProps = {
   onRun: (stageId: string) => void;
 };
 
-const STATUS_CONFIG: Record<StageStatus, { icon: React.ReactNode; label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const STATUS_CONFIG: Record<
+  StageStatus,
+  {
+    icon: React.ReactNode;
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   idle: {
     icon: <Circle className="h-3.5 w-3.5 text-neutral-400" />,
     label: 'Idle',
@@ -36,7 +43,14 @@ const STATUS_CONFIG: Record<StageStatus, { icon: React.ReactNode; label: string;
   },
 };
 
-export default function PipelineStep({ id, name, description, status, disabled, onRun }: PipelineStepProps) {
+export default function PipelineStep({
+  id,
+  name,
+  description,
+  status,
+  disabled,
+  onRun,
+}: PipelineStepProps) {
   const cfg = STATUS_CONFIG[status];
 
   return (

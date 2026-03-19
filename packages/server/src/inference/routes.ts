@@ -10,9 +10,7 @@ import {
   DEFAULT_SUMMARIZATION_USER_PROMPT,
   SUMMARIZATION_VARIABLES,
 } from './prompts.ts';
-import {
-  NEWS_ARTICLE_SUMMARIZER,
-} from './summarizers/news-article.ts';
+import { NEWS_ARTICLE_SUMMARIZER } from './summarizers/news-article.ts';
 import type { InferenceRequest } from './types.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */

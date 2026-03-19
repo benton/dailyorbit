@@ -111,26 +111,28 @@ function ConfigEditorInner() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.filter((e) => !AI_CONFIG_KEYS.has(e.key)).map((entry) => (
-              <TableRow key={entry.key}>
-                <TableCell className="font-mono text-sm">{entry.key}</TableCell>
-                <TableCell className="text-neutral-500 dark:text-neutral-400">
-                  {entry.description}
-                </TableCell>
-                <TableCell>
-                  {entry.encrypted ? (
-                    <Badge variant="secondary">encrypted</Badge>
-                  ) : (
-                    <span className="font-mono text-sm">{entry.value}</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button onClick={() => handleEdit(entry)} size="icon" variant="ghost">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {entries
+              .filter((e) => !AI_CONFIG_KEYS.has(e.key))
+              .map((entry) => (
+                <TableRow key={entry.key}>
+                  <TableCell className="font-mono text-sm">{entry.key}</TableCell>
+                  <TableCell className="text-neutral-500 dark:text-neutral-400">
+                    {entry.description}
+                  </TableCell>
+                  <TableCell>
+                    {entry.encrypted ? (
+                      <Badge variant="secondary">encrypted</Badge>
+                    ) : (
+                      <span className="font-mono text-sm">{entry.value}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleEdit(entry)} size="icon" variant="ghost">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>

@@ -552,8 +552,10 @@ export async function listRecentOwnershipEvents(
   );
   return reader.getRowObjectsJS().map((r) => ({
     ...rowToOwnershipEvent(r),
-    transferorName: r.transferor_name != null ? String(r.transferor_name) : null,
-    transfereeName: r.transferee_name != null ? String(r.transferee_name) : null,
+    transferorName:
+      r.transferor_name != null ? String(r.transferor_name) : null,
+    transfereeName:
+      r.transferee_name != null ? String(r.transferee_name) : null,
   }));
 }
 
