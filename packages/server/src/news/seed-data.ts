@@ -29,7 +29,7 @@ export const NEWS_SOURCE_SEED_DATA: ReadonlyArray<NewsSourceSeedEntry> = [
     feedUrl:
       'https://www.federalregister.gov/api/v1/documents.rss?conditions[agencies][]=federal-communications-commission',
     category: 'regulatory',
-    enabled: true,
+    enabled: false, // federalregister.gov blocks automated article extraction
   },
 
   // ── Tier 2 — Operator Press Releases ────────────────────────────
