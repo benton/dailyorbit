@@ -2,7 +2,7 @@ import type { ConverseCommandInput } from '@aws-sdk/client-bedrock-runtime';
 import type { ConverseFunction } from '../inference/inference-service.ts';
 import type { RewrittenQuery } from './types.ts';
 
-const REWRITE_SYSTEM_PROMPT: string = `You are a query rewriting assistant for an FCC filing search system.
+export const DEFAULT_REWRITE_SYSTEM_PROMPT: string = `You are a query rewriting assistant for an FCC filing search system.
 Given a user question, produce 1–2 search queries as a JSON array of objects.
 
 Each object has:
@@ -31,10 +31,12 @@ export async function rewriteQuery(
   question: string,
   backend: ConverseFunction,
   modelId: string,
+  systemPrompt?: string,
 ): Promise<RewriteResult> {
+  const prompt: string = systemPrompt || DEFAULT_REWRITE_SYSTEM_PROMPT;
   const input: ConverseCommandInput = {
     modelId,
-    system: [{ text: REWRITE_SYSTEM_PROMPT }],
+    system: [{ text: prompt }],
     messages: [{ role: 'user', content: [{ text: question }] }],
     inferenceConfig: { maxTokens: 1024, temperature: 0 },
   };

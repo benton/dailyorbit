@@ -83,6 +83,13 @@ function AiSettingsInner() {
   const [newsSummUserPrompt, setNewsSummUserPrompt] = useState<string>('');
   const [newsSummMeta, setNewsSummMeta] = useState<PromptTemplateMeta | null>(null);
 
+  // Query (RAG) prompt state
+  const [queryRewriteSystemPrompt, setQueryRewriteSystemPrompt] = useState<string>('');
+  const [queryRewriteMeta, setQueryRewriteMeta] = useState<PromptTemplateMeta | null>(null);
+  const [queryGenSystemPrompt, setQueryGenSystemPrompt] = useState<string>('');
+  const [queryGenUserPrompt, setQueryGenUserPrompt] = useState<string>('');
+  const [queryGenMeta, setQueryGenMeta] = useState<PromptTemplateMeta | null>(null);
+
   // Embedding config state
   const [embeddingModel, setEmbeddingModel] = useState<string>('');
   const [embeddingDimensions, setEmbeddingDimensions] = useState<string>('1024');
@@ -94,6 +101,8 @@ function AiSettingsInner() {
         apiFetch<Array<ConfigEntry>>('/api/admin/config'),
         apiFetch<{
           newsSummarization: PromptTemplateMeta;
+          queryGenerate: PromptTemplateMeta;
+          queryRewrite: PromptTemplateMeta;
           summarization: PromptTemplateMeta;
         }>('/api/admin/inference/prompt-templates'),
       ]);
@@ -133,6 +142,22 @@ function AiSettingsInner() {
         setNewsSummUserPrompt(newsSummUserEntry.value);
       }
       setNewsSummMeta(templates.newsSummarization);
+
+      // Query (RAG) prompts
+      const qrSysEntry = entries.find((e) => e.key === 'queryRewriteSystemPrompt');
+      const qgSysEntry = entries.find((e) => e.key === 'queryGenerateSystemPrompt');
+      const qgUserEntry = entries.find((e) => e.key === 'queryGenerateUserPrompt');
+      if (qrSysEntry) {
+        setQueryRewriteSystemPrompt(qrSysEntry.value);
+      }
+      if (qgSysEntry) {
+        setQueryGenSystemPrompt(qgSysEntry.value);
+      }
+      if (qgUserEntry) {
+        setQueryGenUserPrompt(qgUserEntry.value);
+      }
+      setQueryRewriteMeta(templates.queryRewrite);
+      setQueryGenMeta(templates.queryGenerate);
 
       // Embedding config
       const embModelEntry = entries.find((e) => e.key === 'embeddingModel');
@@ -198,6 +223,9 @@ function AiSettingsInner() {
         saveKey('newsSummarizationModel', newsSummModel),
         saveKey('newsSummarizationSystemPrompt', newsSummSystemPrompt),
         saveKey('newsSummarizationUserPrompt', newsSummUserPrompt),
+        saveKey('queryRewriteSystemPrompt', queryRewriteSystemPrompt),
+        saveKey('queryGenerateSystemPrompt', queryGenSystemPrompt),
+        saveKey('queryGenerateUserPrompt', queryGenUserPrompt),
         saveKey('embeddingModel', embeddingModel),
         saveKey('embeddingDimensions', embeddingDimensions),
         saveKey('embeddingNormalize', String(embeddingNormalize)),
@@ -217,6 +245,9 @@ function AiSettingsInner() {
     newsSummModel,
     newsSummSystemPrompt,
     newsSummUserPrompt,
+    queryRewriteSystemPrompt,
+    queryGenSystemPrompt,
+    queryGenUserPrompt,
     embeddingModel,
     embeddingDimensions,
     embeddingNormalize,
@@ -387,6 +418,36 @@ function AiSettingsInner() {
           title="News Summarization Prompts"
           userPrompt={newsSummUserPrompt}
           variables={newsSummMeta.variables}
+        />
+      )}
+
+      {/* Query Rewrite Prompts */}
+      {queryRewriteMeta != null && (
+        <PromptEditor
+          defaultSystemPrompt={queryRewriteMeta.defaultSystemPrompt}
+          defaultUserPrompt={queryRewriteMeta.defaultUserPrompt}
+          description="System prompt used when rewriting user questions into structured search queries."
+          onSystemPromptChange={setQueryRewriteSystemPrompt}
+          onUserPromptChange={() => {}}
+          systemPrompt={queryRewriteSystemPrompt}
+          title="Query Rewrite Prompt"
+          userPrompt=""
+          variables={queryRewriteMeta.variables}
+        />
+      )}
+
+      {/* Query Generate Prompts */}
+      {queryGenMeta != null && (
+        <PromptEditor
+          defaultSystemPrompt={queryGenMeta.defaultSystemPrompt}
+          defaultUserPrompt={queryGenMeta.defaultUserPrompt}
+          description="Prompts used when generating answers from retrieved sources."
+          onSystemPromptChange={setQueryGenSystemPrompt}
+          onUserPromptChange={setQueryGenUserPrompt}
+          systemPrompt={queryGenSystemPrompt}
+          title="Query Answer Generation Prompts"
+          userPrompt={queryGenUserPrompt}
+          variables={queryGenMeta.variables}
         />
       )}
 

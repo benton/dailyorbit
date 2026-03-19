@@ -11,6 +11,15 @@ import {
   SUMMARIZATION_VARIABLES,
 } from './prompts.ts';
 import { NEWS_ARTICLE_SUMMARIZER } from './summarizers/news-article.ts';
+import { DEFAULT_REWRITE_SYSTEM_PROMPT } from '../query/rewrite.ts';
+import {
+  DEFAULT_GENERATE_SYSTEM_PROMPT,
+  DEFAULT_GENERATE_USER_PROMPT,
+} from '../query/generate.ts';
+import {
+  QUERY_REWRITE_VARIABLES,
+  QUERY_GENERATE_VARIABLES,
+} from '../query/prompts.ts';
 import type { InferenceRequest } from './types.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */
@@ -70,6 +79,16 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
         defaultSystemPrompt: NEWS_ARTICLE_SUMMARIZER.defaultSystemPrompt,
         defaultUserPrompt: NEWS_ARTICLE_SUMMARIZER.defaultUserPrompt,
         variables: NEWS_ARTICLE_SUMMARIZER.variables,
+      },
+      queryRewrite: {
+        defaultSystemPrompt: DEFAULT_REWRITE_SYSTEM_PROMPT,
+        defaultUserPrompt: '',
+        variables: QUERY_REWRITE_VARIABLES,
+      },
+      queryGenerate: {
+        defaultSystemPrompt: DEFAULT_GENERATE_SYSTEM_PROMPT,
+        defaultUserPrompt: DEFAULT_GENERATE_USER_PROMPT,
+        variables: QUERY_GENERATE_VARIABLES,
       },
     });
   });

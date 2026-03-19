@@ -8,7 +8,7 @@ import { EmbeddingService } from '../inference/embedding-service.ts';
 import type { EmbeddingContext } from '../search/content-search.ts';
 import { rewriteQuery } from './rewrite.ts';
 import { retrieveContext } from './retrieve.ts';
-import { generateAnswer } from './generate.ts';
+import { generateAnswer, type GeneratePrompts } from './generate.ts';
 import type { QuerySSEEvent } from './types.ts';
 
 export const queryRoutes = new Hono();
@@ -58,6 +58,12 @@ queryRoutes.post('/', async (c) => {
   const generateModelId: string =
     (config.get('queryGenerateModel') as string) || 'us.amazon.nova-pro-v1:0';
   const region: string = (config.get('bedrockRegion') as string) || 'us-east-2';
+  const rewriteSystemPrompt: string =
+    (config.get('queryRewriteSystemPrompt') as string) || '';
+  const generateSystemPrompt: string =
+    (config.get('queryGenerateSystemPrompt') as string) || '';
+  const generateUserPrompt: string =
+    (config.get('queryGenerateUserPrompt') as string) || '';
 
   const client = new BedrockClient(region);
   const embeddingCtx: EmbeddingContext | undefined =
@@ -85,6 +91,7 @@ queryRoutes.post('/', async (c) => {
         question,
         client,
         rewriteModelId,
+        rewriteSystemPrompt || undefined,
       );
 
       // 2. Retrieve
@@ -112,11 +119,16 @@ queryRoutes.post('/', async (c) => {
         let generateInputTokens: number = 0;
         let generateOutputTokens: number = 0;
 
+        const genPrompts: GeneratePrompts = {
+          systemPrompt: generateSystemPrompt || undefined,
+          userPromptTemplate: generateUserPrompt || undefined,
+        };
         const gen = generateAnswer(
           question,
           retrieval.sources,
           client,
           generateModelId,
+          genPrompts,
         );
         let result = await gen.next();
         while (!result.done) {

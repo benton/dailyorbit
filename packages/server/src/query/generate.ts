@@ -1,8 +1,11 @@
 import type { ConverseStreamCommandInput } from '@aws-sdk/client-bedrock-runtime';
+import { renderPrompt } from '../inference/prompts.ts';
 import type { BedrockClient } from '../inference/bedrock-client.ts';
 import type { QuerySSEEvent, RetrievedSource } from './types.ts';
 
-const GENERATE_SYSTEM_PROMPT: string = `You are an FCC filing analyst. Answer the user's question using ONLY the provided sources. Cite sources using [brackets] with the source ID. If the sources don't contain enough information, say so. Never invent facts or sources.`;
+export const DEFAULT_GENERATE_SYSTEM_PROMPT: string = `You are an FCC filing analyst. Answer the user's question using ONLY the provided sources. Cite sources using [brackets] with the source ID. If the sources don't contain enough information, say so. Never invent facts or sources.`;
+
+export const DEFAULT_GENERATE_USER_PROMPT: string = `Context:\n{{{context}}}\n\nQuestion: {{question}}`;
 
 /** Format sources into a context block for the generation prompt. */
 function buildContextBlock(sources: RetrievedSource[]): string {
@@ -14,6 +17,11 @@ function buildContextBlock(sources: RetrievedSource[]): string {
     .join('\n\n');
 }
 
+export type GeneratePrompts = {
+  systemPrompt?: string | undefined;
+  userPromptTemplate?: string | undefined;
+};
+
 /**
  * Generate a streamed answer from retrieved sources.
  * Yields delta and usage QuerySSEEvents.
@@ -23,13 +31,21 @@ export async function* generateAnswer(
   sources: RetrievedSource[],
   client: BedrockClient,
   modelId: string,
+  prompts?: GeneratePrompts,
 ): AsyncGenerator<QuerySSEEvent> {
   const contextBlock: string = buildContextBlock(sources);
-  const userMessage: string = `Context:\n${contextBlock}\n\nQuestion: ${question}`;
+  const sysPrompt: string =
+    prompts?.systemPrompt || DEFAULT_GENERATE_SYSTEM_PROMPT;
+  const userTemplate: string =
+    prompts?.userPromptTemplate || DEFAULT_GENERATE_USER_PROMPT;
+  const userMessage: string = renderPrompt(userTemplate, {
+    context: contextBlock,
+    question,
+  });
 
   const input: ConverseStreamCommandInput = {
     modelId,
-    system: [{ text: GENERATE_SYSTEM_PROMPT }],
+    system: [{ text: sysPrompt }],
     messages: [{ role: 'user', content: [{ text: userMessage }] }],
     inferenceConfig: { maxTokens: 4096, temperature: 0.2 },
   };

@@ -45,6 +45,7 @@ export default function PublicLayout() {
           <NavLink label="Home" to="/" />
           <NavLink label="Search" to="/search" />
           <NavLink label="News" to="/news" />
+          <NavLink label="Ask" to="/query" />
           <div className="ml-auto flex items-center gap-3">
             <button
               className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"

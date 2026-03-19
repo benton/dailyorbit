@@ -112,6 +112,27 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Maximum character length for RAG questions',
   },
+  queryRewriteSystemPrompt: {
+    key: 'queryRewriteSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for RAG query rewriting (blank = built-in default)',
+  },
+  queryGenerateSystemPrompt: {
+    key: 'queryGenerateSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for RAG answer generation (blank = built-in default)',
+  },
+  queryGenerateUserPrompt: {
+    key: 'queryGenerateUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt template for RAG answer generation (blank = built-in default)',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
