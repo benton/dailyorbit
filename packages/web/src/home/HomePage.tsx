@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { cn } from '../lib/cn.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
+import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type SubsystemCount = { count: number; subsystem_code: string };
@@ -34,6 +35,7 @@ type RecentFiling = {
   file_number: string;
   status_code: string | null;
   subsystem_code: string;
+  summary: string | null;
 };
 
 type RecentFilingsResponse = {
@@ -78,7 +80,16 @@ type TopLineStats = {
 // ── Column definitions for recent filings table ─────────────────────
 
 const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
-  { accessorKey: 'file_number', header: 'File Number', size: 220 },
+  {
+    accessorKey: 'file_number',
+    header: 'File Number',
+    size: 220,
+    cell: ({ row }) => (
+      <SummaryTooltip summary={row.original.summary}>
+        <span className="font-mono">{row.original.file_number}</span>
+      </SummaryTooltip>
+    ),
+  },
   { accessorKey: 'subsystem_code', header: 'Subsystem', size: 80 },
   { accessorKey: 'app_type_code', header: 'App Type', size: 80 },
   { accessorKey: 'address_attention', header: 'Applicant', size: 180 },

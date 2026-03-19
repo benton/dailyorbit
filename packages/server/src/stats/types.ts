@@ -48,6 +48,7 @@ export type RecentFiling = {
   status_code: string | null;
   date_filed: string | null;
   company_name: string | null;
+  summary: string | null;
 };
 
 export type CompanyFilingVolume = {

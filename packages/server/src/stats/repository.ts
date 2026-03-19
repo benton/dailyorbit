@@ -167,7 +167,12 @@ export async function getRecentFilings(
     `SELECT f.file_number, f.callsign, f.address_attention,
             f.subsystem_code, f.app_type_code, f.status_code,
             f.date_filed::VARCHAR AS date_filed,
-            c.name AS company_name
+            c.name AS company_name,
+            (SELECT a.summary FROM attachment a
+             WHERE a.filing_key = f.filing_key
+             ORDER BY CASE WHEN a.attachment_name = 'Attachment Application' THEN 0 ELSE 1 END,
+                      a.attachment_key
+             LIMIT 1) AS summary
      FROM filing f
      LEFT JOIN company c ON c.id = f.company_id
      WHERE f.date_filed::DATE = $1::DATE
@@ -184,6 +189,7 @@ export async function getRecentFilings(
     status_code: r.status_code != null ? String(r.status_code) : null,
     date_filed: r.date_filed != null ? String(r.date_filed) : null,
     company_name: r.company_name != null ? String(r.company_name) : null,
+    summary: r.summary != null ? String(r.summary) : null,
   }));
 }
 
