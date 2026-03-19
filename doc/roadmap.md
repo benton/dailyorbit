@@ -5,11 +5,11 @@
 - v0.1.0 [x] Data modeling and download
 - v0.1.5 [x] Attachment discovery and download
 - v0.1.6 [x] ICFS filing ingestion: transfer parties, service types, red light status, enriched metadata
-- v0.1.7 [x] Show basic data set information and explore visualization library
+- v0.1.7 [x] Show basic data set information and visualizations
 - v0.2.0 [x] Basic Entity viewing and search
-- v0.3.0 [x] Company entity, attribution & ownership tracking
+- v0.3.0 [x] Company entity: attribution & ownership tracking
 - v0.3.5 [x] Enriched data model: Comment atttachments, timelines
-- v0.4.0 [x] Attachment processing: text (markdown?) extraction
+- v0.4.0 [x] Attachment processing: text / markdown extraction
 - v0.5.0 [x] Anonymous home page
 - v0.6.0 [x] User authentication and profile
 - v0.7.0 [x] User home page, preferences, and viewing history
@@ -26,6 +26,7 @@
 - v1.6.0 [x] Premium feature: Query-modifying RAG / interrogation mode
 - v1.7.0 [ ] LLM-powered question answering / different "consultants"
 - v1.8.0 [ ] RAG Search module
+- v1.9.0 [ ] Per-use, per-request inference cost accounting
 
 ## Medium Term: The Daily Orbit Newspaper
 
@@ -43,9 +44,10 @@
 
 ## Off the Wall Ideas or Nice to have
 
+- v?.x.x [ ] Revisit, refine, and document Company Entity attribution with Filings and News
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
 - v?.x.x [ ] Parse GXT files
-- v?.x.x [ ] Exponential backoff during ingest
-- v?.x.x [ ] Document and Refine Company Entity attribution with Filings and News
 
 ## Bug fixes
+
+- v?.x.x [ ] Exponential backoff during ingest
