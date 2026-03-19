@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import ReadUnreadToggle from '../filings/ReadUnreadToggle.tsx';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 
 type UnreadFiling = {
   applicantName: string | null;
@@ -41,7 +42,7 @@ export default function UserHomePage() {
   }, []);
 
   const goToFiling = useCallback(
-    (fileNumber: string) => void navigate(`/filings/${encodeURIComponent(fileNumber)}`),
+    (fileNumber: string) => void navigate(filingUrl(fileNumber)),
     [navigate],
   );
 

@@ -8,6 +8,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { cn } from '../lib/cn.ts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
@@ -78,7 +79,7 @@ const ownershipEventColumns: Array<ColumnDef<OwnershipEvent, unknown>> = [
         <Link
           className="text-blue-600 hover:underline dark:text-blue-400"
           onClick={(e) => e.stopPropagation()}
-          to={`/filings/${encodeURIComponent(fn)}`}
+          to={filingUrl(fn)}
         >
           {fn}
         </Link>

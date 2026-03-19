@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { filingUrl } from '../lib/filing-url.ts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
 
 type OwnershipEventItem = {
@@ -58,7 +59,7 @@ const columns: Array<ColumnDef<OwnershipEventItem, unknown>> = [
     cell: ({ row }) => (
       <Link
         className="font-mono text-blue-600 hover:underline dark:text-blue-400"
-        to={`/filings/${row.original.filingFileNumber}`}
+        to={filingUrl(row.original.filingFileNumber)}
       >
         {row.original.filingFileNumber}
       </Link>
