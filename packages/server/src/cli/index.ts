@@ -2,6 +2,7 @@ import { defineCommand } from 'citty';
 import { attachmentsCommand } from './attachments/index.ts';
 import { companiesCommand } from './companies/index.ts';
 import { configCommand } from './config/index.ts';
+import { consultantCommand } from './consultant/index.ts';
 import { dbCommand } from './db/index.ts';
 import { inferenceCommand } from './inference/index.ts';
 import { ingestCommand } from './ingest/index.ts';
@@ -20,6 +21,7 @@ export const main = defineCommand({
     attachments: attachmentsCommand,
     companies: companiesCommand,
     config: configCommand,
+    consultant: consultantCommand,
     db: dbCommand,
     inference: inferenceCommand,
     ingest: ingestCommand,
