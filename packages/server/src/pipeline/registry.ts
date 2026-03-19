@@ -516,6 +516,14 @@ const STAGES: PipelineStage[] = [
       );
       const start: number = Date.now();
       await ensureNewsTables(ctx.conn);
+
+      // Count pending before and after to derive processed count
+      const countSql: string =
+        'SELECT COUNT(*) AS cnt FROM news_item WHERE full_text IS NOT NULL AND summary IS NULL';
+      const beforeReader = await ctx.conn.runAndReadAll(countSql);
+      const pendingBefore: number = Number(beforeReader.getRowObjectsJS()[0]!.cnt);
+      ctx.log('info', `${String(pendingBefore)} articles pending summarization`);
+
       await summarizeNewsItems(ctx.conn, {
         region: process.env.AWS_REGION ?? 'us-east-2',
         modelId: 'us.amazon.nova-pro-v1:0',
@@ -523,11 +531,15 @@ const STAGES: PipelineStage[] = [
         limit: 0,
         dryRun: false,
       });
+
+      const afterReader = await ctx.conn.runAndReadAll(countSql);
+      const pendingAfter: number = Number(afterReader.getRowObjectsJS()[0]!.cnt);
+      const processed: number = pendingBefore - pendingAfter;
       return {
-        itemsProcessed: 0, // summarizeNewsItems logs internally
-        itemsFailed: 0,
+        itemsProcessed: processed,
+        itemsFailed: pendingAfter,
         durationMs: Date.now() - start,
-        summary: 'News summarization complete',
+        summary: `Summarized ${String(processed)} articles`,
       };
     },
   },
