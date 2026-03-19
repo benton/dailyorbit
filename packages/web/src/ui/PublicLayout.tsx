@@ -58,7 +58,7 @@ export default function PublicLayout() {
           </div>
         </nav>
       </header>
-      <main className={`mx-auto p-6 ${isWide ? 'max-w-[96rem]' : 'max-w-6xl'}`}>
+      <main className={`mx-auto p-6 ${isWide ? '' : 'max-w-6xl'}`}>
         <Outlet />
       </main>
     </div>

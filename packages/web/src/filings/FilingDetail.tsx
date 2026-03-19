@@ -236,7 +236,7 @@ export default function FilingDetailPage() {
   const hasTransferInfo: boolean = filing.transferorName != null || filing.transfereeName != null;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
+    <div className="space-y-6">
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-3">

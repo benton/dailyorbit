@@ -76,7 +76,7 @@ export default function AdminLayout() {
           </div>
         </nav>
       </header>
-      <main className={`mx-auto p-6 ${isWide ? 'max-w-[96rem]' : 'max-w-5xl'}`}>
+      <main className={`mx-auto p-6 ${isWide ? '' : 'max-w-5xl'}`}>
         <Outlet />
       </main>
     </div>
