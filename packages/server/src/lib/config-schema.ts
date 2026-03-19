@@ -94,6 +94,24 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Whether to L2-normalize embeddings (for cosine similarity)',
   },
+  queryRewriteModel: {
+    key: 'queryRewriteModel',
+    defaultValue: 'us.amazon.nova-micro-v1:0',
+    encrypted: false,
+    description: 'Bedrock model ID for RAG query rewriting',
+  },
+  queryGenerateModel: {
+    key: 'queryGenerateModel',
+    defaultValue: 'us.amazon.nova-pro-v1:0',
+    encrypted: false,
+    description: 'Bedrock model ID for RAG answer generation',
+  },
+  queryMaxQuestionLength: {
+    key: 'queryMaxQuestionLength',
+    defaultValue: '1024',
+    encrypted: false,
+    description: 'Maximum character length for RAG questions',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

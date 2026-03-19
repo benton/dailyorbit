@@ -1,9 +1,12 @@
 import {
   BedrockRuntimeClient,
   ConverseCommand,
+  ConverseStreamCommand,
   InvokeModelCommand,
   type ConverseCommandInput,
   type ConverseCommandOutput,
+  type ConverseStreamCommandInput,
+  type ConverseStreamOutput,
 } from '@aws-sdk/client-bedrock-runtime';
 import type {
   EmbeddingRequest,
@@ -79,6 +82,17 @@ export class BedrockClient {
 
   async converse(input: ConverseCommandInput): Promise<ConverseCommandOutput> {
     return this.client.send(new ConverseCommand(input));
+  }
+
+  /** Stream a conversation response, yielding raw SDK events. */
+  async *converseStream(
+    input: ConverseStreamCommandInput,
+  ): AsyncGenerator<ConverseStreamOutput> {
+    const response = await this.client.send(new ConverseStreamCommand(input));
+    if (response.stream == null) return;
+    for await (const event of response.stream) {
+      yield event;
+    }
   }
 
   /** Embed text using a Titan-compatible embedding model via InvokeModel. */
