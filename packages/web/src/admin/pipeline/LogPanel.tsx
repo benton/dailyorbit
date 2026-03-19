@@ -3,28 +3,28 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../ui/button.tsx';
 
 export type LogLine = {
-  stage: string;
   level: 'info' | 'error' | 'progress';
   message: string;
+  stage: string;
   timestamp: string;
 };
 
 type LogPanelProps = {
-  lines: LogLine[];
+  lines: Array<LogLine>;
   onClear: () => void;
 };
 
 const LEVEL_CLASSES: Record<string, string> = {
-  info: 'text-neutral-200',
   error: 'text-red-400',
+  info: 'text-neutral-200',
   progress: 'text-neutral-500',
 };
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleTimeString('en-US', {
-    hour12: false,
     hour: '2-digit',
+    hour12: false,
     minute: '2-digit',
     second: '2-digit',
   });
@@ -44,7 +44,9 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
   // Detect manual scroll to un-pin
   const handleScroll = useCallback(() => {
     const el = preRef.current;
-    if (el == null) return;
+    if (el == null) {
+      return;
+    }
     const atBottom: boolean = el.scrollTop + el.clientHeight >= el.scrollHeight - 16;
     setPinToBottom(atBottom);
   }, []);

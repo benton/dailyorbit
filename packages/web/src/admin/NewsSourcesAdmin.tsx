@@ -8,9 +8,9 @@ type NewsSource = {
   feedUrl: string;
   fetchIntervalMinutes: number;
   id: number;
+  lastFetchedAt: string | null;
   lastFetchError: string | null;
   lastFetchStatus: string | null;
-  lastFetchedAt: string | null;
   name: string;
   updatedAt: string;
 };

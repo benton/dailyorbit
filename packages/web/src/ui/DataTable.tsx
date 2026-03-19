@@ -51,10 +51,10 @@ export type DataTableProps<TData> = {
   onRowClick?: (row: TData) => void;
   /** Available page size options */
   pageSizeOptions?: Array<number>;
-  /** Optional function to extract tooltip text from a row (shown on row hover) */
-  rowTooltip?: (row: TData) => string | null;
   /** Optional prefix for URL query params to avoid collisions between multiple tables */
   paramPrefix?: string;
+  /** Optional function to extract tooltip text from a row (shown on row hover) */
+  rowTooltip?: (row: TData) => string | null;
 };
 
 const DEFAULT_PAGE_SIZE_OPTIONS: Array<number> = [10, 25, 50, 100];

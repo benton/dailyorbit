@@ -95,6 +95,7 @@ export default function OwnershipEventsPage() {
 
   const cols = useMemo(() => columns, []);
 
+  // eslint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable<OwnershipEventItem>({
     columns: cols,
     data: events,

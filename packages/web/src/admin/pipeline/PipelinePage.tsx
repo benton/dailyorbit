@@ -11,23 +11,23 @@ import PipelineGroup from './PipelineGroup.tsx';
 type GroupInfo = {
   id: string;
   name: string;
-  stageIds: string[];
+  stageIds: Array<string>;
 };
 
 type StageInfo = {
-  id: string;
-  group: string;
-  name: string;
   description: string;
+  group: string;
+  id: string;
+  name: string;
   status: StageStatus;
 };
 
 type StatusResponse = {
+  currentStageId: string | null;
+  groups: Array<GroupInfo>;
   runId: string | null;
   running: boolean;
-  currentStageId: string | null;
-  groups: GroupInfo[];
-  stages: StageInfo[];
+  stages: Array<StageInfo>;
 };
 
 type RunResponse = {
@@ -37,11 +37,11 @@ type RunResponse = {
 // ── Component ───────────────────────────────────────────────────────
 
 export default function PipelinePage() {
-  const [groups, setGroups] = useState<GroupInfo[]>([]);
-  const [stages, setStages] = useState<StageInfo[]>([]);
+  const [groups, setGroups] = useState<Array<GroupInfo>>([]);
+  const [stages, setStages] = useState<Array<StageInfo>>([]);
   const [running, setRunning] = useState<boolean>(false);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
-  const [logLines, setLogLines] = useState<LogLine[]>([]);
+  const [logLines, setLogLines] = useState<Array<LogLine>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -58,8 +58,8 @@ export default function PipelinePage() {
         setActiveRunId(data.runId);
       }
       setError(null);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load pipeline status');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to load pipeline status');
     } finally {
       setLoading(false);
     }
@@ -86,10 +86,10 @@ export default function PipelinePage() {
 
       es.addEventListener('log', (event: MessageEvent) => {
         const line: LogLine = JSON.parse(event.data as string) as LogLine;
-        setLogLines((prev: LogLine[]) => [...prev, line]);
+        setLogLines((prev: Array<LogLine>) => [...prev, line]);
 
         // Update stage status from log events
-        setStages((prev: StageInfo[]) =>
+        setStages((prev: Array<StageInfo>) =>
           prev.map((s: StageInfo) => {
             if (s.id === line.stage && line.level !== 'progress') {
               return { ...s, status: 'running' as StageStatus };
@@ -129,28 +129,30 @@ export default function PipelinePage() {
   // ── Run handler ─────────────────────────────────────────────────
 
   const runStages = useCallback(
-    async (stageIds: string[]) => {
-      if (running) return;
+    async (stageIds: Array<string>) => {
+      if (running) {
+        return;
+      }
 
       try {
         setRunning(true);
         // Optimistically set stages to running
-        setStages((prev: StageInfo[]) =>
+        setStages((prev: Array<StageInfo>) =>
           prev.map((s: StageInfo) =>
             stageIds.includes(s.id) ? { ...s, status: 'idle' as StageStatus } : s,
           ),
         );
 
         const resp: RunResponse = await apiFetch<RunResponse>('/api/admin/pipeline/run', {
-          method: 'POST',
           body: JSON.stringify({ stages: stageIds }),
+          method: 'POST',
         });
 
         setActiveRunId(resp.runId);
         connectSSE(resp.runId);
-      } catch (err: unknown) {
+      } catch (error_: unknown) {
         setRunning(false);
-        setError(err instanceof Error ? err.message : 'Failed to start pipeline run');
+        setError(error_ instanceof Error ? error_.message : 'Failed to start pipeline run');
       }
     },
     [running, connectSSE],
@@ -164,7 +166,7 @@ export default function PipelinePage() {
   );
 
   const handleRunAll = useCallback(
-    (stageIds: string[]) => {
+    (stageIds: Array<string>) => {
       void runStages(stageIds);
     },
     [runStages],
@@ -200,9 +202,9 @@ export default function PipelinePage() {
           const groupStages = stages
             .filter((s: StageInfo) => group.stageIds.includes(s.id))
             .map((s: StageInfo) => ({
+              description: s.description,
               id: s.id,
               name: s.name,
-              description: s.description,
               status: s.status,
             }));
 

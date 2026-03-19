@@ -70,9 +70,13 @@ export function SummaryTooltip({ children, summary }: SummaryTooltipProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showTooltip = useCallback(() => {
-    if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = setTimeout(() => {
-      if (triggerRef.current == null) return;
+      if (triggerRef.current == null) {
+        return;
+      }
       const rect: DOMRect = triggerRef.current.getBoundingClientRect();
       const pos = computePosition(rect);
       setTooltip({ left: pos.left, placement: pos.placement, text: summary ?? '', top: pos.top });
@@ -80,7 +84,9 @@ export function SummaryTooltip({ children, summary }: SummaryTooltipProps) {
   }, [summary]);
 
   const hideTooltip = useCallback(() => {
-    if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current);
+    }
     setTooltip(null);
   }, []);
 
@@ -126,17 +132,23 @@ export function useRowTooltip<TData>(rowTooltip?: (row: TData) => string | null)
     (row: TData) => ({
       onMouseEnter: (e: MouseEvent<HTMLElement>) => {
         const text: string | null | undefined = rowTooltip?.(row);
-        if (text == null || text.trim() === '') return;
+        if (text == null || text.trim() === '') {
+          return;
+        }
         // Capture rect immediately — React nullifies synthetic event properties after handler
         const rect: DOMRect = e.currentTarget.getBoundingClientRect();
-        if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current != null) {
+          clearTimeout(timeoutRef.current);
+        }
         timeoutRef.current = setTimeout(() => {
           const pos = computePosition(rect);
           setTooltip({ left: pos.left, placement: pos.placement, text, top: pos.top });
         }, 300);
       },
       onMouseLeave: () => {
-        if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current != null) {
+          clearTimeout(timeoutRef.current);
+        }
         setTooltip(null);
       },
     }),

@@ -5,12 +5,12 @@ import { Button } from '../../ui/button.tsx';
 export type StageStatus = 'idle' | 'running' | 'success' | 'failed';
 
 type PipelineStepProps = {
+  description: string;
+  disabled: boolean;
   id: string;
   name: string;
-  description: string;
-  status: StageStatus;
-  disabled: boolean;
   onRun: (stageId: string) => void;
+  status: StageStatus;
 };
 
 const STATUS_CONFIG: Record<
@@ -21,6 +21,11 @@ const STATUS_CONFIG: Record<
     variant: 'default' | 'secondary' | 'destructive' | 'outline';
   }
 > = {
+  failed: {
+    icon: <XCircle className="h-3.5 w-3.5 text-red-500" />,
+    label: 'Failed',
+    variant: 'destructive',
+  },
   idle: {
     icon: <Circle className="h-3.5 w-3.5 text-neutral-400" />,
     label: 'Idle',
@@ -36,20 +41,15 @@ const STATUS_CONFIG: Record<
     label: 'Success',
     variant: 'default',
   },
-  failed: {
-    icon: <XCircle className="h-3.5 w-3.5 text-red-500" />,
-    label: 'Failed',
-    variant: 'destructive',
-  },
 };
 
 export default function PipelineStep({
+  description,
+  disabled,
   id,
   name,
-  description,
-  status,
-  disabled,
   onRun,
+  status,
 }: PipelineStepProps) {
   const cfg = STATUS_CONFIG[status];
 

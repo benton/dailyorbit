@@ -5,32 +5,32 @@ import { Button } from '../../ui/button.tsx';
 import PipelineStep from './PipelineStep.tsx';
 
 type StageInfo = {
+  description: string;
   id: string;
   name: string;
-  description: string;
   status: StageStatus;
 };
 
 type PipelineGroupProps = {
-  name: string;
-  stages: StageInfo[];
   disabled: boolean;
-  onRunStage: (stageId: string) => void;
-  onRunAll: (stageIds: string[]) => void;
   isLast: boolean;
+  name: string;
+  onRunAll: (stageIds: Array<string>) => void;
+  onRunStage: (stageId: string) => void;
+  stages: Array<StageInfo>;
 };
 
 export default function PipelineGroup({
-  name,
-  stages,
   disabled,
-  onRunStage,
-  onRunAll,
   isLast,
+  name,
+  onRunAll,
+  onRunStage,
+  stages,
 }: PipelineGroupProps) {
   const [expanded, setExpanded] = useState<boolean>(true);
 
-  const stageIds: string[] = stages.map((s: StageInfo) => s.id);
+  const stageIds: Array<string> = stages.map((s: StageInfo) => s.id);
 
   return (
     <div className="relative">
