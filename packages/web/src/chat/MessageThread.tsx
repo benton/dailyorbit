@@ -1,8 +1,8 @@
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { Consultant, Message } from './types.ts';
 import type { RetrievedSource } from '../query/types.ts';
+import type { Consultant, Message } from './types.ts';
 
 type Props = {
   consultants: Map<number, Consultant>;
@@ -23,20 +23,13 @@ function SourcesList({ sources }: { sources: RetrievedSource[] }) {
         onClick={() => setExpanded(!expanded)}
         type="button"
       >
-        {expanded ? (
-          <ChevronDown className="h-3 w-3" />
-        ) : (
-          <ChevronRight className="h-3 w-3" />
-        )}
+        {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         {String(sources.length)} source{sources.length !== 1 ? 's' : ''}
       </button>
       {expanded && (
         <ul className="mt-1 space-y-1">
           {sources.map((s: RetrievedSource, i: number) => (
-            <li
-              className="text-xs text-neutral-500"
-              key={`${s.id}-${String(i)}`}
-            >
+            <li className="text-xs text-neutral-500" key={`${s.id}-${String(i)}`}>
               <span className="font-medium">[{String(i + 1)}]</span>{' '}
               {s.url != null ? (
                 <a
@@ -83,19 +76,13 @@ export default function MessageThread({
 
           // Show divider when consultant changes between assistant messages
           if (msg.role === 'assistant' && msg.consultantId != null) {
-            if (
-              lastConsultantId != null &&
-              msg.consultantId !== lastConsultantId
-            ) {
-              const consultant: Consultant | undefined = consultants.get(
-                msg.consultantId,
-              );
+            if (lastConsultantId != null && msg.consultantId !== lastConsultantId) {
+              const consultant: Consultant | undefined = consultants.get(msg.consultantId);
               divider = (
                 <div className="flex items-center gap-2 py-2 text-xs text-neutral-400">
                   <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
                   <span>
-                    Switched to {consultant?.icon ?? ''}{' '}
-                    {consultant?.name ?? 'another consultant'}
+                    Switched to {consultant?.icon ?? ''} {consultant?.name ?? 'another consultant'}
                   </span>
                   <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
                 </div>
@@ -120,13 +107,11 @@ export default function MessageThread({
                       ? (consultants.get(msg.consultantId)?.icon ?? '\u{1F916}')
                       : '\u{1F916}'}
                   </div>
-                  <div className="min-w-0 max-w-[85%]">
+                  <div className="max-w-[85%] min-w-0">
                     <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 text-sm dark:bg-neutral-800">
                       <Markdown>{msg.content}</Markdown>
                     </div>
-                    {msg.sources != null && (
-                      <SourcesList sources={msg.sources} />
-                    )}
+                    {msg.sources != null && <SourcesList sources={msg.sources} />}
                   </div>
                 </div>
               )}
@@ -138,16 +123,12 @@ export default function MessageThread({
         {isStreaming && streamingAnswer !== '' && (
           <div className="flex gap-3">
             <div className="mt-1 flex-shrink-0 text-lg">{'\u{1F916}'}</div>
-            <div className="min-w-0 max-w-[85%]">
+            <div className="max-w-[85%] min-w-0">
               <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 text-sm dark:bg-neutral-800">
                 <Markdown>{streamingAnswer}</Markdown>
-                <span className="inline-block animate-pulse text-neutral-400">
-                  {'\u2588'}
-                </span>
+                <span className="inline-block animate-pulse text-neutral-400">{'\u2588'}</span>
               </div>
-              {streamingSources.length > 0 && (
-                <SourcesList sources={streamingSources} />
-              )}
+              {streamingSources.length > 0 && <SourcesList sources={streamingSources} />}
             </div>
           </div>
         )}
@@ -157,9 +138,7 @@ export default function MessageThread({
           <div className="flex gap-3">
             <div className="mt-1 flex-shrink-0 text-lg">{'\u{1F916}'}</div>
             <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 dark:bg-neutral-800">
-              <span className="animate-pulse text-sm text-neutral-400">
-                Thinking...
-              </span>
+              <span className="animate-pulse text-sm text-neutral-400">Thinking...</span>
             </div>
           </div>
         )}

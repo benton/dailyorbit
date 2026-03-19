@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseChatSSEData } from './useChatStream.ts';
 import type { ChatSSEEvent } from './types.ts';
+import { parseChatSSEData } from './useChatStream.ts';
 
 describe('parseChatSSEData', () => {
   it('parses a status event', () => {
@@ -15,9 +15,7 @@ describe('parseChatSSEData', () => {
   });
 
   it('parses a delta event', () => {
-    const event: ChatSSEEvent | null = parseChatSSEData(
-      'data: {"type":"delta","text":"hello"}',
-    );
+    const event: ChatSSEEvent | null = parseChatSSEData('data: {"type":"delta","text":"hello"}');
     expect(event).toEqual({ text: 'hello', type: 'delta' });
   });
 
@@ -59,9 +57,7 @@ describe('parseChatSSEData', () => {
   });
 
   it('parses a title event', () => {
-    const event: ChatSSEEvent | null = parseChatSSEData(
-      'data: {"type":"title","title":"My Chat"}',
-    );
+    const event: ChatSSEEvent | null = parseChatSSEData('data: {"type":"title","title":"My Chat"}');
     expect(event).toEqual({ title: 'My Chat', type: 'title' });
   });
 
@@ -95,9 +91,7 @@ describe('parseChatSSEData', () => {
   });
 
   it('handles data with extra whitespace around the JSON', () => {
-    const event: ChatSSEEvent | null = parseChatSSEData(
-      'data:   {"type":"done"}  ',
-    );
+    const event: ChatSSEEvent | null = parseChatSSEData('data:   {"type":"done"}  ');
     expect(event).toEqual({ type: 'done' });
   });
 });

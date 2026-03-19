@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
 import { MessageSquarePlus, Pencil, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import type { Conversation } from './types.ts';
 import { Button } from '../ui/button.tsx';
 import { Input } from '../ui/input.tsx';
-import type { Conversation } from './types.ts';
 
 type Props = {
   activeId: string | null;
@@ -62,9 +62,7 @@ export default function ConversationSidebar({
         {conversations.map((conv: Conversation) => (
           <div
             className={`group relative cursor-pointer border-b border-neutral-100 px-3 py-2 hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-800 ${
-              conv.id === activeId
-                ? 'bg-blue-50 dark:bg-blue-950'
-                : ''
+              conv.id === activeId ? 'bg-blue-50 dark:bg-blue-950' : ''
             }`}
             key={conv.id}
             onClick={() => onSelect(conv.id)}
@@ -96,7 +94,7 @@ export default function ConversationSidebar({
                 </div>
 
                 {/* Hover actions */}
-                <div className="absolute right-2 top-2 hidden gap-1 group-hover:flex">
+                <div className="absolute top-2 right-2 hidden gap-1 group-hover:flex">
                   <button
                     className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:hover:text-neutral-300"
                     onClick={(e) => {
@@ -126,9 +124,7 @@ export default function ConversationSidebar({
         ))}
 
         {conversations.length === 0 && (
-          <p className="p-4 text-center text-sm text-neutral-400">
-            No conversations yet
-          </p>
+          <p className="p-4 text-center text-sm text-neutral-400">No conversations yet</p>
         )}
       </div>
     </div>

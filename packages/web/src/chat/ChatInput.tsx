@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
 import { Send, StopCircle } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import type { Consultant } from './types.ts';
 import { Button } from '../ui/button.tsx';
 import ConsultantSelector from './ConsultantSelector.tsx';
-import type { Consultant } from './types.ts';
 
 type Props = {
   consultants: Consultant[];
@@ -47,15 +47,12 @@ export default function ChatInput({
   );
 
   // Auto-resize textarea
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setValue(e.target.value);
-      const ta: HTMLTextAreaElement = e.target;
-      ta.style.height = 'auto';
-      ta.style.height = `${String(Math.min(ta.scrollHeight, 200))}px`;
-    },
-    [],
-  );
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setValue(e.target.value);
+    const ta: HTMLTextAreaElement = e.target;
+    ta.style.height = 'auto';
+    ta.style.height = `${String(Math.min(ta.scrollHeight, 200))}px`;
+  }, []);
 
   return (
     <div className="border-t border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-900">
@@ -84,11 +81,7 @@ export default function ChatInput({
               <StopCircle className="h-4 w-4 text-red-500" />
             </Button>
           ) : (
-            <Button
-              disabled={value.trim() === '' || disabled}
-              onClick={handleSubmit}
-              size="icon"
-            >
+            <Button disabled={value.trim() === '' || disabled} onClick={handleSubmit} size="icon">
               <Send className="h-4 w-4" />
             </Button>
           )}

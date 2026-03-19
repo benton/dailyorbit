@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { Consultant } from '../chat/types.ts';
 import {
   archiveConsultantAdmin,
   createConsultantAdmin,
   fetchAllConsultants,
   updateConsultantAdmin,
 } from '../chat/api.ts';
-import type { Consultant } from '../chat/types.ts';
 
 type ConsultantForm = {
   color: string;
@@ -48,8 +48,7 @@ function consultantToForm(c: Consultant): ConsultantForm {
     description: c.description ?? '',
     enabled: c.enabled,
     icon: c.icon ?? '',
-    maxResponseTokens:
-      c.maxResponseTokens != null ? String(c.maxResponseTokens) : '',
+    maxResponseTokens: c.maxResponseTokens != null ? String(c.maxResponseTokens) : '',
     modelId: c.modelId ?? '',
     name: c.name,
     slug: c.slug,
@@ -59,25 +58,19 @@ function consultantToForm(c: Consultant): ConsultantForm {
   };
 }
 
-function formToPayload(
-  form: ConsultantForm,
-): Partial<Consultant> {
+function formToPayload(form: ConsultantForm): Partial<Consultant> {
   return {
     color: form.color || null,
     description: form.description || null,
     enabled: form.enabled,
     icon: form.icon || null,
-    maxResponseTokens:
-      form.maxResponseTokens !== ''
-        ? Number(form.maxResponseTokens)
-        : null,
+    maxResponseTokens: form.maxResponseTokens !== '' ? Number(form.maxResponseTokens) : null,
     modelId: form.modelId || null,
     name: form.name,
     slug: form.slug,
     sortOrder: form.sortOrder,
     systemPrompt: form.systemPrompt,
-    temperature:
-      form.temperature !== '' ? Number(form.temperature) : null,
+    temperature: form.temperature !== '' ? Number(form.temperature) : null,
   };
 }
 
@@ -158,10 +151,7 @@ export default function ConsultantAdmin() {
     setShowForm(true);
   };
 
-  const updateField = <K extends keyof ConsultantForm>(
-    key: K,
-    value: ConsultantForm[K],
-  ): void => {
+  const updateField = <K extends keyof ConsultantForm>(key: K, value: ConsultantForm[K]): void => {
     setForm((prev) => {
       const next: ConsultantForm = { ...prev, [key]: value };
       // Auto-generate slug from name when adding new
@@ -176,19 +166,13 @@ export default function ConsultantAdmin() {
     return <p className="text-sm text-neutral-500">Loading...</p>;
   }
 
-  const active: Consultant[] = consultants.filter(
-    (c) => c.archivedAt == null,
-  );
-  const archived: Consultant[] = consultants.filter(
-    (c) => c.archivedAt != null,
-  );
+  const active: Consultant[] = consultants.filter((c) => c.archivedAt == null);
+  const archived: Consultant[] = consultants.filter((c) => c.archivedAt != null);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-          Consultants
-        </h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">Consultants</h2>
         <button
           className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
           onClick={() => (showForm ? setShowForm(false) : startAdd())}
@@ -198,9 +182,7 @@ export default function ConsultantAdmin() {
         </button>
       </div>
 
-      {error != null && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error != null && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Add / Edit form */}
       {showForm && (
@@ -278,9 +260,7 @@ export default function ConsultantAdmin() {
             </label>
           </div>
           <div className="mt-3">
-            <label className="mb-1 block text-xs font-medium text-neutral-500">
-              System Prompt
-            </label>
+            <label className="mb-1 block text-xs font-medium text-neutral-500">System Prompt</label>
             <textarea
               className="w-full rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
               onChange={(e) => updateField('systemPrompt', e.target.value)}
@@ -292,7 +272,10 @@ export default function ConsultantAdmin() {
           <button
             className="mt-3 rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
             disabled={
-              saving || form.name.trim() === '' || form.slug.trim() === '' || form.systemPrompt.trim() === ''
+              saving ||
+              form.name.trim() === '' ||
+              form.slug.trim() === '' ||
+              form.systemPrompt.trim() === ''
             }
             onClick={() => void handleSave()}
             type="button"
@@ -323,17 +306,11 @@ export default function ConsultantAdmin() {
                 <td className="px-3 py-2 font-medium text-neutral-900 dark:text-neutral-100">
                   {c.name}
                   {c.description != null && (
-                    <div className="truncate text-xs text-neutral-400">
-                      {c.description}
-                    </div>
+                    <div className="truncate text-xs text-neutral-400">{c.description}</div>
                   )}
                 </td>
-                <td className="px-3 py-2 font-mono text-xs text-neutral-500">
-                  {c.slug}
-                </td>
-                <td className="px-3 py-2 text-xs text-neutral-500">
-                  {c.modelId ?? 'default'}
-                </td>
+                <td className="px-3 py-2 font-mono text-xs text-neutral-500">{c.slug}</td>
+                <td className="px-3 py-2 text-xs text-neutral-500">{c.modelId ?? 'default'}</td>
                 <td className="px-3 py-2">
                   <button
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -347,9 +324,7 @@ export default function ConsultantAdmin() {
                     {c.enabled ? 'On' : 'Off'}
                   </button>
                 </td>
-                <td className="px-3 py-2 text-xs text-neutral-500">
-                  {c.sortOrder}
-                </td>
+                <td className="px-3 py-2 text-xs text-neutral-500">{c.sortOrder}</td>
                 <td className="px-3 py-2">
                   <button
                     className="mr-2 text-xs text-neutral-600 hover:underline dark:text-neutral-400"
@@ -370,10 +345,7 @@ export default function ConsultantAdmin() {
             ))}
             {active.length === 0 && (
               <tr>
-                <td
-                  className="px-3 py-4 text-center text-neutral-400"
-                  colSpan={7}
-                >
+                <td className="px-3 py-4 text-center text-neutral-400" colSpan={7}>
                   No consultants configured
                 </td>
               </tr>
@@ -395,14 +367,10 @@ export default function ConsultantAdmin() {
                   <tr className="opacity-60" key={c.id}>
                     <td className="px-3 py-2 text-lg">{c.icon ?? '—'}</td>
                     <td className="px-3 py-2 text-neutral-500">{c.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-neutral-400">
-                      {c.slug}
-                    </td>
+                    <td className="px-3 py-2 font-mono text-xs text-neutral-400">{c.slug}</td>
                     <td className="px-3 py-2 text-xs text-neutral-400">
                       Archived{' '}
-                      {c.archivedAt != null
-                        ? new Date(c.archivedAt).toLocaleDateString()
-                        : ''}
+                      {c.archivedAt != null ? new Date(c.archivedAt).toLocaleDateString() : ''}
                     </td>
                   </tr>
                 ))}

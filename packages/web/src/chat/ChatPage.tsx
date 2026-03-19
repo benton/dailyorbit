@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import ConversationSidebar from './ConversationSidebar.tsx';
-import ConsultantSelector from './ConsultantSelector.tsx';
-import MessageThread from './MessageThread.tsx';
-import ChatInput from './ChatInput.tsx';
-import { useChatStream } from './useChatStream.ts';
+import type { Consultant, Conversation, Message } from './types.ts';
+import { useToast } from '../ui/toast.tsx';
 import {
   createConversation,
   deleteConversation,
@@ -12,24 +9,21 @@ import {
   fetchConversations,
   renameConversation,
 } from './api.ts';
-import type { Consultant, Conversation, Message } from './types.ts';
-import { useToast } from '../ui/toast.tsx';
+import ChatInput from './ChatInput.tsx';
+import ConsultantSelector from './ConsultantSelector.tsx';
+import ConversationSidebar from './ConversationSidebar.tsx';
+import MessageThread from './MessageThread.tsx';
+import { useChatStream } from './useChatStream.ts';
 
 export default function ChatPage() {
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedConsultant, setSelectedConsultant] =
-    useState<Consultant | null>(null);
+  const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [isNewConversation, setIsNewConversation] = useState<boolean>(true);
   const { toast } = useToast();
-  const {
-    cancel,
-    reset,
-    sendMessage,
-    state: streamState,
-  } = useChatStream();
+  const { cancel, reset, sendMessage, state: streamState } = useChatStream();
 
   // Build consultant lookup map
   const consultantMap: Map<number, Consultant> = new Map(
@@ -40,18 +34,14 @@ export default function ChatPage() {
   useEffect(() => {
     void (async () => {
       try {
-        const [c, convs] = await Promise.all([
-          fetchConsultants(),
-          fetchConversations(),
-        ]);
+        const [c, convs] = await Promise.all([fetchConsultants(), fetchConversations()]);
         setConsultants(c);
         setConversations(convs);
         if (c.length > 0) {
           setSelectedConsultant(c[0]!);
         }
       } catch (err: unknown) {
-        const msg: string =
-          err instanceof Error ? err.message : 'Failed to load';
+        const msg: string = err instanceof Error ? err.message : 'Failed to load';
         toast(msg, 'error');
       }
     })();
@@ -65,13 +55,10 @@ export default function ChatPage() {
         const conv = await fetchConversation(activeConvId);
         setMessages(conv.messages);
         // Set consultant to match conversation's current consultant
-        const consultant: Consultant | undefined = consultantMap.get(
-          conv.consultantId,
-        );
+        const consultant: Consultant | undefined = consultantMap.get(conv.consultantId);
         if (consultant != null) setSelectedConsultant(consultant);
       } catch (err: unknown) {
-        const msg: string =
-          err instanceof Error ? err.message : 'Failed to load conversation';
+        const msg: string = err instanceof Error ? err.message : 'Failed to load conversation';
         toast(msg, 'error');
       }
     })();
@@ -124,10 +111,7 @@ export default function ChatPage() {
           setIsNewConversation(false);
           setConversations((prev) => [conv, ...prev]);
         } catch (err: unknown) {
-          const msg: string =
-            err instanceof Error
-              ? err.message
-              : 'Failed to create conversation';
+          const msg: string = err instanceof Error ? err.message : 'Failed to create conversation';
           toast(msg, 'error');
           return;
         }
@@ -160,12 +144,9 @@ export default function ChatPage() {
     async (id: string, title: string) => {
       try {
         await renameConversation(id, title);
-        setConversations((prev) =>
-          prev.map((c) => (c.id === id ? { ...c, title } : c)),
-        );
+        setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)));
       } catch (err: unknown) {
-        const msg: string =
-          err instanceof Error ? err.message : 'Rename failed';
+        const msg: string = err instanceof Error ? err.message : 'Rename failed';
         toast(msg, 'error');
       }
     },
@@ -181,8 +162,7 @@ export default function ChatPage() {
         setConversations((prev) => prev.filter((c) => c.id !== id));
         if (activeConvId === id) handleNew();
       } catch (err: unknown) {
-        const msg: string =
-          err instanceof Error ? err.message : 'Delete failed';
+        const msg: string = err instanceof Error ? err.message : 'Delete failed';
         toast(msg, 'error');
       }
     },
@@ -190,12 +170,9 @@ export default function ChatPage() {
   );
 
   // Handle consultant switch during conversation
-  const handleConsultantSwitch = useCallback(
-    (consultant: Consultant) => {
-      setSelectedConsultant(consultant);
-    },
-    [],
-  );
+  const handleConsultantSwitch = useCallback((consultant: Consultant) => {
+    setSelectedConsultant(consultant);
+  }, []);
 
   const isStreaming: boolean = ['rewriting', 'retrieving', 'generating'].includes(
     streamState.status,
@@ -221,9 +198,7 @@ export default function ChatPage() {
             <h1 className="mb-2 text-2xl font-semibold text-neutral-800 dark:text-neutral-200">
               Chat with your Team
             </h1>
-            <p className="mb-6 text-neutral-500">
-              Choose a consultant to start
-            </p>
+            <p className="mb-6 text-neutral-500">Choose a consultant to start</p>
             <div className="w-full max-w-2xl">
               <ConsultantSelector
                 consultants={consultants}

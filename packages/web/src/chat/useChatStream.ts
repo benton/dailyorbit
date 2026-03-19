@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import type { ChatSSEEvent } from './types.ts';
 import type { QueryUsage, RetrievedSource } from '../query/types.ts';
+import type { ChatSSEEvent } from './types.ts';
 import env from '../lib/env.tsx';
 
 export type ChatStreamState = {
@@ -84,11 +84,8 @@ export function useChatStream(): {
           );
 
           if (!response.ok) {
-            const body = await response
-              .json()
-              .catch(() => ({ error: response.statusText }));
-            const errorMsg: string =
-              (body as Record<string, string>).error ?? response.statusText;
+            const body = await response.json().catch(() => ({ error: response.statusText }));
+            const errorMsg: string = (body as Record<string, string>).error ?? response.statusText;
             setState((prev) => ({
               ...prev,
               error: errorMsg,
@@ -98,8 +95,7 @@ export function useChatStream(): {
             return;
           }
 
-          const reader: ReadableStreamDefaultReader<Uint8Array> =
-            response.body!.getReader();
+          const reader: ReadableStreamDefaultReader<Uint8Array> = response.body!.getReader();
           const decoder = new TextDecoder();
           let buffer: string = '';
 
@@ -179,9 +175,7 @@ export function useChatStream(): {
             return;
           }
           const message: string =
-            error instanceof Error
-              ? error.message
-              : 'An unexpected error occurred';
+            error instanceof Error ? error.message : 'An unexpected error occurred';
           setState((prev) => ({
             ...prev,
             error: message,

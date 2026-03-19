@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import type { Consultant } from './types.ts';
 
 type Props = {
@@ -42,13 +42,9 @@ export default function ConsultantSelector({
           >
             <div className="mb-1 flex items-center gap-2">
               {c.icon != null && <span className="text-lg">{c.icon}</span>}
-              <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                {c.name}
-              </span>
+              <span className="font-medium text-neutral-800 dark:text-neutral-200">{c.name}</span>
             </div>
-            {c.description != null && (
-              <p className="text-sm text-neutral-500">{c.description}</p>
-            )}
+            {c.description != null && <p className="text-sm text-neutral-500">{c.description}</p>}
           </button>
         ))}
       </div>
@@ -75,9 +71,7 @@ export default function ConsultantSelector({
           {consultants.map((c: Consultant) => (
             <button
               className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 ${
-                selected?.id === c.id
-                  ? 'bg-neutral-100 dark:bg-neutral-700'
-                  : ''
+                selected?.id === c.id ? 'bg-neutral-100 dark:bg-neutral-700' : ''
               }`}
               key={c.id}
               onClick={() => handleSelect(c)}
@@ -85,13 +79,9 @@ export default function ConsultantSelector({
             >
               {c.icon != null && <span>{c.icon}</span>}
               <div>
-                <div className="font-medium text-neutral-800 dark:text-neutral-200">
-                  {c.name}
-                </div>
+                <div className="font-medium text-neutral-800 dark:text-neutral-200">{c.name}</div>
                 {c.description != null && (
-                  <div className="text-xs text-neutral-500">
-                    {c.description}
-                  </div>
+                  <div className="text-xs text-neutral-500">{c.description}</div>
                 )}
               </div>
             </button>
