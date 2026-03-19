@@ -20,9 +20,12 @@
 - v1.0.0 [x] Summarizations: per Application, per Attachment
 - v1.1.0 [x] Full text search via DuckDB BM25
 - v1.2.0 [x] Vector-DB search via Bedrock embeddings
-- v1.3.0 [~] News items Entity and RSS ingest of relevant news sources
-- v1.4.0 [ ] Premium feature: RAG and interrogation mode: LLM-powered question answering / different "consultants"
-- v1.5.0 [ ] RAG Search module
+- v1.3.0 [x] News items Entity and RSS ingest of relevant news sources
+- v1.4.0 [x] Ingestion pipeline admin UI
+- v1.5.0 [~] News items UI - user and admin
+- v1.6.0 [.] Premium feature: RAG and interrogation mode:
+- v1.7.0 [ ] LLM-powered question answering / different "consultants"
+- v1.8.0 [ ] RAG Search module
 
 ## Medium Term: The Daily Orbit Newspaper
 
@@ -40,6 +43,21 @@
 
 ## Off the Wall Ideas or Nice to have
 
-- v?.x.x [ ] Admin ingest control UI
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
 - v?.x.x [ ] Parse GXT files
+- v?.x.x [ ] Exponential backoff during ingest
+- v?.x.x [ ] Document and Refine Company Entity attribution with Filings and News
+
+## Bug fixes
+
+- Fix page width toggle on all pages site wide - logic should be in top template - wide should strech forever with the browser window
+- Attachment summary popup occurs on search results page, and Filing Details page Attachment list, but not on Home Page's Yesterdays Filings
+- The left half of the Attachment summary popup is always cut off by the edge of the browser. it seems to "shift" slightly to the left of the mouseover, whereas it should "shift" right
+- On the Filing details page, in the Milestones swim lane of Timeline visualization, some of the FCC-related events are really important changes of status: accepted for filing, and especially and final state: rejected, accepted, etc. We souhld make special Milestone types and put them in the legend so they're present at a glance.
+- In fact, the current status of each Filing should be more prominently represented on the Filing details page in some predictable place. Consider "reifying" these Filings status states as a Typescript class with associated UI colors, desccriptions, etc.
+- Filing Details page Attachment list should be sortable
+- On the home page, Total Filings should also list Comments and Attachment (non Filig, non Comment) counts - but smaller than Filings because they're more important
+- Can we Link M&A Activity on Home page to some visualization or list of events?
+- Last 3 Months Filing Volume by Company should be Last 6 Months Filing Volume by Company (it looks too blocky and needs more data)
+- On the home page, make the 3 lower full-width cards collapsable but open by default
+-
