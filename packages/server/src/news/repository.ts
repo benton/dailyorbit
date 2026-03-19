@@ -70,6 +70,7 @@ function rowToNewsItem(r: Record<string, unknown>): NewsItem {
     summarizedAt: r.summarized_at != null ? String(r.summarized_at) : null,
     extractStatus: String(r.extract_status) as ExtractStatus,
     companyId: r.company_id != null ? Number(r.company_id) : null,
+    companyName: r.company_name != null ? String(r.company_name) : null,
     tags,
     createdAt: String(r.created_at),
   };
@@ -295,7 +296,7 @@ export async function getNewsItemById(
   id: number,
 ): Promise<NewsItem | null> {
   const reader = await conn.runAndReadAll(
-    `SELECT ni.*, ns.name AS source_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id WHERE ni.id = $1`,
+    `SELECT ni.*, ns.name AS source_name, c.name AS company_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id LEFT JOIN company c ON c.id = ni.company_id WHERE ni.id = $1`,
     [id] as DuckDBValue[],
   );
   const rows = reader.getRowObjectsJS();
@@ -335,7 +336,7 @@ export async function listNewsItems(
   const whereClause: string =
     conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const baseSql: string = `SELECT ni.*, ns.name AS source_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id ${whereClause}`;
+  const baseSql: string = `SELECT ni.*, ns.name AS source_name, c.name AS company_name FROM news_item ni LEFT JOIN news_source ns ON ns.id = ni.news_source_id LEFT JOIN company c ON c.id = ni.company_id ${whereClause}`;
 
   const {
     sql,

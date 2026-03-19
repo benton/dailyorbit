@@ -45,6 +45,7 @@ export type NewsItem = {
   summarizedAt: string | null;
   extractStatus: ExtractStatus;
   companyId: number | null;
+  companyName: string | null;
   tags: string[];
   createdAt: string;
 };

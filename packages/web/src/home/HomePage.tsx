@@ -71,10 +71,12 @@ const COMPANY_COLORS: Array<string> = [
 
 type NewsListItem = {
   author: string | null;
+  companyName: string | null;
   extractStatus: string;
   id: number;
   newsSourceId: number;
   publishedAt: string | null;
+  sourceName: string | null;
   sourceUrl: string;
   summary: string | null;
   tags: Array<string>;
@@ -140,9 +142,15 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
     size: 400,
   },
   {
-    accessorKey: 'author',
+    accessorKey: 'sourceName',
     cell: ({ getValue }) => (getValue() as string | null) ?? '',
-    header: 'Author',
+    header: 'Source',
+    size: 120,
+  },
+  {
+    accessorKey: 'companyName',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
+    header: 'Company',
     size: 150,
   },
 ];
