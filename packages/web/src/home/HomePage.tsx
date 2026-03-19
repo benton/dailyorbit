@@ -69,6 +69,26 @@ const COMPANY_COLORS: Array<string> = [
   '#86bcb6',
 ];
 
+type NewsListItem = {
+  id: number;
+  title: string;
+  author: string | null;
+  publishedAt: string | null;
+  summary: string | null;
+  extractStatus: string;
+  newsSourceId: number;
+  sourceUrl: string;
+  tags: string[];
+};
+
+type PaginatedResponse<T> = {
+  data: T[];
+  page: number;
+  pageSize: number;
+  totalRows: number;
+  totalPages: number;
+};
+
 type ActiveFiling = {
   activity_count: number;
   company_name: string | null;
@@ -103,6 +123,32 @@ const recentFilingColumns: Array<ColumnDef<RecentFiling, unknown>> = [
   },
   { accessorKey: 'callsign', header: 'Callsign', size: 100 },
   { accessorKey: 'status_code', header: 'Status', size: 100 },
+];
+
+const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
+  {
+    accessorKey: 'publishedAt',
+    cell: ({ getValue }) => {
+      const v = getValue() as string | null;
+      return v != null ? new Date(v).toLocaleDateString() : '—';
+    },
+    header: 'Date',
+    size: 100,
+  },
+  {
+    accessorKey: 'title',
+    header: 'Title',
+    size: 400,
+    cell: ({ getValue }) => (
+      <span className="line-clamp-1">{getValue() as string}</span>
+    ),
+  },
+  {
+    accessorKey: 'author',
+    cell: ({ getValue }) => (getValue() as string | null) ?? '',
+    header: 'Author',
+    size: 150,
+  },
 ];
 
 // ── Client-side sortable data table (no pagination needed) ──────────
@@ -267,6 +313,9 @@ export default function HomePage() {
 
   const [topLine, setTopLine] = useState<TopLineStats | null>(null);
 
+  const [newsItems, setNewsItems] = useState<NewsListItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState<boolean>(true);
+
   const fetchStats = useCallback(async () => {
     try {
       const data: PublicStats = await apiFetch<PublicStats>('/api/stats');
@@ -316,6 +365,22 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Recent news
+  useEffect(() => {
+    let cancelled: boolean = false;
+    apiFetch<PaginatedResponse<NewsListItem>>(
+      '/api/news?pageSize=10&sort=published_at&order=desc',
+    )
+      .then((data: PaginatedResponse<NewsListItem>) => {
+        if (!cancelled) setNewsItems(data.data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setNewsLoading(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   // Company volume chart (last 3 months)
@@ -568,6 +633,42 @@ export default function HomePage() {
               defaultSort="file_number"
               rowTooltip={(row: RecentFiling) => row.summary}
               onRowClick={onRecentFilingClick}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Recent News */}
+      <div className={cardClass}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Recent News
+            </p>
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              Latest satellite industry news from RSS feeds.
+            </p>
+          </div>
+          <Link
+            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+            to="/news"
+          >
+            View all →
+          </Link>
+        </div>
+        <div className="mt-3">
+          {newsLoading ? (
+            <p className="text-sm text-neutral-500">Loading news...</p>
+          ) : newsItems.length === 0 ? (
+            <p className="text-sm text-neutral-500">No news articles available.</p>
+          ) : (
+            <SimpleDataTable<NewsListItem>
+              columns={newsColumns}
+              data={newsItems}
+              defaultOrder="desc"
+              defaultSort="publishedAt"
+              onRowClick={(row: NewsListItem) => navigate(`/news/${String(row.id)}`)}
+              rowTooltip={(row: NewsListItem) => row.summary}
             />
           )}
         </div>
