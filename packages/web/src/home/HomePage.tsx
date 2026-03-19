@@ -6,6 +6,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -205,6 +206,42 @@ function SimpleDataTable<TData>({
 
 const cardClass: string =
   'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+
+function CollapsibleCard({
+  children,
+  defaultOpen = true,
+  subtitle,
+  title,
+}: {
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  subtitle?: string;
+  title: string;
+}) {
+  const [open, setOpen] = useState<boolean>(defaultOpen);
+  return (
+    <div className={cardClass}>
+      <button
+        className="flex w-full items-center gap-2 text-left"
+        onClick={() => setOpen(!open)}
+        type="button"
+      >
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+        )}
+        <div>
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{title}</p>
+          {subtitle != null && (
+            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{subtitle}</p>
+          )}
+        </div>
+      </button>
+      {open && <div className="mt-3">{children}</div>}
+    </div>
+  );
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -521,40 +558,32 @@ export default function HomePage() {
       </div>
 
       {/* Last 6 Months Filing Volume by Company */}
-      <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Last 6 Months Filing Volume by Company
-        </p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-          Monthly filing counts by company over the last 3 months.
-        </p>
-        <div className="mt-3">
-          {companyVolumeLoading && (
-            <p className="text-sm text-neutral-500">Loading company volume chart...</p>
-          )}
-          <div ref={companyVolumeRef} />
-          {companyNames.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
-              {companyNames.map((name: string, i: number) => (
-                <div className="flex items-center gap-1.5" key={name}>
-                  <span
-                    className="inline-block h-3 w-3 rounded-sm"
-                    style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
-                  />
-                  <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <CollapsibleCard
+        subtitle="Monthly filing counts by company over the last 6 months."
+        title="Last 6 Months Filing Volume by Company"
+      >
+        {companyVolumeLoading && (
+          <p className="text-sm text-neutral-500">Loading company volume chart...</p>
+        )}
+        <div ref={companyVolumeRef} />
+        {companyNames.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+            {companyNames.map((name: string, i: number) => (
+              <div className="flex items-center gap-1.5" key={name}>
+                <span
+                  className="inline-block h-3 w-3 rounded-sm"
+                  style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
+                />
+                <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleCard>
 
       {/* Total Filings by Subsystem */}
-      <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Total Filings by Subsystem
-        </p>
-        <div className="mt-3 space-y-1.5">
+      <CollapsibleCard title="Total Filings by Subsystem">
+        <div className="space-y-1.5">
           {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
             const info = getSubsystem(sub.subsystem_code);
             const pct: number = (sub.count / maxSubsystemCount) * 100;
@@ -582,20 +611,16 @@ export default function HomePage() {
             );
           })}
         </div>
-      </div>
+      </CollapsibleCard>
 
       {/* Historical Filing Volume by Year */}
-      <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Historical Filing Volume by Year
-        </p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-          Stacked bar chart of filing counts per subsystem, grouped by year.
-        </p>
-        <div className="mt-3">
-          {volumeLoading && (
-            <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
-          )}
+      <CollapsibleCard
+        subtitle="Stacked bar chart of filing counts per subsystem, grouped by year."
+        title="Historical Filing Volume by Year"
+      >
+        {volumeLoading && (
+          <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
+        )}
           <div ref={volumeRef} />
           {volumeCodes.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
@@ -615,8 +640,7 @@ export default function HomePage() {
               })}
             </div>
           )}
-        </div>
-      </div>
+      </CollapsibleCard>
     </div>
   );
 }
