@@ -25,6 +25,7 @@ import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
 import { queryRoutes } from './query/routes.ts';
 import { consultantRoutes, consultantAdminRoutes } from './consultant/routes.ts';
+import { chatRoutes } from './chat/routes.ts';
 
 const app = new Hono();
 
@@ -90,6 +91,7 @@ app.route('/api/news', newsRoutes);
 app.route('/api/query', queryRoutes);
 app.route('/api/stats', publicStatsRoutes);
 app.route('/api/consultants', consultantRoutes);
+app.route('/api/conversations', chatRoutes);
 app.route('/api/admin/consultants', consultantAdminRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
