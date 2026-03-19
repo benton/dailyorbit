@@ -49,14 +49,3 @@
 - v?.x.x [ ] Document and Refine Company Entity attribution with Filings and News
 
 ## Bug fixes
-
-- Fix page width toggle on all pages site wide - logic should be in top template - wide should strech forever with the browser window
-- Attachment summary popup occurs on search results page, and Filing Details page Attachment list, but not on Home Page's Yesterdays Filings
-- The left half of the Attachment summary popup is always cut off by the edge of the browser. it seems to "shift" slightly to the left of the mouseover, whereas it should "shift" right
-- On the Filing details page, in the Milestones swim lane of Timeline visualization, some of the FCC-related events are really important changes of status: accepted for filing, and especially and final state: rejected, accepted, etc. We souhld make special Milestone types and put them in the legend so they're present at a glance.
-- In fact, the current status of each Filing should be more prominently represented on the Filing details page in some predictable place. Consider "reifying" these Filings status states as a Typescript class with associated UI colors, desccriptions, etc.
-- Filing Details page Attachment list should be sortable
-- On the home page, Total Filings should also list Comments and Attachment (non Filig, non Comment) counts - but smaller than Filings because they're more important
-- Can we Link M&A Activity on Home page to some visualization or list of events?
-- Last 3 Months Filing Volume by Company should be Last 6 Months Filing Volume by Company (it looks too blocky and needs more data)
-- On the home page, make the 3 lower full-width cards collapsable but open by default
