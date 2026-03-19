@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
+import { getFilingStatus } from '../lib/filing-status.ts';
 import { getSubsystem } from '../lib/subsystems.ts';
 import { markRead } from '../lib/viewing-history.ts';
 import { Badge } from '../ui/badge.tsx';
@@ -251,7 +252,19 @@ export default function FilingDetailPage() {
               {filing.appTypeLabel} ({filing.appTypeCode})
             </span>
           )}
-          {filing.statusText != null && <Badge variant="secondary">{filing.statusText}</Badge>}
+          {(() => {
+            const status = getFilingStatus(filing.statusCode, filing.statusText);
+            if (status != null) {
+              return (
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${status.bg} ${status.text}`}
+                >
+                  {status.label}
+                </span>
+              );
+            }
+            return null;
+          })()}
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
           {filing.applicantName != null && (
