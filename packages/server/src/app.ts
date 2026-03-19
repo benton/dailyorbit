@@ -24,6 +24,7 @@ import { userSettingsRoutes } from './user-settings/routes.ts';
 import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
 import { queryRoutes } from './query/routes.ts';
+import { consultantRoutes, consultantAdminRoutes } from './consultant/routes.ts';
 
 const app = new Hono();
 
@@ -55,6 +56,7 @@ const publicPrefixes: string[] = [
   '/api/autocomplete',
   '/api/companies',
   '/api/news',
+  '/api/consultants',
 ];
 app.use('/api/*', async (c, next) => {
   const path: string = c.req.path;
@@ -87,6 +89,8 @@ app.route('/api/companies', companyRoutes);
 app.route('/api/news', newsRoutes);
 app.route('/api/query', queryRoutes);
 app.route('/api/stats', publicStatsRoutes);
+app.route('/api/consultants', consultantRoutes);
+app.route('/api/admin/consultants', consultantAdminRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
 // In development, Vite runs separately with hot-reload.
