@@ -171,7 +171,7 @@ const STAGES: PipelineStage[] = [
       const start: number = Date.now();
       const conn: DuckDBConnection = await DuckDBConnection.create(ctx.db);
       try {
-        const rows = await getPendingSummarizations(conn, { limit: 100 });
+        const rows = await getPendingSummarizations(conn, {});
         if (rows.length === 0) {
           ctx.log('info', 'No attachments pending summarization');
           return { itemsProcessed: 0, itemsFailed: 0, durationMs: Date.now() - start };
@@ -271,7 +271,7 @@ const STAGES: PipelineStage[] = [
                 AND e.source_key = CAST(a.attachment_key AS VARCHAR)
                 AND e.chunk_index = 0
             )
-          LIMIT 100`;
+          `;
         const reader = await conn.runAndReadAll(sql);
         const rows = reader.getRowObjectsJS();
 
@@ -520,7 +520,7 @@ const STAGES: PipelineStage[] = [
         region: process.env.AWS_REGION ?? 'us-east-2',
         modelId: 'us.amazon.nova-pro-v1:0',
         concurrency: ctx.concurrency,
-        limit: 100,
+        limit: 0,
         dryRun: false,
       });
       return {
