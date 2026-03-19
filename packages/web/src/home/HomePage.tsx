@@ -16,6 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 
 type SubsystemCount = { count: number; subsystem_code: string };
 type PublicStats = {
+  attachment_count: number;
+  comment_count: number;
   filing_count: number;
   filings_by_subsystem: Array<SubsystemCount>;
 };
@@ -444,6 +446,10 @@ export default function HomePage() {
           <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
             {stats.filing_count.toLocaleString()}
           </p>
+          <div className="mt-2 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+            <span>{stats.comment_count.toLocaleString()} comments</span>
+            <span>{stats.attachment_count.toLocaleString()} attachments</span>
+          </div>
         </div>
 
         {/* M&A Activity */}

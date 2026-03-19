@@ -19,6 +19,22 @@ export async function getFilingCount(conn: DuckDBConnection): Promise<number> {
   return Number(rows[0]?.cnt ?? 0);
 }
 
+export async function getCommentCount(conn: DuckDBConnection): Promise<number> {
+  const result = await conn.runAndReadAll(
+    'SELECT count(*)::INTEGER AS cnt FROM pleading',
+  );
+  const rows = result.getRowObjectsJS();
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+export async function getAttachmentCount(conn: DuckDBConnection): Promise<number> {
+  const result = await conn.runAndReadAll(
+    'SELECT count(*)::INTEGER AS cnt FROM attachment',
+  );
+  const rows = result.getRowObjectsJS();
+  return Number(rows[0]?.cnt ?? 0);
+}
+
 export async function getFilingsBySubsystem(
   conn: DuckDBConnection,
 ): Promise<SubsystemCount[]> {
