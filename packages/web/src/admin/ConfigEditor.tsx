@@ -23,6 +23,20 @@ type ConfigEntry = {
   value: string;
 };
 
+const AI_CONFIG_KEYS: ReadonlySet<string> = new Set([
+  'bedrockRegion',
+  'bedrockDefaultModel',
+  'summarizationModel',
+  'summarizationSystemPrompt',
+  'summarizationUserPrompt',
+  'newsSummarizationModel',
+  'newsSummarizationSystemPrompt',
+  'newsSummarizationUserPrompt',
+  'embeddingModel',
+  'embeddingDimensions',
+  'embeddingNormalize',
+]);
+
 function ConfigEditorInner() {
   const [entries, setEntries] = useState<Array<ConfigEntry>>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -97,7 +111,7 @@ function ConfigEditorInner() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.map((entry) => (
+            {entries.filter((e) => !AI_CONFIG_KEYS.has(e.key)).map((entry) => (
               <TableRow key={entry.key}>
                 <TableCell className="font-mono text-sm">{entry.key}</TableCell>
                 <TableCell className="text-neutral-500 dark:text-neutral-400">

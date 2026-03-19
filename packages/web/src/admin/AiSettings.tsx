@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { Loader2, Send } from 'lucide-react';
+import { ChevronDown, ChevronRight, Loader2, Send } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
@@ -77,11 +77,25 @@ function AiSettingsInner() {
   const [summUserPrompt, setSummUserPrompt] = useState<string>('');
   const [summMeta, setSummMeta] = useState<PromptTemplateMeta | null>(null);
 
+  // News summarization state
+  const [newsSummModel, setNewsSummModel] = useState<string>('');
+  const [newsSummSystemPrompt, setNewsSummSystemPrompt] = useState<string>('');
+  const [newsSummUserPrompt, setNewsSummUserPrompt] = useState<string>('');
+  const [newsSummMeta, setNewsSummMeta] = useState<PromptTemplateMeta | null>(null);
+
+  // Embedding config state
+  const [embeddingModel, setEmbeddingModel] = useState<string>('');
+  const [embeddingDimensions, setEmbeddingDimensions] = useState<string>('1024');
+  const [embeddingNormalize, setEmbeddingNormalize] = useState<boolean>(true);
+
   const fetchConfig = useCallback(async () => {
     try {
       const [entries, templates] = await Promise.all([
         apiFetch<Array<ConfigEntry>>('/api/admin/config'),
-        apiFetch<{ summarization: PromptTemplateMeta }>('/api/admin/inference/prompt-templates'),
+        apiFetch<{
+          newsSummarization: PromptTemplateMeta;
+          summarization: PromptTemplateMeta;
+        }>('/api/admin/inference/prompt-templates'),
       ]);
       const regionEntry = entries.find((e) => e.key === 'bedrockRegion');
       const modelEntry = entries.find((e) => e.key === 'bedrockDefaultModel');
@@ -104,6 +118,23 @@ function AiSettingsInner() {
         setSummUserPrompt(summUserEntry.value);
       }
       setSummMeta(templates.summarization);
+
+      // News summarization
+      const newsSummModelEntry = entries.find((e) => e.key === 'newsSummarizationModel');
+      const newsSummSysEntry = entries.find((e) => e.key === 'newsSummarizationSystemPrompt');
+      const newsSummUserEntry = entries.find((e) => e.key === 'newsSummarizationUserPrompt');
+      if (newsSummModelEntry) setNewsSummModel(newsSummModelEntry.value);
+      if (newsSummSysEntry) setNewsSummSystemPrompt(newsSummSysEntry.value);
+      if (newsSummUserEntry) setNewsSummUserPrompt(newsSummUserEntry.value);
+      setNewsSummMeta(templates.newsSummarization);
+
+      // Embedding config
+      const embModelEntry = entries.find((e) => e.key === 'embeddingModel');
+      const embDimEntry = entries.find((e) => e.key === 'embeddingDimensions');
+      const embNormEntry = entries.find((e) => e.key === 'embeddingNormalize');
+      if (embModelEntry) setEmbeddingModel(embModelEntry.value);
+      if (embDimEntry) setEmbeddingDimensions(embDimEntry.value);
+      if (embNormEntry) setEmbeddingNormalize(embNormEntry.value === 'true');
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Failed to load config', 'error');
     }
@@ -141,27 +172,23 @@ function AiSettingsInner() {
   const handleSaveConfig = useCallback(async () => {
     setSavingConfig(true);
     try {
+      const saveKey = (key: string, value: string): Promise<unknown> =>
+        apiFetch(`/api/admin/config/${key}`, {
+          body: JSON.stringify({ value }),
+          method: 'PUT',
+        });
       await Promise.all([
-        apiFetch('/api/admin/config/bedrockRegion', {
-          body: JSON.stringify({ value: region }),
-          method: 'PUT',
-        }),
-        apiFetch('/api/admin/config/bedrockDefaultModel', {
-          body: JSON.stringify({ value: defaultModel }),
-          method: 'PUT',
-        }),
-        apiFetch('/api/admin/config/summarizationModel', {
-          body: JSON.stringify({ value: summarizationModel }),
-          method: 'PUT',
-        }),
-        apiFetch('/api/admin/config/summarizationSystemPrompt', {
-          body: JSON.stringify({ value: summSystemPrompt }),
-          method: 'PUT',
-        }),
-        apiFetch('/api/admin/config/summarizationUserPrompt', {
-          body: JSON.stringify({ value: summUserPrompt }),
-          method: 'PUT',
-        }),
+        saveKey('bedrockRegion', region),
+        saveKey('bedrockDefaultModel', defaultModel),
+        saveKey('summarizationModel', summarizationModel),
+        saveKey('summarizationSystemPrompt', summSystemPrompt),
+        saveKey('summarizationUserPrompt', summUserPrompt),
+        saveKey('newsSummarizationModel', newsSummModel),
+        saveKey('newsSummarizationSystemPrompt', newsSummSystemPrompt),
+        saveKey('newsSummarizationUserPrompt', newsSummUserPrompt),
+        saveKey('embeddingModel', embeddingModel),
+        saveKey('embeddingDimensions', embeddingDimensions),
+        saveKey('embeddingNormalize', String(embeddingNormalize)),
       ]);
       toast('AI settings saved', 'success');
     } catch (error) {
@@ -169,7 +196,11 @@ function AiSettingsInner() {
     } finally {
       setSavingConfig(false);
     }
-  }, [region, defaultModel, summarizationModel, summSystemPrompt, summUserPrompt, toast]);
+  }, [
+    region, defaultModel, summarizationModel, summSystemPrompt, summUserPrompt,
+    newsSummModel, newsSummSystemPrompt, newsSummUserPrompt,
+    embeddingModel, embeddingDimensions, embeddingNormalize, toast,
+  ]);
 
   const handleTest = useCallback(async () => {
     setTesting(true);
@@ -285,6 +316,100 @@ function AiSettingsInner() {
           variables={summMeta.variables}
         />
       )}
+
+      {/* News Summarization Model */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">News Summarization Model</h2>
+        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+          Model used for summarizing news articles in the ingestion pipeline.
+        </p>
+        <div className="space-y-3">
+          {SUMMARIZATION_MODELS.map((m) => (
+            <label
+              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              key={m.id}
+              style={
+                newsSummModel === m.id
+                  ? {
+                      backgroundColor: 'var(--color-blue-50)',
+                      borderColor: 'var(--color-blue-500)',
+                    }
+                  : undefined
+              }
+            >
+              <input
+                checked={newsSummModel === m.id}
+                className="h-4 w-4 accent-blue-600"
+                name="news-summarization-model"
+                onChange={() => setNewsSummModel(m.id)}
+                type="radio"
+                value={m.id}
+              />
+              <div>
+                <div className="text-sm font-medium">{m.label}</div>
+                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* News Summarization Prompts */}
+      {newsSummMeta != null && (
+        <PromptEditor
+          defaultSystemPrompt={newsSummMeta.defaultSystemPrompt}
+          defaultUserPrompt={newsSummMeta.defaultUserPrompt}
+          description="Templates used when summarizing news articles in the ingestion pipeline."
+          onSystemPromptChange={setNewsSummSystemPrompt}
+          onUserPromptChange={setNewsSummUserPrompt}
+          systemPrompt={newsSummSystemPrompt}
+          title="News Summarization Prompts"
+          userPrompt={newsSummUserPrompt}
+          variables={newsSummMeta.variables}
+        />
+      )}
+
+      {/* Embedding Configuration */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">Embedding Configuration</h2>
+        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+          Settings for vector embeddings used in semantic search.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <Label htmlFor="embedding-model">Embedding Model</Label>
+            <Input
+              id="embedding-model"
+              onChange={(e) => setEmbeddingModel(e.target.value)}
+              placeholder="e.g. amazon.titan-embed-text-v2:0"
+              value={embeddingModel}
+            />
+          </div>
+          <div>
+            <Label htmlFor="embedding-dimensions">Dimensions</Label>
+            <select
+              className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              id="embedding-dimensions"
+              onChange={(e) => setEmbeddingDimensions(e.target.value)}
+              value={embeddingDimensions}
+            >
+              <option value="256">256</option>
+              <option value="512">512</option>
+              <option value="1024">1024</option>
+            </select>
+          </div>
+          <div className="flex items-end gap-2 pb-1">
+            <input
+              checked={embeddingNormalize}
+              className="h-4 w-4 accent-blue-600"
+              id="embedding-normalize"
+              onChange={(e) => setEmbeddingNormalize(e.target.checked)}
+              type="checkbox"
+            />
+            <Label htmlFor="embedding-normalize">Normalize vectors</Label>
+          </div>
+        </div>
+      </div>
 
       {/* Test Section */}
       <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">

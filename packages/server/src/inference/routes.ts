@@ -10,6 +10,9 @@ import {
   DEFAULT_SUMMARIZATION_USER_PROMPT,
   SUMMARIZATION_VARIABLES,
 } from './prompts.ts';
+import {
+  NEWS_ARTICLE_SUMMARIZER,
+} from './summarizers/news-article.ts';
 import type { InferenceRequest } from './types.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */
@@ -64,6 +67,11 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
         defaultSystemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
         defaultUserPrompt: DEFAULT_SUMMARIZATION_USER_PROMPT,
         variables: SUMMARIZATION_VARIABLES,
+      },
+      newsSummarization: {
+        defaultSystemPrompt: NEWS_ARTICLE_SUMMARIZER.defaultSystemPrompt,
+        defaultUserPrompt: NEWS_ARTICLE_SUMMARIZER.defaultUserPrompt,
+        variables: NEWS_ARTICLE_SUMMARIZER.variables,
       },
     });
   });
