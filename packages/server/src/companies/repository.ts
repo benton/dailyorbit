@@ -12,6 +12,7 @@ import type {
   CompanyDetail,
   CompanyListItem,
   OwnershipEvent,
+  OwnershipEventListItem,
   OwnershipEventStatus,
   OwnershipEventType,
 } from './types.ts';
@@ -534,6 +535,26 @@ export async function getOwnershipEventsForCompany(
     [companyId] as DuckDBValue[],
   );
   return reader.getRowObjectsJS().map(rowToOwnershipEvent);
+}
+
+export async function listRecentOwnershipEvents(
+  conn: DuckDBConnection,
+  limit: number = 50,
+): Promise<OwnershipEventListItem[]> {
+  const reader = await conn.runAndReadAll(
+    `SELECT oe.*, tc.name AS transferor_name, te.name AS transferee_name
+     FROM ownership_event oe
+     LEFT JOIN company tc ON tc.id = oe.transferor_company_id
+     LEFT JOIN company te ON te.id = oe.transferee_company_id
+     ORDER BY oe.effective_date DESC NULLS LAST
+     LIMIT $1`,
+    [limit] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().map((r) => ({
+    ...rowToOwnershipEvent(r),
+    transferorName: r.transferor_name != null ? String(r.transferor_name) : null,
+    transfereeName: r.transferee_name != null ? String(r.transferee_name) : null,
+  }));
 }
 
 // ── Ownership event extraction from T/C and ASG filings ─────────────

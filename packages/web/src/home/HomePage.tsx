@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { cn } from '../lib/cn.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
@@ -454,15 +454,19 @@ export default function HomePage() {
 
         {/* M&A Activity */}
         {topLine != null && (
-          <div className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              M&amp;A Activity (Last Quarter)
-            </p>
-            <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {topLine.recent_ownership_events.toLocaleString()}
-            </p>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">ownership events</p>
-          </div>
+          <Link className="block" to="/ownership-events">
+            <div className={`${cardClass} transition-colors hover:border-blue-300 dark:hover:border-blue-700`}>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                M&amp;A Activity (Last Quarter)
+              </p>
+              <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {topLine.recent_ownership_events.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                ownership events
+              </p>
+            </div>
+          </Link>
         )}
 
         {/* Most Active Filings This Week */}

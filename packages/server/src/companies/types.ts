@@ -53,6 +53,12 @@ export type OwnershipEvent = {
   description: string | null;
 };
 
+/** An ownership event with resolved company names for list display */
+export type OwnershipEventListItem = OwnershipEvent & {
+  transferorName: string | null;
+  transfereeName: string | null;
+};
+
 /** Full company detail response including related entities */
 export type CompanyDetail = {
   company: Company;

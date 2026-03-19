@@ -8,6 +8,7 @@ import {
   createCompany,
   extractOwnershipEvents,
   getAttributionStats,
+  listRecentOwnershipEvents,
   getCompanyDetail,
   getCompanyFilings,
   listCompanies,
@@ -85,6 +86,14 @@ companyRoutes.get('/:id/filings', async (c) => {
   const pagination: PaginatedRequest = parsePagination(q);
   const result = await withConn((conn) =>
     getCompanyFilings(conn, id, pagination),
+  );
+  return c.json(result);
+});
+
+companyRoutes.get('/ownership-events/recent', async (c) => {
+  const limit: number = Number(c.req.query('limit') ?? '50');
+  const result = await withConn((conn) =>
+    listRecentOwnershipEvents(conn, limit),
   );
   return c.json(result);
 });

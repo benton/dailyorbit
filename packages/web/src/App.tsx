@@ -23,6 +23,7 @@ const AiSettings = lazy(() => import('./admin/AiSettings.tsx'));
 const PipelinePage = lazy(() => import('./admin/pipeline/PipelinePage.tsx'));
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
+const OwnershipEventsPage = lazy(() => import('./companies/OwnershipEventsPage.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
@@ -83,6 +84,14 @@ export default function App() {
                 </Suspense>
               }
               path="/companies/:id"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <OwnershipEventsPage />
+                </Suspense>
+              }
+              path="/ownership-events"
             />
             {/* Auth-required user pages */}
             <Route
