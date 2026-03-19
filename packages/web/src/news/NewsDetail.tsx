@@ -148,7 +148,7 @@ export default function NewsDetail() {
           <h2 className="mb-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
             Full Text
           </h2>
-          <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
+          <div className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap text-neutral-700 dark:text-neutral-300 dark:prose-invert">
             {item.fullText}
           </div>
         </div>

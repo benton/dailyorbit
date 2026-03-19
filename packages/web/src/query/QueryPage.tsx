@@ -11,9 +11,9 @@ import {
 import { type FormEvent, type ReactNode, useCallback, useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
 import { Link } from 'react-router';
+import type { QueryUsage, RetrievedSource } from './types.ts';
 import { Button } from '../ui/button.tsx';
 import { buildCitationMap, resolveSourceUrl } from './citation-links.ts';
-import type { QueryUsage, RetrievedSource } from './types.ts';
 import { type QueryStreamState, useQueryStream } from './useQueryStream.ts';
 
 // ---------------------------------------------------------------------------
@@ -144,9 +144,7 @@ function SourcesList({ sources }: { sources: RetrievedSource[] }) {
                     </div>
                     <div className="truncate text-xs text-neutral-500">{s.snippet}</div>
                   </div>
-                  <span className="whitespace-nowrap text-xs text-neutral-400">
-                    {s.type}
-                  </span>
+                  <span className="text-xs whitespace-nowrap text-neutral-400">{s.type}</span>
                 </a>
               ) : (
                 <Link
@@ -160,9 +158,7 @@ function SourcesList({ sources }: { sources: RetrievedSource[] }) {
                     </div>
                     <div className="truncate text-xs text-neutral-500">{s.snippet}</div>
                   </div>
-                  <span className="whitespace-nowrap text-xs text-neutral-400">
-                    {s.type}
-                  </span>
+                  <span className="text-xs whitespace-nowrap text-neutral-400">{s.type}</span>
                 </Link>
               )}
             </li>
@@ -174,33 +170,24 @@ function SourcesList({ sources }: { sources: RetrievedSource[] }) {
 }
 
 /** Render streamed markdown answer with citation links. */
-function AnswerDisplay({
-  answer,
-  sources,
-}: {
-  answer: string;
-  sources: RetrievedSource[];
-}) {
+function AnswerDisplay({ answer, sources }: { answer: string; sources: RetrievedSource[] }) {
   const citationMap = useMemo(() => buildCitationMap(sources), [sources]);
 
   if (answer === '') return null;
 
   // Replace [citation] patterns with markdown links
-  const processed: string = answer.replace(
-    /\[([^\]]+)\]/g,
-    (_match: string, inner: string) => {
-      const source: RetrievedSource | undefined = citationMap.get(inner);
-      if (source != null) {
-        const url: string = resolveSourceUrl(source);
-        return `[${inner}](${url})`;
-      }
-      return `[${inner}]`;
-    },
-  );
+  const processed: string = answer.replace(/\[([^\]]+)\]/g, (_match: string, inner: string) => {
+    const source: RetrievedSource | undefined = citationMap.get(inner);
+    if (source != null) {
+      const url: string = resolveSourceUrl(source);
+      return `[${inner}](${url})`;
+    }
+    return `[${inner}]`;
+  });
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="prose prose-sm prose-neutral max-w-none dark:prose-invert prose-a:text-pink-700 dark:prose-a:text-pink-400">
+      <div className="prose prose-sm max-w-none prose-neutral dark:prose-invert prose-a:text-pink-700 dark:prose-a:text-pink-400">
         <Markdown>{processed}</Markdown>
       </div>
     </div>
@@ -221,11 +208,7 @@ function UsageFooter({ usage }: { usage: QueryUsage }) {
         onClick={() => setOpen(!open)}
         type="button"
       >
-        {open ? (
-          <ChevronDown className="h-3 w-3" />
-        ) : (
-          <ChevronRight className="h-3 w-3" />
-        )}
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         Usage &middot; {(usage.totalMs / 1000).toFixed(1)}s total
       </button>
       {open && (
@@ -233,8 +216,8 @@ function UsageFooter({ usage }: { usage: QueryUsage }) {
           <div>
             <span className="font-medium text-neutral-700 dark:text-neutral-300">Rewrite</span>
             <br />
-            {formatTokens(usage.rewriteTokens.input)} in / {formatTokens(usage.rewriteTokens.output)}{' '}
-            out
+            {formatTokens(usage.rewriteTokens.input)} in /{' '}
+            {formatTokens(usage.rewriteTokens.output)} out
           </div>
           <div>
             <span className="font-medium text-neutral-700 dark:text-neutral-300">Generate</span>
@@ -265,9 +248,7 @@ function UsageFooter({ usage }: { usage: QueryUsage }) {
 export default function QueryPage() {
   const { cancel, state, submit } = useQueryStream();
   const isStreaming: boolean =
-    state.status === 'rewriting' ||
-    state.status === 'retrieving' ||
-    state.status === 'generating';
+    state.status === 'rewriting' || state.status === 'retrieving' || state.status === 'generating';
 
   return (
     <div className="space-y-4">

@@ -23,7 +23,7 @@
 - v1.3.0 [x] News items Entity and RSS ingest of relevant news sources
 - v1.4.0 [x] Ingestion pipeline admin UI
 - v1.5.0 [x] News items UI - user and admin
-- v1.6.0 [.] Premium feature: RAG and interrogation mode:
+- v1.6.0 [x] Premium feature: Query-modifying RAG / interrogation mode
 - v1.7.0 [ ] LLM-powered question answering / different "consultants"
 - v1.8.0 [ ] RAG Search module
 

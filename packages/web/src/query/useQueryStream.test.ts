@@ -26,9 +26,7 @@ describe('parseSSEData', () => {
   });
 
   it('parses a delta event', () => {
-    const event: QuerySSEEvent | null = parseSSEData(
-      'data: {"type":"delta","text":"The Hughes"}',
-    );
+    const event: QuerySSEEvent | null = parseSSEData('data: {"type":"delta","text":"The Hughes"}');
     expect(event).toEqual({ type: 'delta', text: 'The Hughes' });
   });
 
@@ -98,9 +96,7 @@ describe('parseSSEData', () => {
   });
 
   it('handles data with extra whitespace around the JSON', () => {
-    const event: QuerySSEEvent | null = parseSSEData(
-      'data:   {"type":"done"}  ',
-    );
+    const event: QuerySSEEvent | null = parseSSEData('data:   {"type":"done"}  ');
     expect(event).toEqual({ type: 'done' });
   });
 });
