@@ -171,6 +171,7 @@ const STAGES: PipelineStage[] = [
         DEFAULT_SUMMARIZATION_USER_PROMPT,
         renderPrompt,
       } = await import('../inference/prompts.ts');
+      const { processWithConcurrency } = await import('../lib/concurrency.ts');
 
       const start: number = Date.now();
       const conn: DuckDBConnection = await DuckDBConnection.create(ctx.db);
@@ -192,7 +193,7 @@ const STAGES: PipelineStage[] = [
         let processed: number = 0;
         let failed: number = 0;
 
-        for (const row of rows) {
+        await processWithConcurrency(rows, ctx.concurrency, async (row) => {
           try {
             // Dedup check
             if (row.textChecksum != null) {
@@ -203,7 +204,7 @@ const STAGES: PipelineStage[] = [
               if (existing != null) {
                 await saveSummary(conn, row.attachmentKey, existing, 'copied');
                 processed++;
-                continue;
+                return;
               }
             }
 
@@ -244,7 +245,7 @@ const STAGES: PipelineStage[] = [
               `Failed to summarize attachment ${String(row.attachmentKey)}: ${err instanceof Error ? err.message : String(err)}`,
             );
           }
-        }
+        });
 
         return {
           itemsProcessed: processed,
@@ -273,6 +274,7 @@ const STAGES: PipelineStage[] = [
         await import('../search/embedding-schema.ts');
       const { splitText } = await import('../inference/text-chunker.ts');
       const { computeTextChecksum } = await import('../lib/text-utils.ts');
+      const { processWithConcurrency } = await import('../lib/concurrency.ts');
 
       const start: number = Date.now();
       const conn: DuckDBConnection = await DuckDBConnection.create(ctx.db);
@@ -311,7 +313,7 @@ const STAGES: PipelineStage[] = [
         let processed: number = 0;
         let failed: number = 0;
 
-        for (const row of rows) {
+        await processWithConcurrency(rows, ctx.concurrency, async (row) => {
           try {
             const text: string = String(row.full_text);
             const sourceKey: string = String(row.source_key);
@@ -358,7 +360,7 @@ const STAGES: PipelineStage[] = [
               `Embed failed: ${err instanceof Error ? err.message : String(err)}`,
             );
           }
-        }
+        });
 
         return {
           itemsProcessed: processed,

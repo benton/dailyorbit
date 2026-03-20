@@ -43,6 +43,7 @@ export default function PipelinePage() {
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [logLines, setLogLines] = useState<Array<LogLine>>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [concurrency, setConcurrency] = useState<number>(20);
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -144,7 +145,7 @@ export default function PipelinePage() {
         );
 
         const resp: RunResponse = await apiFetch<RunResponse>('/api/admin/pipeline/run', {
-          body: JSON.stringify({ stages: stageIds }),
+          body: JSON.stringify({ stages: stageIds, concurrency }),
           method: 'POST',
         });
 
@@ -194,6 +195,23 @@ export default function PipelinePage() {
           Data ingestion pipeline stages. Run steps individually or by group.
         </p>
         {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <div className="mt-3 flex items-center gap-2">
+          <label htmlFor="concurrency" className="text-sm text-neutral-600 dark:text-neutral-300">
+            Concurrency
+          </label>
+          <input
+            id="concurrency"
+            type="number"
+            min={1}
+            max={100}
+            value={concurrency}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setConcurrency(Math.max(1, Number.parseInt(e.target.value, 10) || 1))
+            }
+            disabled={running}
+            className="w-20 rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
       </div>
 
       {/* Pipeline stages */}
