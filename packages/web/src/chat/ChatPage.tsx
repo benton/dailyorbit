@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Consultant, Conversation, Message } from './types.ts';
-import { useToast } from '../ui/toast.tsx';
+import { ToastProvider, useToast } from '../ui/toast.tsx';
 import {
   createConversation,
   deleteConversation,
@@ -16,6 +16,14 @@ import MessageThread from './MessageThread.tsx';
 import { useChatStream } from './useChatStream.ts';
 
 export default function ChatPage() {
+  return (
+    <ToastProvider>
+      <ChatPageInner />
+    </ToastProvider>
+  );
+}
+
+function ChatPageInner() {
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
