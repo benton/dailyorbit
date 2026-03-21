@@ -3,14 +3,17 @@ import { Hono } from 'hono';
 import { getDb } from '../lib/db.ts';
 import type { SessionUser } from '../user/SessionUser.ts';
 import {
+  type ContentType,
   getRecentlyViewed,
   getUnreadFilingsSince,
   getViewedFileNumbers,
   getViewedNewsIds,
+  getWatermarks,
   markNewsUnread,
   markNewsViewed,
   markUnread,
   markViewed,
+  setWatermark,
 } from './repository.ts';
 
 const viewingHistoryRoutes = new Hono();
@@ -123,8 +126,46 @@ viewingHistoryRoutes.post('/news/bulk-check', async (c) => {
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
-    const viewed: Set<number> = await getViewedNewsIds(conn, user.id, body.newsItemIds);
+    const viewed: Set<number> = await getViewedNewsIds(
+      conn,
+      user.id,
+      body.newsItemIds,
+    );
     return c.json({ viewed: [...viewed] });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── Watermark routes ────────────────────────────────────────────────
+
+viewingHistoryRoutes.post('/mark-all-read', async (c) => {
+  const user: SessionUser = c.get('user');
+  const body = await c.req.json<{ contentType: ContentType }>();
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    const watermarkAt: Date = await setWatermark(
+      conn,
+      user.id,
+      body.contentType,
+    );
+    return c.json({ ok: true, watermarkAt: watermarkAt.toISOString() });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+viewingHistoryRoutes.get('/watermarks', async (c) => {
+  const user: SessionUser = c.get('user');
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    const wms: Map<ContentType, Date> = await getWatermarks(conn, user.id);
+    return c.json({
+      filing: wms.get('filing')?.toISOString() ?? null,
+      news: wms.get('news')?.toISOString() ?? null,
+    });
   } finally {
     conn.closeSync();
   }

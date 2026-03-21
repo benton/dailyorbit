@@ -26,4 +26,14 @@ export async function ensureViewingHistoryTables(
       PRIMARY KEY (user_id, news_item_id)
     )
   `);
+
+  await conn.run(`
+    CREATE TABLE IF NOT EXISTS user_view_watermark (
+      user_id      VARCHAR NOT NULL,
+      content_type VARCHAR NOT NULL,
+      watermark_at TIMESTAMP NOT NULL,
+      updated_at   TIMESTAMP NOT NULL DEFAULT current_timestamp,
+      PRIMARY KEY (user_id, content_type)
+    )
+  `);
 }

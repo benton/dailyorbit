@@ -3,6 +3,7 @@ import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { DuckDBConnection as DuckDBConn } from '@duckdb/node-api';
 import { hashPassword } from 'better-auth/crypto';
 import type { SecretValue } from '../lib/encryption.ts';
+import { setWatermark } from '../viewing-history/repository.ts';
 
 export type UserRecord = {
   id: string;
@@ -93,6 +94,10 @@ export class UserService {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [accountId, id, id, 'credential', hash, nowIso, nowIso],
     );
+
+    // Initialize watermarks so back catalog is implicitly "read" from day one
+    await setWatermark(conn, id, 'filing', now);
+    await setWatermark(conn, id, 'news', now);
 
     conn.closeSync();
 

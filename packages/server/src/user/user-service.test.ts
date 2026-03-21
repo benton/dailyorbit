@@ -1,6 +1,7 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { SecretValue } from '../lib/encryption.ts';
+import { ensureViewingHistoryTables } from '../viewing-history/schema.ts';
 import { ensureAuthTables } from './schema.ts';
 import { UserService } from './user-service.ts';
 
@@ -15,6 +16,7 @@ describe('UserService', () => {
     db = await DuckDBInstance.create(':memory:');
     conn = await DuckDBConnection.create(db);
     await ensureAuthTables(conn);
+    await ensureViewingHistoryTables(conn);
     service = new UserService(db);
   });
 

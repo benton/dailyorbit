@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import ReadUnreadToggle from '../filings/ReadUnreadToggle.tsx';
 import { apiFetch } from '../lib/api.ts';
 import { filingUrl } from '../lib/filing-url.ts';
+import { markAllRead } from '../lib/viewing-history.ts';
 
 type UnreadFiling = {
   applicantName: string | null;
@@ -26,6 +27,7 @@ export default function UserHomePage() {
   const [unreadLoading, setUnreadLoading] = useState<boolean>(true);
   const [recent, setRecent] = useState<Array<ViewRecord>>([]);
   const [recentLoading, setRecentLoading] = useState<boolean>(true);
+  const [markingAllRead, setMarkingAllRead] = useState<boolean>(false);
 
   useEffect(() => {
     apiFetch<Array<UnreadFiling>>('/api/user/viewing-history/unread?since=7')
@@ -46,6 +48,16 @@ export default function UserHomePage() {
     [navigate],
   );
 
+  const handleMarkAllRead = useCallback(async () => {
+    setMarkingAllRead(true);
+    try {
+      await Promise.all([markAllRead('filing'), markAllRead('news')]);
+      setUnread([]);
+    } finally {
+      setMarkingAllRead(false);
+    }
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
@@ -59,9 +71,22 @@ export default function UserHomePage() {
 
       {/* Unread Filings */}
       <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Unread Filings (Last 7 Days)
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            Unread Filings (Last 7 Days)
+          </p>
+          {unread.length > 0 && (
+            <button
+              className="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+              disabled={markingAllRead}
+              onClick={handleMarkAllRead}
+              title="Marks all filings and news articles up to this moment as read, not just the items shown here"
+              type="button"
+            >
+              {markingAllRead ? 'Marking...' : 'Mark all as read'}
+            </button>
+          )}
+        </div>
         <div className="mt-3">
           {unreadLoading ? (
             <p className="text-sm text-neutral-500">Loading...</p>

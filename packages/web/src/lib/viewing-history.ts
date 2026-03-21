@@ -31,3 +31,24 @@ export async function markNewsRead(newsItemId: number): Promise<void> {
     method: 'POST',
   });
 }
+
+export async function markAllRead(
+  contentType: 'filing' | 'news',
+): Promise<{ ok: boolean; watermarkAt: string }> {
+  return apiFetch<{ ok: boolean; watermarkAt: string }>(
+    '/api/user/viewing-history/mark-all-read',
+    {
+      body: JSON.stringify({ contentType }),
+      method: 'POST',
+    },
+  );
+}
+
+export async function getWatermarks(): Promise<{
+  filing: string | null;
+  news: string | null;
+}> {
+  return apiFetch<{ filing: string | null; news: string | null }>(
+    '/api/user/viewing-history/watermarks',
+  );
+}
