@@ -6,6 +6,9 @@ import {
   getRecentlyViewed,
   getUnreadFilingsSince,
   getViewedFileNumbers,
+  getViewedNewsIds,
+  markNewsUnread,
+  markNewsViewed,
   markUnread,
   markViewed,
 } from './repository.ts';
@@ -81,6 +84,47 @@ viewingHistoryRoutes.get('/recent', async (c) => {
   try {
     const recent = await getRecentlyViewed(conn, user.id, limit);
     return c.json(recent);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── News viewing history ─────────────────────────────────────────────
+
+viewingHistoryRoutes.post('/news/mark-read', async (c) => {
+  const user: SessionUser = c.get('user');
+  const body = await c.req.json<{ newsItemId: number }>();
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    await markNewsViewed(conn, user.id, body.newsItemId);
+    return c.json({ ok: true });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+viewingHistoryRoutes.post('/news/mark-unread', async (c) => {
+  const user: SessionUser = c.get('user');
+  const body = await c.req.json<{ newsItemId: number }>();
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    await markNewsUnread(conn, user.id, body.newsItemId);
+    return c.json({ ok: true });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+viewingHistoryRoutes.post('/news/bulk-check', async (c) => {
+  const user: SessionUser = c.get('user');
+  const body = await c.req.json<{ newsItemIds: number[] }>();
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  try {
+    const viewed: Set<number> = await getViewedNewsIds(conn, user.id, body.newsItemIds);
+    return c.json({ viewed: [...viewed] });
   } finally {
     conn.closeSync();
   }
