@@ -41,31 +41,23 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
     }
   }, [open, fetchSearches]);
 
-  const handleDelete = useCallback(
-    async (e: React.MouseEvent, id: number) => {
-      e.stopPropagation();
-      await apiFetch(`/api/user/saved-searches/${id}`, { method: 'DELETE' });
-      setSearches((prev: Array<SavedSearch>) => prev.filter((s: SavedSearch) => s.id !== id));
-    },
-    [],
-  );
+  const handleDelete = useCallback(async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    await apiFetch(`/api/user/saved-searches/${id}`, { method: 'DELETE' });
+    setSearches((prev: Array<SavedSearch>) => prev.filter((s: SavedSearch) => s.id !== id));
+  }, []);
 
-  const handleToggleAlert = useCallback(
-    async (e: React.MouseEvent, search: SavedSearch) => {
-      e.stopPropagation();
-      const newValue: boolean = !search.alert_enabled;
-      await apiFetch(`/api/user/saved-searches/${search.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ alert_enabled: newValue }),
-      });
-      setSearches((prev: Array<SavedSearch>) =>
-        prev.map((s: SavedSearch) =>
-          s.id === search.id ? { ...s, alert_enabled: newValue } : s,
-        ),
-      );
-    },
-    [],
-  );
+  const handleToggleAlert = useCallback(async (e: React.MouseEvent, search: SavedSearch) => {
+    e.stopPropagation();
+    const newValue: boolean = !search.alert_enabled;
+    await apiFetch(`/api/user/saved-searches/${search.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ alert_enabled: newValue }),
+    });
+    setSearches((prev: Array<SavedSearch>) =>
+      prev.map((s: SavedSearch) => (s.id === search.id ? { ...s, alert_enabled: newValue } : s)),
+    );
+  }, []);
 
   const handleSelect = useCallback(
     (search: SavedSearch) => {
@@ -77,11 +69,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
 
   return (
     <div className="relative">
-      <Button
-        onClick={() => setOpen(!open)}
-        size="sm"
-        variant="outline"
-      >
+      <Button onClick={() => setOpen(!open)} size="sm" variant="outline">
         <Bookmark className="mr-1.5 h-3.5 w-3.5" />
         Saved Searches
         {searches.length > 0 && open && (

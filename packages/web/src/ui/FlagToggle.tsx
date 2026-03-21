@@ -10,12 +10,7 @@ type FlagToggleProps = {
   onToggle?: (flagged: boolean) => void;
 };
 
-export function FlagToggle({
-  contentKey,
-  contentType,
-  initialFlagged,
-  onToggle,
-}: FlagToggleProps) {
+export function FlagToggle({ contentKey, contentType, initialFlagged, onToggle }: FlagToggleProps) {
   const [flagged, setFlagged] = useState<boolean>(initialFlagged);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -24,9 +19,9 @@ export function FlagToggle({
     try {
       if (flagged) {
         // To unflag, we need to get the flag ID first — fetch active flags and dismiss
-        const flags = await apiFetch<
-          Array<{ id: number; content_key: string }>
-        >(`/api/user/flags?content_type=${encodeURIComponent(contentType)}`);
+        const flags = await apiFetch<Array<{ id: number; content_key: string }>>(
+          `/api/user/flags?content_type=${encodeURIComponent(contentType)}`,
+        );
         const match = flags.find((f) => f.content_key === contentKey);
         if (match != null) {
           await apiFetch(`/api/user/flags/${match.id}/dismiss`, { method: 'POST' });
@@ -48,9 +43,7 @@ export function FlagToggle({
     <button
       className={cn(
         'rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700',
-        flagged
-          ? 'text-amber-500 dark:text-amber-400'
-          : 'text-neutral-300 dark:text-neutral-600',
+        flagged ? 'text-amber-500 dark:text-amber-400' : 'text-neutral-300 dark:text-neutral-600',
       )}
       disabled={loading}
       onClick={(e) => {

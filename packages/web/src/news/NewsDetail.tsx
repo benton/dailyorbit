@@ -116,7 +116,9 @@ export default function NewsDetail() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{item.title}</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            {item.title}
+          </h1>
           <FlagToggle
             contentKey={String(item.id)}
             contentType="news"

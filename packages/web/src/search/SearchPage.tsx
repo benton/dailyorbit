@@ -9,11 +9,11 @@ import { filingUrl } from '../lib/filing-url.ts';
 import { APP_TYPE_CODES, SUBSYSTEM_OPTIONS } from '../lib/subsystems.ts';
 import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
-import { FlagToggle } from '../ui/FlagToggle.tsx';
-import { SaveSearchModal } from './SaveSearchModal.tsx';
 import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
+import { SaveSearchModal } from './SaveSearchModal.tsx';
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -1439,11 +1439,7 @@ export default function SearchPage() {
                 Clear
               </Button>
               {activeTab === 'filings' && (
-                <Button
-                  onClick={() => setShowSaveModal(true)}
-                  size="sm"
-                  variant="outline"
-                >
+                <Button onClick={() => setShowSaveModal(true)} size="sm" variant="outline">
                   <Bookmark className="mr-1.5 h-3.5 w-3.5" />
                   Save Search
                 </Button>
@@ -1459,19 +1455,11 @@ export default function SearchPage() {
           <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
             {selectedKeys.size} selected
           </span>
-          <Button
-            onClick={() => void handleBulkFlag()}
-            size="sm"
-            variant="default"
-          >
+          <Button onClick={() => void handleBulkFlag()} size="sm" variant="default">
             <Flag className="mr-1 h-3.5 w-3.5" />
             Flag Selected
           </Button>
-          <Button
-            onClick={() => setSelectedKeys(new Set())}
-            size="sm"
-            variant="ghost"
-          >
+          <Button onClick={() => setSelectedKeys(new Set())} size="sm" variant="ghost">
             Clear Selection
           </Button>
         </div>

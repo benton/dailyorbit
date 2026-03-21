@@ -38,10 +38,7 @@ function AlertBadge() {
       }
     };
     void fetchCount();
-    const interval: ReturnType<typeof setInterval> = setInterval(
-      () => void fetchCount(),
-      60_000,
-    );
+    const interval: ReturnType<typeof setInterval> = setInterval(() => void fetchCount(), 60_000);
     return () => clearInterval(interval);
   }, []);
 

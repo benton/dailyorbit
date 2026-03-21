@@ -35,13 +35,10 @@ export async function markNewsRead(newsItemId: number): Promise<void> {
 export async function markAllRead(
   contentType: 'filing' | 'news',
 ): Promise<{ ok: boolean; watermarkAt: string }> {
-  return apiFetch<{ ok: boolean; watermarkAt: string }>(
-    '/api/user/viewing-history/mark-all-read',
-    {
-      body: JSON.stringify({ contentType }),
-      method: 'POST',
-    },
-  );
+  return apiFetch<{ ok: boolean; watermarkAt: string }>('/api/user/viewing-history/mark-all-read', {
+    body: JSON.stringify({ contentType }),
+    method: 'POST',
+  });
 }
 
 export async function getWatermarks(): Promise<{
