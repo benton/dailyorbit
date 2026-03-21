@@ -230,7 +230,11 @@ class PipelineRunner {
         this.emitter.emit('stage-start', { runId, stageId });
         this.emitLog(buffer, runId, stageId, 'info', `Starting: ${stage.name}`);
 
-        const dbStageRunId: number = await insertStageRun(conn, dbRunId, stageId);
+        const dbStageRunId: number = await insertStageRun(
+          conn,
+          dbRunId,
+          stageId,
+        );
 
         // Resolve concurrency: explicit override > stage default > 1
         const effectiveConcurrency: number =
@@ -270,10 +274,10 @@ class PipelineRunner {
           completed++;
           await finishStageRun(conn, dbStageRunId, {
             status: 'completed',
-            itemsDiscovered: result.itemsDiscovered,
+            itemsDiscovered: result.itemsDiscovered ?? 0,
             itemsProcessed: result.itemsProcessed,
             itemsFailed: result.itemsFailed,
-            summary: result.summary,
+            summary: result.summary ?? '',
           });
           this.emitLog(
             buffer,
@@ -304,7 +308,9 @@ class PipelineRunner {
       const runStatus: string = failed > 0 ? 'failed' : 'completed';
       const runSummary: string = `${String(completed)} completed, ${String(failed)} failed`;
       await finishPipelineRunRecord(conn, dbRunId, runStatus, runSummary).catch(
-        () => { /* best-effort — connection may already be bad */ },
+        () => {
+          /* best-effort — connection may already be bad */
+        },
       );
       try {
         untrackConnection(conn!);
