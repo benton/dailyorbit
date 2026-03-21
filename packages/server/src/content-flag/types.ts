@@ -10,6 +10,7 @@ export type ContentFlagRow = {
   reason: string | null;
   created_at: string;
   dismissed_at: string | null;
+  emailed_at: string | null;
 };
 
 export type CreateFlagInput = {

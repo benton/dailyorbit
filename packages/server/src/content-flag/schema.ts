@@ -19,6 +19,7 @@ export async function ensureContentFlagTables(
       reason           VARCHAR,
       created_at       TIMESTAMP NOT NULL DEFAULT current_timestamp,
       dismissed_at     TIMESTAMP,
+      emailed_at       TIMESTAMP,
       UNIQUE (user_id, content_type, content_key, saved_search_id)
     );
   `);

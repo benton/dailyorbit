@@ -1,5 +1,9 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
-import type { BulkFlagInput, ContentFlagRow, CreateFlagInput } from './types.ts';
+import type {
+  BulkFlagInput,
+  ContentFlagRow,
+  CreateFlagInput,
+} from './types.ts';
 
 /** Create or re-activate a single flag. Returns the flag ID. */
 export async function createFlag(
@@ -17,7 +21,14 @@ export async function createFlag(
      VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (user_id, content_type, content_key, saved_search_id)
      DO UPDATE SET dismissed_at = NULL, reason = COALESCE($6, user_content_flag.reason)`,
-    [userId, input.content_type, input.content_key, source, savedSearchId, reason],
+    [
+      userId,
+      input.content_type,
+      input.content_key,
+      source,
+      savedSearchId,
+      reason,
+    ],
   );
 
   // Fetch the actual row id (avoids DuckDB sequence quirk with ON CONFLICT RETURNING)
@@ -89,13 +100,58 @@ export async function getActiveFlagsForUser(
     `SELECT id, user_id, content_type, content_key, source,
             saved_search_id, reason,
             created_at::VARCHAR AS created_at,
-            dismissed_at::VARCHAR AS dismissed_at
+            dismissed_at::VARCHAR AS dismissed_at,
+            emailed_at::VARCHAR AS emailed_at
      FROM user_content_flag
      WHERE user_id = $1 AND content_type = $2 AND dismissed_at IS NULL
      ORDER BY created_at DESC`,
     [userId, contentType],
   );
   return reader.getRowObjectsJS() as ContentFlagRow[];
+}
+
+/**
+ * Get content keys that have already been emailed for a given user and content type.
+ * Used to deduplicate email delivery across saved searches.
+ */
+export async function getEmailedContentKeys(
+  conn: DuckDBConnection,
+  userId: string,
+  contentType: string,
+  contentKeys: string[],
+): Promise<Set<string>> {
+  if (contentKeys.length === 0) return new Set();
+  const placeholders: string = contentKeys
+    .map((_: string, i: number) => `$${i + 3}`)
+    .join(', ');
+  const reader = await conn.runAndReadAll(
+    `SELECT DISTINCT content_key FROM user_content_flag
+     WHERE user_id = $1 AND content_type = $2
+       AND emailed_at IS NOT NULL
+       AND content_key IN (${placeholders})`,
+    [userId, contentType, ...contentKeys],
+  );
+  return new Set(
+    reader
+      .getRowObjectsJS()
+      .map((row) => String((row as Record<string, unknown>).content_key)),
+  );
+}
+
+/** Mark specific flag IDs as emailed. */
+export async function markFlagsEmailed(
+  conn: DuckDBConnection,
+  flagIds: number[],
+): Promise<void> {
+  if (flagIds.length === 0) return;
+  const placeholders: string = flagIds
+    .map((_: number, i: number) => `$${i + 1}`)
+    .join(', ');
+  await conn.run(
+    `UPDATE user_content_flag SET emailed_at = current_timestamp
+     WHERE id IN (${placeholders})`,
+    flagIds,
+  );
 }
 
 /** Check which content keys are actively flagged — for bulk UI display. */
@@ -106,7 +162,9 @@ export async function getActiveFlagKeys(
   contentKeys: string[],
 ): Promise<Set<string>> {
   if (contentKeys.length === 0) return new Set();
-  const placeholders: string = contentKeys.map((_: string, i: number) => `$${i + 3}`).join(', ');
+  const placeholders: string = contentKeys
+    .map((_: string, i: number) => `$${i + 3}`)
+    .join(', ');
   const reader = await conn.runAndReadAll(
     `SELECT content_key FROM user_content_flag
      WHERE user_id = $1 AND content_type = $2 AND dismissed_at IS NULL
@@ -114,6 +172,8 @@ export async function getActiveFlagKeys(
     [userId, contentType, ...contentKeys],
   );
   return new Set(
-    reader.getRowObjectsJS().map((row) => String((row as Record<string, unknown>).content_key)),
+    reader
+      .getRowObjectsJS()
+      .map((row) => String((row as Record<string, unknown>).content_key)),
   );
 }

@@ -640,32 +640,53 @@ const STAGES: PipelineStage[] = [
       'Run alert-enabled saved searches against newly ingested content',
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureAlertTables } = await import('../alerts/schema.ts');
-      const { evaluateAlerts } = await import('../alerts/evaluator.ts');
-      const { ensureSavedSearchTables } = await import(
-        '../saved-search/schema.ts'
-      );
-      const { ensureContentFlagTables } = await import(
-        '../content-flag/schema.ts'
-      );
-      const { getRecentRuns } = await import(
-        '../pipeline/tracking-repository.ts'
-      );
+      const { evaluateAlertsWithEmail } =
+        await import('../alerts/evaluator.ts');
+      const { ensureSavedSearchTables } =
+        await import('../saved-search/schema.ts');
+      const { ensureContentFlagTables } =
+        await import('../content-flag/schema.ts');
+      const { ensureViewingHistoryTables } =
+        await import('../viewing-history/schema.ts');
+      const { getRecentRuns } =
+        await import('../pipeline/tracking-repository.ts');
+      const { createEmailService } =
+        await import('../email/email-service.ts');
       const start: number = Date.now();
 
       await ensureAlertTables(ctx.conn);
       await ensureSavedSearchTables(ctx.conn);
       await ensureContentFlagTables(ctx.conn);
+      await ensureViewingHistoryTables(ctx.conn);
 
       // Determine the pipeline run ID from the most recent tracking record
       const recentRuns = await getRecentRuns(ctx.conn, 1);
       const pipelineRunId: number =
         recentRuns.length > 0 ? recentRuns[0]!.id : 0;
 
-      const result = await evaluateAlerts(ctx.conn, pipelineRunId);
+      // Create email service — SES in production, test transport otherwise
+      const emailTransport: string =
+        process.env.NODE_ENV === 'production' ? 'ses' : 'test';
+      const emailService = createEmailService({
+        transport: emailTransport as 'ses' | 'test',
+        region: process.env.AWS_REGION ?? 'us-east-2',
+        senderAddress:
+          process.env.ALERT_SENDER_ADDRESS ??
+          'alerts@daily-orbit.example.com',
+      });
+      const baseUrl: string =
+        process.env.APP_BASE_URL ?? 'http://localhost:5173';
+
+      const result = await evaluateAlertsWithEmail(
+        ctx.conn,
+        pipelineRunId,
+        emailService,
+        baseUrl,
+      );
 
       ctx.log(
         'info',
-        `Evaluated ${String(result.searchesEvaluated)} searches: ${String(result.totalMatched)} matched, ${String(result.totalFlagged)} flagged`,
+        `Evaluated ${String(result.searchesEvaluated)} searches: ${String(result.totalMatched)} matched, ${String(result.totalFlagged)} flagged, ${String(result.emailsSent)} emails sent`,
       );
 
       return {
@@ -673,7 +694,7 @@ const STAGES: PipelineStage[] = [
         itemsProcessed: result.searchesEvaluated,
         itemsFailed: result.errors,
         durationMs: Date.now() - start,
-        summary: `${String(result.searchesEvaluated)} searches, ${String(result.totalMatched)} matches, ${String(result.totalFlagged)} flagged`,
+        summary: `${String(result.searchesEvaluated)} searches, ${String(result.totalMatched)} matches, ${String(result.totalFlagged)} flagged, ${String(result.emailsSent)} emails`,
       };
     },
   },
