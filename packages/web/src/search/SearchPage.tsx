@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import DOMPurify from 'dompurify';
-import { ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -11,6 +11,7 @@ import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
+import { SaveSearchModal } from './SaveSearchModal.tsx';
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -1016,6 +1017,33 @@ export default function SearchPage() {
     setSearchTrigger((prev: number) => prev + 1);
   }, [activeTab]);
 
+  // Save search modal state
+  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+
+  const handleSaveSearch = useCallback(
+    async (name: string) => {
+      // Only filing and content (filing+query) searches are saveable for now
+      const isFilingTab: boolean = activeTab === 'filings';
+      if (!isFilingTab && !isContentSearch) return;
+
+      const contentType: 'filing' | 'news' = isContentSearch ? 'filing' : 'filing';
+      const filters: Record<string, unknown> = { ...filingFilters };
+
+      // Include content query in filters if present
+      if (isContentSearch) {
+        filters.q = contentQuery.trim();
+        filters.mode = searchMode;
+      }
+
+      await apiFetch('/api/user/saved-searches', {
+        body: JSON.stringify({ content_type: contentType, filters, name }),
+        method: 'POST',
+      });
+      setShowSaveModal(false);
+    },
+    [activeTab, isContentSearch, filingFilters, contentQuery, searchMode],
+  );
+
   // Fetch functions for each tab
   const fetchFilings = useCallback(
     (params: DataTableFetchParams): Promise<PaginatedResponse<FilingSearchResult>> => {
@@ -1201,6 +1229,16 @@ export default function SearchPage() {
               <Button onClick={handleClear} size="sm" variant="outline">
                 Clear
               </Button>
+              {activeTab === 'filings' && (
+                <Button
+                  onClick={() => setShowSaveModal(true)}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+                  Save Search
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -1251,6 +1289,12 @@ export default function SearchPage() {
           )}
         </>
       )}
+
+      <SaveSearchModal
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveSearch}
+        open={showSaveModal}
+      />
     </div>
   );
 }
