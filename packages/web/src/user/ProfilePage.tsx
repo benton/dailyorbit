@@ -115,8 +115,8 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <ToggleRow
             checked={settings?.emailDailyOrbit ?? false}
-            description="Receive a daily email summary of new filings"
-            label="Daily Orbit Email"
+            description="Email me when new content matches my alert searches"
+            label="Email Alerts"
             onChange={(v: boolean) => updateSetting('emailDailyOrbit', v)}
           />
           <ToggleRow
