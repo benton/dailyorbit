@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import DOMPurify from 'dompurify';
-import { Bookmark, ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronRight, Flag, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -11,6 +11,7 @@ import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
+import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { SaveSearchModal } from './SaveSearchModal.tsx';
 import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
 
@@ -1021,6 +1022,11 @@ export default function SearchPage() {
   // Save search modal state
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
+  // Flag and selection state
+  const [flaggedKeys, setFlaggedKeys] = useState<Set<string>>(new Set());
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [lastPageKeys, setLastPageKeys] = useState<Array<string>>([]);
+
   const handleSaveSearch = useCallback(
     async (name: string) => {
       // Only filing and content (filing+query) searches are saveable for now
@@ -1085,14 +1091,54 @@ export default function SearchPage() {
     [activeTab, switchTab],
   );
 
+  // Bulk-check flagged keys for the current page of results
+  const checkFlaggedKeys = useCallback(
+    async (contentType: string, keys: Array<string>): Promise<void> => {
+      if (keys.length === 0) return;
+      try {
+        const result = await apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
+          body: JSON.stringify({ content_type: contentType, content_keys: keys }),
+          method: 'POST',
+        });
+        setFlaggedKeys(new Set(result.flagged));
+      } catch {
+        // Silently ignore — flag state is non-critical
+      }
+    },
+    [],
+  );
+
+  // Bulk flag selected keys
+  const handleBulkFlag = useCallback(async (): Promise<void> => {
+    if (selectedKeys.size === 0) return;
+    const contentType: string = activeTab === 'filings' || isContentSearch ? 'filing' : activeTab;
+    await apiFetch('/api/user/flags/bulk', {
+      body: JSON.stringify({
+        content_type: contentType,
+        content_keys: [...selectedKeys],
+        reason: 'Bulk flagged from search',
+      }),
+      method: 'POST',
+    });
+    setFlaggedKeys((prev: Set<string>) => new Set([...prev, ...selectedKeys]));
+    setSelectedKeys(new Set());
+  }, [selectedKeys, activeTab, isContentSearch]);
+
   // Fetch functions for each tab
   const fetchFilings = useCallback(
-    (params: DataTableFetchParams): Promise<PaginatedResponse<FilingSearchResult>> => {
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<FilingSearchResult>> => {
       const qs: string = buildFilingQueryString(filingFilters, params);
-      return apiFetch<PaginatedResponse<FilingSearchResult>>(`/api/search/filings?${qs}`);
+      const result = await apiFetch<PaginatedResponse<FilingSearchResult>>(
+        `/api/search/filings?${qs}`,
+      );
+      const keys: Array<string> = result.data.map((r: FilingSearchResult) => r.file_number);
+      setLastPageKeys(keys);
+      setSelectedKeys(new Set());
+      void checkFlaggedKeys('filing', keys);
+      return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filingFilters, searchTrigger],
+    [filingFilters, searchTrigger, checkFlaggedKeys],
   );
 
   const fetchSatellites = useCallback(
@@ -1117,7 +1163,7 @@ export default function SearchPage() {
 
   // Content search fetch
   const fetchContent = useCallback(
-    (params: DataTableFetchParams): Promise<PaginatedResponse<ContentSearchResult>> => {
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<ContentSearchResult>> => {
       const parts: Array<string> = [
         `q=${encodeURIComponent(contentQuery.trim())}`,
         `mode=${searchMode}`,
@@ -1149,12 +1195,17 @@ export default function SearchPage() {
       if (filingFilters.company.trim() !== '') {
         parts.push(`company=${encodeURIComponent(filingFilters.company.trim())}`);
       }
-      return apiFetch<PaginatedResponse<ContentSearchResult>>(
+      const result = await apiFetch<PaginatedResponse<ContentSearchResult>>(
         `/api/search/content?${parts.join('&')}`,
       );
+      const keys: Array<string> = result.data.map((r: ContentSearchResult) => r.file_number);
+      setLastPageKeys(keys);
+      setSelectedKeys(new Set());
+      void checkFlaggedKeys('filing', keys);
+      return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentQuery, searchMode, filingFilters, searchTrigger],
+    [contentQuery, searchMode, filingFilters, searchTrigger, checkFlaggedKeys],
   );
 
   // Row click handlers
@@ -1179,11 +1230,125 @@ export default function SearchPage() {
     [navigate],
   );
 
-  // Memoize stable column refs
-  const filingCols = useMemo(() => filingColumns, []);
+  // Toggle a single key in the selection set
+  const toggleSelected = useCallback((key: string) => {
+    setSelectedKeys((prev: Set<string>) => {
+      const next: Set<string> = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedKeys((prev: Set<string>) =>
+      prev.size === lastPageKeys.length ? new Set() : new Set(lastPageKeys),
+    );
+  }, [lastPageKeys]);
+
+  // Build dynamic filing columns with select checkbox and flag toggle
+  const filingCols = useMemo((): Array<ColumnDef<FilingSearchResult, unknown>> => {
+    const selectCol: ColumnDef<FilingSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <input
+          checked={selectedKeys.has(row.original.file_number)}
+          className="cursor-pointer"
+          onChange={() => toggleSelected(row.original.file_number)}
+          onClick={(e) => e.stopPropagation()}
+          type="checkbox"
+        />
+      ),
+      header: () => (
+        <input
+          checked={lastPageKeys.length > 0 && selectedKeys.size === lastPageKeys.length}
+          className="cursor-pointer"
+          onChange={toggleSelectAll}
+          type="checkbox"
+        />
+      ),
+      id: 'select',
+      size: 40,
+    };
+    const flagCol: ColumnDef<FilingSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <FlagToggle
+          contentKey={row.original.file_number}
+          contentType="filing"
+          initialFlagged={flaggedKeys.has(row.original.file_number)}
+          onToggle={(nowFlagged: boolean) => {
+            setFlaggedKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowFlagged) {
+                next.add(row.original.file_number);
+              } else {
+                next.delete(row.original.file_number);
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      id: 'flag',
+      size: 40,
+    };
+    return [selectCol, ...filingColumns, flagCol];
+  }, [flaggedKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+
   const satelliteCols = useMemo(() => satelliteColumns, []);
   const earthStationCols = useMemo(() => earthStationColumns, []);
-  const contentCols = useMemo(() => contentColumns, []);
+
+  // Build dynamic content columns with select checkbox and flag toggle
+  const contentCols = useMemo((): Array<ColumnDef<ContentSearchResult, unknown>> => {
+    const selectCol: ColumnDef<ContentSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <input
+          checked={selectedKeys.has(row.original.file_number)}
+          className="cursor-pointer"
+          onChange={() => toggleSelected(row.original.file_number)}
+          onClick={(e) => e.stopPropagation()}
+          type="checkbox"
+        />
+      ),
+      header: () => (
+        <input
+          checked={lastPageKeys.length > 0 && selectedKeys.size === lastPageKeys.length}
+          className="cursor-pointer"
+          onChange={toggleSelectAll}
+          type="checkbox"
+        />
+      ),
+      id: 'select',
+      size: 40,
+    };
+    const flagCol: ColumnDef<ContentSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <FlagToggle
+          contentKey={row.original.file_number}
+          contentType="filing"
+          initialFlagged={flaggedKeys.has(row.original.file_number)}
+          onToggle={(nowFlagged: boolean) => {
+            setFlaggedKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowFlagged) {
+                next.add(row.original.file_number);
+              } else {
+                next.delete(row.original.file_number);
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      id: 'flag',
+      size: 40,
+    };
+    return [selectCol, ...contentColumns, flagCol];
+  }, [flaggedKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
 
   return (
     <div className="space-y-4">
@@ -1287,6 +1452,30 @@ export default function SearchPage() {
           </div>
         )}
       </div>
+
+      {/* Bulk flagging toolbar */}
+      {selectedKeys.size > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950">
+          <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            {selectedKeys.size} selected
+          </span>
+          <Button
+            onClick={() => void handleBulkFlag()}
+            size="sm"
+            variant="default"
+          >
+            <Flag className="mr-1 h-3.5 w-3.5" />
+            Flag Selected
+          </Button>
+          <Button
+            onClick={() => setSelectedKeys(new Set())}
+            size="sm"
+            variant="ghost"
+          >
+            Clear Selection
+          </Button>
+        </div>
+      )}
 
       {/* Results table — content search replaces tab tables when active */}
       {isContentSearch ? (
