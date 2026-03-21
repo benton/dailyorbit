@@ -23,6 +23,7 @@ import {
 import { userSettingsRoutes } from './user-settings/routes.ts';
 import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 import { savedSearchRoutes } from './saved-search/routes.ts';
+import { contentFlagRoutes } from './content-flag/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
 import { queryRoutes } from './query/routes.ts';
 import {
@@ -79,6 +80,7 @@ app.route('/api/user', userProfileRoutes);
 app.route('/api/user/settings', userSettingsRoutes);
 app.route('/api/user/viewing-history', viewingHistoryRoutes);
 app.route('/api/user/saved-searches', savedSearchRoutes);
+app.route('/api/user/flags', contentFlagRoutes);
 app.route('/api/admin/config', configRoutes);
 app.route('/api/admin/stats', statsRoutes);
 app.route('/api/admin/companies', companyAdminRoutes);
