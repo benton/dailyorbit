@@ -11,6 +11,7 @@ import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 // ── Public types ────────────────────────────────────────────────────
 
 export type StageResult = {
+  itemsDiscovered?: number;
   itemsProcessed: number;
   itemsFailed: number;
   durationMs: number;
@@ -70,6 +71,7 @@ const STAGES: PipelineStage[] = [
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
+        itemsDiscovered: result.filingsDiscovered,
         itemsProcessed: result.filingsIngested,
         itemsFailed: result.filingsFailed,
         durationMs: Date.now() - start,
@@ -514,6 +516,7 @@ const STAGES: PipelineStage[] = [
       );
       const errors: number = results.filter((r) => r.error != null).length;
       return {
+        itemsDiscovered: totalInserted,
         itemsProcessed: totalInserted,
         itemsFailed: errors,
         durationMs: Date.now() - start,
