@@ -105,6 +105,87 @@ Content search results always navigate to the filing detail page.
 
 ---
 
+## Saved Searches
+
+Any search — whether a filtered browse or a content query — can be saved for quick reuse and optional alerting. Saved searches persist per-user and are accessible from the search page and the user dashboard.
+
+### Saving a Search
+
+After configuring filters (and optionally a content query), click **Save Search** to persist the current criteria. Each saved search stores:
+
+- **Name** — a user-provided label (e.g. "SpaceX SAT filings")
+- **Content type** — `filing` or `news`
+- **Filters** — the full set of filter criteria at the time of saving
+
+### Managing Saved Searches
+
+The **Saved Searches** picker on the search page lists all saved searches for the current user. From here you can:
+
+- **Load** — click a saved search to re-execute it with the original filters
+- **Rename** — update the display name
+- **Delete** — permanently remove the saved search
+- **Enable/disable alerts** — toggle whether the search triggers automatic alerting on new content
+
+### Alerts
+
+Any saved search can be used as an alert. When alerting is enabled:
+
+1. The nightly pipeline evaluates all alert-enabled searches after content ingestion
+2. Each new item matching the search criteria is automatically flagged for the user
+3. If the user has email alerts enabled in their settings, a digest email is sent with the matches
+
+**Important:** When a saved search is evaluated as an alert, any date-range filters (`Date Filed From` / `Date Filed To`) are **ignored**. This is intentional — alerts match on content criteria only (subsystem, app type, company, callsign, etc.), and the system automatically scopes results to items discovered since the last evaluation. This means you can save a date-filtered search for browsing and still use it as an alert without maintaining a separate copy.
+
+Alert run history (matches found, flags created, emails sent) is available via the API.
+
+### API Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/saved-searches` | `GET` | List current user's saved searches |
+| `/api/saved-searches/:id` | `GET` | Get a single saved search |
+| `/api/saved-searches` | `POST` | Create a new saved search |
+| `/api/saved-searches/:id` | `PATCH` | Update name or alert_enabled |
+| `/api/saved-searches/:id` | `DELETE` | Delete a saved search |
+| `/api/saved-searches/:id/execute` | `GET` | Re-run a saved search |
+| `/api/alerts/history/:savedSearchId` | `GET` | Alert run history for a search |
+| `/api/alerts/summary` | `GET` | Recent alert activity for current user |
+
+#### Create Saved Search
+
+```
+POST /api/saved-searches
+Content-Type: application/json
+
+{
+  "name": "SpaceX SAT filings",
+  "content_type": "filing",
+  "filters": {
+    "subsystem_code": ["SAT"],
+    "company": "SpaceX"
+  }
+}
+```
+
+#### Enable Alerting
+
+```
+PATCH /api/saved-searches/:id
+Content-Type: application/json
+
+{ "alert_enabled": true }
+```
+
+#### Execute Saved Search
+
+```
+GET /api/saved-searches/:id/execute?page=1&pageSize=25
+```
+
+Returns paginated results in the same format as the corresponding search endpoint.
+
+---
+
 ## Rebuilding the Search Index
 
 The full-text search index must be rebuilt after data ingestion. This happens automatically at the end of the attachment sync pipeline, or can be triggered manually:
