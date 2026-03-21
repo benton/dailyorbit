@@ -113,6 +113,15 @@ export async function searchFilings(
     paramIndex++;
   }
 
+  if (
+    filters.discovered_since != null &&
+    filters.discovered_since.trim() !== ''
+  ) {
+    conditions.push(`f._first_seen_at >= $${paramIndex}`);
+    params.push(filters.discovered_since.trim());
+    paramIndex++;
+  }
+
   const whereClause: string =
     conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
 

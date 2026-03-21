@@ -22,6 +22,7 @@ export type FilingSearchFilters = {
   status_code?: string[];
   date_filed_from?: string;
   date_filed_to?: string;
+  discovered_since?: string;
 };
 
 /** Result row from satellite search */

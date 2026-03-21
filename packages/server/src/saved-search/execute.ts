@@ -22,14 +22,18 @@ export async function executeSavedSearch(
       ...(filters as FilingSearchFilters),
     };
     if (sinceTimestamp != null) {
-      filingFilters.date_filed_from = sinceTimestamp;
+      filingFilters.discovered_since = sinceTimestamp;
     }
     return await searchFilings(conn, filingFilters, pagination);
   }
 
   if (contentType === 'news') {
     const newsFilters = filters as NewsSearchFilters;
-    const hits = await searchNewsByKeyword(conn, newsFilters.q, pagination.pageSize ?? 25);
+    const hits = await searchNewsByKeyword(
+      conn,
+      newsFilters.q,
+      pagination.pageSize ?? 25,
+    );
     return {
       data: hits,
       page: 1,
