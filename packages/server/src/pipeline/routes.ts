@@ -6,11 +6,18 @@
  * GET  /logs/:runId  — SSE endpoint: replays buffered lines then streams live
  */
 
+import { DuckDBConnection } from '@duckdb/node-api';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
+import { getDb } from '../lib/db.ts';
 import { getAllStages, PIPELINE_GROUPS } from './registry.ts';
 import { ConflictError, getRunner } from './runner.ts';
 import type { LogLine, RunSummary } from './runner.ts';
+import { ensurePipelineTrackingTables } from './schema.ts';
+import {
+  getRecentRuns,
+  getStageRunsForPipeline,
+} from './tracking-repository.ts';
 
 export const pipelineRoutes = new Hono();
 
@@ -150,4 +157,34 @@ pipelineRoutes.get('/logs/:runId', (c) => {
       }
     });
   });
+});
+
+// ── GET /history ──────────────────────────────────────────────────────
+
+pipelineRoutes.get('/history', async (c) => {
+  const limit: number = Math.min(Number(c.req.query('limit') ?? '50'), 200);
+  const db = await getDb();
+  const conn = await DuckDBConnection.create(db);
+  try {
+    await ensurePipelineTrackingTables(conn);
+    const runs = await getRecentRuns(conn, limit);
+    return c.json(runs);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── GET /history/:runId ───────────────────────────────────────────────
+
+pipelineRoutes.get('/history/:runId', async (c) => {
+  const runId: number = Number(c.req.param('runId'));
+  const db = await getDb();
+  const conn = await DuckDBConnection.create(db);
+  try {
+    await ensurePipelineTrackingTables(conn);
+    const stages = await getStageRunsForPipeline(conn, runId);
+    return c.json(stages);
+  } finally {
+    conn.closeSync();
+  }
 });
