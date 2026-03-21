@@ -5,6 +5,7 @@ import { getFilingStatus } from '../lib/filing-status.ts';
 import { getSubsystem } from '../lib/subsystems.ts';
 import { markRead } from '../lib/viewing-history.ts';
 import { Badge } from '../ui/badge.tsx';
+import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { SummaryTooltip } from '../ui/SummaryTooltip.tsx';
 import { FilingTimeline } from './FilingTimeline.tsx';
 
@@ -200,6 +201,18 @@ export default function FilingDetailPage() {
     return () => clearTimeout(timer);
   }, [filing]);
 
+  // Check if this filing is flagged
+  const [isFlagged, setIsFlagged] = useState<boolean>(false);
+  useEffect(() => {
+    if (filing == null) return;
+    apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
+      body: JSON.stringify({ content_type: 'filing', content_keys: [filing.fileNumber] }),
+      method: 'POST',
+    })
+      .then((result) => setIsFlagged(result.flagged.includes(filing.fileNumber)))
+      .catch(() => {});
+  }, [filing]);
+
   // ── Attachment sort (hooks must be before early returns) ────────
 
   const [attSort, setAttSort] = useState<{
@@ -288,6 +301,12 @@ export default function FilingDetailPage() {
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             {filing.fileNumber}
           </h1>
+          <FlagToggle
+            contentKey={filing.fileNumber}
+            contentType="filing"
+            initialFlagged={isFlagged}
+            onToggle={setIsFlagged}
+          />
           <Badge className={`${subsystem.bg} ${subsystem.text} border-transparent`}>
             {subsystem.label}
           </Badge>

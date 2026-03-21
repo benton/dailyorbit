@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
 import { markNewsRead } from '../lib/viewing-history.ts';
+import { FlagToggle } from '../ui/FlagToggle.tsx';
 
 type NewsItem = {
   author: string | null;
@@ -63,6 +64,19 @@ export default function NewsDetail() {
     return () => clearTimeout(timer);
   }, [item]);
 
+  // Check if this news item is flagged
+  const [isFlagged, setIsFlagged] = useState<boolean>(false);
+  useEffect(() => {
+    if (item == null) return;
+    const contentKey: string = String(item.id);
+    apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
+      body: JSON.stringify({ content_type: 'news', content_keys: [contentKey] }),
+      method: 'POST',
+    })
+      .then((result) => setIsFlagged(result.flagged.includes(contentKey)))
+      .catch(() => {});
+  }, [item]);
+
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading...</p>;
   }
@@ -101,7 +115,15 @@ export default function NewsDetail() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{item.title}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{item.title}</h1>
+          <FlagToggle
+            contentKey={String(item.id)}
+            contentType="news"
+            initialFlagged={isFlagged}
+            onToggle={setIsFlagged}
+          />
+        </div>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
           {publishedDate != null && <span>{publishedDate}</span>}
           {item.author != null && (
