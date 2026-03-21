@@ -1,4 +1,4 @@
-import { Bookmark, Trash2, X } from 'lucide-react';
+import { Bell, BellOff, Bookmark, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { Button } from '../ui/button.tsx';
@@ -50,6 +50,23 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
     [],
   );
 
+  const handleToggleAlert = useCallback(
+    async (e: React.MouseEvent, search: SavedSearch) => {
+      e.stopPropagation();
+      const newValue: boolean = !search.alert_enabled;
+      await apiFetch(`/api/user/saved-searches/${search.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ alert_enabled: newValue }),
+      });
+      setSearches((prev: Array<SavedSearch>) =>
+        prev.map((s: SavedSearch) =>
+          s.id === search.id ? { ...s, alert_enabled: newValue } : s,
+        ),
+      );
+    },
+    [],
+  );
+
   const handleSelect = useCallback(
     (search: SavedSearch) => {
       onLoad(search);
@@ -75,7 +92,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
       </Button>
 
       {open && (
-        <div className="absolute top-full left-0 z-50 mt-1 w-80 rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="absolute top-full right-0 z-50 mt-1 w-96 rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
           <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-700">
             <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Saved Searches
@@ -114,13 +131,31 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                       {new Date(search.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <button
-                    className="ml-2 shrink-0 rounded p-1 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                    onClick={(e) => void handleDelete(e, search.id)}
-                    type="button"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="ml-2 flex shrink-0 items-center gap-0.5">
+                    <button
+                      className={`rounded p-1 ${
+                        search.alert_enabled
+                          ? 'text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:text-amber-400 dark:hover:bg-amber-900/20'
+                          : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200'
+                      }`}
+                      onClick={(e) => void handleToggleAlert(e, search)}
+                      title={search.alert_enabled ? 'Disable alert' : 'Enable alert'}
+                      type="button"
+                    >
+                      {search.alert_enabled ? (
+                        <Bell className="h-3.5 w-3.5" />
+                      ) : (
+                        <BellOff className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                    <button
+                      className="rounded p-1 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                      onClick={(e) => void handleDelete(e, search.id)}
+                      type="button"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </button>
               ))}
           </div>
