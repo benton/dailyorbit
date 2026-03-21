@@ -91,9 +91,7 @@ describe('alert evaluation integration', () => {
 
     // 5. Verify flag exists
     const flags = await getActiveFlagsForUser(conn, userId, 'filing');
-    const match = flags.find(
-      (f) => f.content_key === 'SES-LIC-20260321-00001',
-    );
+    const match = flags.find((f) => f.content_key === 'SES-LIC-20260321-00001');
     expect(match).toBeDefined();
     expect(match!.source).toEqual('alert');
     expect(match!.saved_search_id).toEqual(searchId);

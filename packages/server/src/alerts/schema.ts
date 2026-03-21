@@ -1,8 +1,6 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 
-export async function ensureAlertTables(
-  conn: DuckDBConnection,
-): Promise<void> {
+export async function ensureAlertTables(conn: DuckDBConnection): Promise<void> {
   await conn.run(`
     CREATE SEQUENCE IF NOT EXISTS alert_run_id_seq START 1;
     CREATE TABLE IF NOT EXISTS alert_run (

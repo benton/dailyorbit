@@ -69,8 +69,14 @@ describe('content flag repository', () => {
 
   describe('getActiveFlagsForUser', () => {
     it('lists only active (non-dismissed) flags for a user', async () => {
-      await createFlag(conn, USER_ID, { content_type: 'filing', content_key: FILING_KEY_A });
-      await createFlag(conn, USER_ID, { content_type: 'filing', content_key: FILING_KEY_B });
+      await createFlag(conn, USER_ID, {
+        content_type: 'filing',
+        content_key: FILING_KEY_A,
+      });
+      await createFlag(conn, USER_ID, {
+        content_type: 'filing',
+        content_key: FILING_KEY_B,
+      });
 
       const flags = await getActiveFlagsForUser(conn, USER_ID, 'filing');
       expect(flags).toHaveLength(2);
@@ -124,8 +130,14 @@ describe('content flag repository', () => {
 
   describe('getActiveFlagKeys', () => {
     it('returns only actively-flagged keys from a candidate list', async () => {
-      await createFlag(conn, USER_ID, { content_type: 'filing', content_key: FILING_KEY_A });
-      await createFlag(conn, USER_ID, { content_type: 'filing', content_key: FILING_KEY_B });
+      await createFlag(conn, USER_ID, {
+        content_type: 'filing',
+        content_key: FILING_KEY_A,
+      });
+      await createFlag(conn, USER_ID, {
+        content_type: 'filing',
+        content_key: FILING_KEY_B,
+      });
 
       const keys: Set<string> = await getActiveFlagKeys(
         conn,
@@ -137,7 +149,12 @@ describe('content flag repository', () => {
     });
 
     it('returns empty set for empty input', async () => {
-      const keys: Set<string> = await getActiveFlagKeys(conn, USER_ID, 'filing', []);
+      const keys: Set<string> = await getActiveFlagKeys(
+        conn,
+        USER_ID,
+        'filing',
+        [],
+      );
       expect(keys).toEqual(new Set());
     });
   });

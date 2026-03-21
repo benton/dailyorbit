@@ -650,8 +650,7 @@ const STAGES: PipelineStage[] = [
         await import('../viewing-history/schema.ts');
       const { getRecentRuns } =
         await import('../pipeline/tracking-repository.ts');
-      const { createEmailService } =
-        await import('../email/email-service.ts');
+      const { createEmailService } = await import('../email/email-service.ts');
       const start: number = Date.now();
 
       await ensureAlertTables(ctx.conn);
@@ -671,8 +670,7 @@ const STAGES: PipelineStage[] = [
         transport: emailTransport as 'ses' | 'test',
         region: process.env.AWS_REGION ?? 'us-east-2',
         senderAddress:
-          process.env.ALERT_SENDER_ADDRESS ??
-          'alerts@daily-orbit.example.com',
+          process.env.ALERT_SENDER_ADDRESS ?? 'alerts@daily-orbit.example.com',
       });
       const baseUrl: string =
         process.env.APP_BASE_URL ?? 'http://localhost:5173';

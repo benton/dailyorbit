@@ -10,7 +10,10 @@ import type {
   PipelineStage,
   StageResult,
 } from './registry.ts';
-import { getRecentRuns, getStageRunsForPipeline } from './tracking-repository.ts';
+import {
+  getRecentRuns,
+  getStageRunsForPipeline,
+} from './tracking-repository.ts';
 
 // ── Mock DB + shutdown (same pattern as runner.test.ts) ──────────────
 
@@ -104,7 +107,11 @@ describe('pipeline tracking integration', () => {
     __registerFake(stage);
 
     const runner = getRunner();
-    const runId: string = await runner.start(['test.tracking'], 0, 'integration-test');
+    const runId: string = await runner.start(
+      ['test.tracking'],
+      0,
+      'integration-test',
+    );
     await waitForDone(runId);
 
     // Query tracking tables using the same in-memory DB

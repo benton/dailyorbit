@@ -63,7 +63,10 @@ contentFlagRoutes.post('/bulk', async (c) => {
 // POST /api/user/flags/bulk-check — check which keys are flagged (for list UI)
 contentFlagRoutes.post('/bulk-check', async (c) => {
   const user: SessionUser = c.get('user');
-  const body = await c.req.json<{ content_type: string; content_keys: string[] }>();
+  const body = await c.req.json<{
+    content_type: string;
+    content_keys: string[];
+  }>();
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {

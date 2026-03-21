@@ -46,14 +46,23 @@ describe('saved search execution', () => {
 
   it('should execute a filing search with saved filters', async () => {
     const filters: FilingSearchFilters = { subsystem_code: ['SAT'] };
-    const result = await executeSavedSearch(conn, 'filing', filters, { page: 1, pageSize: 10 });
+    const result = await executeSavedSearch(conn, 'filing', filters, {
+      page: 1,
+      pageSize: 10,
+    });
     expect(result.data.length).toEqual(1);
   });
 
   it('should execute a filing search scoped to new items since a timestamp', async () => {
     const filters: FilingSearchFilters = { subsystem_code: ['SAT'] };
     // Items since far in the future should return nothing
-    const result = await executeSavedSearch(conn, 'filing', filters, { page: 1, pageSize: 10 }, '2099-01-01');
+    const result = await executeSavedSearch(
+      conn,
+      'filing',
+      filters,
+      { page: 1, pageSize: 10 },
+      '2099-01-01',
+    );
     expect(result.data).toHaveLength(0);
   });
 });

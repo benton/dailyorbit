@@ -40,7 +40,13 @@ export async function createSavedSearch(
     `INSERT INTO saved_search (user_id, name, content_type, filters, include_time_scope)
      VALUES ($1, $2, $3, $4::JSON, $5)
      RETURNING id`,
-    [userId, input.name, input.content_type, JSON.stringify(input.filters), includeTimeScope],
+    [
+      userId,
+      input.name,
+      input.content_type,
+      JSON.stringify(input.filters),
+      includeTimeScope,
+    ],
   );
   return Number(reader.getRowObjectsJS()[0]!.id);
 }

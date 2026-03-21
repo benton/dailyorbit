@@ -92,7 +92,10 @@ savedSearchRoutes.delete('/:id', async (c) => {
 savedSearchRoutes.get('/:id/execute', async (c) => {
   const id: number = Number(c.req.param('id'));
   const page: number = Number(c.req.query('page') ?? '1');
-  const pageSize: number = Math.min(Number(c.req.query('pageSize') ?? '25'), 100);
+  const pageSize: number = Math.min(
+    Number(c.req.query('pageSize') ?? '25'),
+    100,
+  );
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
