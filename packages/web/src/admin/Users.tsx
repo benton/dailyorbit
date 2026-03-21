@@ -67,6 +67,17 @@ export default function Users() {
     void fetchUsers();
   };
 
+  const [sendingEmailTo, setSendingEmailTo] = useState<string | null>(null);
+
+  const handleSendTestEmail = async (id: string) => {
+    setSendingEmailTo(id);
+    try {
+      await apiFetch(`/api/admin/users/${id}/send-test-email`, { method: 'POST' });
+    } finally {
+      setSendingEmailTo(null);
+    }
+  };
+
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading users...</p>;
   }
@@ -144,6 +155,14 @@ export default function Users() {
                           Disable
                         </Button>
                       )}
+                      <Button
+                        disabled={sendingEmailTo === user.id}
+                        onClick={() => void handleSendTestEmail(user.id)}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        {sendingEmailTo === user.id ? 'Sending...' : 'Test Email'}
+                      </Button>
                       <Button
                         onClick={() =>
                           void handleSetRole(user.id, user.role === 'admin' ? 'user' : 'admin')

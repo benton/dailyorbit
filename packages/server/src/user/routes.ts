@@ -1,8 +1,14 @@
 import { DuckDBConnection } from '@duckdb/node-api';
 import { Hono } from 'hono';
+import { getConfigService } from '../lib/config.ts';
 import { getDb } from '../lib/db.ts';
 import { SecretValue } from '../lib/encryption.ts';
 import { gravatarUrl } from '../lib/gravatar.ts';
+import {
+  createEmailService,
+  type EmailServiceConfig,
+} from '../email/email-service.ts';
+import { renderTestEmail } from '../email/test-email.ts';
 import type { SessionUser } from './SessionUser.ts';
 import { UserService } from './user-service.ts';
 
@@ -170,6 +176,33 @@ userAdminRoutes.put('/:id/role', async (c) => {
   const service: UserService = await getService();
   await service.setRole(id, body.role);
   return c.json({ ok: true });
+});
+
+userAdminRoutes.post('/:id/send-test-email', async (c) => {
+  const id: string = c.req.param('id');
+  const service: UserService = await getService();
+  const user = await service.getUser(id);
+  if (user == null) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  const config = getConfigService();
+  const emailConfig: EmailServiceConfig = {
+    transport: config.get('emailTransport') as 'ses' | 'smtp' | 'test',
+    region: config.get('emailRegion') as string,
+    senderAddress: config.get('emailSenderAddress') as string,
+  };
+  const emailService = createEmailService(emailConfig);
+  const appBaseUrl: string = config.get('appBaseUrl') as string;
+
+  const mail = renderTestEmail({
+    recipientName: user.name,
+    recipientEmail: user.email,
+    appBaseUrl,
+  });
+
+  await emailService.sendMail(mail);
+  return c.json({ ok: true, to: user.email });
 });
 
 export { userRoutes, userProfileRoutes, userAdminRoutes };

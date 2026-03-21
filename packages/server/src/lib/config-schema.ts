@@ -133,6 +133,30 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'User prompt template for RAG answer generation (blank = built-in default)',
   },
+  emailTransport: {
+    key: 'emailTransport',
+    defaultValue: 'ses',
+    encrypted: false,
+    description: 'Email transport: ses, smtp, or test',
+  },
+  emailSenderAddress: {
+    key: 'emailSenderAddress',
+    defaultValue: 'admin@dailyorbit.org',
+    encrypted: false,
+    description: 'Default sender (From) address for outgoing email',
+  },
+  emailRegion: {
+    key: 'emailRegion',
+    defaultValue: 'us-east-2',
+    encrypted: false,
+    description: 'AWS region for SES email transport',
+  },
+  appBaseUrl: {
+    key: 'appBaseUrl',
+    defaultValue: 'http://localhost:5173',
+    encrypted: false,
+    description: 'Application base URL for links in emails',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

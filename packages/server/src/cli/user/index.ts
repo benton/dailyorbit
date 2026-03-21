@@ -226,6 +226,96 @@ export const userCommand = defineCommand({
         }
       },
     }),
+
+    'send-test-email': defineCommand({
+      meta: {
+        name: 'send-test-email',
+        description: 'Send a test email to a user',
+      },
+      args: {
+        database: databaseArg,
+        keyFile: {
+          type: 'string',
+          description: 'Path to encryption key file',
+          default: 'data/daily-orbit.key',
+        },
+        email: {
+          type: 'string',
+          description: 'User email address',
+        },
+        id: {
+          type: 'string',
+          description: 'User ID',
+        },
+      },
+      async run({ args }) {
+        const dbInstance = await createDb(args.database);
+        const conn: DuckDBConnection =
+          await DuckDBConnection.create(dbInstance);
+
+        try {
+          const { ensureAuthTables } = await import('../../user/schema.ts');
+          await ensureAuthTables(conn);
+
+          const { UserService } = await import('../../user/user-service.ts');
+          const { ConfigService } = await import('../../lib/config-service.ts');
+          const { readKeyFile } = await import('../../lib/encryption.ts');
+          const { resolveFromRoot } = await import('../shared/context.ts');
+          const { createEmailService } =
+            await import('../../email/email-service.ts');
+          const { renderTestEmail } = await import('../../email/test-email.ts');
+
+          const service = new UserService(dbInstance);
+
+          const userId: string | null = await resolveUserId(
+            service,
+            args.id,
+            args.email,
+          );
+          if (userId == null) {
+            console.error('Error: user not found');
+            process.exit(1);
+          }
+
+          const user = await service.getUser(userId);
+          if (user == null) {
+            console.error('Error: user not found');
+            process.exit(1);
+          }
+
+          const encryptionKey: Buffer = readKeyFile(
+            resolveFromRoot(args.keyFile),
+          );
+          const config = new ConfigService(dbInstance, encryptionKey);
+          await config.load();
+
+          const emailConfig = {
+            transport: config.get('emailTransport') as string as
+              | 'ses'
+              | 'smtp'
+              | 'test',
+            region: config.get('emailRegion') as string,
+            senderAddress: config.get('emailSenderAddress') as string,
+          };
+          const emailService = createEmailService(emailConfig);
+          const appBaseUrl: string = config.get('appBaseUrl') as string;
+
+          const mail = renderTestEmail({
+            recipientName: user.name,
+            recipientEmail: user.email,
+            appBaseUrl,
+          });
+
+          console.log(
+            `Sending test email to ${user.email} via ${emailConfig.transport}...`,
+          );
+          await emailService.sendMail(mail);
+          console.log('Test email sent successfully.');
+        } finally {
+          conn.closeSync();
+        }
+      },
+    }),
   },
 });
 
