@@ -15,7 +15,7 @@ export async function ensureContentFlagTables(
       content_type     VARCHAR NOT NULL,
       content_key      VARCHAR NOT NULL,
       source           VARCHAR NOT NULL DEFAULT 'manual',
-      saved_search_id  INTEGER,
+      saved_search_id  INTEGER NOT NULL DEFAULT 0,
       reason           VARCHAR,
       created_at       TIMESTAMP NOT NULL DEFAULT current_timestamp,
       dismissed_at     TIMESTAMP,
