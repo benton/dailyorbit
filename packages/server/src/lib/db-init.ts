@@ -10,6 +10,7 @@ import { ensureEmbeddingSchema } from '../search/embedding-schema.ts';
 import { ensureNewsTables } from '../news/schema.ts';
 import { ensureConsultantTables } from '../consultant/schema.ts';
 import { ensureChatTables } from '../chat/schema.ts';
+import { ensureSavedSearchTables } from '../saved-search/schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -37,6 +38,7 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
   await ensureNewsTables(conn);
   await ensureConsultantTables(conn);
   await ensureChatTables(conn);
+  await ensureSavedSearchTables(conn);
 
   conn.closeSync();
 }
