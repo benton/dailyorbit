@@ -30,6 +30,7 @@ const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const QueryPage = lazy(() => import('./query/QueryPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
+const AlertsPage = lazy(() => import('./alerts/AlertsPage.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
@@ -135,6 +136,16 @@ export default function App() {
                 </RequireAuth>
               }
               path="/chat"
+            />
+            <Route
+              element={
+                <RequireAuth>
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <AlertsPage />
+                  </Suspense>
+                </RequireAuth>
+              }
+              path="/alerts"
             />
             <Route
               element={
