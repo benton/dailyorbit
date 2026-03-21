@@ -36,14 +36,12 @@ A government shutdown ran from **October 1 through November 13, 2025**. During t
 - **URL:** `ftp://ftp.fcc.gov/pub/Bureaus/International/databases/IBFS.zip`
 - **Format:** Pipe-delimited `.dat` files with Sybase DDL schema, 67+ tables
 - **Status: Frozen.** Last filing dated 2025-06-18. No new data since ICFS migration.
-- **Used by:** `packages/server/src/ingest/` pipeline (`./daily-orbit ingest ibfs`)
 
 ### 2. fcc.report Mirror
 
 - **URL:** `https://fcc.report/IBFS/`
 - **Format:** HTML pages per filing, with attachment links; RSS feed available
 - **Status: Stale since June 2023.** The mirror stopped ingesting IBFS data ~2 years before the ICFS migration. RSS feed last build date is June 14, 2023.
-- **Used by:** `packages/server/src/attachments/` pipeline for attachment discovery (`./daily-orbit attachments discover`)
 
 ### 3. FCC Open Data (Socrata)
 
@@ -59,10 +57,6 @@ A government shutdown ran from **October 1 through November 13, 2025**. During t
 - **App scope:** `x_fmc_ibfs`
 - **Portal ID:** `6865628b1bd2625069c154e2604bcbf2`
 - **Notes:** `robots.txt` disallows all crawlers. No official API documentation. FCC help available at ICFSInfo@fcc.gov. Public comment docket: GN Docket No. 25-194.
-- **Ingest pipeline:** `packages/server/src/icfs/` — operational as of v0.1.6
-  - `./daily-orbit ingest icfs --date-from 2025-07` — discover and ingest filings for a date range
-  - `./daily-orbit ingest icfs --file-numbers SAT-LOA-20250221-00050` — ingest specific filings
-  - Adds 28 enrichment columns: transfer parties, service types, red light status, full addresses, DA numbers
 
 #### 4.1 ICFS Search API (confirmed working, unauthenticated)
 
@@ -79,6 +73,7 @@ Content-Type: application/json
 ```
 
 **Confirmed behavior (March 2026):**
+
 - No auth required — works with plain HTTP POST
 - `count` parameter works up to at least 200; server caps at some upper bound
 - `start` parameter exists but does **not** offset results (pagination is broken or not supported)
@@ -87,6 +82,7 @@ Content-Type: application/json
 - `pagination_supported` returns `true` but actual offset pagination does not work
 
 **Search sources:**
+
 - `ibfs-search-applications` — **works**, returns filings from `x_fmc_ibfs_base_table`
 - `ibfs-search-all` — returns 0 results for targeted queries (may need different query format)
 - `ibfs-search-pns` — returns 0 results (public notices; may require different query terms)
@@ -94,6 +90,7 @@ Content-Type: application/json
 - `ibfs-search-callsigns`, `ibfs-search-frns` — untested
 
 **Result schema (per item):**
+
 ```json
 {
   "sys_id": "0e294fa41bdea6104c2b877ae54bcb6f",
@@ -110,6 +107,7 @@ Content-Type: application/json
 ```
 
 **Limitations:**
+
 - Results are sparse — only file number, applicant name, subsystem (no dates, status, or attachments)
 - Useful for **enumeration** (discovering file numbers) but not for detail ingestion
 - Query is text-search based: `SAT-LOA-2025` matches file numbers containing that substring; `SpaceX` matches applicant names
@@ -122,6 +120,7 @@ GET /api/now/sp/page?id=ibfs_application_summary&portal_id=6865628b1bd2625069c15
 ```
 
 **Confirmed behavior (March 2026):**
+
 - No auth required — returns full filing detail as JSON
 - Data is in `result.containers[2].rows[0].columns[0].widgets[0].widget.data`
 - `data.found` indicates whether the filing exists
@@ -130,6 +129,7 @@ GET /api/now/sp/page?id=ibfs_application_summary&portal_id=6865628b1bd2625069c15
 - `data.tabs.data.widgets` contains tabbed sub-data (documents, pleadings, etc.)
 
 **Filing summary fields (41 fields):**
+
 ```
 accepted_pn_da_number, action_pn_da_number, action_pn_date, action_taken_date,
 adopted_date, afpn_date, applicant_city, applicant_country, applicant_frn,
@@ -143,6 +143,7 @@ streamlined, submission_date
 ```
 
 **Tab widgets:**
+
 - **Filing Documents** — `fields_array: [sys_created_on, document_name, u_description, actions]`
   - Contains attachment metadata with `sys_id` and download links
   - Schedule S links point to `x_fmc_ibfs_sv3_satellite` table records
@@ -153,6 +154,7 @@ streamlined, submission_date
 - **Tab 3** (empty in tested filings)
 
 **Key observations:**
+
 - `legacy_filing_key` is populated for pre-ICFS filings (e.g., `-1,499,997,387`) but empty for new ICFS-native filings
 - `publicly_available` is `false` for all tested filings (may just mean "not on public notice yet")
 - Old IBFS filings (pre-2004) return `found: false` for some records
@@ -162,7 +164,6 @@ streamlined, submission_date
 - **URL:** `/sys_attachment.do?sys_id={sys_id}`
 - **Status:** Redirects to login page (302 → `auth_redirect.do`) without a session
 - Attachments require an authenticated ServiceNow session (JSESSIONID + g_ck token)
-- See `doc/plans/2026-03-14-icfs-scraping-deep-dive.md` for session acquisition flow
 
 #### 4.4 Standard Table API (requires authentication)
 
