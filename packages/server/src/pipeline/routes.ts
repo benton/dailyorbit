@@ -52,7 +52,7 @@ pipelineRoutes.post('/run', async (c) => {
 
   const runner = getRunner();
   try {
-    const runId: string = await runner.start(stageIds, concurrency);
+    const runId: string = await runner.start(stageIds, concurrency, 'manual');
     return c.json({ runId });
   } catch (err: unknown) {
     if (err instanceof ConflictError) {

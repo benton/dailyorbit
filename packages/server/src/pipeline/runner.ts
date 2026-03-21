@@ -13,6 +13,13 @@ import {
 } from '../lib/graceful-shutdown.ts';
 import type { PipelineContext, StageResult } from './registry.ts';
 import { getStage } from './registry.ts';
+import { ensurePipelineTrackingTables } from './schema.ts';
+import {
+  insertPipelineRun,
+  finishPipelineRun as finishPipelineRunRecord,
+  insertStageRun,
+  finishStageRun,
+} from './tracking-repository.ts';
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -115,7 +122,11 @@ class PipelineRunner {
    * Returns the run ID. Throws if a run is already active.
    * @param concurrency — per-stage concurrency override (0 = use stage default)
    */
-  async start(stageIds: string[], concurrency: number = 0): Promise<string> {
+  async start(
+    stageIds: string[],
+    concurrency: number = 0,
+    triggeredBy: string = 'manual',
+  ): Promise<string> {
     if (this.running) {
       throw new ConflictError('A pipeline run is already in progress');
     }
@@ -134,7 +145,7 @@ class PipelineRunner {
     }
 
     // Run asynchronously — don't await
-    this.executeRun(runId, stageIds, buffer, concurrency).catch(
+    this.executeRun(runId, stageIds, buffer, concurrency, triggeredBy).catch(
       (err: unknown) => {
         const msg: string = err instanceof Error ? err.message : String(err);
         this.emitLog(
@@ -159,6 +170,7 @@ class PipelineRunner {
     stageIds: string[],
     buffer: ReplayBuffer,
     concurrencyOverride: number = 0,
+    triggeredBy: string = 'manual',
   ): Promise<void> {
     const runStart: number = Date.now();
     let completed: number = 0;
@@ -190,6 +202,10 @@ class PipelineRunner {
       return;
     }
 
+    // Persist run tracking
+    await ensurePipelineTrackingTables(conn);
+    const dbRunId: number = await insertPipelineRun(conn, triggeredBy);
+
     try {
       for (const stageId of stageIds) {
         const stage = getStage(stageId);
@@ -213,6 +229,8 @@ class PipelineRunner {
         });
         this.emitter.emit('stage-start', { runId, stageId });
         this.emitLog(buffer, runId, stageId, 'info', `Starting: ${stage.name}`);
+
+        const dbStageRunId: number = await insertStageRun(conn, dbRunId, stageId);
 
         // Resolve concurrency: explicit override > stage default > 1
         const effectiveConcurrency: number =
@@ -250,6 +268,13 @@ class PipelineRunner {
             finishedAt: new Date().toISOString(),
           });
           completed++;
+          await finishStageRun(conn, dbStageRunId, {
+            status: 'completed',
+            itemsDiscovered: result.itemsDiscovered,
+            itemsProcessed: result.itemsProcessed,
+            itemsFailed: result.itemsFailed,
+            summary: result.summary,
+          });
           this.emitLog(
             buffer,
             runId,
@@ -267,11 +292,20 @@ class PipelineRunner {
             finishedAt: new Date().toISOString(),
           });
           failed++;
+          await finishStageRun(conn, dbStageRunId, {
+            status: 'failed',
+            summary: msg,
+          });
           this.emitLog(buffer, runId, stageId, 'error', `Failed: ${msg}`);
           this.emitter.emit('stage-end', { runId, stageId, error: msg });
         }
       }
     } finally {
+      const runStatus: string = failed > 0 ? 'failed' : 'completed';
+      const runSummary: string = `${String(completed)} completed, ${String(failed)} failed`;
+      await finishPipelineRunRecord(conn, dbRunId, runStatus, runSummary).catch(
+        () => { /* best-effort — connection may already be bad */ },
+      );
       try {
         untrackConnection(conn!);
         conn!.closeSync();
