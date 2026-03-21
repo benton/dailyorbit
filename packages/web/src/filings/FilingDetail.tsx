@@ -191,11 +191,13 @@ export default function FilingDetailPage() {
     };
   }, [fileNumber]);
 
-  // Auto-mark as read when filing loads
+  // Auto-mark as read after 10 seconds on the page
   useEffect(() => {
-    if (filing != null) {
+    if (filing == null) return;
+    const timer = setTimeout(() => {
       void markRead(filing.fileNumber);
-    }
+    }, 10_000);
+    return () => clearTimeout(timer);
   }, [filing]);
 
   // ── Attachment sort (hooks must be before early returns) ────────

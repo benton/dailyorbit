@@ -24,3 +24,10 @@ export async function markUnread(fileNumber: string): Promise<void> {
     method: 'POST',
   });
 }
+
+export async function markNewsRead(newsItemId: number): Promise<void> {
+  await apiFetch('/api/user/viewing-history/news/mark-read', {
+    body: JSON.stringify({ newsItemId }),
+    method: 'POST',
+  });
+}

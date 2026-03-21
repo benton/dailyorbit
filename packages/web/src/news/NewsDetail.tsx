@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ApiError, apiFetch } from '../lib/api.ts';
+import { markNewsRead } from '../lib/viewing-history.ts';
 
 type NewsItem = {
   author: string | null;
@@ -52,6 +53,15 @@ export default function NewsDetail() {
       cancelled = true;
     };
   }, [id]);
+
+  // Auto-mark as read after 10 seconds on the page
+  useEffect(() => {
+    if (item == null) return;
+    const timer = setTimeout(() => {
+      void markNewsRead(item.id);
+    }, 10_000);
+    return () => clearTimeout(timer);
+  }, [item]);
 
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading...</p>;
