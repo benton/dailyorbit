@@ -4,6 +4,9 @@ import { ensureViewingHistoryTables } from './schema.ts';
 import {
   getRecentlyViewed,
   getViewedFileNumbers,
+  getViewedNewsIds,
+  markNewsUnread,
+  markNewsViewed,
   markUnread,
   markViewed,
 } from './repository.ts';
@@ -78,6 +81,43 @@ describe('viewing-history repository', () => {
       await markViewed(conn, USER_ID, FILE_B);
       const recent = await getRecentlyViewed(conn, USER_ID, 1);
       expect(recent.length).toEqual(1);
+    });
+  });
+
+  describe('news viewing history', () => {
+    const NEWS_A: number = 42;
+    const NEWS_B: number = 99;
+
+    it('marks a news item as viewed', async () => {
+      await markNewsViewed(conn, USER_ID, NEWS_A);
+      const viewed: Set<number> = await getViewedNewsIds(conn, USER_ID, [
+        NEWS_A,
+        NEWS_B,
+      ]);
+      expect(viewed).toEqual(new Set([NEWS_A]));
+    });
+
+    it('is idempotent — updates last_viewed_at on repeat views', async () => {
+      await markNewsViewed(conn, USER_ID, NEWS_A);
+      await markNewsViewed(conn, USER_ID, NEWS_A);
+      const viewed: Set<number> = await getViewedNewsIds(conn, USER_ID, [
+        NEWS_A,
+      ]);
+      expect(viewed).toEqual(new Set([NEWS_A]));
+    });
+
+    it('marks a news item as unread', async () => {
+      await markNewsViewed(conn, USER_ID, NEWS_A);
+      await markNewsUnread(conn, USER_ID, NEWS_A);
+      const viewed: Set<number> = await getViewedNewsIds(conn, USER_ID, [
+        NEWS_A,
+      ]);
+      expect(viewed).toEqual(new Set());
+    });
+
+    it('returns empty set for empty input', async () => {
+      const viewed: Set<number> = await getViewedNewsIds(conn, USER_ID, []);
+      expect(viewed).toEqual(new Set());
     });
   });
 });

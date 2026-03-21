@@ -56,6 +56,54 @@ export async function getViewedFileNumbers(
   );
 }
 
+/** Mark a news item as viewed by a user. Upserts last_viewed_at on repeat views. */
+export async function markNewsViewed(
+  conn: DuckDBConnection,
+  userId: string,
+  newsItemId: number,
+): Promise<void> {
+  const now: string = new Date().toISOString();
+  await conn.run(
+    `INSERT INTO user_news_view (user_id, news_item_id, first_viewed_at, last_viewed_at)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id, news_item_id)
+     DO UPDATE SET last_viewed_at = $4`,
+    [userId, newsItemId, now, now],
+  );
+}
+
+/** Mark a news item as unread for a user. */
+export async function markNewsUnread(
+  conn: DuckDBConnection,
+  userId: string,
+  newsItemId: number,
+): Promise<void> {
+  await conn.run(
+    'DELETE FROM user_news_view WHERE user_id = $1 AND news_item_id = $2',
+    [userId, newsItemId],
+  );
+}
+
+/** Check which news item IDs have been viewed by a user. */
+export async function getViewedNewsIds(
+  conn: DuckDBConnection,
+  userId: string,
+  newsItemIds: number[],
+): Promise<Set<number>> {
+  if (newsItemIds.length === 0) return new Set();
+  const placeholders: string = newsItemIds.map((_: number, i: number) => `$${i + 2}`).join(', ');
+  const result = await conn.runAndReadAll(
+    `SELECT news_item_id FROM user_news_view
+     WHERE user_id = $1 AND news_item_id IN (${placeholders})`,
+    [userId, ...newsItemIds],
+  );
+  return new Set(
+    result
+      .getRowObjectsJS()
+      .map((row) => Number((row as Record<string, unknown>).news_item_id)),
+  );
+}
+
 type UnreadFiling = {
   fileNumber: string;
   dateFiled: string | null;
