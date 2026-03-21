@@ -629,6 +629,84 @@ authentication; the rest is automated.
 
 ---
 
+## Pipeline Run Tracking
+
+Every pipeline execution — whether triggered via the admin UI, CLI, or a scheduled job — automatically persists its run metadata and per-stage results to DuckDB. This enables cadence analysis (how often the FCC posts new filings, at what hours, in batches or trickles) and provides watermarks for the upcoming saved-search alerting system.
+
+### Tables
+
+**`pipeline_run`** — one row per pipeline invocation.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER (auto) | Primary key |
+| `started_at` | TIMESTAMP | When the run began |
+| `finished_at` | TIMESTAMP | When the run completed (NULL while running) |
+| `status` | VARCHAR | `'running'`, `'completed'`, or `'failed'` |
+| `triggered_by` | VARCHAR | `'manual'`, `'cli'`, `'schedule'`, etc. |
+| `summary` | VARCHAR | Human-readable outcome, e.g. `"3 completed, 0 failed"` |
+
+**`pipeline_stage_run`** — one row per stage within a run.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER (auto) | Primary key |
+| `pipeline_run_id` | INTEGER | Foreign key → `pipeline_run.id` |
+| `stage_id` | VARCHAR | Stage identifier, e.g. `'ingest.icfs'`, `'news.fetch'` |
+| `started_at` | TIMESTAMP | When the stage began |
+| `finished_at` | TIMESTAMP | When the stage completed |
+| `status` | VARCHAR | `'running'`, `'completed'`, or `'failed'` |
+| `items_discovered` | INTEGER | New items found (populated by ingest stages) |
+| `items_processed` | INTEGER | Items successfully processed |
+| `items_failed` | INTEGER | Items that errored |
+| `summary` | VARCHAR | Stage-specific summary text |
+
+### How it works
+
+Tracking is wired into `PipelineRunner.executeRun()` and runs alongside the existing in-memory `ReplayBuffer` + SSE streaming. The sequence is:
+
+1. **Run start** → `INSERT INTO pipeline_run`
+2. **Stage start** → `INSERT INTO pipeline_stage_run`
+3. **Stage end** → `UPDATE pipeline_stage_run SET status, items_*, summary`
+4. **Run end** → `UPDATE pipeline_run SET status, summary` (best-effort in `finally` block)
+
+Tables are created lazily via `ensurePipelineTrackingTables()` on first use.
+
+### `items_discovered` field
+
+The `StageResult` type includes an optional `itemsDiscovered` field. Two stages currently populate it:
+
+- **`ingest.icfs`** — number of filings discovered from the ICFS API (may exceed `itemsProcessed` if some were already known)
+- **`news.fetch`** — number of new RSS items inserted (for news, discovered ≈ inserted since dedup happens at insert time)
+
+This field is the basis for cadence analysis: by querying `items_discovered` over time for `ingest.icfs`, we can chart when the FCC publishes new filings.
+
+### API Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/pipeline/history?limit=N` | Recent pipeline runs, most recent first (default 50, max 200) |
+| `GET` | `/api/pipeline/history/:runId` | Stage-level detail for a specific run |
+
+### Future use
+
+This tracking data is the first piece of the Monitoring & Alerting epic. Subsequent features will build on it:
+
+- **Saved Searches** — persisted queries that run against new data
+- **Alert evaluation** — `alert_run` table referencing `pipeline_run.id` as a watermark
+- **Alert delivery** — email notifications when saved searches match new content
+
+### Key files
+
+| Purpose | Path |
+|---|---|
+| Schema DDL | `packages/server/src/pipeline/schema.ts` |
+| Repository CRUD | `packages/server/src/pipeline/tracking-repository.ts` |
+| Runner integration | `packages/server/src/pipeline/runner.ts` |
+| API routes | `packages/server/src/pipeline/routes.ts` |
+
+---
+
 ## Rate Limiting & Concurrency
 
 | Pipeline | Default Delay | Default Concurrency | Notes |
