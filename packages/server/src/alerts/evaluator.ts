@@ -1,5 +1,9 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
-import type { SavedSearchResponse } from '../saved-search/types.ts';
+import type {
+  SavedSearchResponse,
+  NewsSearchFilters,
+} from '../saved-search/types.ts';
+import type { FilingSearchFilters } from '../search/types.ts';
 import { executeSavedSearch } from '../saved-search/execute.ts';
 import {
   createFlag,
@@ -78,13 +82,29 @@ async function getWatermark(
 }
 
 /**
+ * Strip date/time filters from saved search filters for alert evaluation.
+ * Alerts match on content criteria only — the watermark handles "what's new"
+ * scoping via discovered_since, so date_filed_from/date_filed_to are redundant
+ * and would incorrectly exclude newly ingested items filed outside the range.
+ */
+function stripTimeFilters(
+  contentType: string,
+  filters: FilingSearchFilters | NewsSearchFilters,
+): FilingSearchFilters | NewsSearchFilters {
+  if (contentType !== 'filing') return filters;
+  const {
+    date_filed_from: _from,
+    date_filed_to: _to,
+    ...rest
+  } = filters as FilingSearchFilters;
+  return rest;
+}
+
+/**
  * Extract content keys from search results.
  * Filing results have `file_number`, news results have `news_item_id`.
  */
-function extractContentKeys(
-  contentType: string,
-  results: unknown[],
-): string[] {
+function extractContentKeys(contentType: string, results: unknown[]): string[] {
   return results.map((r) => {
     const row: Record<string, unknown> = r as Record<string, unknown>;
     if (contentType === 'filing') {
@@ -182,8 +202,7 @@ export async function evaluateAlertsWithEmail(
   emailService: EmailService | null,
   baseUrl: string,
 ): Promise<EvaluationWithEmailResult> {
-  const searches: AlertEnabledSearch[] =
-    await getAlertEnabledSearches(conn);
+  const searches: AlertEnabledSearch[] = await getAlertEnabledSearches(conn);
 
   let searchesEvaluated: number = 0;
   let totalMatched: number = 0;
@@ -197,11 +216,15 @@ export async function evaluateAlertsWithEmail(
   for (const search of searches) {
     try {
       const watermark: string = await getWatermark(conn, search);
+      const alertFilters = stripTimeFilters(
+        search.content_type,
+        search.filters,
+      );
 
       const result = await executeSavedSearch(
         conn,
         search.content_type,
-        search.filters,
+        alertFilters,
         { page: 1, pageSize: 500 },
         watermark,
       );
