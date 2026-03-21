@@ -12,6 +12,7 @@ import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '..
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
 import { SaveSearchModal } from './SaveSearchModal.tsx';
+import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
 
 // ── Types mirroring server-side search result shapes ─────────────────
 
@@ -1044,6 +1045,46 @@ export default function SearchPage() {
     [activeTab, isContentSearch, filingFilters, contentQuery, searchMode],
   );
 
+  const handleLoadSavedSearch = useCallback(
+    (search: SavedSearch) => {
+      const f = search.filters as Record<string, unknown>;
+
+      if (search.content_type === 'filing') {
+        // Switch to filings tab
+        if (activeTab !== 'filings') {
+          switchTab('filings');
+        }
+
+        // Populate filing filters from saved search
+        setFilingFilters({
+          app_type_code: (f.app_type_code as Array<string>) ?? [],
+          applicant: (f.applicant as string) ?? '',
+          callsign: (f.callsign as string) ?? '',
+          company: (f.company as string) ?? '',
+          date_filed_from: (f.date_filed_from as string) ?? '',
+          date_filed_to: (f.date_filed_to as string) ?? '',
+          file_number: (f.file_number as string) ?? '',
+          status_code: (f.status_code as Array<string>) ?? [],
+          subsystem_code: (f.subsystem_code as Array<string>) ?? [],
+        });
+
+        // Populate content query if present
+        if (typeof f.q === 'string' && f.q.trim() !== '') {
+          setContentQuery(f.q);
+          if (typeof f.mode === 'string') {
+            setSearchMode(f.mode as 'keyword' | 'semantic' | 'hybrid');
+          }
+        } else {
+          setContentQuery('');
+        }
+      }
+
+      // Trigger search
+      setSearchTrigger((prev: number) => prev + 1);
+    },
+    [activeTab, switchTab],
+  );
+
   // Fetch functions for each tab
   const fetchFilings = useCallback(
     (params: DataTableFetchParams): Promise<PaginatedResponse<FilingSearchResult>> => {
@@ -1147,7 +1188,10 @@ export default function SearchPage() {
   return (
     <div className="space-y-4">
       {/* Page heading */}
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Search</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Search</h1>
+        <SavedSearchPicker onLoad={handleLoadSavedSearch} />
+      </div>
 
       {/* Content search bar */}
       <div className="flex items-center gap-3">
