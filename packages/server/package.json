@@ -19,6 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-bedrock": "^3.1009.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1009.0",
+    "@aws-sdk/client-sesv2": "^3.1014.0",
     "@duckdb/node-api": "1.5.0-r.1",
     "@extractus/article-extractor": "^8.0.20",
     "@hono/node-server": "^1.14.3",
@@ -28,12 +29,14 @@
     "hono": "^4.7.11",
     "mustache": "^4.2.0",
     "node-html-parser": "^7.1.0",
+    "nodemailer": "^8.0.3",
     "pdf-oxide-wasm": "^0.3.17",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@types/mustache": "^4.2.6",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^7.0.11",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
     "nodemon": "^3.1.10",
     "npm-run-all2": "^8.0.4",
