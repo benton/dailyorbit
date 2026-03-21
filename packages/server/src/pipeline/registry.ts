@@ -630,6 +630,53 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+
+  // ── Alerts ───────────────────────────────────────────────────
+  {
+    id: 'alerts.evaluate',
+    group: 'alerts',
+    name: 'Evaluate Alerts',
+    description:
+      'Run alert-enabled saved searches against newly ingested content',
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureAlertTables } = await import('../alerts/schema.ts');
+      const { evaluateAlerts } = await import('../alerts/evaluator.ts');
+      const { ensureSavedSearchTables } = await import(
+        '../saved-search/schema.ts'
+      );
+      const { ensureContentFlagTables } = await import(
+        '../content-flag/schema.ts'
+      );
+      const { getRecentRuns } = await import(
+        '../pipeline/tracking-repository.ts'
+      );
+      const start: number = Date.now();
+
+      await ensureAlertTables(ctx.conn);
+      await ensureSavedSearchTables(ctx.conn);
+      await ensureContentFlagTables(ctx.conn);
+
+      // Determine the pipeline run ID from the most recent tracking record
+      const recentRuns = await getRecentRuns(ctx.conn, 1);
+      const pipelineRunId: number =
+        recentRuns.length > 0 ? recentRuns[0]!.id : 0;
+
+      const result = await evaluateAlerts(ctx.conn, pipelineRunId);
+
+      ctx.log(
+        'info',
+        `Evaluated ${String(result.searchesEvaluated)} searches: ${String(result.totalMatched)} matched, ${String(result.totalFlagged)} flagged`,
+      );
+
+      return {
+        itemsDiscovered: result.totalMatched,
+        itemsProcessed: result.searchesEvaluated,
+        itemsFailed: result.errors,
+        durationMs: Date.now() - start,
+        summary: `${String(result.searchesEvaluated)} searches, ${String(result.totalMatched)} matches, ${String(result.totalFlagged)} flagged`,
+      };
+    },
+  },
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -669,6 +716,7 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
     ],
   },
   { id: 'search', name: 'Search', stageIds: ['search.rebuild-index'] },
+  { id: 'alerts', name: 'Alerts', stageIds: ['alerts.evaluate'] },
 ];
 
 // ── Lookup helpers ──────────────────────────────────────────────────
