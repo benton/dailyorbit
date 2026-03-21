@@ -116,11 +116,15 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
             )}
             {!loading &&
               searches.map((search: SavedSearch) => (
-                <button
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                <div
+                  className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
                   key={search.id}
                   onClick={() => handleSelect(search)}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') handleSelect(search);
+                  }}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium text-neutral-900 dark:text-neutral-100">
@@ -156,7 +160,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                </button>
+                </div>
               ))}
           </div>
         </div>

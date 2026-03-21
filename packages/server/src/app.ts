@@ -39,7 +39,7 @@ app.use(
   cors({
     origin: () => getConfigService().get('clientDomain') as string,
     allowHeaders: ['Content-Type', 'Authorization'],
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   }),
 );
