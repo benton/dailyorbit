@@ -181,6 +181,12 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: true,
     description: 'ICFS/Okta password for headless login',
   },
+  schedulerAutoStart: {
+    key: 'schedulerAutoStart',
+    defaultValue: 'false',
+    encrypted: false,
+    description: 'Start the pipeline scheduler automatically when the API server starts',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;

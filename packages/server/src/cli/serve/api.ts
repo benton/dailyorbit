@@ -167,6 +167,15 @@ export const serveApiCommand = defineCommand({
     const { initializeAuth } = await import('../../lib/auth.ts');
     initializeAuth(config);
 
+    // Auto-start scheduler if configured
+    const autoStart: string = String(config.get('schedulerAutoStart') ?? 'false');
+    if (autoStart === 'true') {
+      const { getScheduler } = await import('../../pipeline/scheduler.ts');
+      const scheduler = getScheduler();
+      scheduler.start();
+      console.log('Pipeline scheduler auto-started');
+    }
+
     const { serve } = await import('@hono/node-server');
     const { default: app } = await import('../../app.ts');
     const { SecretValue } = await import('../../lib/encryption.ts');

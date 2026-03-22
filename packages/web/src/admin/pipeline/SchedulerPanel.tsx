@@ -48,6 +48,7 @@ export default function SchedulerPanel() {
   const [loading, setLoading] = useState<boolean>(true);
   const [probeInterval, setProbeInterval] = useState<number>(60);
   const [refreshInterval, setRefreshInterval] = useState<number>(15);
+  const [autoStart, setAutoStart] = useState<boolean>(false);
 
   const fetchSchedulerStatus = useCallback(async () => {
     try {
@@ -62,6 +63,23 @@ export default function SchedulerPanel() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Fetch auto-start config
+  useEffect(() => {
+    void (async () => {
+      try {
+        const entries = await apiFetch<Array<{ key: string; value: string }>>(
+          '/api/admin/config',
+        );
+        const entry = entries.find((e) => e.key === 'schedulerAutoStart');
+        if (entry != null) {
+          setAutoStart(entry.value === 'true');
+        }
+      } catch {
+        // best-effort
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -99,6 +117,18 @@ export default function SchedulerPanel() {
       setStatus(data);
     } catch {
       // best-effort
+    }
+  }, []);
+
+  const handleAutoStartToggle = useCallback(async (checked: boolean) => {
+    setAutoStart(checked);
+    try {
+      await apiFetch('/api/admin/config/schedulerAutoStart', {
+        method: 'PUT',
+        body: JSON.stringify({ value: checked ? 'true' : 'false' }),
+      });
+    } catch {
+      setAutoStart(!checked); // revert on failure
     }
   }, []);
 
@@ -161,6 +191,15 @@ export default function SchedulerPanel() {
 
       {/* Interval config */}
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+        <label className="flex items-center gap-1.5">
+          <input
+            checked={autoStart}
+            className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600"
+            onChange={(e) => void handleAutoStartToggle(e.target.checked)}
+            type="checkbox"
+          />
+          Start on boot
+        </label>
         <label className="flex items-center gap-1.5">
           <Zap className="h-3 w-3" />
           Probe every
