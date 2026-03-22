@@ -3,17 +3,13 @@ import { dirname } from 'node:path';
 import type { Cookie } from 'playwright';
 import { defineCommand } from 'citty';
 import { resolveFromRoot } from '../shared/context.ts';
+import {
+  formatCookieOutput,
+  type CookieOutput,
+} from '../../icfs/headless-login.ts';
 
 const ICFS_URL: string = 'https://fccprod.servicenowservices.com/icfs';
 const SERVICENOW_DOMAIN: string = 'fccprod.servicenowservices.com';
-const SESSION_LIFETIME_MS: number = 30 * 60 * 1000;
-
-type CookieOutput = {
-  cookies: string;
-  extractedAt: string;
-  expiresAt: string;
-  cookieCount: number;
-};
 
 export const extractCookiesCommand = defineCommand({
   meta: {
@@ -69,31 +65,21 @@ export const extractCookiesCommand = defineCommand({
     );
     await browser.close();
 
-    const snCookies: Cookie[] = allCookies.filter((c) =>
-      c.domain.includes(SERVICENOW_DOMAIN),
-    );
-
-    if (snCookies.length === 0) {
+    let output: CookieOutput;
+    try {
+      output = formatCookieOutput(allCookies, new Date());
+    } catch {
       console.error('No ServiceNow cookies found. Did you complete login?');
       process.exit(1);
     }
 
-    // Format as a Cookie header string
-    const cookieString: string = snCookies
-      .map((c) => `${c.name}=${c.value}`)
-      .join('; ');
-
-    const now: Date = new Date();
-    const output: CookieOutput = {
-      cookies: cookieString,
-      extractedAt: now.toISOString(),
-      expiresAt: new Date(now.getTime() + SESSION_LIFETIME_MS).toISOString(),
-      cookieCount: snCookies.length,
-    };
-
     mkdirSync(dirname(outputPath), { recursive: true });
     writeFileSync(outputPath, JSON.stringify(output, null, 2) + '\n');
 
+    // Print individual cookie details
+    const snCookies: Cookie[] = allCookies.filter((c: Cookie) =>
+      c.domain.includes(SERVICENOW_DOMAIN),
+    );
     console.log(`\nExtracted ${String(snCookies.length)} cookies:`);
     for (const c of snCookies) {
       const expiry: string =
