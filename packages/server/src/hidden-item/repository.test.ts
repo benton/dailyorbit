@@ -223,7 +223,9 @@ describe('hidden item repository', () => {
 
       const rows = await getSystemHides(conn, CONTENT_TYPE);
       expect(rows).toHaveLength(2);
-      const keys: string[] = rows.map((r) => r.content_key).sort();
+      const keys: string[] = rows
+        .map((r: { content_key: string }) => r.content_key)
+        .sort();
       expect(keys).toEqual([KEY_B, KEY_C]);
     });
   });

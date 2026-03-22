@@ -81,7 +81,7 @@ export async function getActiveHiddenKeys(
   return new Set(
     reader
       .getRowObjectsJS()
-      .map((row) => String((row as Record<string, unknown>).content_key)),
+      .map((row: Record<string, unknown>) => String(row.content_key)),
   );
 }
 
