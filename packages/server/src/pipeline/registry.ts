@@ -283,6 +283,7 @@ const STAGES: PipelineStage[] = [
     description: 'Generate vector embeddings for attachment text',
     defaultConcurrency: 10,
     parallelizable: true,
+    resettable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       // Mirrors the CLI embed command for source=attachment
       const { DuckDBConnection } = await import('@duckdb/node-api');
@@ -306,11 +307,12 @@ const STAGES: PipelineStage[] = [
         const client = new BedrockClient(region);
         const service = new EmbeddingService(client);
 
-        // Find attachments needing embeddings
+        // Find attachments needing embeddings (exclude permanently failed)
         const sql: string = `
           SELECT CAST(a.attachment_key AS VARCHAR) AS source_key, a.full_text
           FROM attachment a
           WHERE a.full_text IS NOT NULL AND LENGTH(TRIM(a.full_text)) > 0
+            AND a.indexed_by IS NULL
             AND NOT EXISTS (
               SELECT 1 FROM embedding e
               WHERE e.source_table = 'attachment'
@@ -334,9 +336,9 @@ const STAGES: PipelineStage[] = [
         let failed: number = 0;
 
         await processWithConcurrency(rows, ctx.concurrency, async (row) => {
+          const sourceKey: string = String(row.source_key);
           try {
             const text: string = String(row.full_text);
-            const sourceKey: string = String(row.source_key);
             const textChecksum: string = computeTextChecksum(text);
             const chunks: string[] = splitText(
               text,
@@ -379,10 +381,18 @@ const STAGES: PipelineStage[] = [
             ctx.onProgress(processed, rows.length);
           } catch (err: unknown) {
             failed++;
-            ctx.log(
-              'error',
-              `Embed failed: ${err instanceof Error ? err.message : String(err)}`,
-            );
+            const errMsg: string =
+              err instanceof Error ? err.message : String(err);
+            ctx.log('error', `Embed failed: ${errMsg}`);
+            const isPermanent: boolean =
+              errMsg.includes('Too many input tokens') ||
+              errMsg.includes('Max input tokens');
+            if (isPermanent) {
+              await conn.run(
+                `UPDATE attachment SET indexed_by = 'failed', indexed_at = current_timestamp WHERE CAST(attachment_key AS VARCHAR) = ?`,
+                [sourceKey] as import('@duckdb/node-api').DuckDBValue[],
+              );
+            }
           }
         });
 
