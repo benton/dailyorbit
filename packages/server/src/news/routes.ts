@@ -58,7 +58,9 @@ newsRoutes.get('/', async (c) => {
   if (q.extractStatus != null)
     filters.extractStatus = q.extractStatus as ExtractStatus;
   if (q.show_hidden === 'true') filters.showHidden = true;
-  const newsSession = await getAuth().api.getSession({ headers: c.req.raw.headers });
+  const newsSession = await getAuth().api.getSession({
+    headers: c.req.raw.headers,
+  });
   if (newsSession != null) filters.userId = newsSession.user.id;
 
   const result = await withConn((conn) =>

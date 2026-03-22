@@ -89,7 +89,9 @@ searchRoutes.get('/filings', async (c) => {
   if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
   if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
   if (q.show_hidden === 'true') filters.show_hidden = true;
-  const session = await getAuth().api.getSession({ headers: c.req.raw.headers });
+  const session = await getAuth().api.getSession({
+    headers: c.req.raw.headers,
+  });
   if (session != null) filters.user_id = session.user.id;
   const pagination: PaginatedRequest = parsePagination(q);
 
@@ -168,7 +170,9 @@ searchRoutes.get('/content', async (c) => {
   if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
   if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
   if (q.show_hidden === 'true') filters.show_hidden = true;
-  const contentSession = await getAuth().api.getSession({ headers: c.req.raw.headers });
+  const contentSession = await getAuth().api.getSession({
+    headers: c.req.raw.headers,
+  });
   if (contentSession != null) filters.user_id = contentSession.user.id;
 
   const pagination: PaginatedRequest = parsePagination(q);
