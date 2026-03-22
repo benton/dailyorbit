@@ -38,7 +38,7 @@ export async function planRewind(
 
   const scope: string = opts.since
     ? `filings with _first_seen_at >= ${opts.since}`
-    : `${opts.last} most recently ingested filings`;
+    : `${opts.last} most recently filed filings (hidden excluded)`;
 
   const counts: TableCount[] = await countDeletions(conn);
   const fullCounts: TableCount[] = opts.full
@@ -62,7 +62,7 @@ export async function executeRewind(
 
   const scope: string = opts.since
     ? `filings with _first_seen_at >= ${opts.since}`
-    : `${opts.last} most recently ingested filings`;
+    : `${opts.last} most recently filed filings (hidden excluded)`;
 
   // Delete in FK-safe order within a transaction
   await conn.run('BEGIN TRANSACTION');
@@ -110,8 +110,14 @@ async function createTargetSet(
   } else {
     await conn.run(
       `CREATE TEMP TABLE rewind_filings AS
-         SELECT file_number, filing_key FROM filing
-         ORDER BY _first_seen_at DESC LIMIT ?`,
+         SELECT f.file_number, f.filing_key FROM filing f
+         LEFT JOIN hidden_item h
+           ON h.content_type = 'filing'
+           AND h.content_key = f.file_number
+           AND h.removed_at IS NULL
+         WHERE h.id IS NULL
+         ORDER BY f.date_filed DESC NULLS LAST
+         LIMIT ?`,
       [opts.last!],
     );
   }
