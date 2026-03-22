@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { ensureConsultantTables } from '../consultant/schema.ts';
 import { createConsultant } from '../consultant/repository.ts';
+import { ensureInferenceLogTable } from '../inference/schema.ts';
 import { ensureChatTables } from './schema.ts';
 import {
   createConversation,
@@ -25,6 +26,7 @@ describe('chat repository', () => {
     conn = await DuckDBConnection.create(db);
     await ensureConsultantTables(conn);
     await ensureChatTables(conn);
+    await ensureInferenceLogTable(conn);
 
     const consultant = await createConsultant(conn, {
       name: 'Test Consultant',

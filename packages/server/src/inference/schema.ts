@@ -50,4 +50,21 @@ export async function ensureInferenceLogTable(
     CREATE INDEX IF NOT EXISTS idx_inference_log_user
     ON inference_log(user_id)
   `);
+
+  // Migration: add conversation_id column if table predates its introduction
+  const convReader = await conn.run(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_name = 'inference_log' AND column_name = 'conversation_id'`,
+  );
+  const convRows = await convReader.getRows();
+  if (convRows.length === 0) {
+    await conn.run(
+      `ALTER TABLE inference_log ADD COLUMN conversation_id VARCHAR`,
+    );
+  }
+
+  await conn.run(`
+    CREATE INDEX IF NOT EXISTS idx_inference_log_conversation
+    ON inference_log(conversation_id)
+  `);
 }

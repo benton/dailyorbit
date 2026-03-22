@@ -23,6 +23,9 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
   /** Optional user ID for user-attributed cost tracking. */
   userId: string | undefined;
 
+  /** Optional conversation ID for chat cost tracking. */
+  conversationId: string | undefined;
+
   constructor(
     inner: BedrockClientLike,
     conn: DuckDBConnection | null,
@@ -48,6 +51,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       operation: 'converse',
       caller: this.caller,
       userId: this.userId,
+      conversationId: this.conversationId,
       inputTokens: result.usage?.inputTokens ?? 0,
       outputTokens: result.usage?.outputTokens ?? 0,
       latencyMs,
@@ -77,6 +81,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       operation: 'converse_stream',
       caller: this.caller,
       userId: this.userId,
+      conversationId: this.conversationId,
       inputTokens,
       outputTokens,
       latencyMs,
@@ -91,6 +96,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       operation: 'embed',
       caller: this.caller,
       userId: this.userId,
+      conversationId: this.conversationId,
       inputTokens: result.inputTokenCount,
       outputTokens: 0,
       latencyMs: result.latencyMs,
@@ -105,6 +111,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
     operation: 'converse' | 'converse_stream' | 'embed';
     caller?: string | undefined;
     userId?: string | undefined;
+    conversationId?: string | undefined;
     inputTokens: number;
     outputTokens: number;
     latencyMs: number;

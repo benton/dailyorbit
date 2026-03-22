@@ -21,6 +21,7 @@ const UserHomePage = lazy(() => import('./home/UserHomePage.tsx'));
 const Companies = lazy(() => import('./admin/Companies.tsx'));
 const Users = lazy(() => import('./admin/Users.tsx'));
 const AiSettings = lazy(() => import('./admin/AiSettings.tsx'));
+const InferenceCosts = lazy(() => import('./admin/InferenceCosts.tsx'));
 const PipelinePage = lazy(() => import('./admin/pipeline/PipelinePage.tsx'));
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
@@ -221,6 +222,14 @@ export default function App() {
                 </Suspense>
               }
               path="users"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <InferenceCosts />
+                </Suspense>
+              }
+              path="costs"
             />
             <Route
               element={

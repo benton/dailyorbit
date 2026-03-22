@@ -47,6 +47,13 @@ export default function AdminLayout() {
           <span className="text-neutral-300 dark:text-neutral-600">/</span>
           <Link
             className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            to="/admin/costs"
+          >
+            Costs
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <Link
+            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
             to="/admin/pipeline"
           >
             Pipeline

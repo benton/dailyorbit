@@ -1,9 +1,14 @@
+import { DuckDBConnection } from '@duckdb/node-api';
 import { Hono } from 'hono';
 import { getConfigService } from '../lib/config.ts';
+import { getDb } from '../lib/db.ts';
+import { trackConnection } from '../lib/graceful-shutdown.ts';
+import type { PaginatedRequest } from '../lib/pagination.ts';
 import {
   InferenceService,
   type ConverseFunction,
 } from './inference-service.ts';
+import { listInferenceLog } from './log-repository.ts';
 import { listAvailableModels } from './models.ts';
 import {
   DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
@@ -91,6 +96,27 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
         variables: QUERY_GENERATE_VARIABLES,
       },
     });
+  });
+
+  /** GET /costs — Paginated inference log with computed costs. */
+  routes.get('/costs', async (c) => {
+    const query: Record<string, string> = c.req.query();
+    const request: PaginatedRequest = {};
+    if (query.page != null) request.page = Number(query.page);
+    if (query.pageSize != null) request.pageSize = Number(query.pageSize);
+    if (query.sort != null) request.sort = query.sort;
+    if (query.order === 'asc' || query.order === 'desc')
+      request.order = query.order;
+
+    const db = await getDb();
+    const conn: DuckDBConnection = await DuckDBConnection.create(db);
+    trackConnection(conn);
+    try {
+      const result = await listInferenceLog(conn, request);
+      return c.json(result);
+    } finally {
+      conn.closeSync();
+    }
   });
 
   return routes;

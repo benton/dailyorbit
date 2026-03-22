@@ -1,4 +1,5 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
+import { detachConversationCosts } from '../inference/log-repository.ts';
 import type { RetrievedSource } from '../query/types.ts';
 import type { Conversation, Message } from './types.ts';
 
@@ -127,6 +128,9 @@ export async function deleteConversation(
   );
   const count: number = Number(before.getRowObjectsJS()[0]!.cnt);
   if (count === 0) return false;
+
+  // Detach inference cost rows — keep them for billing, just clear the FK
+  await detachConversationCosts(conn, id);
 
   await conn.run(`DELETE FROM message WHERE conversation_id = $1`, [
     id,
