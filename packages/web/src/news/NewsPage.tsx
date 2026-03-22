@@ -1,8 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { useCallback, useMemo } from 'react';
+import { EyeOff } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { HideToggle } from '../ui/HideToggle.tsx';
 
 type NewsListItem = {
   author: string | null;
@@ -52,9 +54,28 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
 
 export default function NewsPage() {
   const navigate = useNavigate();
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+
+  const checkHiddenKeys = useCallback(
+    async (keys: Array<string>): Promise<void> => {
+      if (keys.length === 0) {
+        return;
+      }
+      try {
+        const result = await apiFetch<{ hidden: Array<string> }>('/api/user/hidden-items/bulk-check', {
+          body: JSON.stringify({ content_keys: keys, content_type: 'news' }),
+          method: 'POST',
+        });
+        setHiddenKeys(new Set(result.hidden));
+      } catch {
+        // Silently ignore — hidden state is non-critical
+      }
+    },
+    [],
+  );
 
   const fetchNews = useCallback(
-    (params: DataTableFetchParams): Promise<PaginatedResponse<NewsListItem>> => {
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<NewsListItem>> => {
       const parts: Array<string> = [
         `page=${String(params.page)}`,
         `pageSize=${String(params.pageSize)}`,
@@ -65,9 +86,12 @@ export default function NewsPage() {
       if (params.order != null) {
         parts.push(`order=${params.order}`);
       }
-      return apiFetch<PaginatedResponse<NewsListItem>>(`/api/news?${parts.join('&')}`);
+      const result = await apiFetch<PaginatedResponse<NewsListItem>>(`/api/news?${parts.join('&')}`);
+      const keys: Array<string> = result.data.map((r: NewsListItem) => String(r.id));
+      void checkHiddenKeys(keys);
+      return result;
     },
-    [],
+    [checkHiddenKeys],
   );
 
   const onRowClick = useCallback(
@@ -77,7 +101,32 @@ export default function NewsPage() {
     [navigate],
   );
 
-  const cols = useMemo(() => newsColumns, []);
+  const cols = useMemo((): Array<ColumnDef<NewsListItem, unknown>> => {
+    const hideCol: ColumnDef<NewsListItem, unknown> = {
+      cell: ({ row }) => (
+        <HideToggle
+          contentKey={String(row.original.id)}
+          contentType="news"
+          initialHidden={hiddenKeys.has(String(row.original.id))}
+          onToggle={(nowHidden: boolean) => {
+            setHiddenKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowHidden) {
+                next.add(String(row.original.id));
+              } else {
+                next.delete(String(row.original.id));
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      id: 'hide',
+      size: 40,
+    };
+    return [...newsColumns, hideCol];
+  }, [hiddenKeys]);
 
   return (
     <div className="space-y-4">

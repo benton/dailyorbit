@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import DOMPurify from 'dompurify';
-import { Bookmark, ChevronDown, ChevronRight, Flag, Search } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronRight, EyeOff, Flag, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -10,6 +10,7 @@ import { APP_TYPE_CODES, SUBSYSTEM_OPTIONS } from '../lib/subsystems.ts';
 import { Button } from '../ui/button.tsx';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { FlagToggle } from '../ui/FlagToggle.tsx';
+import { HideToggle } from '../ui/HideToggle.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
 import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
@@ -1022,8 +1023,9 @@ export default function SearchPage() {
   // Save search modal state
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
-  // Flag and selection state
+  // Flag, hide, and selection state
   const [flaggedKeys, setFlaggedKeys] = useState<Set<string>>(new Set());
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [lastPageKeys, setLastPageKeys] = useState<Array<string>>([]);
 
@@ -1112,6 +1114,25 @@ export default function SearchPage() {
     [],
   );
 
+  // Bulk-check hidden keys for the current page of results
+  const checkHiddenKeys = useCallback(
+    async (contentType: string, keys: Array<string>): Promise<void> => {
+      if (keys.length === 0) {
+        return;
+      }
+      try {
+        const result = await apiFetch<{ hidden: Array<string> }>('/api/user/hidden-items/bulk-check', {
+          body: JSON.stringify({ content_keys: keys, content_type: contentType }),
+          method: 'POST',
+        });
+        setHiddenKeys(new Set(result.hidden));
+      } catch {
+        // Silently ignore — hidden state is non-critical
+      }
+    },
+    [],
+  );
+
   // Bulk flag selected keys
   const handleBulkFlag = useCallback(async (): Promise<void> => {
     if (selectedKeys.size === 0) {
@@ -1141,10 +1162,11 @@ export default function SearchPage() {
       setLastPageKeys(keys);
       setSelectedKeys(new Set());
       void checkFlaggedKeys('filing', keys);
+      void checkHiddenKeys('filing', keys);
       return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filingFilters, searchTrigger, checkFlaggedKeys],
+    [filingFilters, searchTrigger, checkFlaggedKeys, checkHiddenKeys],
   );
 
   const fetchSatellites = useCallback(
@@ -1208,10 +1230,11 @@ export default function SearchPage() {
       setLastPageKeys(keys);
       setSelectedKeys(new Set());
       void checkFlaggedKeys('filing', keys);
+      void checkHiddenKeys('filing', keys);
       return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentQuery, searchMode, filingFilters, searchTrigger, checkFlaggedKeys],
+    [contentQuery, searchMode, filingFilters, searchTrigger, checkFlaggedKeys, checkHiddenKeys],
   );
 
   // Row click handlers
@@ -1301,8 +1324,31 @@ export default function SearchPage() {
       id: 'flag',
       size: 40,
     };
-    return [selectCol, ...filingColumns, flagCol];
-  }, [flaggedKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+    const hideCol: ColumnDef<FilingSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <HideToggle
+          contentKey={row.original.file_number}
+          contentType="filing"
+          initialHidden={hiddenKeys.has(row.original.file_number)}
+          onToggle={(nowHidden: boolean) => {
+            setHiddenKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowHidden) {
+                next.add(row.original.file_number);
+              } else {
+                next.delete(row.original.file_number);
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      id: 'hide',
+      size: 40,
+    };
+    return [selectCol, ...filingColumns, flagCol, hideCol];
+  }, [flaggedKeys, hiddenKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
 
   const satelliteCols = useMemo(() => satelliteColumns, []);
   const earthStationCols = useMemo(() => earthStationColumns, []);
@@ -1353,8 +1399,31 @@ export default function SearchPage() {
       id: 'flag',
       size: 40,
     };
-    return [selectCol, ...contentColumns, flagCol];
-  }, [flaggedKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+    const hideCol: ColumnDef<ContentSearchResult, unknown> = {
+      cell: ({ row }) => (
+        <HideToggle
+          contentKey={row.original.file_number}
+          contentType="filing"
+          initialHidden={hiddenKeys.has(row.original.file_number)}
+          onToggle={(nowHidden: boolean) => {
+            setHiddenKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowHidden) {
+                next.add(row.original.file_number);
+              } else {
+                next.delete(row.original.file_number);
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      id: 'hide',
+      size: 40,
+    };
+    return [selectCol, ...contentColumns, flagCol, hideCol];
+  }, [flaggedKeys, hiddenKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
 
   return (
     <div className="space-y-4">
