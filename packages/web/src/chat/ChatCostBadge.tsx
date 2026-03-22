@@ -8,12 +8,12 @@ export function formatCostCents(cents: number): string {
 
   const dollars: number = cents / 100;
 
-  // Sub-cent: use JS string representation (preserves significant digits) and
-  // pad to at least 3 decimal places
+  // Sub-cent: show 3 significant figures of the dollar value, ensuring at
+  // least 3 decimal places so the leading "$0.00" is always visible
   if (cents < 1) {
-    const raw: string = String(dollars);
-    const decimals: number = (raw.split('.')[1] ?? '').length;
-    return decimals >= 3 ? `$${raw}` : `$${dollars.toFixed(3)}`;
+    const sigFigs: string = parseFloat(dollars.toPrecision(3)).toString();
+    const decimals: number = (sigFigs.split('.')[1] ?? '').length;
+    return decimals >= 3 ? `$${sigFigs}` : `$${dollars.toFixed(3)}`;
   }
 
   return `$${dollars.toFixed(2)}`;
