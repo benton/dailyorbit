@@ -19,6 +19,7 @@ import { ensureIcfsColumns } from './schema.ts';
 import {
   computeSnapshotHash,
   ensureDiscoverySnapshotTable,
+  getLatestSnapshot,
   saveSnapshot,
 } from './snapshot-repository.ts';
 import type { IcfsFilingDetail, IcfsSearchResult } from './types.ts';
@@ -117,7 +118,31 @@ export async function runIcfsIngest(
     await ensureDiscoverySnapshotTable(conn);
     const snapshotHash: string = computeSnapshotHash(fileNumbers);
 
-    // 2c. Filter to unknown file numbers when skipKnown is set
+    // 2c. Hash-based short-circuit: if the discovered set is unchanged, skip everything
+    if (options.skipKnown === true) {
+      const prev = await getLatestSnapshot(conn);
+      if (prev != null && prev.snapshot_hash === snapshotHash) {
+        await saveSnapshot(
+          conn,
+          snapshotHash,
+          [],
+          0,
+          options.pipelineRunId,
+        );
+        const durationMs: number = Date.now() - start;
+        log(`Snapshot unchanged (${snapshotHash.slice(0, 8)}…), no new filings`);
+        return {
+          filingsDiscovered: fileNumbers.length,
+          filingsIngested: 0,
+          filingsNotFound: 0,
+          filingsFailed: 0,
+          skippedKnown: fileNumbers.length,
+          durationMs,
+        };
+      }
+    }
+
+    // 2d. Filter to unknown file numbers when skipKnown is set
     let skippedKnown: number = 0;
     if (options.skipKnown === true && fileNumbers.length > 0) {
       const placeholders: string = fileNumbers.map(() => '?').join(',');

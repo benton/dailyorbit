@@ -127,6 +127,9 @@ async function countForTable(
 }
 
 async function countDeletions(conn: DuckDBConnection): Promise<TableCount[]> {
+  const snapshotCount: number = (await tableExists(conn, 'discovery_snapshot'))
+    ? await countForTable(conn, 'SELECT count(*) FROM discovery_snapshot')
+    : 0;
   const alertRunCount: number = await countForTable(
     conn,
     'SELECT count(*) FROM alert_run',
@@ -158,6 +161,7 @@ async function countDeletions(conn: DuckDBConnection): Promise<TableCount[]> {
   );
 
   return [
+    { table: 'discovery_snapshot', count: snapshotCount },
     { table: 'filing', count: filingCount },
     { table: 'attachment', count: attachmentCount },
     { table: 'pleading', count: pleadingCount },
@@ -227,6 +231,11 @@ async function deleteAndCount(
 async function deleteDependentRows(
   conn: DuckDBConnection,
 ): Promise<TableCount[]> {
+  // Step 0: discovery_snapshot — delete all rows (forces fresh probe)
+  const snapshotCount: number = await tableExists(conn, 'discovery_snapshot')
+    ? await deleteAndCount(conn, 'discovery_snapshot', '1=1')
+    : 0;
+
   // Step 1: alert_run — delete all rows (resets watermarks)
   const alertCount: number = await deleteAndCount(conn, 'alert_run', '1=1');
 
@@ -266,6 +275,7 @@ async function deleteDependentRows(
   );
 
   return [
+    { table: 'discovery_snapshot', count: snapshotCount },
     { table: 'alert_run', count: alertCount },
     { table: 'user_content_flag', count: flagCount },
     { table: 'user_filing_view', count: viewCount },
