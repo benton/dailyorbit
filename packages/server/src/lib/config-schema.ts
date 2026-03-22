@@ -157,6 +157,18 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Application base URL for links in emails',
   },
+  icfsUsername: {
+    key: 'icfsUsername',
+    defaultValue: '',
+    encrypted: true,
+    description: 'ICFS/Okta username (email) for headless login',
+  },
+  icfsPassword: {
+    key: 'icfsPassword',
+    defaultValue: '',
+    encrypted: true,
+    description: 'ICFS/Okta password for headless login',
+  },
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
