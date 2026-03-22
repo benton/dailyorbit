@@ -1,8 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+
 exec > >(tee /var/log/user-data.log) 2>&1
 echo "=== user-data start: $(date -u) ==="
+
+# ── Bootstrap: install AWS CLI ────────────────────────────────────────────────
+apt-get update -qq
+apt-get install -y unzip curl
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip
+unzip -qo /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install
+rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # ── Elastic IP Association ────────────────────────────────────────────────────
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
@@ -17,9 +27,33 @@ aws ec2 associate-address \
 
 echo "EIP associated to $INSTANCE_ID"
 
-# ── Data Restore from S3 ─────────────────────────────────────────────────────
-mkdir -p /data
+# ── ZFS Pool Setup (NVMe instances only) ──────────────────────────────────────
+# Find unformatted NVMe devices (ephemeral instance storage has no filesystem)
+EPHEMERALS=""
+for dev in /dev/nvme*n1; do
+  [ -b "$dev" ] || continue
+  blkid "$dev" >/dev/null 2>&1 && continue  # has a filesystem → EBS, skip
+  EPHEMERALS="$EPHEMERALS $dev"
+done
+EPHEMERALS=$(echo "$EPHEMERALS" | xargs)  # trim
 
+if [ -n "$EPHEMERALS" ]; then
+  echo "NVMe ephemeral devices found: $EPHEMERALS"
+  apt-get install -y zfsutils-linux
+  modprobe zfs
+
+  zpool create -f datapool $EPHEMERALS
+  zfs set compression=lz4 datapool
+  zfs set atime=off datapool
+  mkdir -p /data
+  zfs set mountpoint=/data datapool
+  echo "ZFS pool created on NVMe storage"
+else
+  echo "No NVMe ephemeral devices — using EBS /data"
+  mkdir -p /data
+fi
+
+# ── Data Restore from S3 ─────────────────────────────────────────────────────
 aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}" /data/daily-orbit.duckdb \
   || echo "No DB snapshot found — container will initialize fresh"
 
@@ -31,9 +65,11 @@ aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
   || echo "No attachments found in S3"
 
 # ── Install Docker and Launch Container ───────────────────────────────────────
-yum install -y docker cronie
+apt-get install -y docker.io cron
 systemctl enable docker
 systemctl start docker
+systemctl enable cron
+systemctl start cron
 
 aws ecr get-login-password --region {{REGION}} | \
   docker login --username AWS --password-stdin {{ECR_URI}}

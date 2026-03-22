@@ -145,9 +145,9 @@ export class DailyOrbitStack extends Stack {
     const userData: ec2.UserData = ec2.UserData.custom(userDataRendered);
 
     const launchTemplate: ec2.LaunchTemplate = new ec2.LaunchTemplate(this, 'LaunchTemplate', {
-      machineImage: ec2.MachineImage.latestAmazonLinux2023({
-        cpuType: ec2.AmazonLinuxCpuType.ARM_64,
-      }),
+      machineImage: ec2.MachineImage.fromSsmParameter(
+        '/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id',
+      ),
       instanceType: new ec2.InstanceType(config.instanceType),
       role: instanceRole,
       userData,

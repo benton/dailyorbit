@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := build
 
 .PHONY: help setup dev test build format clean \
-       deploy-synth deploy-diff deploy-up deploy-destroy deploy-seed-secrets
+       deploy-synth deploy-diff deploy-up deploy-destroy deploy-frontend deploy-refresh
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -43,10 +43,26 @@ deploy-up: ## Deploy the stack
 deploy-destroy: ## Tear down the stack
 	cd $(CDK_DIR) && pnpm cdk destroy
 
-deploy-seed-secrets: ## Upload TLS cert+key to Secrets Manager (CERT=... KEY=...)
-	aws secretsmanager put-secret-value \
-		--secret-id daily-orbit/tls-cert \
-		--secret-string "$$(cat $(CERT))"
-	aws secretsmanager put-secret-value \
-		--secret-id daily-orbit/tls-key \
-		--secret-string "$$(cat $(KEY))"
+FRONTEND_BUCKET := daily-orbit-prod-frontend
+VITE_SERVER_URL := https://api.dailyorbit.org
+
+deploy-frontend: ## Build and deploy frontend to CloudFront
+	VITE_SERVER_URL=$(VITE_SERVER_URL) pnpm --filter @daily-orbit/web build
+	aws s3 sync packages/web/dist/ s3://$(FRONTEND_BUCKET)/ \
+		--delete \
+		--cache-control "public,max-age=31536000,immutable" \
+		--exclude "index.html"
+	aws s3 cp packages/web/dist/index.html s3://$(FRONTEND_BUCKET)/index.html \
+		--cache-control "no-cache"
+	aws cloudfront create-invalidation \
+		--distribution-id "$$(aws cloudfront list-distributions \
+			--query 'DistributionList.Items[?Aliases.Items[0]==`dailyorbit.org`].Id | [0]' \
+			--output text)" \
+		--paths "/index.html"
+
+deploy-refresh: ## Trigger ASG instance refresh (rolling replace)
+	aws autoscaling start-instance-refresh \
+		--auto-scaling-group-name "$$(aws autoscaling describe-auto-scaling-groups \
+			--query 'AutoScalingGroups[?Tags[?Key==`Project`&&Value==`daily-orbit`]].AutoScalingGroupName | [0]' \
+			--output text)" \
+		--preferences '{"MinHealthyPercentage": 0}'

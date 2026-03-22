@@ -23,7 +23,7 @@ export interface SeedConfig {
 
 const DEFAULTS: Partial<SeedConfig> = {
   vpcId: null,
-  instanceType: 'r6id.xlarge',
+  instanceType: 'r6gd.xlarge',
   keyPairName: null,
   dbSnapshotKey: 'db/latest.duckdb',
   ecrRepositoryName: 'daily-orbit',
