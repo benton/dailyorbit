@@ -70,4 +70,10 @@ export async function ensureCompanyFk(conn: DuckDBConnection): Promise<void> {
   await conn.run(
     `ALTER TABLE filing ADD COLUMN IF NOT EXISTS company_id INTEGER`,
   );
+  await conn.run(
+    `ALTER TABLE filing ADD COLUMN IF NOT EXISTS company_match_attempted_at TIMESTAMP`,
+  );
+  await conn.run(
+    `ALTER TABLE filing ADD COLUMN IF NOT EXISTS ownership_match_attempted_at TIMESTAMP`,
+  );
 }
