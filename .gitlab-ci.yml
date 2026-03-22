@@ -1,0 +1,129 @@
+include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  GL_IMAGE: $CI_REGISTRY_IMAGE
+  ECR_IMAGE: 665226324657.dkr.ecr.us-east-2.amazonaws.com/daily-orbit
+  CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  VITE_SERVER_URL: "https://api.dailyorbit.org"
+  FRONTEND_BUCKET: "daily-orbit-prod-frontend"
+  AWS_DEFAULT_REGION: "us-east-2"
+
+# ---------------------------------------------------------------------------
+# Build — runs before test so container_scanning can reference the image
+# ---------------------------------------------------------------------------
+build:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker run --rm --privileged tonistiigi/binfmt --install arm64
+    - docker buildx create --use --name cibuilder --driver docker-container
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - |
+      TAGS="--tag $GL_IMAGE:$CI_COMMIT_SHORT_SHA"
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
+        TAGS="$TAGS --tag $GL_IMAGE:$SANITIZED_TAG --tag $GL_IMAGE:latest"
+      fi
+    - |
+      docker buildx build \
+        --platform linux/arm64 \
+        --build-arg VITE_SERVER_URL="$VITE_SERVER_URL" \
+        --cache-from type=registry,ref=$GL_IMAGE:buildcache \
+        --cache-to type=registry,ref=$GL_IMAGE:buildcache,mode=max \
+        $TAGS \
+        --push \
+        .
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# ---------------------------------------------------------------------------
+# Test
+# ---------------------------------------------------------------------------
+test:
+  stage: test
+  image: node:23-slim
+  before_script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# Override container_scanning to run after build
+container_scanning:
+  needs: [build]
+
+# ---------------------------------------------------------------------------
+# Deploy — tagged releases only, manual gate
+# ---------------------------------------------------------------------------
+deploy:
+  stage: deploy
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - apk add --no-cache aws-cli
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION |
+      docker login --username AWS --password-stdin $ECR_IMAGE
+  script:
+    - SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
+
+    # Push image to ECR
+    - docker pull --platform linux/arm64 $GL_IMAGE:$SANITIZED_TAG
+    - docker tag $GL_IMAGE:$SANITIZED_TAG $ECR_IMAGE:$SANITIZED_TAG
+    - docker tag $GL_IMAGE:$SANITIZED_TAG $ECR_IMAGE:latest
+    - docker push $ECR_IMAGE:$SANITIZED_TAG
+    - docker push $ECR_IMAGE:latest
+
+    # Deploy frontend — extract built assets from the image
+    - CONTAINER_ID=$(docker create $GL_IMAGE:$SANITIZED_TAG)
+    - docker cp $CONTAINER_ID:/app/packages/web/dist /tmp/frontend-dist
+    - docker rm $CONTAINER_ID
+    - aws s3 sync /tmp/frontend-dist/ s3://$FRONTEND_BUCKET/
+        --delete --cache-control "public,max-age=31536000,immutable"
+        --exclude "index.html"
+    - aws s3 cp /tmp/frontend-dist/index.html s3://$FRONTEND_BUCKET/index.html
+        --cache-control "no-cache"
+
+    # Invalidate CloudFront index.html
+    - |
+      DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+        --query 'DistributionList.Items[?Aliases.Items[0]==`dailyorbit.org`].Id | [0]' \
+        --output text)
+      aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/index.html"
+
+    # Trigger ASG instance refresh (rolling replace)
+    - |
+      ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+        --query 'AutoScalingGroups[?Tags[?Key==`Project`&&Value==`daily-orbit`]].AutoScalingGroupName | [0]' \
+        --output text)
+      aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME" \
+        --preferences '{"MinHealthyPercentage": 0}'
+  environment:
+    name: production
+    url: https://dailyorbit.org
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      allow_failure: false
