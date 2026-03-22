@@ -572,7 +572,8 @@ export async function extractOwnershipEvents(
      FROM filing f
      WHERE f.app_type_code IN ('T/C', 'ASG')
        AND (f.transferor_name IS NOT NULL OR f.transferee_name IS NOT NULL)
-       AND f.file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
+       AND f.file_number NOT IN (SELECT filing_file_number FROM ownership_event)
+       AND f.ownership_match_attempted_at IS NULL`,
   );
 
   const rows = reader.getRowObjectsJS();
@@ -600,6 +601,12 @@ export async function extractOwnershipEvents(
 
     // Only create event if at least one party is identified
     if (transferorCompany == null && transfereeCompany == null) {
+      // Stamp as attempted so we don't retry next run
+      await conn.run(
+        `UPDATE filing SET ownership_match_attempted_at = current_timestamp
+         WHERE file_number = $1`,
+        [fileNumber] as DuckDBValue[],
+      );
       skipped++;
       const processed: number = created + skipped;
       if (onProgress != null && processed % 500 === 0) {
@@ -640,6 +647,11 @@ export async function extractOwnershipEvents(
         row.brief_description != null ? String(row.brief_description) : null,
     });
     created++;
+    await conn.run(
+      `UPDATE filing SET ownership_match_attempted_at = current_timestamp
+       WHERE file_number = $1`,
+      [fileNumber] as DuckDBValue[],
+    );
 
     const processed: number = created + skipped;
     if (onProgress != null && processed % 500 === 0) {
