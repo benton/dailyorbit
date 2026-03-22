@@ -36,6 +36,16 @@ export async function ensureInferenceLogTable(
     ON inference_log(caller)
   `);
 
+  // Migration: add user_id column if table predates its introduction
+  const reader = await conn.run(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_name = 'inference_log' AND column_name = 'user_id'`,
+  );
+  const rows = await reader.getRows();
+  if (rows.length === 0) {
+    await conn.run(`ALTER TABLE inference_log ADD COLUMN user_id VARCHAR`);
+  }
+
   await conn.run(`
     CREATE INDEX IF NOT EXISTS idx_inference_log_user
     ON inference_log(user_id)
