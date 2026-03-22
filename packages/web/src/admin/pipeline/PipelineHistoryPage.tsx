@@ -233,6 +233,7 @@ export default function PipelineHistoryPage() {
         const statuses: Array<string> = [...new Set(chartData.map((d) => d.status))];
         const colors: Array<string> = statuses.map((s: string) => STATUS_COLORS[s] ?? '#94a3b8');
 
+        const yMax: number = Math.max(5, ...chartData.map((d) => d.count));
         const chart = vg.plot(
           vg.barY(chartData, {
             fill: 'status',
@@ -245,6 +246,7 @@ export default function PipelineHistoryPage() {
           vg.height(300),
           vg.width(900),
           vg.xLabel('Time'),
+          vg.yDomain([0, yMax]),
           vg.yGrid(true),
           vg.yLabel('Filings Ingested'),
         );

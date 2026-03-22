@@ -239,7 +239,6 @@ pipelineRoutes.get('/history/stats', async (c) => {
   const db = await getDb();
   const conn = await DuckDBConnection.create(db);
   try {
-    await ensurePipelineTrackingTables(conn);
     const runs = await getRunsWithIcfsStats(conn, limit);
     return c.json(runs);
   } finally {
@@ -264,7 +263,6 @@ pipelineRoutes.get('/history', async (c) => {
     const db = await getDb();
     const conn = await DuckDBConnection.create(db);
     try {
-      await ensurePipelineTrackingTables(conn);
       const result = await listPipelineRuns(conn, request);
       return c.json(result);
     } finally {

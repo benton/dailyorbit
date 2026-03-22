@@ -41,7 +41,7 @@ declare module '@cosmograph/react' {
     xLabel(label: string | null): any;
     xTickRotate(angle: number): any;
     xTickSpacing(px: number): any;
-    yDomain(domain: Array<string>): any;
+    yDomain(domain: Array<string> | Array<number>): any;
     yGrid(show: boolean): any;
     yLabel(label: string | null): any;
   };
