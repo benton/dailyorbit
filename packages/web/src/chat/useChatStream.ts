@@ -1,7 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import type { QueryUsage, RetrievedSource } from '../query/types.ts';
 import type { ChatSSEEvent } from './types.ts';
+import { parseChatSSEData } from './parse-sse.ts';
 import env from '../lib/env.tsx';
+
+export { parseChatSSEData } from './parse-sse.ts';
 
 export type ChatStreamState = {
   answer: string;
@@ -22,19 +25,6 @@ const INITIAL_STATE: ChatStreamState = {
   statusMessage: '',
   usage: null,
 };
-
-/** Parse a single SSE `data:` line into a ChatSSEEvent, or null on failure. */
-export function parseChatSSEData(line: string): ChatSSEEvent | null {
-  const trimmed: string = line.startsWith('data:') ? line.slice(5).trim() : '';
-  if (trimmed === '') {
-    return null;
-  }
-  try {
-    return JSON.parse(trimmed) as ChatSSEEvent;
-  } catch {
-    return null;
-  }
-}
 
 export function useChatStream(): {
   cancel: () => void;

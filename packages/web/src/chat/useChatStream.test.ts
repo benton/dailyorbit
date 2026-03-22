@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ChatSSEEvent } from './types.ts';
-import { parseChatSSEData } from './useChatStream.ts';
+import { parseChatSSEData } from './parse-sse.ts';
 
 describe('parseChatSSEData', () => {
   it('parses a status event', () => {
