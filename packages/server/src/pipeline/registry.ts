@@ -686,7 +686,16 @@ const STAGES: PipelineStage[] = [
       const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
       const start: number = Date.now();
       ctx.log('info', 'Rebuilding FTS indexes...');
-      await rebuildAllFtsIndexes(ctx.conn);
+      const result = await rebuildAllFtsIndexes(ctx.conn, ctx.db);
+      if (result.skipped) {
+        ctx.log('info', 'FTS indexes up to date');
+        return {
+          itemsProcessed: 0,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+          summary: 'FTS indexes up to date',
+        };
+      }
       return {
         itemsProcessed: 1,
         itemsFailed: 0,

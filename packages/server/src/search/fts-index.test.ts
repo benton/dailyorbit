@@ -105,4 +105,48 @@ describe('FTS index management', () => {
     `);
     expect(result.getRowObjectsJS().length).toEqual(0);
   });
+
+  it('should skip rebuild when row counts are unchanged', async () => {
+    const { rebuildAllFtsIndexes } = await import('./fts-index.ts');
+
+    // Create config table needed for fingerprint storage
+    await conn.run(`
+      CREATE TABLE IF NOT EXISTS config (
+        key       VARCHAR PRIMARY KEY,
+        value     VARCHAR NOT NULL,
+        encrypted BOOLEAN NOT NULL DEFAULT FALSE
+      )
+    `);
+
+    // First rebuild — always runs
+    const first = await rebuildAllFtsIndexes(conn, db);
+    expect(first.skipped).toEqual(false);
+
+    // Second rebuild — same row counts, should skip
+    const second = await rebuildAllFtsIndexes(conn, db);
+    expect(second.skipped).toEqual(true);
+
+    // Insert new data and rebuild — should run again
+    await conn.run(
+      `INSERT INTO filing VALUES ('SAT-LOA-20240301-00003', 'New filing description', 'New filing')`,
+    );
+    const third = await rebuildAllFtsIndexes(conn, db);
+    expect(third.skipped).toEqual(false);
+  });
+
+  it('should rebuild when force=true even if unchanged', async () => {
+    const { rebuildAllFtsIndexes } = await import('./fts-index.ts');
+
+    await conn.run(`
+      CREATE TABLE IF NOT EXISTS config (
+        key       VARCHAR PRIMARY KEY,
+        value     VARCHAR NOT NULL,
+        encrypted BOOLEAN NOT NULL DEFAULT FALSE
+      )
+    `);
+
+    await rebuildAllFtsIndexes(conn, db);
+    const forced = await rebuildAllFtsIndexes(conn, db, true);
+    expect(forced.skipped).toEqual(false);
+  });
 });
