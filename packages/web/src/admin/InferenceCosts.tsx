@@ -14,6 +14,7 @@ type InferenceLogRow = {
   modelId: string;
   operation: string;
   outputTokens: number;
+  userEmail: string | null;
   userId: string | null;
 };
 
@@ -79,9 +80,9 @@ export default function InferenceCosts() {
       },
       {
         accessorKey: 'user_id',
-        cell: ({ row }) => row.original.userId ?? '',
+        cell: ({ row }) => row.original.userEmail ?? row.original.userId ?? '',
         header: 'User',
-        size: 100,
+        size: 160,
       },
       {
         accessorKey: 'conversation_id',

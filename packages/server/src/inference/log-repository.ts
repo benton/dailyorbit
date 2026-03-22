@@ -130,6 +130,7 @@ export type InferenceLogRow = {
   readonly operation: string;
   readonly caller: string | null;
   readonly userId: string | null;
+  readonly userEmail: string | null;
   readonly conversationId: string | null;
   readonly inputTokens: number;
   readonly outputTokens: number;
@@ -157,9 +158,11 @@ export async function listInferenceLog(
   request: PaginatedRequest,
 ): Promise<PaginatedResponse<InferenceLogRow>> {
   const baseSql: string = `
-    SELECT id, model_id, operation, caller, user_id, conversation_id,
-           input_tokens, output_tokens, latency_ms, created_at
-    FROM inference_log
+    SELECT il.id, il.model_id, il.operation, il.caller, il.user_id,
+           u.email AS user_email, il.conversation_id,
+           il.input_tokens, il.output_tokens, il.latency_ms, il.created_at
+    FROM inference_log il
+    LEFT JOIN "user" u ON u.id = il.user_id
   `;
 
   const { sql, params, countSql, countParams } = buildPaginatedQuery(
@@ -180,20 +183,21 @@ export async function listInferenceLog(
   const data: InferenceLogRow[] = [];
   for (const row of dataReader.getRows()) {
     const modelId: string = String(row[1]);
-    const inputTokens: number = Number(row[6]);
-    const outputTokens: number = Number(row[7]);
+    const inputTokens: number = Number(row[7]);
+    const outputTokens: number = Number(row[8]);
     data.push({
       id: Number(row[0]),
       modelId,
       operation: String(row[2]),
       caller: row[3] != null ? String(row[3]) : null,
       userId: row[4] != null ? String(row[4]) : null,
-      conversationId: row[5] != null ? String(row[5]) : null,
+      userEmail: row[5] != null ? String(row[5]) : null,
+      conversationId: row[6] != null ? String(row[6]) : null,
       inputTokens,
       outputTokens,
       costCents: computeCost(modelId, inputTokens, outputTokens),
-      latencyMs: Number(row[8]),
-      createdAt: String(row[9]),
+      latencyMs: Number(row[9]),
+      createdAt: String(row[10]),
     });
   }
 
