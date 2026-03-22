@@ -123,6 +123,7 @@ export async function runAttachmentPipeline(
         {
           concurrency,
           delayMs,
+          signal: options.signal,
           onError: (error: unknown, _filing: FilingRow, index: number) => {
             discoveryErrors.add(index);
             const msg: string =
@@ -135,32 +136,25 @@ export async function runAttachmentPipeline(
         },
       );
 
-    const succeededFilingKeys: number[] = [];
-
     for (let i: number = 0; i < filingsToDiscover.length; i++) {
-      if (discoveryErrors.has(i)) {
+      if (discoveryErrors.has(i) || discoveryResults[i] == null) {
         continue;
       }
 
       const filing: FilingRow = filingsToDiscover[i]!;
-      succeededFilingKeys.push(filing.filingKey);
       const attachments: AttachmentMetadata[] = discoveryResults[i]!;
-      if (attachments.length === 0) {
-        continue;
+      if (attachments.length > 0) {
+        const result: UpsertResult = await upsertAttachments(conn, attachments);
+        totalDiscovered += result.inserted;
+        if (verbose) {
+          log(
+            `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
+          );
+        }
       }
 
-      const result: UpsertResult = await upsertAttachments(conn, attachments);
-      totalDiscovered += result.inserted;
-      if (verbose) {
-        log(
-          `  ${filing.fileNumber}: ${String(attachments.length)} attachments (${String(result.inserted)} new, ${String(result.existing)} existing)`,
-        );
-      }
-    }
-
-    // Mark filings as having had discovery attempted
-    if (succeededFilingKeys.length > 0) {
-      await markFilingsDiscovered(conn, succeededFilingKeys);
+      // Mark immediately so progress survives interruption
+      await markFilingsDiscovered(conn, [filing.filingKey]);
     }
   } else {
     log('All filings already scraped — skipping discovery');
@@ -178,6 +172,13 @@ export async function runAttachmentPipeline(
     );
   }
 
+  const isCancelled = (): boolean => options.signal?.aborted === true;
+
+  // Bail early if cancelled
+  if (isCancelled()) {
+    log('Stopped after discovery (run cancelled)');
+  }
+
   // Stage 4: Download attachments (unless discoverOnly)
   let attachmentsDownloaded: number = 0;
   let attachmentsFailed: number = 0;
@@ -185,7 +186,7 @@ export async function runAttachmentPipeline(
   let downloadSkipped: number = 0;
   const skipExisting: boolean = options.skipExisting !== false;
 
-  if (options.discoverOnly !== true) {
+  if (options.discoverOnly !== true && !isCancelled()) {
     const filingKeys: number[] = filings.map((f) => f.filingKey);
     const allPending: AttachmentRow[] = await getPendingDownloads(
       conn,
@@ -322,6 +323,7 @@ export async function runAttachmentPipeline(
       {
         concurrency,
         delayMs,
+        signal: options.signal,
         onError: (error: unknown, att: AttachmentRow, index: number) => {
           if (error instanceof SessionExpiredError) {
             sessionExpired = true;
@@ -368,7 +370,7 @@ export async function runAttachmentPipeline(
   }
 
   // Stage 4.5: Validate content types of downloaded files
-  if (options.discoverOnly !== true) {
+  if (options.discoverOnly !== true && !isCancelled()) {
     const validationPending: PendingValidationRow[] =
       await getPendingValidations(conn);
 
@@ -412,13 +414,13 @@ export async function runAttachmentPipeline(
     }
   }
 
-  // Stage 5: Extract text from newly downloaded PDFs
+  // Stage 5: Extract text from newly downloaded PDFs (skip if cancelled)
   let textsExtracted: number = 0;
   let textsSkippedNoText: number = 0;
   let textsSkippedAuthError: number = 0;
   let textsFailed: number = 0;
 
-  if (options.discoverOnly !== true) {
+  if (options.discoverOnly !== true && !isCancelled()) {
     const filingKeysForExtraction: number[] = filings.map((f) => f.filingKey);
     const pendingExtractions: PendingExtractionRow[] =
       await getPendingExtractions(conn, {
@@ -570,7 +572,7 @@ export async function runAttachmentPipeline(
   let summariesCopied: number = 0;
   let summariesFailed: number = 0;
 
-  if (options.discoverOnly !== true && options.skipSummarization !== true) {
+  if (options.discoverOnly !== true && options.skipSummarization !== true && !isCancelled()) {
     const filingKeysForSummarization: number[] = filings.map(
       (f) => f.filingKey,
     );
@@ -677,6 +679,7 @@ export async function runAttachmentPipeline(
           {
             concurrency: summConcurrency,
             delayMs: 0,
+            signal: options.signal,
             onError: (error: unknown, row: PendingSummarizationRow) => {
               const msg: string =
                 error instanceof Error ? error.message : String(error);
@@ -712,17 +715,19 @@ export async function runAttachmentPipeline(
   conn.closeSync();
 
   // Rebuild FTS indexes so new/updated content is searchable
-  const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
-  const ftsConn: DuckDBConnection = await DuckDBConnection.create(db);
-  try {
-    log('Rebuilding FTS indexes...');
-    const ftsStart: number = Date.now();
-    await rebuildAllFtsIndexes(ftsConn);
-    log(
-      `FTS indexes rebuilt in ${((Date.now() - ftsStart) / 1000).toFixed(1)}s`,
-    );
-  } finally {
-    ftsConn.closeSync();
+  if (!isCancelled()) {
+    const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
+    const ftsConn: DuckDBConnection = await DuckDBConnection.create(db);
+    try {
+      log('Rebuilding FTS indexes...');
+      const ftsStart: number = Date.now();
+      await rebuildAllFtsIndexes(ftsConn);
+      log(
+        `FTS indexes rebuilt in ${((Date.now() - ftsStart) / 1000).toFixed(1)}s`,
+      );
+    } finally {
+      ftsConn.closeSync();
+    }
   }
 
   const durationMs: number = Date.now() - start;

@@ -1,6 +1,7 @@
 export type QueueOptions<T> = {
   concurrency: number;
   delayMs?: number | undefined;
+  signal?: AbortSignal | undefined;
   onError?: (error: unknown, item: T, index: number) => void;
   onItemComplete?: (index: number, total: number) => void;
 };
@@ -18,7 +19,7 @@ export async function processQueue<T, R>(
   fn: (item: T, index: number) => Promise<R>,
   options: QueueOptions<T>,
 ): Promise<(R | undefined)[]> {
-  const { concurrency, delayMs = 0, onError, onItemComplete } = options;
+  const { concurrency, delayMs = 0, signal, onError, onItemComplete } = options;
   const results: (R | undefined)[] = Array.from<R | undefined>({
     length: items.length,
   });
@@ -28,6 +29,7 @@ export async function processQueue<T, R>(
   async function worker(): Promise<void> {
     let isFirst: boolean = true;
     while (nextIndex < items.length) {
+      if (signal?.aborted) break;
       const idx: number = nextIndex++;
       const item: T = items[idx]!;
 

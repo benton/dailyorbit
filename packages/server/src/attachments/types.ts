@@ -61,6 +61,8 @@ export type AttachmentPipelineOptions = {
   summarizationConcurrency?: number;
   /** Cookie header string for authenticated ServiceNow downloads */
   authCookies?: string | undefined;
+  /** Abort signal for cooperative cancellation */
+  signal?: AbortSignal | undefined;
 };
 
 /** Result summary from a pipeline run */
