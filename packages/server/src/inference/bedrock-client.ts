@@ -72,8 +72,17 @@ export function parseConverseOutput(
   };
 }
 
+/** Common interface for all Bedrock client implementations. */
+export type BedrockClientLike = {
+  converse(input: ConverseCommandInput): Promise<ConverseCommandOutput>;
+  converseStream(
+    input: ConverseStreamCommandInput,
+  ): AsyncGenerator<ConverseStreamOutput>;
+  embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
+};
+
 /** Thin wrapper around BedrockRuntimeClient that calls Converse. */
-export class BedrockClient {
+export class BedrockClient implements BedrockClientLike {
   private readonly client: BedrockRuntimeClient;
 
   constructor(region: string) {

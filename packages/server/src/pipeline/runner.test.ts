@@ -254,7 +254,9 @@ describe('PipelineRunner', () => {
     const runId: string = await runner.start(['test.blocking']);
 
     // Wait until the stage's run() has been called and resolveStage is set
-    await vi.waitFor(() => expect(resolveStage).not.toBeNull(), { timeout: 2000 });
+    await vi.waitFor(() => expect(resolveStage).not.toBeNull(), {
+      timeout: 2000,
+    });
 
     const state = runner.getState();
     expect(state.running).toEqual(true);

@@ -1,4 +1,4 @@
-import type { BedrockClient } from './bedrock-client.ts';
+import type { BedrockClientLike } from './bedrock-client.ts';
 import type { EmbeddingRequest, EmbeddingResponse } from './types.ts';
 
 /** Function signature for embedding a single text — allows test injection. */
@@ -13,7 +13,7 @@ export type EmbedFunction = (
 export class EmbeddingService {
   private readonly embedFn: EmbedFunction;
 
-  constructor(client: { embed: EmbedFunction } | BedrockClient) {
+  constructor(client: { embed: EmbedFunction } | BedrockClientLike) {
     this.embedFn = (req: EmbeddingRequest) => client.embed(req);
   }
 

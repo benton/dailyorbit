@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { DuckDBConnection } from '@duckdb/node-api';
 import type { ConverseCommandInput } from '@aws-sdk/client-bedrock-runtime';
-import type { BedrockClient } from '../../inference/bedrock-client.ts';
+import type { BedrockClientLike } from '../../inference/bedrock-client.ts';
 import type { EmbeddingContext } from '../../search/content-search.ts';
 import { rewriteQuery } from '../rewrite.ts';
 import { retrieveContext } from '../retrieve.ts';
@@ -188,7 +188,7 @@ async function judgeAnswer(
   question: string,
   sources: RetrievedSource[],
   answer: string,
-  client: BedrockClient,
+  client: BedrockClientLike,
   modelId: string,
 ): Promise<{ faithfulness: number; completeness: number }> {
   const sourcesText: string = sources
@@ -237,7 +237,7 @@ async function judgeAnswer(
 async function evaluateCase(
   evalCase: EvalCase,
   conn: DuckDBConnection,
-  client: BedrockClient,
+  client: BedrockClientLike,
   rewriteModelId: string,
   generateModelId: string,
   judgeModelId: string,
@@ -353,7 +353,7 @@ export type EvalOptions = {
 
 export async function runEvaluation(
   conn: DuckDBConnection,
-  client: BedrockClient,
+  client: BedrockClientLike,
   embeddingCtx: EmbeddingContext | undefined,
   options: EvalOptions = {},
 ): Promise<EvalSummary> {

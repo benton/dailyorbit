@@ -1,4 +1,4 @@
-import type { BedrockClient } from '../inference/bedrock-client.ts';
+import type { BedrockClientLike } from '../inference/bedrock-client.ts';
 
 const TITLE_SYSTEM_PROMPT: string =
   'Generate a short, descriptive title (5-10 words) for this conversation. Respond with only the title, no quotes or punctuation.';
@@ -26,7 +26,7 @@ export function parseTitleResponse(raw: string): string {
 export async function generateTitle(
   question: string,
   answer: string,
-  client: BedrockClient,
+  client: BedrockClientLike,
   modelId: string,
 ): Promise<string> {
   const userMessage: string = buildTitlePrompt(question, answer);
