@@ -50,7 +50,7 @@ export type Message = {
 };
 
 export type ConversationWithMessages = Conversation & {
-  messages: Message[];
+  messages: Array<Message>;
 };
 
 export type ChatSSEEvent =
@@ -59,7 +59,7 @@ export type ChatSSEEvent =
       stage: 'generating' | 'retrieving' | 'rewriting';
       type: 'status';
     }
-  | { sources: RetrievedSource[]; type: 'sources' }
+  | { sources: Array<RetrievedSource>; type: 'sources' }
   | { text: string; type: 'delta' }
   | { type: 'usage'; usage: QueryUsage & { costCents: number } }
   | { title: string; type: 'title' }

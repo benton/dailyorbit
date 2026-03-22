@@ -194,7 +194,7 @@ export default function FilingDetailPage() {
 
   // Auto-mark as read after 10 seconds on the page
   useEffect(() => {
-    if (filing == null) return;
+    if (filing == null) {return;}
     const timer = setTimeout(() => {
       void markRead(filing.fileNumber);
     }, 10_000);
@@ -204,9 +204,9 @@ export default function FilingDetailPage() {
   // Check if this filing is flagged
   const [isFlagged, setIsFlagged] = useState<boolean>(false);
   useEffect(() => {
-    if (filing == null) return;
+    if (filing == null) {return;}
     apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
-      body: JSON.stringify({ content_type: 'filing', content_keys: [filing.fileNumber] }),
+      body: JSON.stringify({ content_keys: [filing.fileNumber], content_type: 'filing' }),
       method: 'POST',
     })
       .then((result) => setIsFlagged(result.flagged.includes(filing.fileNumber)))

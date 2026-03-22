@@ -57,7 +57,7 @@ export default function NewsDetail() {
 
   // Auto-mark as read after 10 seconds on the page
   useEffect(() => {
-    if (item == null) return;
+    if (item == null) {return;}
     const timer = setTimeout(() => {
       void markNewsRead(item.id);
     }, 10_000);
@@ -67,10 +67,10 @@ export default function NewsDetail() {
   // Check if this news item is flagged
   const [isFlagged, setIsFlagged] = useState<boolean>(false);
   useEffect(() => {
-    if (item == null) return;
+    if (item == null) {return;}
     const contentKey: string = String(item.id);
     apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
-      body: JSON.stringify({ content_type: 'news', content_keys: [contentKey] }),
+      body: JSON.stringify({ content_keys: [contentKey], content_type: 'news' }),
       method: 'POST',
     })
       .then((result) => setIsFlagged(result.flagged.includes(contentKey)))

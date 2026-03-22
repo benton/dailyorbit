@@ -4,7 +4,7 @@ import type { Consultant } from './types.ts';
 
 type Props = {
   compact?: boolean;
-  consultants: Consultant[];
+  consultants: Array<Consultant>;
   onSelect: (consultant: Consultant) => void;
   selected: Consultant | null;
 };

@@ -1031,7 +1031,7 @@ export default function SearchPage() {
     async (name: string) => {
       // Only filing and content (filing+query) searches are saveable for now
       const isFilingTab: boolean = activeTab === 'filings';
-      if (!isFilingTab && !isContentSearch) return;
+      if (!isFilingTab && !isContentSearch) {return;}
 
       const contentType: 'filing' | 'news' = isContentSearch ? 'filing' : 'filing';
       const filters: Record<string, unknown> = { ...filingFilters };
@@ -1094,10 +1094,10 @@ export default function SearchPage() {
   // Bulk-check flagged keys for the current page of results
   const checkFlaggedKeys = useCallback(
     async (contentType: string, keys: Array<string>): Promise<void> => {
-      if (keys.length === 0) return;
+      if (keys.length === 0) {return;}
       try {
         const result = await apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
-          body: JSON.stringify({ content_type: contentType, content_keys: keys }),
+          body: JSON.stringify({ content_keys: keys, content_type: contentType }),
           method: 'POST',
         });
         setFlaggedKeys(new Set(result.flagged));
@@ -1110,12 +1110,12 @@ export default function SearchPage() {
 
   // Bulk flag selected keys
   const handleBulkFlag = useCallback(async (): Promise<void> => {
-    if (selectedKeys.size === 0) return;
+    if (selectedKeys.size === 0) {return;}
     const contentType: string = activeTab === 'filings' || isContentSearch ? 'filing' : activeTab;
     await apiFetch('/api/user/flags/bulk', {
       body: JSON.stringify({
-        content_type: contentType,
         content_keys: [...selectedKeys],
+        content_type: contentType,
         reason: 'Bulk flagged from search',
       }),
       method: 'POST',

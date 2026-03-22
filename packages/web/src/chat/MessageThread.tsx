@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import type { RetrievedSource } from '../query/types.ts';
 import type { Consultant, Message } from './types.ts';
@@ -7,14 +7,14 @@ import type { Consultant, Message } from './types.ts';
 type Props = {
   consultants: Map<number, Consultant>;
   isStreaming: boolean;
-  messages: Message[];
+  messages: Array<Message>;
   streamingAnswer: string;
-  streamingSources: RetrievedSource[];
+  streamingSources: Array<RetrievedSource>;
 };
 
-function SourcesList({ sources }: { sources: RetrievedSource[] }) {
+function SourcesList({ sources }: { sources: Array<RetrievedSource> }) {
   const [expanded, setExpanded] = useState<boolean>(false);
-  if (sources.length === 0) return null;
+  if (sources.length === 0) {return null;}
 
   return (
     <div className="mt-2">
@@ -65,30 +65,40 @@ export default function MessageThread({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, streamingAnswer]);
 
-  // Detect consultant switches for dividers
-  let lastConsultantId: number | null = null;
+  // Pre-compute consultant switch divider indices
+  const switchIndices: Map<number, Consultant | undefined> = useMemo(() => {
+    const result: Map<number, Consultant | undefined> = new Map();
+    let prevConsultantId: number | null = null;
+    for (let i: number = 0; i < messages.length; i++) {
+      const msg: Message = messages[i]!;
+      if (msg.role === 'assistant' && msg.consultantId != null) {
+        if (prevConsultantId != null && msg.consultantId !== prevConsultantId) {
+          result.set(i, consultants.get(msg.consultantId));
+        }
+        prevConsultantId = msg.consultantId;
+      }
+    }
+    return result;
+  }, [messages, consultants]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mx-auto max-w-3xl space-y-4">
-        {messages.map((msg: Message) => {
+        {messages.map((msg: Message, idx: number) => {
           let divider: React.ReactNode = null;
 
           // Show divider when consultant changes between assistant messages
-          if (msg.role === 'assistant' && msg.consultantId != null) {
-            if (lastConsultantId != null && msg.consultantId !== lastConsultantId) {
-              const consultant: Consultant | undefined = consultants.get(msg.consultantId);
-              divider = (
-                <div className="flex items-center gap-2 py-2 text-xs text-neutral-400">
-                  <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
-                  <span>
-                    Switched to {consultant?.icon ?? ''} {consultant?.name ?? 'another consultant'}
-                  </span>
-                  <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
-                </div>
-              );
-            }
-            lastConsultantId = msg.consultantId;
+          const switchedConsultant: Consultant | undefined = switchIndices.get(idx);
+          if (switchedConsultant !== undefined) {
+            divider = (
+              <div className="flex items-center gap-2 py-2 text-xs text-neutral-400">
+                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
+                <span>
+                  Switched to {switchedConsultant.icon ?? ''} {switchedConsultant.name ?? 'another consultant'}
+                </span>
+                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
+              </div>
+            );
           }
 
           return (

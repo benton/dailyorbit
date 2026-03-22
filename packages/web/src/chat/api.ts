@@ -1,12 +1,12 @@
 import type { Consultant, Conversation, ConversationWithMessages } from './types.ts';
 import { apiFetch } from '../lib/api.ts';
 
-export async function fetchConsultants(): Promise<Consultant[]> {
-  return apiFetch<Consultant[]>('/api/consultants');
+export async function fetchConsultants(): Promise<Array<Consultant>> {
+  return apiFetch<Array<Consultant>>('/api/consultants');
 }
 
-export async function fetchConversations(): Promise<Conversation[]> {
-  return apiFetch<Conversation[]>('/api/conversations');
+export async function fetchConversations(): Promise<Array<Conversation>> {
+  return apiFetch<Array<Conversation>>('/api/conversations');
 }
 
 export async function fetchConversation(id: string): Promise<ConversationWithMessages> {
@@ -34,8 +34,8 @@ export async function deleteConversation(id: string): Promise<void> {
 }
 
 // Admin
-export async function fetchAllConsultants(): Promise<Consultant[]> {
-  return apiFetch<Consultant[]>('/api/admin/consultants');
+export async function fetchAllConsultants(): Promise<Array<Consultant>> {
+  return apiFetch<Array<Consultant>>('/api/admin/consultants');
 }
 
 export async function createConsultantAdmin(data: Partial<Consultant>): Promise<Consultant> {

@@ -51,8 +51,8 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
     e.stopPropagation();
     const newValue: boolean = !search.alert_enabled;
     await apiFetch(`/api/user/saved-searches/${search.id}`, {
-      method: 'PATCH',
       body: JSON.stringify({ alert_enabled: newValue }),
+      method: 'PATCH',
     });
     setSearches((prev: Array<SavedSearch>) =>
       prev.map((s: SavedSearch) => (s.id === search.id ? { ...s, alert_enabled: newValue } : s)),
@@ -108,11 +108,11 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                   className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
                   key={search.id}
                   onClick={() => handleSelect(search)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {handleSelect(search);}
+                  }}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') handleSelect(search);
-                  }}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium text-neutral-900 dark:text-neutral-100">

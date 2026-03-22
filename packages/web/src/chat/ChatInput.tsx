@@ -5,7 +5,7 @@ import { Button } from '../ui/button.tsx';
 import ConsultantSelector from './ConsultantSelector.tsx';
 
 type Props = {
-  consultants: Consultant[];
+  consultants: Array<Consultant>;
   disabled?: boolean;
   isStreaming: boolean;
   onCancel: () => void;
@@ -28,7 +28,7 @@ export default function ChatInput({
 
   const handleSubmit = useCallback(() => {
     const trimmed: string = value.trim();
-    if (trimmed === '' || isStreaming || disabled) return;
+    if (trimmed === '' || isStreaming || disabled) {return;}
     onSend(trimmed);
     setValue('');
     if (textareaRef.current != null) {

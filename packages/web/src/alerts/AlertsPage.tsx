@@ -2,26 +2,42 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
 type FlaggedItem = {
-  flag_id: number;
-  content_type: string;
   content_key: string;
+  content_type: string;
+  flag_id: number;
+  flagged_at: string;
+  item_subtitle: string | null;
+  item_title: string | null;
   reason: string | null;
   saved_search_id: number;
-  flagged_at: string;
   search_name: string | null;
-  item_title: string | null;
-  item_subtitle: string | null;
 };
 
+function contentUrl(flag: FlaggedItem): string {
+  if (flag.content_type === 'filing') {return `/filings/${flag.content_key}`;}
+  return `/news/${flag.content_key}`;
+}
+
+function formatDate(ts: string): string {
+  const d: Date = new Date(ts);
+  return d.toLocaleDateString('en-US', {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 export default function AlertsPage() {
-  const [flags, setFlags] = useState<FlaggedItem[]>([]);
+  const [flags, setFlags] = useState<Array<FlaggedItem>>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchFlags = useCallback(async () => {
     try {
       const res: Response = await fetch('/api/user/alerts/flagged');
       if (res.ok) {
-        const data = (await res.json()) as FlaggedItem[];
+        const data = (await res.json()) as Array<FlaggedItem>;
         setFlags(data);
       }
     } catch {
@@ -35,11 +51,11 @@ export default function AlertsPage() {
     void fetchFlags();
   }, [fetchFlags]);
 
-  const grouped: Map<string, FlaggedItem[]> = useMemo(() => {
-    const map: Map<string, FlaggedItem[]> = new Map();
+  const grouped: Map<string, Array<FlaggedItem>> = useMemo(() => {
+    const map: Map<string, Array<FlaggedItem>> = new Map();
     for (const flag of flags) {
       const key: string = flag.search_name ?? 'Manual flags';
-      if (!map.has(key)) map.set(key, []);
+      if (!map.has(key)) {map.set(key, []);}
       map.get(key)!.push(flag);
     }
     return map;
@@ -49,12 +65,12 @@ export default function AlertsPage() {
     await fetch(`/api/user/flags/${String(flagId)}/dismiss`, {
       method: 'POST',
     });
-    setFlags((prev: FlaggedItem[]) => prev.filter((f: FlaggedItem) => f.flag_id !== flagId));
+    setFlags((prev: Array<FlaggedItem>) => prev.filter((f: FlaggedItem) => f.flag_id !== flagId));
   }, []);
 
   const handleDismissGroup = useCallback(
     async (groupName: string) => {
-      const groupFlags: FlaggedItem[] = grouped.get(groupName) ?? [];
+      const groupFlags: Array<FlaggedItem> = grouped.get(groupName) ?? [];
       await Promise.all(
         groupFlags.map((f: FlaggedItem) =>
           fetch(`/api/user/flags/${String(f.flag_id)}/dismiss`, {
@@ -63,26 +79,10 @@ export default function AlertsPage() {
         ),
       );
       const ids: Set<number> = new Set(groupFlags.map((f: FlaggedItem) => f.flag_id));
-      setFlags((prev: FlaggedItem[]) => prev.filter((f: FlaggedItem) => !ids.has(f.flag_id)));
+      setFlags((prev: Array<FlaggedItem>) => prev.filter((f: FlaggedItem) => !ids.has(f.flag_id)));
     },
     [grouped],
   );
-
-  function contentUrl(flag: FlaggedItem): string {
-    if (flag.content_type === 'filing') return `/filings/${flag.content_key}`;
-    return `/news/${flag.content_key}`;
-  }
-
-  function formatDate(ts: string): string {
-    const d: Date = new Date(ts);
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  }
 
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading alerts...</p>;

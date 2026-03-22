@@ -24,10 +24,10 @@ export default function ChatPage() {
 }
 
 function ChatPageInner() {
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [consultants, setConsultants] = useState<Array<Consultant>>([]);
+  const [conversations, setConversations] = useState<Array<Conversation>>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Array<Message>>([]);
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [isNewConversation, setIsNewConversation] = useState<boolean>(true);
   const { toast } = useToast();
@@ -48,8 +48,8 @@ function ChatPageInner() {
         if (c.length > 0) {
           setSelectedConsultant(c[0]!);
         }
-      } catch (err: unknown) {
-        const msg: string = err instanceof Error ? err.message : 'Failed to load';
+      } catch (error: unknown) {
+        const msg: string = error instanceof Error ? error.message : 'Failed to load';
         toast(msg, 'error');
       }
     })();
@@ -57,16 +57,16 @@ function ChatPageInner() {
 
   // Load conversation messages when active changes
   useEffect(() => {
-    if (activeConvId == null) return;
+    if (activeConvId == null) {return;}
     void (async () => {
       try {
         const conv = await fetchConversation(activeConvId);
         setMessages(conv.messages);
         // Set consultant to match conversation's current consultant
         const consultant: Consultant | undefined = consultantMap.get(conv.consultantId);
-        if (consultant != null) setSelectedConsultant(consultant);
-      } catch (err: unknown) {
-        const msg: string = err instanceof Error ? err.message : 'Failed to load conversation';
+        if (consultant != null) {setSelectedConsultant(consultant);}
+      } catch (error: unknown) {
+        const msg: string = error instanceof Error ? error.message : 'Failed to load conversation';
         toast(msg, 'error');
       }
     })();
@@ -74,8 +74,8 @@ function ChatPageInner() {
 
   // When streaming completes, refresh messages and conversation list
   useEffect(() => {
-    if (streamState.status !== 'done') return;
-    if (activeConvId == null) return;
+    if (streamState.status !== 'done') {return;}
+    if (activeConvId == null) {return;}
     void (async () => {
       const conv = await fetchConversation(activeConvId);
       setMessages(conv.messages);
@@ -106,7 +106,7 @@ function ChatPageInner() {
   // Handle sending a message
   const handleSend = useCallback(
     async (content: string) => {
-      if (selectedConsultant == null) return;
+      if (selectedConsultant == null) {return;}
 
       let convId: string = activeConvId ?? '';
 
@@ -118,8 +118,8 @@ function ChatPageInner() {
           setActiveConvId(convId);
           setIsNewConversation(false);
           setConversations((prev) => [conv, ...prev]);
-        } catch (err: unknown) {
-          const msg: string = err instanceof Error ? err.message : 'Failed to create conversation';
+        } catch (error: unknown) {
+          const msg: string = error instanceof Error ? error.message : 'Failed to create conversation';
           toast(msg, 'error');
           return;
         }
@@ -153,8 +153,8 @@ function ChatPageInner() {
       try {
         await renameConversation(id, title);
         setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)));
-      } catch (err: unknown) {
-        const msg: string = err instanceof Error ? err.message : 'Rename failed';
+      } catch (error: unknown) {
+        const msg: string = error instanceof Error ? error.message : 'Rename failed';
         toast(msg, 'error');
       }
     },
@@ -164,13 +164,13 @@ function ChatPageInner() {
   // Handle delete
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!window.confirm('Delete this conversation?')) return;
+      if (!window.confirm('Delete this conversation?')) {return;}
       try {
         await deleteConversation(id);
         setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeConvId === id) handleNew();
-      } catch (err: unknown) {
-        const msg: string = err instanceof Error ? err.message : 'Delete failed';
+        if (activeConvId === id) {handleNew();}
+      } catch (error: unknown) {
+        const msg: string = error instanceof Error ? error.message : 'Delete failed';
         toast(msg, 'error');
       }
     },

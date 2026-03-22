@@ -38,8 +38,8 @@ const EMPTY_FORM: ConsultantForm = {
 function toSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-|-$/g, '');
 }
 
 function consultantToForm(c: Consultant): ConsultantForm {
@@ -75,7 +75,7 @@ function formToPayload(form: ConsultantForm): Partial<Consultant> {
 }
 
 export default function ConsultantAdmin() {
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
+  const [consultants, setConsultants] = useState<Array<Consultant>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -85,10 +85,10 @@ export default function ConsultantAdmin() {
 
   const refresh = useCallback(async () => {
     try {
-      const data: Consultant[] = await fetchAllConsultants();
+      const data: Array<Consultant> = await fetchAllConsultants();
       setConsultants(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to load');
     } finally {
       setLoading(false);
     }
@@ -111,8 +111,8 @@ export default function ConsultantAdmin() {
       setEditId(null);
       setForm(EMPTY_FORM);
       await refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Save failed');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -125,8 +125,8 @@ export default function ConsultantAdmin() {
     try {
       await archiveConsultantAdmin(id);
       await refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Archive failed');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Archive failed');
     }
   };
 
@@ -134,8 +134,8 @@ export default function ConsultantAdmin() {
     try {
       await updateConsultantAdmin(c.id, { enabled: !c.enabled });
       await refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Toggle failed');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Toggle failed');
     }
   };
 
@@ -166,8 +166,8 @@ export default function ConsultantAdmin() {
     return <p className="text-sm text-neutral-500">Loading...</p>;
   }
 
-  const active: Consultant[] = consultants.filter((c) => c.archivedAt == null);
-  const archived: Consultant[] = consultants.filter((c) => c.archivedAt != null);
+  const active: Array<Consultant> = consultants.filter((c) => c.archivedAt == null);
+  const archived: Array<Consultant> = consultants.filter((c) => c.archivedAt != null);
 
   return (
     <div className="space-y-4">

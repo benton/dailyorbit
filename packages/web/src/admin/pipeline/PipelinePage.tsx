@@ -64,7 +64,7 @@ export default function PipelinePage() {
       }
       // Initialize concurrency overrides from server defaults (only on first load)
       setConcurrencyOverrides((prev: Record<string, number>) => {
-        if (Object.keys(prev).length > 0) return prev;
+        if (Object.keys(prev).length > 0) {return prev;}
         const defaults: Record<string, number> = {};
         for (const s of data.stages) {
           defaults[s.id] = s.defaultConcurrency;
@@ -166,7 +166,7 @@ export default function PipelinePage() {
         }
 
         const resp: RunResponse = await apiFetch<RunResponse>('/api/admin/pipeline/run', {
-          body: JSON.stringify({ stages: stageIds, concurrencyOverrides: overrides }),
+          body: JSON.stringify({ concurrencyOverrides: overrides, stages: stageIds }),
           method: 'POST',
         });
 

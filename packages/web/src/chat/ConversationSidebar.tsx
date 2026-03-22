@@ -6,7 +6,7 @@ import { Input } from '../ui/input.tsx';
 
 type Props = {
   activeId: string | null;
-  conversations: Conversation[];
+  conversations: Array<Conversation>;
   onDelete: (id: string) => void;
   onNew: () => void;
   onRename: (id: string, title: string) => void;
@@ -18,10 +18,10 @@ function relativeTime(dateStr: string): string {
   const then: number = new Date(dateStr).getTime();
   const diffMs: number = now - then;
   const diffMin: number = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${String(diffMin)}m ago`;
+  if (diffMin < 1) {return 'just now';}
+  if (diffMin < 60) {return `${String(diffMin)}m ago`;}
   const diffHr: number = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${String(diffHr)}h ago`;
+  if (diffHr < 24) {return `${String(diffHr)}h ago`;}
   const diffDay: number = Math.floor(diffHr / 24);
   return `${String(diffDay)}d ago`;
 }
@@ -74,8 +74,8 @@ export default function ConversationSidebar({
                 onBlur={submitRename}
                 onChange={(e) => setRenameValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') submitRename();
-                  if (e.key === 'Escape') setRenamingId(null);
+                  if (e.key === 'Enter') {submitRename();}
+                  if (e.key === 'Escape') {setRenamingId(null);}
                 }}
                 value={renameValue}
               />
