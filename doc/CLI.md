@@ -219,6 +219,50 @@ node --no-warnings packages/server/src/bin.ts db query "SELECT COUNT(*) FROM fil
 
 ---
 
+## `daily-orbit test`
+
+Testing and debugging commands.
+
+### `test rewind`
+
+Remove recently ingested filings and all dependent database rows so the monitoring and alerting pipeline can be re-exercised cheaply. Physical attachment files on disk are never touched.
+
+```
+daily-orbit test rewind [OPTIONS]
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `--database` | `data/daily-orbit.duckdb` | Path to DuckDB database file |
+| `--since` | _(none)_ | Remove filings with `_first_seen_at >= date` (YYYY-MM-DD) |
+| `--last` | _(none)_ | Remove the N most recently ingested filings (by `_first_seen_at` desc) |
+| `--full` | `false` | Also delete embeddings and rebuild FTS index (expensive to re-derive) |
+| `--dry-run` | `false` | Print what would be deleted with counts per table, but don't execute |
+| `--yes` | `false` | Skip confirmation prompt |
+
+`--since` and `--last` are mutually exclusive; one is required.
+
+**Default mode** deletes filings plus dependent rows (`alert_run`, `user_content_flag`, `user_filing_view`, `pleading`, `attachment`). Re-ingest will re-discover filings and re-extract text locally.
+
+**`--full` mode** additionally deletes vector embeddings and rebuilds the FTS index. Re-ingest will also re-summarize (Bedrock) and re-embed (Titan V2).
+
+**Examples:**
+
+```bash
+# Preview what would be deleted for filings ingested since March 19
+./daily-orbit test rewind --since 2026-03-19 --dry-run
+
+# Rewind the 50 most recently ingested filings, skip confirmation
+./daily-orbit test rewind --last 50 --yes
+
+# Full rewind including embeddings and FTS
+./daily-orbit test rewind --since 2026-03-18 --full
+```
+
+After rewinding, re-ingest with `./daily-orbit ingest ibfs` (or `ingest icfs`), then run `./daily-orbit pipeline run alerts.evaluate` to test the alerting pipeline.
+
+---
+
 ## Global Notes
 
 - **DuckDB single-process constraint:** DuckDB only allows one process to open a database file at a time. CLI commands cannot run while the server is running against the same database. Stop the server first, or use `db query` within the server process.
