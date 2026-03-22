@@ -6,6 +6,7 @@ import { extractCookiesCommand } from './extract-cookies.ts';
 import { loginCommand } from './login.ts';
 import { resetCommand } from './reset.ts';
 import { syncCommand } from './sync.ts';
+import { testCookiesCommand } from './test-cookies.ts';
 import { validateCommand } from './validate.ts';
 
 export const attachmentsCommand = defineCommand({
@@ -20,6 +21,7 @@ export const attachmentsCommand = defineCommand({
     'extract-cookies': extractCookiesCommand,
     login: loginCommand,
     sync: syncCommand,
+    'test-cookies': testCookiesCommand,
     validate: validateCommand,
     reset: resetCommand,
   },
