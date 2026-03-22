@@ -36,9 +36,7 @@ testAdminRoutes.post('/rewind/plan', async (c) => {
     full: body.full,
     dryRun: true,
   };
-  const result: RewindResult = await withConn((conn) =>
-    planRewind(conn, opts),
-  );
+  const result: RewindResult = await withConn((conn) => planRewind(conn, opts));
   return c.json(result);
 });
 
