@@ -253,8 +253,8 @@ describe('PipelineRunner', () => {
     const runner = getRunner();
     const runId: string = await runner.start(['test.blocking']);
 
-    // Give the async executeRun a tick to enter the stage
-    await new Promise((r) => setTimeout(r, 50));
+    // Wait until the stage's run() has been called and resolveStage is set
+    await vi.waitFor(() => expect(resolveStage).not.toBeNull(), { timeout: 2000 });
 
     const state = runner.getState();
     expect(state.running).toEqual(true);
