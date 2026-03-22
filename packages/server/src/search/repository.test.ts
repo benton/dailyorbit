@@ -1,5 +1,6 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import {
   autocomplete,
   searchEarthStations,
@@ -129,6 +130,7 @@ beforeEach(async () => {
   await seedFilings(conn);
   await seedSpaceStations(conn);
   await seedEarthStationSta(conn);
+  await ensureHiddenItemTables(conn);
 });
 
 afterEach(() => {

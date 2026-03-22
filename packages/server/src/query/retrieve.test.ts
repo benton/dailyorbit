@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import { rebuildAllFtsIndexes } from '../search/fts-index.ts';
 import { retrieveContext } from './retrieve.ts';
 import type { RewrittenQuery } from './types.ts';
@@ -114,6 +115,7 @@ describe('retrieveContext', () => {
     )`);
 
     await rebuildAllFtsIndexes(conn);
+    await ensureHiddenItemTables(conn);
   });
 
   afterEach(() => {

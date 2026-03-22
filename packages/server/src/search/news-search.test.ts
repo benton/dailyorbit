@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import { rebuildAllFtsIndexes } from './fts-index.ts';
 import { searchNewsByKeyword, searchNewsByVector } from './news-search.ts';
 
@@ -88,6 +89,7 @@ describe('news-search', () => {
     `);
 
     await rebuildAllFtsIndexes(conn);
+    await ensureHiddenItemTables(conn);
   });
 
   afterEach(() => {

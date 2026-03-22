@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
 import { ensureAlertTables } from './schema.ts';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import { ensureSavedSearchTables } from '../saved-search/schema.ts';
 import { ensureContentFlagTables } from '../content-flag/schema.ts';
 import { ensurePipelineTrackingTables } from '../pipeline/schema.ts';
@@ -59,6 +60,7 @@ describe('alert evaluation integration', () => {
     await ensureSavedSearchTables(conn);
     await ensureContentFlagTables(conn);
     await ensureAlertTables(conn);
+    await ensureHiddenItemTables(conn);
   });
 
   afterAll(() => {

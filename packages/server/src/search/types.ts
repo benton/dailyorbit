@@ -23,6 +23,7 @@ export type FilingSearchFilters = {
   date_filed_from?: string;
   date_filed_to?: string;
   discovered_since?: string;
+  show_hidden?: boolean;
 };
 
 /** Result row from satellite search */
