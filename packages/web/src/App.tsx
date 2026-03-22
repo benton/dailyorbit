@@ -2,6 +2,7 @@ import { AnchorHTMLAttributes, lazy, Suspense } from 'react';
 import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
+import SettingsLayout from './admin/SettingsLayout.tsx';
 import Dashboard from './admin/Dashboard.tsx';
 import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
 import FilingDetail from './filings/FilingDetail.tsx';
@@ -178,7 +179,33 @@ export default function App() {
             path="/admin"
           >
             <Route element={<Dashboard />} index />
-            <Route element={<ConfigEditor />} path="config" />
+            <Route element={<SettingsLayout />} path="settings">
+              <Route element={<ConfigEditor />} index />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <AiSettings />
+                  </Suspense>
+                }
+                path="ai"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <NewsSourcesAdmin />
+                  </Suspense>
+                }
+                path="news"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <ConsultantAdmin />
+                  </Suspense>
+                }
+                path="consultants"
+              />
+            </Route>
             <Route
               element={
                 <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
@@ -198,34 +225,10 @@ export default function App() {
             <Route
               element={
                 <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <AiSettings />
-                </Suspense>
-              }
-              path="ai"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
                   <PipelinePage />
                 </Suspense>
               }
               path="pipeline"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <NewsSourcesAdmin />
-                </Suspense>
-              }
-              path="news"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <ConsultantAdmin />
-                </Suspense>
-              }
-              path="consultants"
             />
           </Route>
         </Routes>

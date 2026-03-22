@@ -26,9 +26,9 @@ export default function AdminLayout() {
           <span className="text-neutral-300 dark:text-neutral-600">/</span>
           <Link
             className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-            to="/admin/config"
+            to="/admin/settings"
           >
-            Config
+            Settings
           </Link>
           <span className="text-neutral-300 dark:text-neutral-600">/</span>
           <Link
@@ -47,30 +47,9 @@ export default function AdminLayout() {
           <span className="text-neutral-300 dark:text-neutral-600">/</span>
           <Link
             className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-            to="/admin/ai"
-          >
-            AI
-          </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
-          <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
             to="/admin/pipeline"
           >
             Pipeline
-          </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
-          <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-            to="/admin/news"
-          >
-            News
-          </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
-          <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-            to="/admin/consultants"
-          >
-            Consultants
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <button

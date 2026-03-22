@@ -35,6 +35,12 @@ const AI_CONFIG_KEYS: ReadonlySet<string> = new Set([
   'embeddingModel',
   'embeddingDimensions',
   'embeddingNormalize',
+  'queryRewriteModel',
+  'queryGenerateModel',
+  'queryMaxQuestionLength',
+  'queryRewriteSystemPrompt',
+  'queryGenerateSystemPrompt',
+  'queryGenerateUserPrompt',
 ]);
 
 function ConfigEditorInner() {
