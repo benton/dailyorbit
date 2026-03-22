@@ -28,7 +28,9 @@ export default function ChatInput({
 
   const handleSubmit = useCallback(() => {
     const trimmed: string = value.trim();
-    if (trimmed === '' || isStreaming || disabled) {return;}
+    if (trimmed === '' || isStreaming || disabled) {
+      return;
+    }
     onSend(trimmed);
     setValue('');
     if (textareaRef.current != null) {

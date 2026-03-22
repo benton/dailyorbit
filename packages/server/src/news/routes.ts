@@ -48,12 +48,14 @@ newsRoutes.get('/', async (c) => {
     newsSourceId?: number;
     companyId?: number;
     extractStatus?: ExtractStatus;
+    showHidden?: boolean;
   } = {};
 
   if (q.sourceId != null) filters.newsSourceId = Number(q.sourceId);
   if (q.companyId != null) filters.companyId = Number(q.companyId);
   if (q.extractStatus != null)
     filters.extractStatus = q.extractStatus as ExtractStatus;
+  if (q.show_hidden === 'true') filters.showHidden = true;
 
   const result = await withConn((conn) =>
     listNewsItems(conn, pagination, filters),

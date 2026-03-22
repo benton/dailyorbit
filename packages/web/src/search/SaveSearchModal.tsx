@@ -22,7 +22,9 @@ export function SaveSearchModal({ onClose, onSave, open }: SaveSearchModalProps)
 
   const handleSave = () => {
     const trimmed: string = name.trim();
-    if (trimmed === '') {return;}
+    if (trimmed === '') {
+      return;
+    }
     onSave(trimmed);
     setName('');
   };
@@ -49,7 +51,9 @@ export function SaveSearchModal({ onClose, onSave, open }: SaveSearchModalProps)
             id="saved-search-name"
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {handleSave();}
+              if (e.key === 'Enter') {
+                handleSave();
+              }
             }}
             placeholder="e.g. SpaceX SAT filings"
             value={name}
