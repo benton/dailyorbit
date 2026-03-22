@@ -31,6 +31,8 @@ pipelineRoutes.get('/status', (c) => {
     group: s.group,
     name: s.name,
     description: s.description,
+    defaultConcurrency: s.defaultConcurrency,
+    parallelizable: s.parallelizable,
     status: state.stages[s.id]?.status ?? 'idle',
     lastResult: state.stages[s.id]?.lastResult ?? null,
     startedAt: state.stages[s.id]?.startedAt ?? null,
@@ -48,10 +50,16 @@ pipelineRoutes.get('/status', (c) => {
 // ── POST /run ───────────────────────────────────────────────────────
 
 pipelineRoutes.post('/run', async (c) => {
-  const body = await c.req.json<{ stages: string[]; concurrency?: number }>();
+  const body = await c.req.json<{
+    stages: string[];
+    concurrencyOverrides?: Record<string, number>;
+  }>();
   const stageIds: string[] = body.stages;
-  const concurrency: number =
-    typeof body.concurrency === 'number' ? body.concurrency : 0;
+  const concurrencyOverrides: Record<string, number> =
+    body.concurrencyOverrides != null &&
+    typeof body.concurrencyOverrides === 'object'
+      ? body.concurrencyOverrides
+      : {};
 
   if (!Array.isArray(stageIds) || stageIds.length === 0) {
     return c.json({ error: 'stages array is required' }, 400);
@@ -59,7 +67,11 @@ pipelineRoutes.post('/run', async (c) => {
 
   const runner = getRunner();
   try {
-    const runId: string = await runner.start(stageIds, concurrency, 'manual');
+    const runId: string = await runner.start(
+      stageIds,
+      concurrencyOverrides,
+      'manual',
+    );
     return c.json({ runId });
   } catch (err: unknown) {
     if (err instanceof ConflictError) {
@@ -67,6 +79,17 @@ pipelineRoutes.post('/run', async (c) => {
     }
     throw err;
   }
+});
+
+// ── POST /stop ──────────────────────────────────────────────────────
+
+pipelineRoutes.post('/stop', (c) => {
+  const runner = getRunner();
+  if (!runner.isRunning()) {
+    return c.json({ error: 'No pipeline run is active' }, 404);
+  }
+  const stopped: boolean = runner.stop();
+  return c.json({ stopped, runId: runner.getRunId() });
 });
 
 // ── GET /logs/:runId — SSE ──────────────────────────────────────────

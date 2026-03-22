@@ -100,9 +100,7 @@ describe('rewind', () => {
     it('counts filings with _first_seen_at >= the given date', async () => {
       const result = await planRewind(conn, { since: '2026-03-19' });
 
-      expect(result.scope).toBe(
-        'filings with _first_seen_at >= 2026-03-19',
-      );
+      expect(result.scope).toBe('filings with _first_seen_at >= 2026-03-19');
 
       const filingCount = result.counts.find((c) => c.table === 'filing');
       expect(filingCount?.count).toBe(2); // filing_key 2 and 3
@@ -114,9 +112,7 @@ describe('rewind', () => {
       const attachmentCount = result.counts.find(
         (c) => c.table === 'attachment',
       );
-      const pleadingCount = result.counts.find(
-        (c) => c.table === 'pleading',
-      );
+      const pleadingCount = result.counts.find((c) => c.table === 'pleading');
       expect(attachmentCount?.count).toBe(2);
       expect(pleadingCount?.count).toBe(1);
     });

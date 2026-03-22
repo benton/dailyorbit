@@ -93,6 +93,8 @@ describe('pipeline tracking integration', () => {
       group: 'test',
       name: 'Tracking Test',
       description: 'Reports discovery counts for tracking verification',
+      defaultConcurrency: 1,
+      parallelizable: false,
       run: async (_ctx: PipelineContext): Promise<StageResult> => {
         await new Promise((r) => setTimeout(r, 10));
         return {
@@ -109,7 +111,7 @@ describe('pipeline tracking integration', () => {
     const runner = getRunner();
     const runId: string = await runner.start(
       ['test.tracking'],
-      0,
+      {},
       'integration-test',
     );
     await waitForDone(runId);
@@ -151,6 +153,8 @@ describe('pipeline tracking integration', () => {
       group: 'test',
       name: 'Failing Stage',
       description: 'Always fails for testing',
+      defaultConcurrency: 1,
+      parallelizable: false,
       run: async (_ctx: PipelineContext): Promise<StageResult> => {
         throw new Error('intentional failure');
       },

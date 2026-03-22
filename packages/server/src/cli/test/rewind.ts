@@ -13,8 +13,7 @@ export const rewindCommand = defineCommand({
     database: databaseArg,
     since: {
       type: 'string',
-      description:
-        'Remove filings with _first_seen_at >= date (YYYY-MM-DD)',
+      description: 'Remove filings with _first_seen_at >= date (YYYY-MM-DD)',
     },
     last: {
       type: 'string',
@@ -51,9 +50,8 @@ export const rewindCommand = defineCommand({
     const conn = await instance.connect();
 
     try {
-      const { planRewind, executeRewind } = await import(
-        '../../test-utils/rewind.ts'
-      );
+      const { planRewind, executeRewind } =
+        await import('../../test-utils/rewind.ts');
 
       // Plan phase: compute counts
       const plan = await planRewind(conn, { since, last, full });
@@ -99,23 +97,17 @@ export const rewindCommand = defineCommand({
         // Rebuild FTS index
         console.log('  FTS index: rebuilding...');
         const start: number = performance.now();
-        const { rebuildAllFtsIndexes } = await import(
-          '../../search/fts-index.ts'
-        );
+        const { rebuildAllFtsIndexes } =
+          await import('../../search/fts-index.ts');
         await rebuildAllFtsIndexes(conn);
-        const elapsed: string = (
-          (performance.now() - start) /
-          1000
-        ).toFixed(1);
+        const elapsed: string = ((performance.now() - start) / 1000).toFixed(1);
         console.log(`  FTS index: rebuilt (${elapsed}s)`);
 
         console.log(
           "\nDone. Run './daily-orbit ingest ibfs' to re-ingest (will re-extract, re-summarize, and re-embed).",
         );
       } else {
-        console.log(
-          "\nDone. Run './daily-orbit ingest ibfs' to re-ingest.",
-        );
+        console.log("\nDone. Run './daily-orbit ingest ibfs' to re-ingest.");
       }
     } finally {
       conn.closeSync();
@@ -123,7 +115,9 @@ export const rewindCommand = defineCommand({
   },
 });
 
-function printTable(rows: Array<{ table: string; count: number | string }>): void {
+function printTable(
+  rows: Array<{ table: string; count: number | string }>,
+): void {
   const maxName: number = Math.max(...rows.map((r) => r.table.length));
   for (const row of rows) {
     const name: string = row.table.padEnd(maxName + 2);

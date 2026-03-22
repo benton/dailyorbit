@@ -5,9 +5,11 @@ import { Button } from '../../ui/button.tsx';
 import PipelineStep from './PipelineStep.tsx';
 
 type StageInfo = {
+  concurrency: number;
   description: string;
   id: string;
   name: string;
+  parallelizable: boolean;
   status: StageStatus;
 };
 
@@ -15,6 +17,7 @@ type PipelineGroupProps = {
   disabled: boolean;
   isLast: boolean;
   name: string;
+  onConcurrencyChange: (stageId: string, value: number) => void;
   onRunAll: (stageIds: Array<string>) => void;
   onRunStage: (stageId: string) => void;
   stages: Array<StageInfo>;
@@ -24,6 +27,7 @@ export default function PipelineGroup({
   disabled,
   isLast,
   name,
+  onConcurrencyChange,
   onRunAll,
   onRunStage,
   stages,
@@ -70,12 +74,15 @@ export default function PipelineGroup({
         <div className="mt-1 ml-3 space-y-1 border-l-2 border-neutral-200 pl-4 dark:border-neutral-700">
           {stages.map((stage: StageInfo) => (
             <PipelineStep
+              concurrency={stage.concurrency}
               description={stage.description}
               disabled={disabled}
               id={stage.id}
               key={stage.id}
               name={stage.name}
+              onConcurrencyChange={onConcurrencyChange}
               onRun={onRunStage}
+              parallelizable={stage.parallelizable}
               status={stage.status}
             />
           ))}

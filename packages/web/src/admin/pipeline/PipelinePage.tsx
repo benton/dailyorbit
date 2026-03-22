@@ -1,8 +1,10 @@
+import { StopCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LogLine } from './LogPanel.tsx';
 import type { StageStatus } from './PipelineStep.tsx';
 import { apiFetch } from '../../lib/api.ts';
 import env from '../../lib/env.tsx';
+import { Button } from '../../ui/button.tsx';
 import LogPanel from './LogPanel.tsx';
 import PipelineGroup from './PipelineGroup.tsx';
 
@@ -15,10 +17,12 @@ type GroupInfo = {
 };
 
 type StageInfo = {
+  defaultConcurrency: number;
   description: string;
   group: string;
   id: string;
   name: string;
+  parallelizable: boolean;
   status: StageStatus;
 };
 
@@ -43,7 +47,7 @@ export default function PipelinePage() {
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [logLines, setLogLines] = useState<Array<LogLine>>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [concurrency, setConcurrency] = useState<number>(20);
+  const [concurrencyOverrides, setConcurrencyOverrides] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -58,6 +62,15 @@ export default function PipelinePage() {
       if (data.running && data.runId != null) {
         setActiveRunId(data.runId);
       }
+      // Initialize concurrency overrides from server defaults (only on first load)
+      setConcurrencyOverrides((prev: Record<string, number>) => {
+        if (Object.keys(prev).length > 0) return prev;
+        const defaults: Record<string, number> = {};
+        for (const s of data.stages) {
+          defaults[s.id] = s.defaultConcurrency;
+        }
+        return defaults;
+      });
       setError(null);
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : 'Failed to load pipeline status');
@@ -144,8 +157,16 @@ export default function PipelinePage() {
           ),
         );
 
+        // Build per-stage overrides for just the stages being run
+        const overrides: Record<string, number> = {};
+        for (const id of stageIds) {
+          if (concurrencyOverrides[id] != null) {
+            overrides[id] = concurrencyOverrides[id];
+          }
+        }
+
         const resp: RunResponse = await apiFetch<RunResponse>('/api/admin/pipeline/run', {
-          body: JSON.stringify({ stages: stageIds, concurrency }),
+          body: JSON.stringify({ stages: stageIds, concurrencyOverrides: overrides }),
           method: 'POST',
         });
 
@@ -156,8 +177,18 @@ export default function PipelinePage() {
         setError(error_ instanceof Error ? error_.message : 'Failed to start pipeline run');
       }
     },
-    [running, connectSSE],
+    [running, connectSSE, concurrencyOverrides],
   );
+
+  // ── Stop handler ──────────────────────────────────────────────
+
+  const handleStop = useCallback(async () => {
+    try {
+      await apiFetch('/api/admin/pipeline/stop', { method: 'POST' });
+    } catch {
+      // best-effort
+    }
+  }, []);
 
   const handleRunStage = useCallback(
     (stageId: string) => {
@@ -172,6 +203,13 @@ export default function PipelinePage() {
     },
     [runStages],
   );
+
+  const handleConcurrencyChange = useCallback((stageId: string, value: number) => {
+    setConcurrencyOverrides((prev: Record<string, number>) => ({
+      ...prev,
+      [stageId]: Math.max(1, value),
+    }));
+  }, []);
 
   const handleClearLog = useCallback(() => {
     setLogLines([]);
@@ -189,29 +227,28 @@ export default function PipelinePage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Pipeline</h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Data ingestion pipeline stages. Run steps individually or by group.
-        </p>
-        {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
-        <div className="mt-3 flex items-center gap-2">
-          <label htmlFor="concurrency" className="text-sm text-neutral-600 dark:text-neutral-300">
-            Concurrency
-          </label>
-          <input
-            id="concurrency"
-            type="number"
-            min={1}
-            max={100}
-            value={concurrency}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConcurrency(Math.max(1, Number.parseInt(e.target.value, 10) || 1))
-            }
-            disabled={running}
-            className="w-20 rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
-          />
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            Pipeline
+          </h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Data ingestion pipeline stages. Run steps individually or by group.
+          </p>
+          {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
+        {running && (
+          <Button
+            onClick={() => void handleStop()}
+            size="sm"
+            title="Stop all pipeline stages"
+            type="button"
+            variant="destructive"
+          >
+            <StopCircle className="mr-1.5 h-4 w-4" />
+            Stop All
+          </Button>
+        )}
       </div>
 
       {/* Pipeline stages */}
@@ -220,9 +257,11 @@ export default function PipelinePage() {
           const groupStages = stages
             .filter((s: StageInfo) => group.stageIds.includes(s.id))
             .map((s: StageInfo) => ({
+              concurrency: concurrencyOverrides[s.id] ?? s.defaultConcurrency,
               description: s.description,
               id: s.id,
               name: s.name,
+              parallelizable: s.parallelizable,
               status: s.status,
             }));
 
@@ -232,6 +271,7 @@ export default function PipelinePage() {
               isLast={i === groups.length - 1}
               key={group.id}
               name={group.name}
+              onConcurrencyChange={handleConcurrencyChange}
               onRunAll={handleRunAll}
               onRunStage={handleRunStage}
               stages={groupStages}

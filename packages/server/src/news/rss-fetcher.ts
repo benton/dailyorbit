@@ -20,20 +20,27 @@ type FetchResult = {
  */
 export async function fetchAllDueSources(
   conn: DuckDBConnection,
+  concurrency: number = 1,
   onProgress?: (result: FetchResult) => void,
 ): Promise<{ results: FetchResult[]; totalInserted: number }> {
+  const { processWithConcurrency } = await import('../lib/concurrency.ts');
+
   const sources: NewsSource[] = await getSourcesDueForFetch(conn);
   const results: FetchResult[] = [];
   let totalInserted: number = 0;
 
-  for (const source of sources) {
-    const result: FetchResult = await fetchSingleSource(conn, source);
-    results.push(result);
-    totalInserted += result.itemsInserted;
-    if (onProgress != null) {
-      onProgress(result);
-    }
-  }
+  await processWithConcurrency(
+    sources,
+    concurrency,
+    async (source: NewsSource) => {
+      const result: FetchResult = await fetchSingleSource(conn, source);
+      results.push(result);
+      totalInserted += result.itemsInserted;
+      if (onProgress != null) {
+        onProgress(result);
+      }
+    },
+  );
 
   return { results, totalInserted };
 }

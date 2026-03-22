@@ -64,6 +64,7 @@ export const newsCommand = defineCommand({
             await import('../../news/rss-fetcher.ts');
           const { results, totalInserted } = await fetchAllDueSources(
             conn,
+            1,
             (result) => {
               if (result.error != null) {
                 console.log(`  [FAIL] ${result.sourceName}: ${result.error}`);

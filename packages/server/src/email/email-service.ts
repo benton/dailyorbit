@@ -25,12 +25,13 @@ export type EmailService = {
 export async function createSesTransporter(
   region: string,
 ): Promise<Transporter> {
-  const { SESv2Client, SendEmailCommand } = await import(
-    '@aws-sdk/client-sesv2'
-  );
+  const { SESv2Client, SendEmailCommand } =
+    await import('@aws-sdk/client-sesv2');
   const sesClient = new SESv2Client({ region });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- nodemailer 8.x SES transport types are incomplete
-  return nodemailer.createTransport({ SES: { sesClient, SendEmailCommand } } as any);
+  return nodemailer.createTransport({
+    SES: { sesClient, SendEmailCommand },
+  } as any);
 }
 
 export function createEmailService(config: EmailServiceConfig): EmailService {

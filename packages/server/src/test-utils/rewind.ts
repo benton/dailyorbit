@@ -275,9 +275,7 @@ async function deleteDependentRows(
   ];
 }
 
-async function deleteFullRows(
-  conn: DuckDBConnection,
-): Promise<TableCount[]> {
+async function deleteFullRows(conn: DuckDBConnection): Promise<TableCount[]> {
   const hasEmbedding: boolean = await tableExists(conn, 'embedding');
   if (!hasEmbedding) {
     return [];

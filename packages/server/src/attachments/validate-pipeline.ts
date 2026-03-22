@@ -1,4 +1,5 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import { processWithConcurrency } from '../lib/concurrency.ts';
 import {
   trackConnection,
   trackInstance,
@@ -17,6 +18,7 @@ export type ValidationPipelineOptions = {
   databaseUrl?: string | undefined;
   dbInstance?: DuckDBInstance | undefined;
   limit?: number | undefined;
+  concurrency?: number | undefined;
   verbose?: boolean | undefined;
   onProgress?: ((msg: string) => void) | undefined;
 };
@@ -52,36 +54,41 @@ export async function runValidationPipeline(
   let corrected: number = 0;
   let confirmed: number = 0;
   let failed: number = 0;
+  let processed: number = 0;
+  const concurrency: number = options.concurrency ?? 1;
 
-  for (let i: number = 0; i < pending.length; i++) {
-    const row: PendingValidationRow = pending[i]!;
+  await processWithConcurrency(
+    pending,
+    concurrency,
+    async (row: PendingValidationRow) => {
+      try {
+        const detected = detectContentType(row.localPath, row.contentType);
+        await markContentTypeValidated(
+          conn,
+          row.attachmentKey,
+          detected.mimeType,
+        );
 
-    try {
-      const detected = detectContentType(row.localPath, row.contentType);
-      await markContentTypeValidated(
-        conn,
-        row.attachmentKey,
-        detected.mimeType,
-      );
-
-      if (detected.isDifferent) {
-        corrected++;
-        if (options.verbose) {
-          log(
-            `  ${String(row.attachmentKey)}: ${row.contentType ?? '(null)'} → ${detected.mimeType}`,
-          );
+        if (detected.isDifferent) {
+          corrected++;
+          if (options.verbose) {
+            log(
+              `  ${String(row.attachmentKey)}: ${row.contentType ?? '(null)'} → ${detected.mimeType}`,
+            );
+          }
+        } else {
+          confirmed++;
         }
-      } else {
-        confirmed++;
+      } catch (e: unknown) {
+        failed++;
+        const msg: string = e instanceof Error ? e.message : String(e);
+        log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
       }
-    } catch (e: unknown) {
-      failed++;
-      const msg: string = e instanceof Error ? e.message : String(e);
-      log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
-    }
 
-    printProgress(i + 1, pending.length, 'Validating');
-  }
+      processed++;
+      printProgress(processed, pending.length, 'Validating');
+    },
+  );
 
   untrackConnection(conn);
   conn.closeSync();

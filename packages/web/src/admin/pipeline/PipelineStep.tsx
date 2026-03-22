@@ -5,11 +5,14 @@ import { Button } from '../../ui/button.tsx';
 export type StageStatus = 'idle' | 'running' | 'success' | 'failed';
 
 type PipelineStepProps = {
+  concurrency: number;
   description: string;
   disabled: boolean;
   id: string;
   name: string;
+  onConcurrencyChange: (stageId: string, value: number) => void;
   onRun: (stageId: string) => void;
+  parallelizable: boolean;
   status: StageStatus;
 };
 
@@ -44,11 +47,14 @@ const STATUS_CONFIG: Record<
 };
 
 export default function PipelineStep({
+  concurrency,
   description,
   disabled,
   id,
   name,
+  onConcurrencyChange,
   onRun,
+  parallelizable,
   status,
 }: PipelineStepProps) {
   const cfg = STATUS_CONFIG[status];
@@ -68,6 +74,23 @@ export default function PipelineStep({
       <Badge className="shrink-0" variant={cfg.variant}>
         {cfg.label}
       </Badge>
+
+      {/* Per-stage concurrency input (only for parallelizable stages) */}
+      {parallelizable && (
+        <input
+          aria-label={`Concurrency for ${name}`}
+          className="w-14 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center text-xs dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          disabled={disabled}
+          max={100}
+          min={1}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onConcurrencyChange(id, Number.parseInt(e.target.value, 10) || 1)
+          }
+          title={`Concurrency for ${name}`}
+          type="number"
+          value={concurrency}
+        />
+      )}
 
       {/* Run button */}
       <Button

@@ -8,6 +8,7 @@ import {
 import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
 import { htmlToMarkdown } from '../lib/html-to-markdown.ts';
+import { processWithConcurrency } from '../lib/concurrency.ts';
 import { printProgress } from './progress.ts';
 import {
   createAttachmentTable,
@@ -30,6 +31,7 @@ export type ExtractionPipelineOptions = {
   dbInstance?: DuckDBInstance | undefined;
   retryFailed?: boolean | undefined;
   limit?: number | undefined;
+  concurrency?: number | undefined;
   verbose?: boolean | undefined;
   onProgress?: ((msg: string) => void) | undefined;
 };
@@ -100,61 +102,101 @@ export async function runExtractionPipeline(
   let skippedNoText: number = 0;
   let skippedAuthError: number = 0;
   let failed: number = 0;
+  let processed: number = 0;
+  const concurrency: number = options.concurrency ?? 1;
 
-  for (let i: number = 0; i < pending.length; i++) {
-    const row: PendingExtractionRow = pending[i]!;
-
-    try {
-      // Text and CSV files: read directly as UTF-8 text
-      if (row.contentType === 'text/plain' || row.contentType === 'text/csv') {
-        const text: string = readFileSync(row.localPath, 'utf-8');
-        const textLength: number = text.replace(/\s/g, '').length;
-        if (textLength >= 10) {
-          await markExtracted(conn, row.attachmentKey, text, textLength);
-          extracted++;
-          if (options.verbose) {
-            log(
-              `  ${String(row.attachmentKey)}: extracted ${String(textLength)} chars (text)`,
+  await processWithConcurrency(
+    pending,
+    concurrency,
+    async (row: PendingExtractionRow) => {
+      try {
+        // Text and CSV files: read directly as UTF-8 text
+        if (
+          row.contentType === 'text/plain' ||
+          row.contentType === 'text/csv'
+        ) {
+          const text: string = readFileSync(row.localPath, 'utf-8');
+          const textLength: number = text.replace(/\s/g, '').length;
+          if (textLength >= 10) {
+            await markExtracted(conn, row.attachmentKey, text, textLength);
+            extracted++;
+            if (options.verbose) {
+              log(
+                `  ${String(row.attachmentKey)}: extracted ${String(textLength)} chars (text)`,
+              );
+            }
+          } else {
+            await markExtractionSkipped(
+              conn,
+              row.attachmentKey,
+              'skipped_no_text',
             );
+            skippedNoText++;
+          }
+        } else if (row.contentType === 'text/html') {
+          // HTML extraction
+          const html: string = readFileSync(row.localPath, 'utf-8');
+          const { statSync } = await import('node:fs');
+          const fileSizeBytes: number = statSync(row.localPath).size;
+          if (looksLikeAuthError(html, fileSizeBytes)) {
+            await markExtractionSkipped(
+              conn,
+              row.attachmentKey,
+              'skipped_auth_error',
+            );
+            skippedAuthError++;
+            if (options.verbose) {
+              log(`  ${String(row.attachmentKey)}: skipped (auth error stub)`);
+            }
+          } else {
+            const result = extractTextFromHtml(html);
+            if (result.status === 'extracted') {
+              const cleanText: string = htmlToMarkdown(result.text);
+              const cleanLength: number = cleanText.replace(/\s/g, '').length;
+              await markExtracted(
+                conn,
+                row.attachmentKey,
+                cleanText,
+                cleanLength,
+              );
+              extracted++;
+              if (options.verbose) {
+                log(
+                  `  ${String(row.attachmentKey)}: extracted ${String(cleanLength)} chars (html→md)`,
+                );
+              }
+            } else if (result.status === 'skipped_no_text') {
+              await markExtractionSkipped(
+                conn,
+                row.attachmentKey,
+                'skipped_no_text',
+              );
+              skippedNoText++;
+              if (options.verbose) {
+                log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+              }
+            } else {
+              await markExtractionFailed(conn, row.attachmentKey);
+              failed++;
+              log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
+            }
           }
         } else {
-          await markExtractionSkipped(
-            conn,
-            row.attachmentKey,
-            'skipped_no_text',
-          );
-          skippedNoText++;
-        }
-      } else if (row.contentType === 'text/html') {
-        // HTML extraction
-        const html: string = readFileSync(row.localPath, 'utf-8');
-        const { statSync } = await import('node:fs');
-        const fileSizeBytes: number = statSync(row.localPath).size;
-        if (looksLikeAuthError(html, fileSizeBytes)) {
-          await markExtractionSkipped(
-            conn,
-            row.attachmentKey,
-            'skipped_auth_error',
-          );
-          skippedAuthError++;
-          if (options.verbose) {
-            log(`  ${String(row.attachmentKey)}: skipped (auth error stub)`);
-          }
-        } else {
-          const result = extractTextFromHtml(html);
+          // PDF extraction
+          const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
+          const result = extractTextFromPdf(bytes, row.localPath);
+
           if (result.status === 'extracted') {
-            const cleanText: string = htmlToMarkdown(result.text);
-            const cleanLength: number = cleanText.replace(/\s/g, '').length;
             await markExtracted(
               conn,
               row.attachmentKey,
-              cleanText,
-              cleanLength,
+              result.text,
+              result.textLength,
             );
             extracted++;
             if (options.verbose) {
               log(
-                `  ${String(row.attachmentKey)}: extracted ${String(cleanLength)} chars (html→md)`,
+                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
               );
             }
           } else if (result.status === 'skipped_no_text') {
@@ -173,49 +215,17 @@ export async function runExtractionPipeline(
             log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
           }
         }
-      } else {
-        // PDF extraction
-        const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
-        const result = extractTextFromPdf(bytes, row.localPath);
-
-        if (result.status === 'extracted') {
-          await markExtracted(
-            conn,
-            row.attachmentKey,
-            result.text,
-            result.textLength,
-          );
-          extracted++;
-          if (options.verbose) {
-            log(
-              `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
-            );
-          }
-        } else if (result.status === 'skipped_no_text') {
-          await markExtractionSkipped(
-            conn,
-            row.attachmentKey,
-            'skipped_no_text',
-          );
-          skippedNoText++;
-          if (options.verbose) {
-            log(`  ${String(row.attachmentKey)}: skipped (no text)`);
-          }
-        } else {
-          await markExtractionFailed(conn, row.attachmentKey);
-          failed++;
-          log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
-        }
+      } catch (e: unknown) {
+        await markExtractionFailed(conn, row.attachmentKey);
+        failed++;
+        const msg: string = e instanceof Error ? e.message : String(e);
+        log(`  ${String(row.attachmentKey)}: FAILED — ${msg}`);
       }
-    } catch (e: unknown) {
-      await markExtractionFailed(conn, row.attachmentKey);
-      failed++;
-      const msg: string = e instanceof Error ? e.message : String(e);
-      log(`  ${String(row.attachmentKey)}: FAILED — ${msg}`);
-    }
 
-    printProgress(i + 1, pending.length, 'Extracting');
-  }
+      processed++;
+      printProgress(processed, pending.length, 'Extracting');
+    },
+  );
 
   untrackConnection(conn);
   conn.closeSync();

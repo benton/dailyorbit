@@ -37,8 +37,10 @@ export type PipelineStage = {
   group: string;
   name: string;
   description: string;
-  /** Default concurrency for this stage (undefined = not applicable). */
-  defaultConcurrency?: number | undefined;
+  /** Default concurrency for this stage (1 = sequential). */
+  defaultConcurrency: number;
+  /** Whether this stage supports concurrency > 1. Controls UI input visibility. */
+  parallelizable: boolean;
   run: (ctx: PipelineContext) => Promise<StageResult>;
 };
 
@@ -51,7 +53,8 @@ const STAGES: PipelineStage[] = [
     group: 'ingest',
     name: 'ICFS Ingest',
     description: 'Discover and ingest filings from the new ICFS API',
-    defaultConcurrency: 1,
+    defaultConcurrency: 20,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runIcfsIngest } = await import('../icfs/pipeline.ts');
       const start: number = Date.now();
@@ -86,7 +89,8 @@ const STAGES: PipelineStage[] = [
     group: 'attachments',
     name: 'Discover & Download',
     description: 'Discover attachment metadata and download files',
-    defaultConcurrency: 5,
+    defaultConcurrency: 20,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runAttachmentPipeline } =
         await import('../attachments/pipeline.ts');
@@ -112,12 +116,15 @@ const STAGES: PipelineStage[] = [
     group: 'attachments',
     name: 'Extract Text',
     description: 'Extract text content from downloaded PDF/HTML attachments',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runExtractionPipeline } =
         await import('../attachments/extract-pipeline.ts');
       const start: number = Date.now();
       const result = await runExtractionPipeline({
         dbInstance: ctx.db,
+        concurrency: ctx.concurrency,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
@@ -134,12 +141,15 @@ const STAGES: PipelineStage[] = [
     name: 'Validate Content Types',
     description:
       'Verify content types of downloaded attachments via magic bytes',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runValidationPipeline } =
         await import('../attachments/validate-pipeline.ts');
       const start: number = Date.now();
       const result = await runValidationPipeline({
         dbInstance: ctx.db,
+        concurrency: ctx.concurrency,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
@@ -155,7 +165,8 @@ const STAGES: PipelineStage[] = [
     group: 'attachments',
     name: 'Summarize Attachments',
     description: 'Generate LLM summaries of extracted attachment text',
-    defaultConcurrency: 10,
+    defaultConcurrency: 15,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       // This stage mirrors the CLI summarize command logic inline
       // because there's no single pipeline function for it
@@ -265,7 +276,8 @@ const STAGES: PipelineStage[] = [
     group: 'attachments',
     name: 'Embed Attachments',
     description: 'Generate vector embeddings for attachment text',
-    defaultConcurrency: 10,
+    defaultConcurrency: 15,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       // Mirrors the CLI embed command for source=attachment
       const { DuckDBConnection } = await import('@duckdb/node-api');
@@ -382,6 +394,8 @@ const STAGES: PipelineStage[] = [
     group: 'companies',
     name: 'Seed Companies',
     description: 'Load built-in satellite industry company dataset',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureCompanyTables, ensureCompanyFk } =
         await import('../companies/schema.ts');
@@ -404,6 +418,8 @@ const STAGES: PipelineStage[] = [
     group: 'companies',
     name: 'Attribute Filings',
     description: 'Match unattributed filings to company entities',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureCompanyTables, ensureCompanyFk } =
         await import('../companies/schema.ts');
@@ -429,6 +445,8 @@ const STAGES: PipelineStage[] = [
     group: 'companies',
     name: 'Extract Ownership',
     description: 'Derive ownership events from T/C and ASG filings',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureCompanyTables, ensureCompanyFk } =
         await import('../companies/schema.ts');
@@ -454,6 +472,8 @@ const STAGES: PipelineStage[] = [
     group: 'companies',
     name: 'Enrich Companies',
     description: 'Enrich company data from GLEIF and Wikidata',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { enrichAllCompanies } = await import('../enrichment/pipeline.ts');
       const start: number = Date.now();
@@ -476,6 +496,8 @@ const STAGES: PipelineStage[] = [
     group: 'news',
     name: 'Seed Sources',
     description: 'Load default RSS feed sources',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { seedNewsSources } = await import('../news/repository.ts');
@@ -496,6 +518,8 @@ const STAGES: PipelineStage[] = [
     group: 'news',
     name: 'Fetch Feeds',
     description: 'Poll RSS feeds for new articles',
+    defaultConcurrency: 10,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { fetchAllDueSources } = await import('../news/rss-fetcher.ts');
@@ -503,6 +527,7 @@ const STAGES: PipelineStage[] = [
       await ensureNewsTables(ctx.conn);
       const { results, totalInserted } = await fetchAllDueSources(
         ctx.conn,
+        ctx.concurrency,
         (result) => {
           if (result.error != null) {
             ctx.log('error', `${result.sourceName}: ${result.error}`);
@@ -529,7 +554,8 @@ const STAGES: PipelineStage[] = [
     group: 'news',
     name: 'Extract Articles',
     description: 'Download and extract full text from article URLs',
-    defaultConcurrency: 3,
+    defaultConcurrency: 20,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { extractArticles } = await import('../news/article-extractor.ts');
@@ -549,7 +575,8 @@ const STAGES: PipelineStage[] = [
     group: 'news',
     name: 'Summarize News',
     description: 'Generate LLM summaries of extracted articles',
-    defaultConcurrency: 5,
+    defaultConcurrency: 15,
+    parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { summarizeNewsItems } = await import('../news/summarize-news.ts');
@@ -594,6 +621,8 @@ const STAGES: PipelineStage[] = [
     group: 'news',
     name: 'Attribute News',
     description: 'Match news items to company entities',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { ensureCompanyTables } = await import('../companies/schema.ts');
@@ -617,6 +646,8 @@ const STAGES: PipelineStage[] = [
     group: 'search',
     name: 'Rebuild FTS Index',
     description: 'Rebuild all full-text search indexes',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { rebuildAllFtsIndexes } = await import('../search/fts-index.ts');
       const start: number = Date.now();
@@ -638,6 +669,8 @@ const STAGES: PipelineStage[] = [
     name: 'Evaluate Alerts',
     description:
       'Run alert-enabled saved searches against newly ingested content',
+    defaultConcurrency: 1,
+    parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureAlertTables } = await import('../alerts/schema.ts');
       const { evaluateAlertsWithEmail } =

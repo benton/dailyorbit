@@ -73,7 +73,8 @@ function makeFakeStage(
     group: 'test',
     name: `Test stage ${id}`,
     description: `Fake stage for testing (${id})`,
-    defaultConcurrency: opts.defaultConcurrency,
+    defaultConcurrency: opts.defaultConcurrency ?? 1,
+    parallelizable: (opts.defaultConcurrency ?? 1) > 1,
     run: async (ctx: PipelineContext): Promise<StageResult> => {
       ctx.log('info', `Running ${id}`);
       const delay: number = opts.durationMs ?? 10;
@@ -176,7 +177,7 @@ describe('PipelineRunner', () => {
     await waitForDone(runId);
   });
 
-  it('passes concurrency override to stage context', async () => {
+  it('passes per-stage concurrency override to stage context', async () => {
     let capturedConcurrency: number = 0;
     const stage: PipelineStage = {
       id: 'test.concurrency',
@@ -184,6 +185,7 @@ describe('PipelineRunner', () => {
       name: 'Concurrency Test',
       description: 'Captures concurrency from context',
       defaultConcurrency: 3,
+      parallelizable: true,
       run: async (ctx: PipelineContext): Promise<StageResult> => {
         capturedConcurrency = ctx.concurrency;
         return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
@@ -192,7 +194,9 @@ describe('PipelineRunner', () => {
     __registerFake(stage);
 
     const runner = getRunner();
-    const runId: string = await runner.start(['test.concurrency'], 7);
+    const runId: string = await runner.start(['test.concurrency'], {
+      'test.concurrency': 7,
+    });
     await waitForDone(runId);
     expect(capturedConcurrency).toEqual(7);
   });
@@ -205,6 +209,7 @@ describe('PipelineRunner', () => {
       name: 'Default Concurrency',
       description: 'Uses default concurrency',
       defaultConcurrency: 5,
+      parallelizable: true,
       run: async (ctx: PipelineContext): Promise<StageResult> => {
         capturedConcurrency = ctx.concurrency;
         return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
@@ -216,26 +221,6 @@ describe('PipelineRunner', () => {
     const runId: string = await runner.start(['test.default-conc']);
     await waitForDone(runId);
     expect(capturedConcurrency).toEqual(5);
-  });
-
-  it('falls back to concurrency 1 when no default and no override', async () => {
-    let capturedConcurrency: number = 0;
-    const stage: PipelineStage = {
-      id: 'test.no-conc',
-      group: 'test',
-      name: 'No Concurrency',
-      description: 'Has no default concurrency',
-      run: async (ctx: PipelineContext): Promise<StageResult> => {
-        capturedConcurrency = ctx.concurrency;
-        return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
-      },
-    };
-    __registerFake(stage);
-
-    const runner = getRunner();
-    const runId: string = await runner.start(['test.no-conc']);
-    await waitForDone(runId);
-    expect(capturedConcurrency).toEqual(1);
   });
 
   it('skips unknown stages and counts them as failed', async () => {
@@ -254,6 +239,8 @@ describe('PipelineRunner', () => {
       group: 'test',
       name: 'Blocking',
       description: 'Blocks until released',
+      defaultConcurrency: 1,
+      parallelizable: false,
       run: (_ctx: PipelineContext): Promise<StageResult> => {
         return new Promise<StageResult>((resolve) => {
           resolveStage = () =>

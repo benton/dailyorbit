@@ -85,6 +85,7 @@ class PipelineRunner {
   private running: boolean = false;
   private currentRunId: string | null = null;
   private currentStageId: string | null = null;
+  private abortController: AbortController | null = null;
   private readonly stageStates: Map<string, StageState> = new Map();
   private readonly replayBuffers: Map<string, ReplayBuffer> = new Map();
 
@@ -117,14 +118,21 @@ class PipelineRunner {
     return this.replayBuffers.get(runId)?.getAll() ?? [];
   }
 
+  /** Stop the current pipeline run. In-flight items finish but no new work starts. */
+  stop(): boolean {
+    if (!this.running || this.abortController == null) return false;
+    this.abortController.abort();
+    return true;
+  }
+
   /**
    * Start a pipeline run with the given stage IDs.
    * Returns the run ID. Throws if a run is already active.
-   * @param concurrency — per-stage concurrency override (0 = use stage default)
+   * @param concurrencyOverrides — per-stage concurrency overrides (0 or absent = use stage default)
    */
   async start(
     stageIds: string[],
-    concurrency: number = 0,
+    concurrencyOverrides: Record<string, number> = {},
     triggeredBy: string = 'manual',
   ): Promise<string> {
     if (this.running) {
@@ -135,6 +143,7 @@ class PipelineRunner {
     this.running = true;
     this.currentRunId = runId;
     this.currentStageId = null;
+    this.abortController = new AbortController();
 
     const buffer = new ReplayBuffer();
     this.replayBuffers.set(runId, buffer);
@@ -145,20 +154,18 @@ class PipelineRunner {
     }
 
     // Run asynchronously — don't await
-    this.executeRun(runId, stageIds, buffer, concurrency, triggeredBy).catch(
-      (err: unknown) => {
-        const msg: string = err instanceof Error ? err.message : String(err);
-        this.emitLog(
-          buffer,
-          runId,
-          'runner',
-          'error',
-          `Unhandled error: ${msg}`,
-        );
-        this.running = false;
-        this.currentStageId = null;
-      },
-    );
+    this.executeRun(
+      runId,
+      stageIds,
+      buffer,
+      concurrencyOverrides,
+      triggeredBy,
+    ).catch((err: unknown) => {
+      const msg: string = err instanceof Error ? err.message : String(err);
+      this.emitLog(buffer, runId, 'runner', 'error', `Unhandled error: ${msg}`);
+      this.running = false;
+      this.currentStageId = null;
+    });
 
     return runId;
   }
@@ -169,7 +176,7 @@ class PipelineRunner {
     runId: string,
     stageIds: string[],
     buffer: ReplayBuffer,
-    concurrencyOverride: number = 0,
+    concurrencyOverrides: Record<string, number> = {},
     triggeredBy: string = 'manual',
   ): Promise<void> {
     const runStart: number = Date.now();
@@ -207,7 +214,22 @@ class PipelineRunner {
     const dbRunId: number = await insertPipelineRun(conn, triggeredBy);
 
     try {
+      const signal: AbortSignal = this.abortController!.signal;
+
       for (const stageId of stageIds) {
+        // Check if run was cancelled before starting next stage
+        if (signal.aborted) {
+          this.emitLog(
+            buffer,
+            runId,
+            stageId,
+            'info',
+            'Skipped (run cancelled)',
+          );
+          this.stageStates.set(stageId, { id: stageId, status: 'idle' });
+          continue;
+        }
+
         const stage = getStage(stageId);
         if (stage == null) {
           this.emitLog(
@@ -236,11 +258,10 @@ class PipelineRunner {
           stageId,
         );
 
-        // Resolve concurrency: explicit override > stage default > 1
+        // Resolve concurrency: per-stage override > stage default
+        const stageOverride: number = concurrencyOverrides[stageId] ?? 0;
         const effectiveConcurrency: number =
-          concurrencyOverride > 0
-            ? concurrencyOverride
-            : (stage.defaultConcurrency ?? 1);
+          stageOverride > 0 ? stageOverride : stage.defaultConcurrency;
 
         const ctx: PipelineContext = {
           db,
