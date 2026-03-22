@@ -42,6 +42,8 @@ export type PipelineStage = {
   defaultConcurrency: number;
   /** Whether this stage supports concurrency > 1. Controls UI input visibility. */
   parallelizable: boolean;
+  /** Whether this stage supports resetting failed matches. */
+  resettable?: boolean;
   run: (ctx: PipelineContext) => Promise<StageResult>;
 };
 
@@ -428,6 +430,7 @@ const STAGES: PipelineStage[] = [
     description: 'Match unattributed filings to company entities',
     defaultConcurrency: 1,
     parallelizable: false,
+    resettable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureCompanyTables, ensureCompanyFk } =
         await import('../companies/schema.ts');
@@ -455,6 +458,7 @@ const STAGES: PipelineStage[] = [
     description: 'Derive ownership events from T/C and ASG filings',
     defaultConcurrency: 1,
     parallelizable: false,
+    resettable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureCompanyTables, ensureCompanyFk } =
         await import('../companies/schema.ts');

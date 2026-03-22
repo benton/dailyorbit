@@ -33,6 +33,7 @@ pipelineRoutes.get('/status', (c) => {
     description: s.description,
     defaultConcurrency: s.defaultConcurrency,
     parallelizable: s.parallelizable,
+    resettable: s.resettable ?? false,
     status: state.stages[s.id]?.status ?? 'idle',
     lastResult: state.stages[s.id]?.lastResult ?? null,
     startedAt: state.stages[s.id]?.startedAt ?? null,
@@ -180,6 +181,39 @@ pipelineRoutes.get('/logs/:runId', (c) => {
       }
     });
   });
+});
+
+// ── POST /reset-matches/:stageId ────────────────────────────────────
+
+pipelineRoutes.post('/reset-matches/:stageId', async (c) => {
+  const stageId: string = c.req.param('stageId');
+
+  const RESET_QUERIES: Record<string, { count: string; update: string }> = {
+    'companies.attribute': {
+      count: `SELECT COUNT(*)::INTEGER AS cnt FROM filing WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+      update: `UPDATE filing SET company_match_attempted_at = NULL WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+    },
+    'companies.extract-ownership': {
+      count: `SELECT COUNT(*)::INTEGER AS cnt FROM filing WHERE ownership_match_attempted_at IS NOT NULL AND file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
+      update: `UPDATE filing SET ownership_match_attempted_at = NULL WHERE ownership_match_attempted_at IS NOT NULL AND file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
+    },
+  };
+
+  const queries = RESET_QUERIES[stageId];
+  if (queries == null) {
+    return c.json({ error: `Stage ${stageId} does not support reset` }, 400);
+  }
+
+  const db = await getDb();
+  const conn = await DuckDBConnection.create(db);
+  try {
+    const countReader = await conn.runAndReadAll(queries.count);
+    const affected: number = Number(countReader.getRowObjectsJS()[0]?.cnt ?? 0);
+    await conn.run(queries.update);
+    return c.json({ stageId, reset: affected });
+  } finally {
+    conn.closeSync();
+  }
 });
 
 // ── GET /history ──────────────────────────────────────────────────────
