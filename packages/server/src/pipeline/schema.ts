@@ -11,7 +11,7 @@ export async function ensurePipelineTrackingTables(
       finished_at   TIMESTAMP,
       status        VARCHAR NOT NULL DEFAULT 'running',
       triggered_by  VARCHAR NOT NULL DEFAULT 'manual',
-      mode          VARCHAR NOT NULL DEFAULT 'full',
+      mode          VARCHAR DEFAULT 'full',
       summary       VARCHAR
     );
 
@@ -32,6 +32,6 @@ export async function ensurePipelineTrackingTables(
 
   // Migration: add mode column to existing tables
   await conn.run(
-    `ALTER TABLE pipeline_run ADD COLUMN IF NOT EXISTS mode VARCHAR NOT NULL DEFAULT 'full'`,
+    `ALTER TABLE pipeline_run ADD COLUMN IF NOT EXISTS mode VARCHAR DEFAULT 'full'`,
   );
 }
