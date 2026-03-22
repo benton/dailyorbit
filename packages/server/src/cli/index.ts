@@ -10,6 +10,7 @@ import { newsCommand } from './news/index.ts';
 import { queryCommand } from './query/index.ts';
 import { searchCommand } from './search/index.ts';
 import { serveCommand } from './serve/index.ts';
+import { testCommand } from './test/index.ts';
 import { userCommand } from './user/index.ts';
 
 export const main = defineCommand({
@@ -29,6 +30,7 @@ export const main = defineCommand({
     query: queryCommand,
     search: searchCommand,
     serve: serveCommand,
+    test: testCommand,
     user: userCommand,
   },
 });
