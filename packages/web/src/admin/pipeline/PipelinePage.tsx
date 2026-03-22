@@ -23,6 +23,7 @@ type StageInfo = {
   id: string;
   name: string;
   parallelizable: boolean;
+  resettable: boolean;
   status: StageStatus;
 };
 
@@ -213,6 +214,27 @@ export default function PipelinePage() {
     }));
   }, []);
 
+  const handleReset = useCallback(async (stageId: string) => {
+    try {
+      const resp = await apiFetch<{ stageId: string; reset: number }>(
+        `/api/admin/pipeline/reset-matches/${stageId}`,
+        { method: 'POST' },
+      );
+      setLogLines((prev: Array<LogLine>) => [
+        ...prev,
+        {
+          runId: 'reset',
+          stage: stageId,
+          level: 'info' as const,
+          message: `Reset ${String(resp.reset)} failed match attempts — next run will retry them`,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Reset failed');
+    }
+  }, []);
+
   const handleClearLog = useCallback(() => {
     setLogLines([]);
   }, []);
@@ -279,6 +301,7 @@ export default function PipelinePage() {
               id: s.id,
               name: s.name,
               parallelizable: s.parallelizable,
+              resettable: s.resettable,
               status: s.status,
             }));
 
@@ -289,6 +312,7 @@ export default function PipelinePage() {
               key={group.id}
               name={group.name}
               onConcurrencyChange={handleConcurrencyChange}
+              onReset={(stageId: string) => void handleReset(stageId)}
               onRunAll={handleRunAll}
               onRunStage={handleRunStage}
               stages={groupStages}

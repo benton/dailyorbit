@@ -10,6 +10,7 @@ type StageInfo = {
   id: string;
   name: string;
   parallelizable: boolean;
+  resettable: boolean;
   status: StageStatus;
 };
 
@@ -18,6 +19,7 @@ type PipelineGroupProps = {
   isLast: boolean;
   name: string;
   onConcurrencyChange: (stageId: string, value: number) => void;
+  onReset: (stageId: string) => void;
   onRunAll: (stageIds: Array<string>) => void;
   onRunStage: (stageId: string) => void;
   stages: Array<StageInfo>;
@@ -28,6 +30,7 @@ export default function PipelineGroup({
   isLast,
   name,
   onConcurrencyChange,
+  onReset,
   onRunAll,
   onRunStage,
   stages,
@@ -81,8 +84,10 @@ export default function PipelineGroup({
               key={stage.id}
               name={stage.name}
               onConcurrencyChange={onConcurrencyChange}
+              onReset={onReset}
               onRun={onRunStage}
               parallelizable={stage.parallelizable}
+              resettable={stage.resettable}
               status={stage.status}
             />
           ))}

@@ -1,4 +1,4 @@
-import { Play, Loader2, CheckCircle2, XCircle, Circle } from 'lucide-react';
+import { Play, Loader2, CheckCircle2, XCircle, Circle, RotateCcw } from 'lucide-react';
 import { Badge } from '../../ui/badge.tsx';
 import { Button } from '../../ui/button.tsx';
 
@@ -11,8 +11,10 @@ type PipelineStepProps = {
   id: string;
   name: string;
   onConcurrencyChange: (stageId: string, value: number) => void;
+  onReset?: (stageId: string) => void;
   onRun: (stageId: string) => void;
   parallelizable: boolean;
+  resettable: boolean;
   status: StageStatus;
 };
 
@@ -53,8 +55,10 @@ export default function PipelineStep({
   id,
   name,
   onConcurrencyChange,
+  onReset,
   onRun,
   parallelizable,
+  resettable,
   status,
 }: PipelineStepProps) {
   const cfg = STATUS_CONFIG[status];
@@ -74,6 +78,21 @@ export default function PipelineStep({
       <Badge className="shrink-0" variant={cfg.variant}>
         {cfg.label}
       </Badge>
+
+      {/* Reset failed matches button (only for idle resettable stages) */}
+      {resettable && status === 'idle' && onReset != null && (
+        <Button
+          disabled={disabled}
+          onClick={() => onReset(id)}
+          size="sm"
+          title="Clear previously-failed match attempts so next run retries them"
+          type="button"
+          variant="ghost"
+        >
+          <RotateCcw className="mr-1 h-3 w-3" />
+          Reset failed
+        </Button>
+      )}
 
       {/* Per-stage concurrency input (only for parallelizable stages) */}
       {parallelizable && (
