@@ -2,7 +2,7 @@
 
 ## Overview
 
-A CLI command that "reverses time" by removing recently ingested filings and all dependent rows from the database, enabling fast and cheap manual (and eventually automated) testing of the monitoring and alerting pipeline.
+A CLI command and admin API that "reverses time" by removing recently ingested filings and all dependent rows from the database, enabling fast and cheap manual and automated testing of the monitoring and alerting pipeline.
 
 Physical attachment files on disk are never touched — only database rows are affected.
 
@@ -142,17 +142,69 @@ Done. Run './daily-orbit ingest ibfs' to re-ingest (will re-extract, re-summariz
 | `packages/server/src/cli/test/rewind.ts`   | CLI command definition                   |
 | `packages/server/src/test-utils/rewind.ts` | Core rewind logic (testable without CLI) |
 
-Core logic is separated from the CLI so it can be called from integration tests later.
+Core logic is separated from the CLI so it can be called from integration tests and the admin API.
 
 ---
 
-## Test Scenarios
+## Admin API
 
-These scenarios document how to use the rewind command to exercise the monitoring and alerting pipeline. Each scenario builds on the previous one and tests a distinct code path.
+The rewind operation is also exposed via admin API routes, enabling browser-based testing with Playwright while the app is running (and the DB is locked by the API server).
+
+### Endpoints
+
+| Method | Path                            | Description                            |
+| ------ | ------------------------------- | -------------------------------------- |
+| POST   | `/api/admin/test/rewind/plan`   | Dry-run: returns per-table counts      |
+| POST   | `/api/admin/test/rewind/execute`| Execute the rewind deletion            |
+
+Both endpoints accept the same JSON body:
+
+```json
+{
+  "since": "2026-03-20",  // or omit
+  "last": 20,             // mutually exclusive with since
+  "full": false           // optional, default false
+}
+```
+
+Response shape matches `RewindResult`:
+
+```json
+{
+  "scope": "20 most recently ingested filings",
+  "counts": [
+    { "table": "filing", "count": 20 },
+    { "table": "attachment", "count": 143 },
+    ...
+  ],
+  "fullCounts": [
+    { "table": "embedding", "count": 0 },
+    { "table": "FTS index", "count": "rebuild" }
+  ]
+}
+```
+
+### File Locations
+
+| File                                            | Purpose                                  |
+| ----------------------------------------------- | ---------------------------------------- |
+| `packages/server/src/cli/test/index.ts`         | `test` subcommand group                  |
+| `packages/server/src/cli/test/rewind.ts`        | CLI command definition                   |
+| `packages/server/src/test-utils/rewind.ts`      | Core rewind logic (testable without CLI) |
+| `packages/server/src/test-utils/routes.ts`      | Admin API routes for rewind              |
+
+---
+
+## Test Scenarios (Playwright-Automated)
+
+These scenarios use the Playwright MCP server to drive the admin UI and verify the monitoring/alerting pipeline. Each scenario builds on the previous one and tests a distinct code path.
+
+All scenarios assume the dev servers are running (`make dev`) and the user is logged in as an admin.
 
 ### Prerequisites
 
-- A user account exists in the database
+- Dev servers running (`make dev`)
+- Admin user logged in via Playwright browser session
 - At least one saved search exists with `alert_enabled=true` (e.g. "SpaceX SAT filings")
 - The database has filings that match the saved search criteria
 - AWS_PROFILE is configured for SES email delivery (for scenario 2)
@@ -161,36 +213,32 @@ These scenarios document how to use the rewind command to exercise the monitorin
 
 **Goal:** Verify that alert evaluation discovers re-ingested filings and creates content flags.
 
-**Steps:**
+**Playwright Steps:**
 
-1. Ensure `user_settings.email_daily_orbit = false` for the test user
-2. Note the current count of `user_content_flag` rows for reference
-3. Run: `./daily-orbit test rewind --last 20`
-4. Verify: 20 filings removed, all `alert_run` rows cleared
-5. Run: `./daily-orbit ingest ibfs` — re-discovers the 20 filings as new (`_first_seen_at` = now)
-6. Run: `./daily-orbit pipeline run alerts.evaluate`
-7. **Check:** `user_content_flag` rows exist with:
+1. Navigate to `/admin` settings and ensure email alerts are disabled for the test user
+2. Call `POST /api/admin/test/rewind/plan` with `{ "last": 20 }` — note the counts
+3. Call `POST /api/admin/test/rewind/execute` with `{ "last": 20 }` — verify 20 filings removed
+4. Navigate to the Admin Pipeline page
+5. Trigger the `ibfs.ingest` pipeline stage from the UI — wait for completion via SSE logs
+6. Trigger the `alerts.evaluate` pipeline stage from the UI — wait for completion
+7. **Check via API:** `GET /api/user/alerts/flagged` returns items with:
    - `source = 'alert'`
-   - Correct `saved_search_id` matching the enabled search
-   - `content_key` values are file numbers of matching re-ingested filings
-   - `emailed_at IS NULL`
-   - `dismissed_at IS NULL`
-8. **Check:** `alert_run` row exists with `items_matched > 0`, `items_flagged > 0`, `email_sent = false`
+   - `content_key` values matching re-ingested filing file numbers
+8. **Check via API:** `GET /api/user/alerts/unread-count` returns count > 0
 
 ### Scenario 2: Alert Email Delivery
 
 **Goal:** Verify that alert evaluation sends an email digest when the user has opted in.
 
-**Steps:**
+**Playwright Steps:**
 
-1. Set `user_settings.email_daily_orbit = true` for the test user (benton@bentonroberts.com)
-2. Run: `./daily-orbit test rewind --last 20`
-3. Run: `./daily-orbit ingest ibfs`
-4. Run: `./daily-orbit pipeline run alerts.evaluate`
-5. **Check:** `user_content_flag` rows have `emailed_at IS NOT NULL`
-6. **Check:** `alert_run` row has `email_sent = true`
-7. **Check:** Email arrives at benton@bentonroberts.com with:
-   - Subject: "Daily Orbit: N new items matching your alerts"
+1. Navigate to user settings and enable email alerts (`email_daily_orbit = true`)
+2. Call `POST /api/admin/test/rewind/execute` with `{ "last": 20 }`
+3. Trigger `ibfs.ingest` from the pipeline UI — wait for completion
+4. Trigger `alerts.evaluate` from the pipeline UI — wait for completion
+5. **Check via API:** `GET /api/user/alerts/flagged` — items should have `emailed_at` set
+6. **Check inbox:** Email arrives at benton@bentonroberts.com with:
+   - Subject containing "new items matching your alerts"
    - Body lists the saved search name and matching filings
    - Filing links point to the correct `/filings/:file_number` URLs
 
@@ -198,13 +246,13 @@ These scenarios document how to use the rewind command to exercise the monitorin
 
 **Goal:** Verify that running alert evaluation a second time does not re-flag or re-email already-processed filings.
 
-**Steps:**
+**Playwright Steps:**
 
 1. Complete scenario 1 or 2 (flags exist from a prior evaluation)
-2. Run: `./daily-orbit pipeline run alerts.evaluate` again — **without** rewinding
-3. **Check:** No new `user_content_flag` rows are created
-4. **Check:** New `alert_run` row exists with `items_matched = 0`, `items_flagged = 0`
-5. **Check:** No email is sent (if email was enabled)
+2. Note the current flag count via `GET /api/user/alerts/unread-count`
+3. Trigger `alerts.evaluate` from the pipeline UI again — **without** rewinding
+4. **Check:** `GET /api/user/alerts/unread-count` returns same count (no new flags)
+5. **Check:** No new email is sent (if email was enabled)
 
 **Why this works:** The evaluator uses the previous `alert_run.executed_at` as the watermark. Since no filings have `_first_seen_at` after that timestamp, zero results are returned.
 
@@ -212,22 +260,21 @@ These scenarios document how to use the rewind command to exercise the monitorin
 
 **Goal:** Verify that alert flags are correctly surfaced in the web UI.
 
-**Prerequisites:** Complete scenario 1 (active flags exist in the database). Start the dev servers with `make dev`.
+**Prerequisites:** Complete scenario 1 (active flags exist in the database).
 
-**Steps:**
+**Playwright Steps:**
 
-1. Open the app in a browser and log in
-2. **Nav bar badge:** Verify the alert count badge shows the correct number of unread flagged items
-3. **Alerts page (`/alerts`):** Navigate to the alerts page and verify:
+1. Navigate to the app home page
+2. **Nav bar badge:** Take a snapshot and verify the alert count badge shows unread flagged items > 0
+3. **Alerts page:** Navigate to `/alerts` and verify:
    - Flagged filings appear grouped by saved search name
    - Each item shows file number, applicant, date filed
    - Items link to the correct filing detail page
 4. **Dismiss a flag:** Click dismiss on one flagged item and verify:
    - The item disappears from the active list
    - The nav bar badge count decrements by 1
-   - The `user_content_flag` row has `dismissed_at IS NOT NULL`
-5. **Filing detail page:** Navigate to a flagged filing's detail page and verify:
+5. **Filing detail page:** Click through to a flagged filing's detail page and verify:
    - The flag indicator is visible
-   - After ~10 seconds, the filing is marked as read (`user_filing_view` row created)
-   - Returning to `/alerts`, the item still appears (flags are independent of view status)
-6. **Badge polling:** Wait 60 seconds and verify the badge count refreshes (polls `/api/user/alerts/unread-count`)
+   - Wait ~12 seconds, then verify the filing is marked as read (view count changes)
+   - Navigate back to `/alerts` — the item still appears (flags are independent of view status)
+6. **Badge polling:** Wait 60 seconds, take a snapshot, and verify the badge count refreshed

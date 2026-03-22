@@ -32,6 +32,7 @@ import {
   consultantAdminRoutes,
 } from './consultant/routes.ts';
 import { chatRoutes } from './chat/routes.ts';
+import { testAdminRoutes } from './test-utils/routes.ts';
 
 const app = new Hono();
 
@@ -102,6 +103,7 @@ app.route('/api/stats', publicStatsRoutes);
 app.route('/api/consultants', consultantRoutes);
 app.route('/api/conversations', chatRoutes);
 app.route('/api/admin/consultants', consultantAdminRoutes);
+app.route('/api/admin/test', testAdminRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
 // In development, Vite runs separately with hot-reload.
