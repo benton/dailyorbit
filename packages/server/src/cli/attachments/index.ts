@@ -3,6 +3,7 @@ import { discoverCommand } from './discover.ts';
 import { downloadCommand } from './download.ts';
 import { extractCommand } from './extract.ts';
 import { extractCookiesCommand } from './extract-cookies.ts';
+import { loginCommand } from './login.ts';
 import { resetCommand } from './reset.ts';
 import { syncCommand } from './sync.ts';
 import { validateCommand } from './validate.ts';
@@ -17,6 +18,7 @@ export const attachmentsCommand = defineCommand({
     download: downloadCommand,
     extract: extractCommand,
     'extract-cookies': extractCookiesCommand,
+    login: loginCommand,
     sync: syncCommand,
     validate: validateCommand,
     reset: resetCommand,
