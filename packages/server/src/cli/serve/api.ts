@@ -169,8 +169,43 @@ export const serveApiCommand = defineCommand({
 
     const { serve } = await import('@hono/node-server');
     const { default: app } = await import('../../app.ts');
-    serve({ fetch: app.fetch, port }, () => {
-      console.log(`Server running at http://localhost:${String(port)}`);
-    });
+
+    const tlsCert: string | undefined = process.env.TLS_CERT_PATH;
+    const tlsKey: string | undefined = process.env.TLS_KEY_PATH;
+
+    if (tlsCert && tlsKey) {
+      const { readFileSync } = await import('node:fs');
+      const { createServer: createHttpsServer } = await import('node:https');
+      const { Hono } = await import('hono');
+
+      serve(
+        {
+          fetch: app.fetch,
+          port: 443,
+          createServer: createHttpsServer,
+          serverOptions: {
+            cert: readFileSync(tlsCert),
+            key: readFileSync(tlsKey),
+          },
+        },
+        () => {
+          console.log('Server running at https://0.0.0.0:443');
+        },
+      );
+
+      // HTTP → HTTPS redirect on port 80
+      const redirect: InstanceType<typeof Hono> = new Hono();
+      redirect.all('*', (c) => {
+        const url: URL = new URL(c.req.url);
+        url.protocol = 'https:';
+        url.port = '';
+        return c.redirect(url.toString(), 301);
+      });
+      serve({ fetch: redirect.fetch, port: 80 });
+    } else {
+      serve({ fetch: app.fetch, port }, () => {
+        console.log(`Server running at http://localhost:${String(port)}`);
+      });
+    }
   },
 });

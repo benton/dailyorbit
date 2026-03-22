@@ -1,0 +1,17 @@
+{
+  "stackName": "daily-orbit-prod",
+  "domainName": "dailyorbit.org",
+  "certificateArn": "arn:aws:acm:us-east-1:123456789012:certificate/EXAMPLE-GUID",
+  "vpcId": null,
+  "instanceType": "r6id.xlarge",
+  "dbSnapshotBucket": "daily-orbit-backups",
+  "dbSnapshotKey": "db/latest.duckdb",
+  "ecrRepositoryName": "daily-orbit",
+  "containerTag": "latest",
+  "snapshotIntervalMinutes": 60,
+  "healthCheckPath": "/api/health",
+  "tags": {
+    "Project": "daily-orbit",
+    "Environment": "prod"
+  }
+}
