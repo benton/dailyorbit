@@ -57,23 +57,23 @@ export default function NewsPage() {
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState<boolean>(false);
 
-  const checkHiddenKeys = useCallback(
-    async (keys: Array<string>): Promise<void> => {
-      if (keys.length === 0) {
-        return;
-      }
-      try {
-        const result = await apiFetch<{ hidden: Array<string> }>('/api/user/hidden-items/bulk-check', {
+  const checkHiddenKeys = useCallback(async (keys: Array<string>): Promise<void> => {
+    if (keys.length === 0) {
+      return;
+    }
+    try {
+      const result = await apiFetch<{ hidden: Array<string> }>(
+        '/api/user/hidden-items/bulk-check',
+        {
           body: JSON.stringify({ content_keys: keys, content_type: 'news' }),
           method: 'POST',
-        });
-        setHiddenKeys(new Set(result.hidden));
-      } catch {
-        // Silently ignore — hidden state is non-critical
-      }
-    },
-    [],
-  );
+        },
+      );
+      setHiddenKeys(new Set(result.hidden));
+    } catch {
+      // Silently ignore — hidden state is non-critical
+    }
+  }, []);
 
   const fetchNews = useCallback(
     async (params: DataTableFetchParams): Promise<PaginatedResponse<NewsListItem>> => {
@@ -90,7 +90,9 @@ export default function NewsPage() {
       if (showHidden) {
         parts.push('show_hidden=true');
       }
-      const result = await apiFetch<PaginatedResponse<NewsListItem>>(`/api/news?${parts.join('&')}`);
+      const result = await apiFetch<PaginatedResponse<NewsListItem>>(
+        `/api/news?${parts.join('&')}`,
+      );
       const keys: Array<string> = result.data.map((r: NewsListItem) => String(r.id));
       void checkHiddenKeys(keys);
       return result;

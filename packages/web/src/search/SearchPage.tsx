@@ -1124,10 +1124,13 @@ export default function SearchPage() {
         return;
       }
       try {
-        const result = await apiFetch<{ hidden: Array<string> }>('/api/user/hidden-items/bulk-check', {
-          body: JSON.stringify({ content_keys: keys, content_type: contentType }),
-          method: 'POST',
-        });
+        const result = await apiFetch<{ hidden: Array<string> }>(
+          '/api/user/hidden-items/bulk-check',
+          {
+            body: JSON.stringify({ content_keys: keys, content_type: contentType }),
+            method: 'POST',
+          },
+        );
         setHiddenKeys(new Set(result.hidden));
       } catch {
         // Silently ignore — hidden state is non-critical
@@ -1241,7 +1244,15 @@ export default function SearchPage() {
       return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentQuery, searchMode, filingFilters, searchTrigger, showHidden, checkFlaggedKeys, checkHiddenKeys],
+    [
+      contentQuery,
+      searchMode,
+      filingFilters,
+      searchTrigger,
+      showHidden,
+      checkFlaggedKeys,
+      checkHiddenKeys,
+    ],
   );
 
   // Row click handlers
@@ -1365,7 +1376,15 @@ export default function SearchPage() {
       size: 80,
     };
     return [selectCol, ...filingColumns, flagCol, hideCol];
-  }, [flaggedKeys, hiddenKeys, showHidden, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+  }, [
+    flaggedKeys,
+    hiddenKeys,
+    showHidden,
+    selectedKeys,
+    lastPageKeys,
+    toggleSelected,
+    toggleSelectAll,
+  ]);
 
   const satelliteCols = useMemo(() => satelliteColumns, []);
   const earthStationCols = useMemo(() => earthStationColumns, []);
@@ -1450,7 +1469,15 @@ export default function SearchPage() {
       size: 80,
     };
     return [selectCol, ...contentColumns, flagCol, hideCol];
-  }, [flaggedKeys, hiddenKeys, showHidden, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+  }, [
+    flaggedKeys,
+    hiddenKeys,
+    showHidden,
+    selectedKeys,
+    lastPageKeys,
+    toggleSelected,
+    toggleSelectAll,
+  ]);
 
   return (
     <div className="space-y-4">

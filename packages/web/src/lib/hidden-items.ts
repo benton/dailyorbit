@@ -39,9 +39,7 @@ export async function unhideAll(): Promise<number> {
 }
 
 /** List active user-scope hidden items. */
-export async function listHiddenItems(
-  contentType: string,
-): Promise<
+export async function listHiddenItems(contentType: string): Promise<
   Array<{
     content_key: string;
     content_type: string;

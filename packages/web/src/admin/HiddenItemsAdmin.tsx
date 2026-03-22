@@ -24,6 +24,20 @@ const EMPTY_FORM: HideForm = {
   reason: '',
 };
 
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleString();
+}
+
+function contentLink(type: string, key: string): string {
+  if (type === 'filing') {
+    return `/filings/${encodeURIComponent(key)}`;
+  }
+  if (type === 'news') {
+    return `/news/${encodeURIComponent(key)}`;
+  }
+  return '#';
+}
+
 export default function HiddenItemsAdmin() {
   const [filingItems, setFilingItems] = useState<Array<HiddenItemRow>>([]);
   const [newsItems, setNewsItems] = useState<Array<HiddenItemRow>>([]);
@@ -84,20 +98,6 @@ export default function HiddenItemsAdmin() {
     } finally {
       setUnhidingId(null);
     }
-  };
-
-  const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleString();
-  };
-
-  const contentLink = (type: string, key: string): string => {
-    if (type === 'filing') {
-      return `/filings/${encodeURIComponent(key)}`;
-    }
-    if (type === 'news') {
-      return `/news/${encodeURIComponent(key)}`;
-    }
-    return '#';
   };
 
   const allItems: Array<HiddenItemRow> = [...filingItems, ...newsItems];
@@ -197,7 +197,9 @@ export default function HiddenItemsAdmin() {
                 <td className="px-3 py-2 text-xs text-neutral-500">
                   {item.scope === 'system' ? 'System' : item.user_id}
                 </td>
-                <td className="px-3 py-2 text-xs text-neutral-500">{formatDate(item.created_at)}</td>
+                <td className="px-3 py-2 text-xs text-neutral-500">
+                  {formatDate(item.created_at)}
+                </td>
                 <td className="px-3 py-2">
                   <button
                     className="text-xs text-red-600 hover:underline disabled:text-neutral-400"

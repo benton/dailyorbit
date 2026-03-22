@@ -10,12 +10,7 @@ type HideToggleProps = {
   onToggle?: (nowHidden: boolean) => void;
 };
 
-export function HideToggle({
-  contentKey,
-  contentType,
-  initialHidden,
-  onToggle,
-}: HideToggleProps) {
+export function HideToggle({ contentKey, contentType, initialHidden, onToggle }: HideToggleProps) {
   const [hidden, setHidden] = useState<boolean>(initialHidden);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -48,7 +43,9 @@ export function HideToggle({
     <button
       className={cn(
         'rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700',
-        hidden ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-300 dark:text-neutral-600',
+        hidden
+          ? 'text-neutral-400 dark:text-neutral-500'
+          : 'text-neutral-300 dark:text-neutral-600',
       )}
       disabled={loading}
       onClick={(e) => {
@@ -58,11 +55,7 @@ export function HideToggle({
       title={hidden ? 'Unhide' : 'Hide'}
       type="button"
     >
-      {hidden ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
+      {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
     </button>
   );
 }
