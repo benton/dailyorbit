@@ -14,7 +14,9 @@ type FlaggedItem = {
 };
 
 function contentUrl(flag: FlaggedItem): string {
-  if (flag.content_type === 'filing') {return `/filings/${flag.content_key}`;}
+  if (flag.content_type === 'filing') {
+    return `/filings/${flag.content_key}`;
+  }
   return `/news/${flag.content_key}`;
 }
 
@@ -55,7 +57,9 @@ export default function AlertsPage() {
     const map: Map<string, Array<FlaggedItem>> = new Map();
     for (const flag of flags) {
       const key: string = flag.search_name ?? 'Manual flags';
-      if (!map.has(key)) {map.set(key, []);}
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
       map.get(key)!.push(flag);
     }
     return map;

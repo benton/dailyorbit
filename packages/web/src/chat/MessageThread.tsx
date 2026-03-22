@@ -14,7 +14,9 @@ type Props = {
 
 function SourcesList({ sources }: { sources: Array<RetrievedSource> }) {
   const [expanded, setExpanded] = useState<boolean>(false);
-  if (sources.length === 0) {return null;}
+  if (sources.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-2">
@@ -94,7 +96,8 @@ export default function MessageThread({
               <div className="flex items-center gap-2 py-2 text-xs text-neutral-400">
                 <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
                 <span>
-                  Switched to {switchedConsultant.icon ?? ''} {switchedConsultant.name ?? 'another consultant'}
+                  Switched to {switchedConsultant.icon ?? ''}{' '}
+                  {switchedConsultant.name ?? 'another consultant'}
                 </span>
                 <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
               </div>

@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import type { QueryUsage, RetrievedSource } from '../query/types.ts';
 import type { ChatSSEEvent } from './types.ts';
-import { parseChatSSEData } from './parse-sse.ts';
 import env from '../lib/env.tsx';
+import { parseChatSSEData } from './parse-sse.ts';
 
 export { parseChatSSEData } from './parse-sse.ts';
 

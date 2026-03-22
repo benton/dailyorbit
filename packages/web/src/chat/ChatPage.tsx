@@ -57,14 +57,18 @@ function ChatPageInner() {
 
   // Load conversation messages when active changes
   useEffect(() => {
-    if (activeConvId == null) {return;}
+    if (activeConvId == null) {
+      return;
+    }
     void (async () => {
       try {
         const conv = await fetchConversation(activeConvId);
         setMessages(conv.messages);
         // Set consultant to match conversation's current consultant
         const consultant: Consultant | undefined = consultantMap.get(conv.consultantId);
-        if (consultant != null) {setSelectedConsultant(consultant);}
+        if (consultant != null) {
+          setSelectedConsultant(consultant);
+        }
       } catch (error: unknown) {
         const msg: string = error instanceof Error ? error.message : 'Failed to load conversation';
         toast(msg, 'error');
@@ -74,8 +78,12 @@ function ChatPageInner() {
 
   // When streaming completes, refresh messages and conversation list
   useEffect(() => {
-    if (streamState.status !== 'done') {return;}
-    if (activeConvId == null) {return;}
+    if (streamState.status !== 'done') {
+      return;
+    }
+    if (activeConvId == null) {
+      return;
+    }
     void (async () => {
       const conv = await fetchConversation(activeConvId);
       setMessages(conv.messages);
@@ -106,7 +114,9 @@ function ChatPageInner() {
   // Handle sending a message
   const handleSend = useCallback(
     async (content: string) => {
-      if (selectedConsultant == null) {return;}
+      if (selectedConsultant == null) {
+        return;
+      }
 
       let convId: string = activeConvId ?? '';
 
@@ -119,7 +129,8 @@ function ChatPageInner() {
           setIsNewConversation(false);
           setConversations((prev) => [conv, ...prev]);
         } catch (error: unknown) {
-          const msg: string = error instanceof Error ? error.message : 'Failed to create conversation';
+          const msg: string =
+            error instanceof Error ? error.message : 'Failed to create conversation';
           toast(msg, 'error');
           return;
         }
@@ -164,11 +175,15 @@ function ChatPageInner() {
   // Handle delete
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!window.confirm('Delete this conversation?')) {return;}
+      if (!window.confirm('Delete this conversation?')) {
+        return;
+      }
       try {
         await deleteConversation(id);
         setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeConvId === id) {handleNew();}
+        if (activeConvId === id) {
+          handleNew();
+        }
       } catch (error: unknown) {
         const msg: string = error instanceof Error ? error.message : 'Delete failed';
         toast(msg, 'error');
