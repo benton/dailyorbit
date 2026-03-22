@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import DOMPurify from 'dompurify';
-import { Bookmark, ChevronDown, ChevronRight, EyeOff, Flag, Search } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronRight, Eye, EyeOff, Flag, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -985,6 +985,9 @@ export default function SearchPage() {
   // Trigger counter to force DataTable refetch when filters change on search
   const [searchTrigger, setSearchTrigger] = useState<number>(0);
 
+  // Show hidden items toggle
+  const [showHidden, setShowHidden] = useState<boolean>(false);
+
   const switchTab = useCallback(
     (tab: SearchTab) => {
       setSearchParams((prev: URLSearchParams) => {
@@ -1155,8 +1158,9 @@ export default function SearchPage() {
   const fetchFilings = useCallback(
     async (params: DataTableFetchParams): Promise<PaginatedResponse<FilingSearchResult>> => {
       const qs: string = buildFilingQueryString(filingFilters, params);
+      const hiddenParam: string = showHidden ? '&show_hidden=true' : '';
       const result = await apiFetch<PaginatedResponse<FilingSearchResult>>(
-        `/api/search/filings?${qs}`,
+        `/api/search/filings?${qs}${hiddenParam}`,
       );
       const keys: Array<string> = result.data.map((r: FilingSearchResult) => r.file_number);
       setLastPageKeys(keys);
@@ -1166,7 +1170,7 @@ export default function SearchPage() {
       return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filingFilters, searchTrigger, checkFlaggedKeys, checkHiddenKeys],
+    [filingFilters, searchTrigger, showHidden, checkFlaggedKeys, checkHiddenKeys],
   );
 
   const fetchSatellites = useCallback(
@@ -1223,6 +1227,9 @@ export default function SearchPage() {
       if (filingFilters.company.trim() !== '') {
         parts.push(`company=${encodeURIComponent(filingFilters.company.trim())}`);
       }
+      if (showHidden) {
+        parts.push('show_hidden=true');
+      }
       const result = await apiFetch<PaginatedResponse<ContentSearchResult>>(
         `/api/search/content?${parts.join('&')}`,
       );
@@ -1234,7 +1241,7 @@ export default function SearchPage() {
       return result;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentQuery, searchMode, filingFilters, searchTrigger, checkFlaggedKeys, checkHiddenKeys],
+    [contentQuery, searchMode, filingFilters, searchTrigger, showHidden, checkFlaggedKeys, checkHiddenKeys],
   );
 
   // Row click handlers
@@ -1325,30 +1332,40 @@ export default function SearchPage() {
       size: 40,
     };
     const hideCol: ColumnDef<FilingSearchResult, unknown> = {
-      cell: ({ row }) => (
-        <HideToggle
-          contentKey={row.original.file_number}
-          contentType="filing"
-          initialHidden={hiddenKeys.has(row.original.file_number)}
-          onToggle={(nowHidden: boolean) => {
-            setHiddenKeys((prev: Set<string>) => {
-              const next: Set<string> = new Set(prev);
-              if (nowHidden) {
-                next.add(row.original.file_number);
-              } else {
-                next.delete(row.original.file_number);
-              }
-              return next;
-            });
-          }}
-        />
-      ),
+      cell: ({ row }) => {
+        const isHidden: boolean = hiddenKeys.has(row.original.file_number);
+        return (
+          <div className="flex items-center gap-1">
+            <HideToggle
+              contentKey={row.original.file_number}
+              contentType="filing"
+              initialHidden={isHidden}
+              onToggle={(nowHidden: boolean) => {
+                setHiddenKeys((prev: Set<string>) => {
+                  const next: Set<string> = new Set(prev);
+                  if (nowHidden) {
+                    next.add(row.original.file_number);
+                  } else {
+                    next.delete(row.original.file_number);
+                  }
+                  return next;
+                });
+              }}
+            />
+            {showHidden && isHidden && (
+              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+                Hidden
+              </span>
+            )}
+          </div>
+        );
+      },
       header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
       id: 'hide',
-      size: 40,
+      size: 80,
     };
     return [selectCol, ...filingColumns, flagCol, hideCol];
-  }, [flaggedKeys, hiddenKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+  }, [flaggedKeys, hiddenKeys, showHidden, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
 
   const satelliteCols = useMemo(() => satelliteColumns, []);
   const earthStationCols = useMemo(() => earthStationColumns, []);
@@ -1400,30 +1417,40 @@ export default function SearchPage() {
       size: 40,
     };
     const hideCol: ColumnDef<ContentSearchResult, unknown> = {
-      cell: ({ row }) => (
-        <HideToggle
-          contentKey={row.original.file_number}
-          contentType="filing"
-          initialHidden={hiddenKeys.has(row.original.file_number)}
-          onToggle={(nowHidden: boolean) => {
-            setHiddenKeys((prev: Set<string>) => {
-              const next: Set<string> = new Set(prev);
-              if (nowHidden) {
-                next.add(row.original.file_number);
-              } else {
-                next.delete(row.original.file_number);
-              }
-              return next;
-            });
-          }}
-        />
-      ),
+      cell: ({ row }) => {
+        const isHidden: boolean = hiddenKeys.has(row.original.file_number);
+        return (
+          <div className="flex items-center gap-1">
+            <HideToggle
+              contentKey={row.original.file_number}
+              contentType="filing"
+              initialHidden={isHidden}
+              onToggle={(nowHidden: boolean) => {
+                setHiddenKeys((prev: Set<string>) => {
+                  const next: Set<string> = new Set(prev);
+                  if (nowHidden) {
+                    next.add(row.original.file_number);
+                  } else {
+                    next.delete(row.original.file_number);
+                  }
+                  return next;
+                });
+              }}
+            />
+            {showHidden && isHidden && (
+              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+                Hidden
+              </span>
+            )}
+          </div>
+        );
+      },
       header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
       id: 'hide',
-      size: 40,
+      size: 80,
     };
     return [selectCol, ...contentColumns, flagCol, hideCol];
-  }, [flaggedKeys, hiddenKeys, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
+  }, [flaggedKeys, hiddenKeys, showHidden, selectedKeys, lastPageKeys, toggleSelected, toggleSelectAll]);
 
   return (
     <div className="space-y-4">
@@ -1506,7 +1533,7 @@ export default function SearchPage() {
                 onChange={setEarthStationFilters}
               />
             )}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Button onClick={handleSearch} size="sm">
                 Search
               </Button>
@@ -1519,6 +1546,15 @@ export default function SearchPage() {
                   Save Search
                 </Button>
               )}
+              <label className="ml-4 flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+                <input
+                  checked={showHidden}
+                  onChange={(e) => setShowHidden(e.target.checked)}
+                  type="checkbox"
+                />
+                <Eye className="h-3.5 w-3.5" />
+                Show hidden items
+              </label>
             </div>
           </div>
         )}
