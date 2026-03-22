@@ -336,7 +336,11 @@ const STAGES: PipelineStage[] = [
             const text: string = String(row.full_text);
             const sourceKey: string = String(row.source_key);
             const textChecksum: string = computeTextChecksum(text);
-            const chunks: string[] = splitText(text, EMBEDDING_MAX_CHARS, EMBEDDING_OVERLAP);
+            const chunks: string[] = splitText(
+              text,
+              EMBEDDING_MAX_CHARS,
+              EMBEDDING_OVERLAP,
+            );
 
             // Delete existing embeddings
             await conn.run(

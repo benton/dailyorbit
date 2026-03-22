@@ -17,7 +17,7 @@ export default function ChatCostBadge({ costCents }: ChatCostBadgeProps) {
   if (costCents <= 0) return null;
 
   return (
-    <span className="inline-block text-xs text-neutral-400 dark:text-neutral-500 tabular-nums">
+    <span className="inline-block text-xs text-neutral-400 tabular-nums dark:text-neutral-500">
       {formatCostCents(costCents)}
     </span>
   );

@@ -104,7 +104,9 @@ function ChatPageInner() {
 
   // Live-update cost from SSE usage events during streaming
   useEffect(() => {
-    if (streamState.usage?.costCents == null) {return;}
+    if (streamState.usage?.costCents == null) {
+      return;
+    }
     setDisplayCostCents(baseCostRef.current + streamState.usage.costCents);
   }, [streamState.usage]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -249,18 +251,18 @@ function ChatPageInner() {
           </div>
         ) : (
           <>
-          {/* Cost badge header */}
-          <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-1 dark:border-neutral-800">
-            <ChatCostBadge costCents={displayCostCents} />
-          </div>
-          {/* Message thread */}
-          <MessageThread
-            consultants={consultantMap}
-            isStreaming={isStreaming}
-            messages={messages}
-            streamingAnswer={streamState.answer}
-            streamingSources={streamState.sources}
-          />
+            {/* Cost badge header */}
+            <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-1 dark:border-neutral-800">
+              <ChatCostBadge costCents={displayCostCents} />
+            </div>
+            {/* Message thread */}
+            <MessageThread
+              consultants={consultantMap}
+              isStreaming={isStreaming}
+              messages={messages}
+              streamingAnswer={streamState.answer}
+              streamingSources={streamState.sources}
+            />
           </>
         )}
 
