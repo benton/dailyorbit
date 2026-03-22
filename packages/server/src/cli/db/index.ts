@@ -1,4 +1,5 @@
 import { defineCommand } from 'citty';
+import { checkpointCommand } from './checkpoint.ts';
 import { queryCommand } from './query.ts';
 import { remediateHtmlCommand } from './remediate-html.ts';
 
@@ -8,6 +9,7 @@ export const dbCommand = defineCommand({
     description: 'Database utility commands',
   },
   subCommands: {
+    checkpoint: checkpointCommand,
     query: queryCommand,
     'remediate-html': remediateHtmlCommand,
   },

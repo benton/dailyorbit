@@ -1,5 +1,6 @@
 packages:
   - "packages/*"
+  - "deploy"
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
