@@ -23,6 +23,8 @@ export type PipelineContext = {
   conn: DuckDBConnection;
   concurrency: number;
   signal: AbortSignal;
+  mode: 'probe' | 'full';
+  pipelineRunId: number;
   log: (level: 'info' | 'error' | 'progress', message: string) => void;
   onProgress: (processed: number, total: number) => void;
 };
@@ -46,6 +48,100 @@ export type PipelineStage = {
   resettable?: boolean;
   run: (ctx: PipelineContext) => Promise<StageResult>;
 };
+
+// ── Alert stage factory ─────────────────────────────────────────────
+
+type AlertSearchType = 'metadata' | 'keyword' | 'semantic';
+
+const ALERT_STAGE_DEFS: Array<{
+  id: string;
+  name: string;
+  searchType: AlertSearchType;
+  description: string;
+}> = [
+  {
+    id: 'alerts.evaluate-metadata',
+    name: 'Evaluate Metadata Alerts',
+    searchType: 'metadata',
+    description:
+      'Evaluate metadata-only saved searches (applicant, subsystem, file number)',
+  },
+  {
+    id: 'alerts.evaluate-semantic',
+    name: 'Evaluate Semantic Alerts',
+    searchType: 'semantic',
+    description: 'Evaluate semantic/vector similarity saved searches',
+  },
+  {
+    id: 'alerts.evaluate-keyword',
+    name: 'Evaluate Keyword Alerts',
+    searchType: 'keyword',
+    description: 'Evaluate keyword/FTS-based saved searches',
+  },
+];
+
+function makeAlertStage(searchType: AlertSearchType): PipelineStage {
+  const def = ALERT_STAGE_DEFS.find((d) => d.searchType === searchType)!;
+  return {
+    id: def.id,
+    group: 'alerts',
+    name: def.name,
+    description: def.description,
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureAlertTables } = await import('../alerts/schema.ts');
+      const { evaluateAlertsWithEmail } =
+        await import('../alerts/evaluator.ts');
+      const { ensureSavedSearchTables } =
+        await import('../saved-search/schema.ts');
+      const { ensureContentFlagTables } =
+        await import('../content-flag/schema.ts');
+      const { ensureViewingHistoryTables } =
+        await import('../viewing-history/schema.ts');
+      const { createEmailService } = await import('../email/email-service.ts');
+      const start: number = Date.now();
+
+      await ensureAlertTables(ctx.conn);
+      await ensureSavedSearchTables(ctx.conn);
+      await ensureContentFlagTables(ctx.conn);
+      await ensureViewingHistoryTables(ctx.conn);
+
+      const emailTransport: string =
+        process.env.NODE_ENV === 'production' ? 'ses' : 'test';
+      const emailService = createEmailService({
+        transport: emailTransport as 'ses' | 'test',
+        region: process.env.AWS_REGION ?? 'us-east-2',
+        senderAddress:
+          process.env.ALERT_SENDER_ADDRESS ??
+          'alerts@daily-orbit.example.com',
+      });
+      const baseUrl: string =
+        process.env.APP_BASE_URL ?? 'http://localhost:5173';
+
+      const result = await evaluateAlertsWithEmail(
+        ctx.conn,
+        ctx.pipelineRunId,
+        emailService,
+        baseUrl,
+        def.searchType,
+      );
+
+      ctx.log(
+        'info',
+        `[${def.searchType}] Evaluated ${String(result.searchesEvaluated)} searches: ${String(result.totalMatched)} matched, ${String(result.totalFlagged)} flagged, ${String(result.emailsSent)} emails sent`,
+      );
+
+      return {
+        itemsDiscovered: result.totalMatched,
+        itemsProcessed: result.searchesEvaluated,
+        itemsFailed: result.errors,
+        durationMs: Date.now() - start,
+        summary: `${String(result.searchesEvaluated)} ${def.searchType} searches, ${String(result.totalMatched)} matches, ${String(result.totalFlagged)} flagged`,
+      };
+    },
+  };
+}
 
 // ── Stage definitions ───────────────────────────────────────────────
 
@@ -74,6 +170,8 @@ const STAGES: PipelineStage[] = [
         dateFrom,
         dateTo,
         concurrency: ctx.concurrency,
+        skipKnown: ctx.mode === 'probe',
+        pipelineRunId: ctx.pipelineRunId,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
@@ -85,6 +183,9 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+
+  // ── Alerts: metadata (after ingest.icfs) ────────────────────────
+  makeAlertStage('metadata'),
 
   // ── Attachments ─────────────────────────────────────────────────
   {
@@ -408,6 +509,9 @@ const STAGES: PipelineStage[] = [
     },
   },
 
+  // ── Alerts: semantic (after attachments.embed) ──────────────────
+  makeAlertStage('semantic'),
+
   // ── Companies ───────────────────────────────────────────────────
   {
     id: 'companies.seed',
@@ -705,73 +809,8 @@ const STAGES: PipelineStage[] = [
     },
   },
 
-  // ── Alerts ───────────────────────────────────────────────────
-  {
-    id: 'alerts.evaluate',
-    group: 'alerts',
-    name: 'Evaluate Alerts',
-    description:
-      'Run alert-enabled saved searches against newly ingested content',
-    defaultConcurrency: 1,
-    parallelizable: false,
-    async run(ctx: PipelineContext): Promise<StageResult> {
-      const { ensureAlertTables } = await import('../alerts/schema.ts');
-      const { evaluateAlertsWithEmail } =
-        await import('../alerts/evaluator.ts');
-      const { ensureSavedSearchTables } =
-        await import('../saved-search/schema.ts');
-      const { ensureContentFlagTables } =
-        await import('../content-flag/schema.ts');
-      const { ensureViewingHistoryTables } =
-        await import('../viewing-history/schema.ts');
-      const { getRecentRuns } =
-        await import('../pipeline/tracking-repository.ts');
-      const { createEmailService } = await import('../email/email-service.ts');
-      const start: number = Date.now();
-
-      await ensureAlertTables(ctx.conn);
-      await ensureSavedSearchTables(ctx.conn);
-      await ensureContentFlagTables(ctx.conn);
-      await ensureViewingHistoryTables(ctx.conn);
-
-      // Determine the pipeline run ID from the most recent tracking record
-      const recentRuns = await getRecentRuns(ctx.conn, 1);
-      const pipelineRunId: number =
-        recentRuns.length > 0 ? recentRuns[0]!.id : 0;
-
-      // Create email service — SES in production, test transport otherwise
-      const emailTransport: string =
-        process.env.NODE_ENV === 'production' ? 'ses' : 'test';
-      const emailService = createEmailService({
-        transport: emailTransport as 'ses' | 'test',
-        region: process.env.AWS_REGION ?? 'us-east-2',
-        senderAddress:
-          process.env.ALERT_SENDER_ADDRESS ?? 'alerts@daily-orbit.example.com',
-      });
-      const baseUrl: string =
-        process.env.APP_BASE_URL ?? 'http://localhost:5173';
-
-      const result = await evaluateAlertsWithEmail(
-        ctx.conn,
-        pipelineRunId,
-        emailService,
-        baseUrl,
-      );
-
-      ctx.log(
-        'info',
-        `Evaluated ${String(result.searchesEvaluated)} searches: ${String(result.totalMatched)} matched, ${String(result.totalFlagged)} flagged, ${String(result.emailsSent)} emails sent`,
-      );
-
-      return {
-        itemsDiscovered: result.totalMatched,
-        itemsProcessed: result.searchesEvaluated,
-        itemsFailed: result.errors,
-        durationMs: Date.now() - start,
-        summary: `${String(result.searchesEvaluated)} searches, ${String(result.totalMatched)} matches, ${String(result.totalFlagged)} flagged, ${String(result.emailsSent)} emails`,
-      };
-    },
-  },
+  // ── Alerts: keyword (after search.rebuild-index) ────────────
+  makeAlertStage('keyword'),
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -811,7 +850,15 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
     ],
   },
   { id: 'search', name: 'Search', stageIds: ['search.rebuild-index'] },
-  { id: 'alerts', name: 'Alerts', stageIds: ['alerts.evaluate'] },
+  {
+    id: 'alerts',
+    name: 'Alerts',
+    stageIds: [
+      'alerts.evaluate-metadata',
+      'alerts.evaluate-semantic',
+      'alerts.evaluate-keyword',
+    ],
+  },
 ];
 
 // ── Lookup helpers ──────────────────────────────────────────────────

@@ -11,6 +11,7 @@ export async function ensurePipelineTrackingTables(
       finished_at   TIMESTAMP,
       status        VARCHAR NOT NULL DEFAULT 'running',
       triggered_by  VARCHAR NOT NULL DEFAULT 'manual',
+      mode          VARCHAR NOT NULL DEFAULT 'full',
       summary       VARCHAR
     );
 

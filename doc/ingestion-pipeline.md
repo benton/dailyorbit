@@ -6,7 +6,139 @@
 
 Daily Orbit maintains a multi-stage pipeline that transforms raw FCC filing data and industry news into an enriched, company-attributed, searchable dataset. The pipeline draws from two primary government data sources (IBFS legacy and ICFS live), discovers and downloads binary attachments, validates their actual content types via file-magic detection, extracts full text from PDF, HTML, text, and CSV attachments, generates LLM-powered summaries via AWS Bedrock, attributes filings to canonical company entities, extracts ownership-change events, enriches company records from external registries, and ingests industry news articles from RSS/Atom feeds.
 
-All pipeline stages are **idempotent** and designed to run nightly.
+All pipeline stages are **idempotent**. The pipeline supports two execution modes:
+
+- **Probe** — lightweight check every ~60 seconds; short-circuits if no new filings are discovered
+- **Full refresh** — complete pipeline run every ~15 minutes, processing all pending work across all stages
+
+A built-in **PipelineScheduler** manages both timers automatically from the admin UI.
+
+---
+
+## Two-Tier Scheduling Model
+
+The pipeline runs in two alternating modes managed by the **PipelineScheduler**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     PipelineScheduler                            │
+│                                                                  │
+│  Probe Timer (every ~60s)          Refresh Timer (every ~15min) │
+│  ┌───────────────────────┐         ┌──────────────────────────┐ │
+│  │ 1. Ingest ICFS        │         │ All pipeline stages      │ │
+│  │    (skipKnown=true)   │         │ (full mode, all work)    │ │
+│  │ 2. If 0 new → STOP   │         │                          │ │
+│  │ 3. Alert: metadata    │         │ Including all 3 alert    │ │
+│  │    (if new filings)   │         │ evaluation points        │ │
+│  └───────────────────────┘         └──────────────────────────┘ │
+│                                                                  │
+│  Skip rules:                                                     │
+│  • Skip probe if any run is in progress                         │
+│  • Skip probe while refresh is running                          │
+│  • Skip refresh if any run is in progress                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Probe mode (`mode = 'probe'`)
+
+1. Runs the ICFS ingest stage with `skipKnown = true` — filters discovered file numbers against the DB, only fetches truly new ones
+2. Saves a **discovery snapshot** (SHA-256 hash of sorted/deduped file numbers) to the `discovery_snapshot` table
+3. If `itemsProcessed === 0` (no new filings), the probe **short-circuits** — remaining stages are skipped
+4. If new filings were ingested, runs the `alerts.evaluate-metadata` stage to check metadata-only saved searches
+
+### Full refresh mode (`mode = 'full'`)
+
+Runs all pipeline stages in order, including all three alert evaluation points. Does not use `skipKnown` — processes all pending work.
+
+### Scheduler API
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/admin/pipeline/scheduler` | Current scheduler status |
+| `POST` | `/api/admin/pipeline/scheduler/start` | Start scheduler with optional `probeIntervalMs`, `refreshIntervalMs` |
+| `POST` | `/api/admin/pipeline/scheduler/stop` | Stop scheduler (does not cancel in-flight runs) |
+
+### Admin UI
+
+The Pipeline admin page includes a **Scheduler Panel** at the top with:
+- Start/Stop toggle
+- Configurable probe interval (seconds) and refresh interval (minutes)
+- Last probe/refresh timestamps with duration and stage count
+- Next scheduled probe/refresh times
+- Refresh-in-progress indicator
+
+---
+
+## Discovery Snapshot
+
+Each ICFS ingest (probe or full) records a **discovery snapshot** — a fingerprint of all file numbers returned by the discovery query.
+
+### `discovery_snapshot` table
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER (auto) | Primary key |
+| `snapshot_hash` | VARCHAR | SHA-256 of sorted, deduped file numbers |
+| `file_numbers` | VARCHAR[] | The file numbers in the snapshot |
+| `file_count` | INTEGER | Total count |
+| `new_count` | INTEGER | Count of genuinely new file numbers |
+| `pipeline_run_id` | INTEGER | Foreign key → `pipeline_run.id` (nullable) |
+| `created_at` | TIMESTAMP | When the snapshot was taken |
+
+The snapshot hash enables fast comparison: if the hash matches the previous snapshot, nothing changed.
+
+### Key files
+
+| Purpose | Path |
+|---|---|
+| Snapshot repository | `packages/server/src/icfs/snapshot-repository.ts` |
+| Snapshot tests | `packages/server/src/icfs/snapshot-repository.test.ts` |
+
+---
+
+## Alert Evaluation Points
+
+Saved searches are classified by **search type** (`metadata`, `keyword`, or `semantic`) and alerts are evaluated at three points in the pipeline, matching when the data they depend on becomes available:
+
+```
+Pipeline Stage Order:
+  ingest.icfs
+  ↓
+  alerts.evaluate-metadata   ← metadata-only searches (date, subsystem, app-type filters)
+  ↓
+  attachments.discover → download → validate → extract → summarize → embed
+  ↓
+  alerts.evaluate-semantic   ← vector similarity searches
+  ↓
+  companies.seed → attribute → extract-ownership → enrich
+  ↓
+  news.seed → fetch → extract → summarize → attribute
+  ↓
+  search.rebuild-index
+  ↓
+  alerts.evaluate-keyword    ← BM25 full-text searches
+```
+
+### Search type classification
+
+Auto-classification (`classifySearchType()`) assigns a type based on saved search content type and filters:
+
+| Content type | Condition | Search type |
+|---|---|---|
+| `news` | `mode = 'semantic'` or `'hybrid'` | `semantic` |
+| `news` | `q` is non-empty | `keyword` |
+| `news` | metadata filters only | `metadata` |
+| `filings` | (all) | `metadata` |
+
+The `search_type` column on `saved_search` can also be set manually via the admin API.
+
+### Key files
+
+| Purpose | Path |
+|---|---|
+| Search type classifier | `packages/server/src/saved-search/types.ts` |
+| Alert evaluator (type filter) | `packages/server/src/alerts/evaluator.ts` |
+| Alert stage factory | `packages/server/src/pipeline/registry.ts` |
 
 ---
 
@@ -27,7 +159,8 @@ flowchart TD
 
     subgraph ingest["Stage 1 — Filing Ingest"]
         IBFS_INGEST["1a. IBFS Ingest\n./daily-orbit ingest ibfs\nParse .dat → normalize → deduplicate → load"]
-        ICFS_INGEST["1b. ICFS Ingest\n./daily-orbit ingest icfs\nDiscover → fetch detail → upsert + auto-attribute"]
+        ICFS_INGEST["1b. ICFS Ingest\n./daily-orbit ingest icfs\nDiscover → fetch → snapshot → upsert"]
+        ALERT_META["⚡ Alert: metadata\nEvaluate metadata-only\nsaved searches"]
     end
 
     subgraph attachments["Stage 2 — Attachment Pipeline"]
@@ -38,7 +171,9 @@ flowchart TD
         ATT_EXTRACT["2d. Text Extraction\n./daily-orbit attachments extract\nPDF/HTML/text/CSV → full text"]
         ATT_SUMMARIZE["2e. Summarization\n./daily-orbit inference summarize\nExtracted text → LLM summary via Bedrock"]
         ATT_EMBED["2f. Vector Embedding\n./daily-orbit inference embed\nChunked full-text → Titan V2 embeddings via Bedrock"]
+        ALERT_SEMANTIC["⚡ Alert: semantic\nEvaluate vector similarity\nsaved searches"]
         FTS_REBUILD["2g. FTS Index Rebuild\n./daily-orbit search rebuild-index\nBM25 indexes on filing + attachment + pleading"]
+        ALERT_KEYWORD["⚡ Alert: keyword\nEvaluate BM25 full-text\nsaved searches"]
     end
 
     subgraph company["Stage 3 — Company Attribution"]
@@ -63,7 +198,7 @@ flowchart TD
     end
 
     subgraph storage["Persistence"]
-        DB[("DuckDB\ndata/daily-orbit.duckdb\n\nfiling · attachment · company\ncompany_alias · ownership_event\nnews_source · news_item")]
+        DB[("DuckDB\ndata/daily-orbit.duckdb\n\nfiling · attachment · company\ncompany_alias · ownership_event\nnews_source · news_item\ndiscovery_snapshot")]
         DISK["Attachment Files\ndata/attachments/"]
     end
 
@@ -71,6 +206,8 @@ flowchart TD
     ICFS --> ICFS_INGEST
     IBFS_INGEST --> DB
     ICFS_INGEST --> DB
+    ICFS_INGEST --> ALERT_META
+    ALERT_META --> DB
 
     FCC_PAGES --> ATT_DISCOVER
     DB --> ATT_DISCOVER
@@ -89,8 +226,12 @@ flowchart TD
     DB --> ATT_EMBED
     BEDROCK --> ATT_EMBED
     ATT_EMBED --> DB
+    ATT_EMBED --> ALERT_SEMANTIC
+    ALERT_SEMANTIC --> DB
     DB --> FTS_REBUILD
     FTS_REBUILD --> DB
+    FTS_REBUILD --> ALERT_KEYWORD
+    ALERT_KEYWORD --> DB
 
     SEED --> DB
     DB --> ATTRIBUTE
@@ -573,9 +714,11 @@ Only queries companies missing `gleif_lei` or `wikidata_id` — already-enriched
 
 ## Daily Run Sequence
 
-The recommended daily pipeline order. Steps 1–2 and 12–16 are fully
-automated. Steps 3–5 require a human to log in once for ServiceNow
-authentication; the rest is automated.
+In production, the **PipelineScheduler** handles pipeline execution automatically:
+- **Probes** run every ~60 seconds, checking for new ICFS filings and firing metadata alerts
+- **Full refreshes** run every ~15 minutes, processing all pending work including embeddings, FTS rebuild, and all alert types
+
+The scheduler is started/stopped from the admin Pipeline page. For manual runs or debugging, the recommended sequence is below. Steps 1–2 and 12–16 are fully automated. Steps 3–5 require a human to log in once for ServiceNow authentication; the rest is automated.
 
 ```bash
 # 1. Ingest new filings from ICFS (includes auto-attribution)
@@ -643,7 +786,8 @@ Every pipeline execution — whether triggered via the admin UI, CLI, or a sched
 | `started_at` | TIMESTAMP | When the run began |
 | `finished_at` | TIMESTAMP | When the run completed (NULL while running) |
 | `status` | VARCHAR | `'running'`, `'completed'`, or `'failed'` |
-| `triggered_by` | VARCHAR | `'manual'`, `'cli'`, `'schedule'`, etc. |
+| `triggered_by` | VARCHAR | `'manual'`, `'cli'`, `'scheduler-probe'`, `'scheduler-refresh'` |
+| `mode` | VARCHAR | `'probe'` or `'full'` (default: `'full'`) |
 | `summary` | VARCHAR | Human-readable outcome, e.g. `"3 completed, 0 failed"` |
 
 **`pipeline_stage_run`** — one row per stage within a run.
@@ -688,13 +832,13 @@ This field is the basis for cadence analysis: by querying `items_discovered` ove
 | `GET` | `/api/pipeline/history?limit=N` | Recent pipeline runs, most recent first (default 50, max 200) |
 | `GET` | `/api/pipeline/history/:runId` | Stage-level detail for a specific run |
 
-### Future use
+### Integration with alerts
 
-This tracking data is the first piece of the Monitoring & Alerting epic. Subsequent features will build on it:
+Pipeline run tracking is integrated with the alert evaluation system:
 
-- **Saved Searches** — persisted queries that run against new data
-- **Alert evaluation** — `alert_run` table referencing `pipeline_run.id` as a watermark
-- **Alert delivery** — email notifications when saved searches match new content
+- **Saved Searches** — persisted queries with a `search_type` classification (`metadata`, `keyword`, `semantic`)
+- **Alert evaluation** — three evaluation stages run at different pipeline positions, each filtering to matching search types
+- **Discovery snapshots** — `discovery_snapshot.pipeline_run_id` links snapshots to their pipeline run for audit
 
 ### Key files
 
@@ -770,3 +914,8 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | Companies module | `packages/server/src/companies/` |
 | News module | `packages/server/src/news/` |
 | Enrichment module | `packages/server/src/enrichment/` |
+| Pipeline scheduler | `packages/server/src/pipeline/scheduler.ts` |
+| Discovery snapshots | `packages/server/src/icfs/snapshot-repository.ts` |
+| Saved search types | `packages/server/src/saved-search/types.ts` |
+| Alert evaluator | `packages/server/src/alerts/evaluator.ts` |
+| Scheduler admin UI | `packages/web/src/admin/pipeline/SchedulerPanel.tsx` |

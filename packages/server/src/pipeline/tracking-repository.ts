@@ -1,11 +1,14 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 
+export type PipelineRunMode = 'probe' | 'full';
+
 export type PipelineRunRow = {
   id: number;
   started_at: string;
   finished_at: string | null;
   status: string;
   triggered_by: string;
+  mode: PipelineRunMode;
   summary: string | null;
 };
 
@@ -34,10 +37,11 @@ export type FinishStageInput = {
 export async function insertPipelineRun(
   conn: DuckDBConnection,
   triggeredBy: string,
+  mode: PipelineRunMode = 'full',
 ): Promise<number> {
   const reader = await conn.runAndReadAll(
-    `INSERT INTO pipeline_run (triggered_by) VALUES ($1) RETURNING id`,
-    [triggeredBy],
+    `INSERT INTO pipeline_run (triggered_by, mode) VALUES ($1, $2) RETURNING id`,
+    [triggeredBy, mode],
   );
   return Number(reader.getRowObjectsJS()[0]!.id);
 }
@@ -101,11 +105,29 @@ export async function getRecentRuns(
 ): Promise<PipelineRunRow[]> {
   const reader = await conn.runAndReadAll(
     `SELECT id, started_at::VARCHAR AS started_at, finished_at::VARCHAR AS finished_at,
-            status, triggered_by, summary
+            status, triggered_by, mode, summary
      FROM pipeline_run ORDER BY started_at DESC LIMIT $1`,
     [limit],
   );
   return reader.getRowObjectsJS() as PipelineRunRow[];
+}
+
+/** Get the most recent completed pipeline run with the given mode. */
+export async function getLastSuccessfulRun(
+  conn: DuckDBConnection,
+  mode: PipelineRunMode,
+): Promise<PipelineRunRow | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT id, started_at::VARCHAR AS started_at, finished_at::VARCHAR AS finished_at,
+            status, triggered_by, mode, summary
+     FROM pipeline_run
+     WHERE status = 'completed' AND mode = $1
+     ORDER BY started_at DESC
+     LIMIT 1`,
+    [mode],
+  );
+  const rows = reader.getRowObjectsJS() as PipelineRunRow[];
+  return rows.length > 0 ? rows[0]! : null;
 }
 
 /** Get all stage runs for a given pipeline run, ordered by start time. */

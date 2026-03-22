@@ -16,6 +16,11 @@ import {
   upsertPleadings,
 } from './repository.ts';
 import { ensureIcfsColumns } from './schema.ts';
+import {
+  computeSnapshotHash,
+  ensureDiscoverySnapshotTable,
+  saveSnapshot,
+} from './snapshot-repository.ts';
 import type { IcfsFilingDetail, IcfsSearchResult } from './types.ts';
 
 export type IcfsIngestOptions = {
@@ -30,6 +35,10 @@ export type IcfsIngestOptions = {
   dateTo: string;
   /** Specific file numbers to fetch (skips search-based discovery) */
   fileNumbers?: string[];
+  /** When true, skip detail-fetch for file numbers already in the DB */
+  skipKnown?: boolean;
+  /** Pipeline run ID to associate with the discovery snapshot */
+  pipelineRunId?: number;
   /** Delay between API requests in ms (default: 500) */
   delayMs?: number;
   /** Number of concurrent HTTP requests (default: 1) */
@@ -42,6 +51,7 @@ export type IcfsIngestResult = {
   filingsIngested: number;
   filingsNotFound: number;
   filingsFailed: number;
+  skippedKnown: number;
   durationMs: number;
 };
 
@@ -101,6 +111,51 @@ export async function runIcfsIngest(
       });
       fileNumbers = results.map((r) => r.fileNumber);
       log(`Discovered ${String(fileNumbers.length)} unique file number(s)`);
+    }
+
+    // 2b. Compute and save discovery snapshot
+    await ensureDiscoverySnapshotTable(conn);
+    const snapshotHash: string = computeSnapshotHash(fileNumbers);
+
+    // 2c. Filter to unknown file numbers when skipKnown is set
+    let skippedKnown: number = 0;
+    if (options.skipKnown === true && fileNumbers.length > 0) {
+      const placeholders: string = fileNumbers.map(() => '?').join(',');
+      const knownReader = await conn.runAndReadAll(
+        `SELECT file_number FROM filing WHERE file_number IN (${placeholders})`,
+        fileNumbers,
+      );
+      const knownSet: Set<string> = new Set(
+        knownReader
+          .getRowObjectsJS()
+          .map((r) => String((r as Record<string, unknown>).file_number)),
+      );
+      const allCount: number = fileNumbers.length;
+      fileNumbers = fileNumbers.filter((fn) => !knownSet.has(fn));
+      skippedKnown = allCount - fileNumbers.length;
+      log(
+        `skipKnown: ${String(skippedKnown)} known, ${String(fileNumbers.length)} new`,
+      );
+    }
+
+    await saveSnapshot(
+      conn,
+      snapshotHash,
+      fileNumbers,
+      fileNumbers.length,
+      options.pipelineRunId,
+    );
+
+    if (options.skipKnown === true && fileNumbers.length === 0) {
+      const durationMs: number = Date.now() - start;
+      return {
+        filingsDiscovered: skippedKnown,
+        filingsIngested: 0,
+        filingsNotFound: 0,
+        filingsFailed: 0,
+        skippedKnown,
+        durationMs,
+      };
     }
 
     // 3. Fetch details concurrently
@@ -194,10 +249,11 @@ export async function runIcfsIngest(
 
     const durationMs: number = Date.now() - start;
     return {
-      filingsDiscovered: fileNumbers.length,
+      filingsDiscovered: fileNumbers.length + skippedKnown,
       filingsIngested: ingested,
       filingsNotFound: notFound,
       filingsFailed: failed,
+      skippedKnown,
       durationMs,
     };
   } finally {

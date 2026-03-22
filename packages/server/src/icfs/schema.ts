@@ -1,4 +1,5 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
+import { ensureDiscoverySnapshotTable } from './snapshot-repository.ts';
 
 /** New columns for ICFS-sourced filing data and v0.1.6 enrichment */
 const ICFS_COLUMNS: Array<[string, string]> = [
@@ -42,4 +43,6 @@ export async function ensureIcfsColumns(conn: DuckDBConnection): Promise<void> {
       `ALTER TABLE filing ADD COLUMN IF NOT EXISTS "${name}" ${type}`,
     );
   }
+
+  await ensureDiscoverySnapshotTable(conn);
 }

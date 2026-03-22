@@ -19,6 +19,7 @@ import {
   finishPipelineRun as finishPipelineRunRecord,
   insertStageRun,
   finishStageRun,
+  type PipelineRunMode,
 } from './tracking-repository.ts';
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -129,11 +130,13 @@ class PipelineRunner {
    * Start a pipeline run with the given stage IDs.
    * Returns the run ID. Throws if a run is already active.
    * @param concurrencyOverrides — per-stage concurrency overrides (0 or absent = use stage default)
+   * @param mode — 'probe' for fast probing (short-circuits if no new items), 'full' for complete refresh
    */
   async start(
     stageIds: string[],
     concurrencyOverrides: Record<string, number> = {},
     triggeredBy: string = 'manual',
+    mode: PipelineRunMode = 'full',
   ): Promise<string> {
     if (this.running) {
       throw new ConflictError('A pipeline run is already in progress');
@@ -160,6 +163,7 @@ class PipelineRunner {
       buffer,
       concurrencyOverrides,
       triggeredBy,
+      mode,
     ).catch((err: unknown) => {
       const msg: string = err instanceof Error ? err.message : String(err);
       this.emitLog(buffer, runId, 'runner', 'error', `Unhandled error: ${msg}`);
@@ -178,6 +182,7 @@ class PipelineRunner {
     buffer: ReplayBuffer,
     concurrencyOverrides: Record<string, number> = {},
     triggeredBy: string = 'manual',
+    mode: PipelineRunMode = 'full',
   ): Promise<void> {
     const runStart: number = Date.now();
     let completed: number = 0;
@@ -211,7 +216,7 @@ class PipelineRunner {
 
     // Persist run tracking
     await ensurePipelineTrackingTables(conn);
-    const dbRunId: number = await insertPipelineRun(conn, triggeredBy);
+    const dbRunId: number = await insertPipelineRun(conn, triggeredBy, mode);
 
     try {
       const signal: AbortSignal = this.abortController!.signal;
@@ -268,6 +273,8 @@ class PipelineRunner {
           conn,
           concurrency: effectiveConcurrency,
           signal,
+          mode,
+          pipelineRunId: dbRunId,
           log: (level: 'info' | 'error' | 'progress', message: string) => {
             this.emitLog(buffer, runId, stageId, level, message);
           },
@@ -320,6 +327,22 @@ class PipelineRunner {
             `Completed in ${String(result.durationMs)}ms${result.summary != null ? ` — ${result.summary}` : ''}`,
           );
           this.emitter.emit('stage-end', { runId, stageId, result });
+
+          // Probe mode short-circuit: if the ingest stage processed 0 new filings, skip remaining stages
+          if (
+            mode === 'probe' &&
+            stageId === 'ingest.icfs' &&
+            result.itemsProcessed === 0
+          ) {
+            this.emitLog(
+              buffer,
+              runId,
+              'runner',
+              'info',
+              'Probe: no new filings discovered, short-circuiting',
+            );
+            break;
+          }
         } catch (err: unknown) {
           const msg: string = err instanceof Error ? err.message : String(err);
           this.stageStates.set(stageId, {

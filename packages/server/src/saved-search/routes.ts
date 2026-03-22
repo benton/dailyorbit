@@ -60,7 +60,11 @@ savedSearchRoutes.post('/', async (c) => {
 savedSearchRoutes.patch('/:id', async (c) => {
   const user: SessionUser = c.get('user');
   const id: number = Number(c.req.param('id'));
-  const body = await c.req.json<{ name?: string; alert_enabled?: boolean }>();
+  const body = await c.req.json<{
+    name?: string;
+    alert_enabled?: boolean;
+    search_type?: 'metadata' | 'keyword' | 'semantic';
+  }>();
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {

@@ -2,6 +2,7 @@ import type { DuckDBConnection } from '@duckdb/node-api';
 import type {
   SavedSearchResponse,
   NewsSearchFilters,
+  SearchType,
 } from '../saved-search/types.ts';
 import type { FilingSearchFilters } from '../search/types.ts';
 import { executeSavedSearch } from '../saved-search/execute.ts';
@@ -36,17 +37,25 @@ type SearchMatchResult = {
   flagIds: number[];
 };
 
-/** Fetch all alert-enabled saved searches. */
+/** Fetch alert-enabled saved searches, optionally filtered by search_type. */
 async function getAlertEnabledSearches(
   conn: DuckDBConnection,
+  searchType?: SearchType,
 ): Promise<AlertEnabledSearch[]> {
-  const reader = await conn.runAndReadAll(
-    `SELECT id, user_id, name, content_type, filters::VARCHAR AS filters,
-            include_time_scope, alert_enabled,
-            created_at::VARCHAR AS created_at, updated_at::VARCHAR AS updated_at
-     FROM saved_search
-     WHERE alert_enabled = true`,
-  );
+  const sql: string =
+    searchType != null
+      ? `SELECT id, user_id, name, content_type, filters::VARCHAR AS filters,
+              include_time_scope, alert_enabled, search_type,
+              created_at::VARCHAR AS created_at, updated_at::VARCHAR AS updated_at
+       FROM saved_search
+       WHERE alert_enabled = true AND search_type = $1`
+      : `SELECT id, user_id, name, content_type, filters::VARCHAR AS filters,
+              include_time_scope, alert_enabled, search_type,
+              created_at::VARCHAR AS created_at, updated_at::VARCHAR AS updated_at
+       FROM saved_search
+       WHERE alert_enabled = true`;
+  const params = searchType != null ? [searchType] : [];
+  const reader = await conn.runAndReadAll(sql, params);
   return reader.getRowObjectsJS().map((row) => {
     const r: Record<string, unknown> = row as Record<string, unknown>;
     return {
@@ -57,6 +66,7 @@ async function getAlertEnabledSearches(
       filters: JSON.parse(String(r.filters)),
       include_time_scope: Boolean(r.include_time_scope),
       alert_enabled: Boolean(r.alert_enabled),
+      search_type: (String(r.search_type) || 'keyword') as SearchType,
       created_at: String(r.created_at),
       updated_at: String(r.updated_at),
     };
@@ -115,18 +125,20 @@ function extractContentKeys(contentType: string, results: unknown[]): string[] {
 }
 
 /**
- * Evaluate all alert-enabled saved searches against new content.
- * Called as part of the pipeline's alerts.evaluate stage.
+ * Evaluate alert-enabled saved searches against new content.
+ * When searchType is provided, only searches of that type are evaluated.
  */
 export async function evaluateAlerts(
   conn: DuckDBConnection,
   pipelineRunId: number,
+  searchType?: SearchType,
 ): Promise<EvaluationResult> {
   const result: EvaluationWithEmailResult = await evaluateAlertsWithEmail(
     conn,
     pipelineRunId,
     null,
     '',
+    searchType,
   );
   return {
     searchesEvaluated: result.searchesEvaluated,
@@ -195,14 +207,19 @@ async function getNewsTitle(
 /**
  * Run alert evaluation and optionally send email digests for users with matches.
  * When emailService is null, email delivery is skipped (evaluation-only mode).
+ * When searchType is provided, only searches of that type are evaluated.
  */
 export async function evaluateAlertsWithEmail(
   conn: DuckDBConnection,
   pipelineRunId: number,
   emailService: EmailService | null,
   baseUrl: string,
+  searchType?: SearchType,
 ): Promise<EvaluationWithEmailResult> {
-  const searches: AlertEnabledSearch[] = await getAlertEnabledSearches(conn);
+  const searches: AlertEnabledSearch[] = await getAlertEnabledSearches(
+    conn,
+    searchType,
+  );
 
   let searchesEvaluated: number = 0;
   let totalMatched: number = 0;
