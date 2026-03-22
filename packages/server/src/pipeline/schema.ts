@@ -29,4 +29,9 @@ export async function ensurePipelineTrackingTables(
       summary          VARCHAR
     );
   `);
+
+  // Migration: add mode column to existing tables
+  await conn.run(
+    `ALTER TABLE pipeline_run ADD COLUMN IF NOT EXISTS mode VARCHAR NOT NULL DEFAULT 'full'`,
+  );
 }
