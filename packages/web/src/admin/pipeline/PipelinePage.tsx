@@ -7,6 +7,7 @@ import env from '../../lib/env.tsx';
 import { Button } from '../../ui/button.tsx';
 import LogPanel from './LogPanel.tsx';
 import PipelineGroup from './PipelineGroup.tsx';
+import SchedulerPanel from './SchedulerPanel.tsx';
 
 // ── API response types ──────────────────────────────────────────────
 
@@ -289,6 +290,9 @@ export default function PipelinePage() {
           )}
         </div>
       </div>
+
+      {/* Scheduler control panel */}
+      <SchedulerPanel />
 
       {/* Pipeline stages */}
       <div className="space-y-1">

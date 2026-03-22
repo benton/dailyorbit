@@ -13,6 +13,7 @@ import { getDb } from '../lib/db.ts';
 import { getAllStages, PIPELINE_GROUPS } from './registry.ts';
 import { ConflictError, getRunner } from './runner.ts';
 import type { LogLine, RunSummary } from './runner.ts';
+import { getScheduler } from './scheduler.ts';
 import { ensurePipelineTrackingTables } from './schema.ts';
 import {
   getRecentRuns,
@@ -256,4 +257,31 @@ pipelineRoutes.get('/history/:runId', async (c) => {
   } finally {
     conn.closeSync();
   }
+});
+
+// ── GET /scheduler — scheduler status ───────────────────────────────
+
+pipelineRoutes.get('/scheduler', (c) => {
+  const scheduler = getScheduler();
+  return c.json(scheduler.status());
+});
+
+// ── POST /scheduler/start — start the scheduler ────────────────────
+
+pipelineRoutes.post('/scheduler/start', async (c) => {
+  const body = await c.req.json<{
+    probeIntervalMs?: number;
+    refreshIntervalMs?: number;
+  }>().catch(() => ({}));
+  const scheduler = getScheduler(body);
+  scheduler.start();
+  return c.json(scheduler.status());
+});
+
+// ── POST /scheduler/stop — stop the scheduler ──────────────────────
+
+pipelineRoutes.post('/scheduler/stop', (c) => {
+  const scheduler = getScheduler();
+  scheduler.stop();
+  return c.json(scheduler.status());
 });

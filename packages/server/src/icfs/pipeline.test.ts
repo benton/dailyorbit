@@ -139,3 +139,42 @@ describe('ICFS pipeline (unit)', () => {
     expect(typeof runIcfsIngest).toEqual('function');
   });
 });
+
+describeIf('ICFS pipeline skipKnown (live API)', () => {
+  let db: DuckDBInstance;
+
+  beforeEach(async () => {
+    db = await DuckDBInstance.create(':memory:');
+    const conn: DuckDBConnection = await db.connect();
+    await conn.run(CREATE_FILING_TABLE);
+    conn.closeSync();
+  });
+
+  it('skips known filings in skipKnown mode', async () => {
+    const fileNumber: string = 'SAT-LOA-20250221-00050';
+
+    // First ingest — normal mode
+    const first: IcfsIngestResult = await runIcfsIngest({
+      dbInstance: db,
+      dateFrom: '2025-02',
+      dateTo: '2025-02',
+      fileNumbers: [fileNumber],
+      delayMs: 0,
+    });
+    expect(first.filingsIngested).toEqual(1);
+    expect(first.skippedKnown).toEqual(0);
+
+    // Second ingest — skipKnown mode with same file number
+    const second: IcfsIngestResult = await runIcfsIngest({
+      dbInstance: db,
+      dateFrom: '2025-02',
+      dateTo: '2025-02',
+      fileNumbers: [fileNumber],
+      skipKnown: true,
+      delayMs: 0,
+    });
+    expect(second.filingsDiscovered).toEqual(1);
+    expect(second.filingsIngested).toEqual(0);
+    expect(second.skippedKnown).toEqual(1);
+  });
+});

@@ -13,8 +13,14 @@ export async function ensureSavedSearchTables(
       filters            JSON NOT NULL,
       include_time_scope BOOLEAN NOT NULL DEFAULT true,
       alert_enabled      BOOLEAN NOT NULL DEFAULT false,
+      search_type        VARCHAR NOT NULL DEFAULT 'keyword',
       created_at         TIMESTAMP NOT NULL DEFAULT current_timestamp,
       updated_at         TIMESTAMP NOT NULL DEFAULT current_timestamp
     );
   `);
+
+  // Idempotent migration for existing tables (DuckDB doesn't support NOT NULL in ADD COLUMN)
+  await conn.run(
+    `ALTER TABLE saved_search ADD COLUMN IF NOT EXISTS search_type VARCHAR DEFAULT 'keyword'`,
+  );
 }

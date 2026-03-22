@@ -232,6 +232,140 @@ describe('PipelineRunner', () => {
     expect(summary.stagesFailed).toEqual(1);
   });
 
+  it('probe mode short-circuits when ingest.icfs reports 0 items processed', async () => {
+    const ingestStage: PipelineStage = {
+      id: 'ingest.icfs',
+      group: 'ingest',
+      name: 'ICFS Ingest',
+      description: 'Fake ingest returning 0 processed',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => ({
+        itemsDiscovered: 50,
+        itemsProcessed: 0,
+        itemsFailed: 0,
+        durationMs: 5,
+        summary: 'No new filings',
+      }),
+    };
+    let secondStageRan: boolean = false;
+    const nextStage: PipelineStage = {
+      id: 'attachments.discover-download',
+      group: 'attachments',
+      name: 'Discover',
+      description: 'Should be skipped in probe mode',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => {
+        secondStageRan = true;
+        return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
+      },
+    };
+    __registerFake(ingestStage);
+    __registerFake(nextStage);
+
+    const runner = getRunner();
+    const runId: string = await runner.start(
+      ['ingest.icfs', 'attachments.discover-download'],
+      {},
+      'scheduler',
+      'probe',
+    );
+    const summary: RunSummary = await waitForDone(runId);
+
+    expect(summary.stagesCompleted).toEqual(1);
+    expect(summary.stagesFailed).toEqual(0);
+    expect(secondStageRan).toEqual(false);
+  });
+
+  it('probe mode continues when ingest.icfs reports new items', async () => {
+    const ingestStage: PipelineStage = {
+      id: 'ingest.icfs',
+      group: 'ingest',
+      name: 'ICFS Ingest',
+      description: 'Fake ingest returning new items',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => ({
+        itemsDiscovered: 3,
+        itemsProcessed: 3,
+        itemsFailed: 0,
+        durationMs: 5,
+      }),
+    };
+    let secondStageRan: boolean = false;
+    const nextStage: PipelineStage = {
+      id: 'attachments.discover-download',
+      group: 'attachments',
+      name: 'Discover',
+      description: 'Should run in probe mode when new items found',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => {
+        secondStageRan = true;
+        return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
+      },
+    };
+    __registerFake(ingestStage);
+    __registerFake(nextStage);
+
+    const runner = getRunner();
+    const runId: string = await runner.start(
+      ['ingest.icfs', 'attachments.discover-download'],
+      {},
+      'scheduler',
+      'probe',
+    );
+    const summary: RunSummary = await waitForDone(runId);
+
+    expect(summary.stagesCompleted).toEqual(2);
+    expect(secondStageRan).toEqual(true);
+  });
+
+  it('full mode does not short-circuit even when ingest reports 0 items', async () => {
+    const ingestStage: PipelineStage = {
+      id: 'ingest.icfs',
+      group: 'ingest',
+      name: 'ICFS Ingest',
+      description: 'Fake ingest returning 0 processed',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => ({
+        itemsDiscovered: 0,
+        itemsProcessed: 0,
+        itemsFailed: 0,
+        durationMs: 5,
+      }),
+    };
+    let secondStageRan: boolean = false;
+    const nextStage: PipelineStage = {
+      id: 'search.rebuild-index',
+      group: 'search',
+      name: 'Rebuild FTS',
+      description: 'Should run in full mode',
+      defaultConcurrency: 1,
+      parallelizable: false,
+      run: async (_ctx: PipelineContext): Promise<StageResult> => {
+        secondStageRan = true;
+        return { itemsProcessed: 0, itemsFailed: 0, durationMs: 0 };
+      },
+    };
+    __registerFake(ingestStage);
+    __registerFake(nextStage);
+
+    const runner = getRunner();
+    const runId: string = await runner.start(
+      ['ingest.icfs', 'search.rebuild-index'],
+      {},
+      'manual',
+      'full',
+    );
+    const summary: RunSummary = await waitForDone(runId);
+
+    expect(summary.stagesCompleted).toEqual(2);
+    expect(secondStageRan).toEqual(true);
+  });
+
   it('getState reflects running status during execution', async () => {
     let resolveStage: (() => void) | null = null;
     const stage: PipelineStage = {
