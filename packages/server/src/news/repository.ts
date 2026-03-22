@@ -312,6 +312,7 @@ export async function listNewsItems(
     companyId?: number;
     extractStatus?: ExtractStatus;
     showHidden?: boolean;
+    userId?: string;
   },
 ): Promise<PaginatedResponse<NewsItem>> {
   const conditions: string[] = [];
@@ -335,13 +336,25 @@ export async function listNewsItems(
   }
 
   if (!filters?.showHidden) {
-    conditions.push(`NOT EXISTS (
-      SELECT 1 FROM hidden_item h
-      WHERE h.content_type = 'news'
-        AND h.content_key = CAST(ni.id AS VARCHAR)
-        AND h.removed_at IS NULL
-        AND h.scope = 'system'
-    )`);
+    if (filters?.userId != null) {
+      conditions.push(`NOT EXISTS (
+        SELECT 1 FROM hidden_item h
+        WHERE h.content_type = 'news'
+          AND h.content_key = CAST(ni.id AS VARCHAR)
+          AND h.removed_at IS NULL
+          AND (h.scope = 'system' OR (h.scope = 'user' AND h.user_id = $${String(idx)}))
+      )`);
+      params.push(filters.userId as DuckDBValue);
+      idx++;
+    } else {
+      conditions.push(`NOT EXISTS (
+        SELECT 1 FROM hidden_item h
+        WHERE h.content_type = 'news'
+          AND h.content_key = CAST(ni.id AS VARCHAR)
+          AND h.removed_at IS NULL
+          AND h.scope = 'system'
+      )`);
+    }
   }
 
   const whereClause: string =

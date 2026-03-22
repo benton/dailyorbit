@@ -26,6 +26,7 @@ export async function searchNewsByKeyword(
   query: string,
   limit: number,
   showHidden?: boolean,
+  userId?: string,
 ): Promise<NewsSearchHit[]> {
   const q: string = query.trim();
   if (q === '') return [];
@@ -52,7 +53,7 @@ export async function searchNewsByKeyword(
         WHERE h.content_type = 'news'
           AND h.content_key = CAST(ni.id AS VARCHAR)
           AND h.removed_at IS NULL
-          AND h.scope = 'system'
+          AND ${userId != null ? `(h.scope = 'system' OR (h.scope = 'user' AND h.user_id = '${escapeSqlString(userId)}'))` : `h.scope = 'system'`}
       )`
           : ''
       }

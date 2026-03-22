@@ -12,6 +12,7 @@ import {
   updateNewsSource,
 } from './repository.ts';
 import type { ExtractStatus, NewsSourceCategory } from './types.ts';
+import { getAuth } from '../lib/auth.ts';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ newsRoutes.get('/', async (c) => {
     companyId?: number;
     extractStatus?: ExtractStatus;
     showHidden?: boolean;
+    userId?: string;
   } = {};
 
   if (q.sourceId != null) filters.newsSourceId = Number(q.sourceId);
@@ -56,6 +58,8 @@ newsRoutes.get('/', async (c) => {
   if (q.extractStatus != null)
     filters.extractStatus = q.extractStatus as ExtractStatus;
   if (q.show_hidden === 'true') filters.showHidden = true;
+  const newsSession = await getAuth().api.getSession({ headers: c.req.raw.headers });
+  if (newsSession != null) filters.userId = newsSession.user.id;
 
   const result = await withConn((conn) =>
     listNewsItems(conn, pagination, filters),

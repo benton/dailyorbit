@@ -123,13 +123,25 @@ export async function searchFilings(
   }
 
   if (!filters.show_hidden) {
-    conditions.push(`NOT EXISTS (
-      SELECT 1 FROM hidden_item h
-      WHERE h.content_type = 'filing'
-        AND h.content_key = f.file_number
-        AND h.removed_at IS NULL
-        AND h.scope = 'system'
-    )`);
+    if (filters.user_id != null) {
+      conditions.push(`NOT EXISTS (
+        SELECT 1 FROM hidden_item h
+        WHERE h.content_type = 'filing'
+          AND h.content_key = f.file_number
+          AND h.removed_at IS NULL
+          AND (h.scope = 'system' OR (h.scope = 'user' AND h.user_id = $${paramIndex}))
+      )`);
+      params.push(filters.user_id);
+      paramIndex++;
+    } else {
+      conditions.push(`NOT EXISTS (
+        SELECT 1 FROM hidden_item h
+        WHERE h.content_type = 'filing'
+          AND h.content_key = f.file_number
+          AND h.removed_at IS NULL
+          AND h.scope = 'system'
+      )`);
+    }
   }
 
   const whereClause: string =

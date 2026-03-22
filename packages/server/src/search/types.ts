@@ -24,6 +24,8 @@ export type FilingSearchFilters = {
   date_filed_to?: string;
   discovered_since?: string;
   show_hidden?: boolean;
+  /** Current user ID — used to filter user-scope hidden items */
+  user_id?: string;
 };
 
 /** Result row from satellite search */
