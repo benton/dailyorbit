@@ -584,6 +584,8 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { summarizeNewsItems } = await import('../news/summarize-news.ts');
+      const { getConfigService, setConfigService } =
+        await import('../lib/config.ts');
       const start: number = Date.now();
       await ensureNewsTables(ctx.conn);
 
@@ -599,13 +601,21 @@ const STAGES: PipelineStage[] = [
         `${String(pendingBefore)} articles pending summarization`,
       );
 
-      await summarizeNewsItems(ctx.conn, {
-        region: process.env.AWS_REGION ?? 'us-east-2',
-        modelId: 'us.amazon.nova-pro-v1:0',
-        concurrency: ctx.concurrency,
-        limit: 0,
-        dryRun: false,
-      });
+      // summarizeNewsItems overwrites the global ConfigService with a
+      // standalone shim (designed for CLI use). Save and restore the
+      // server's real config so subsequent stages aren't corrupted.
+      const savedConfig = getConfigService();
+      try {
+        await summarizeNewsItems(ctx.conn, {
+          region: process.env.AWS_REGION ?? 'us-east-2',
+          modelId: 'us.amazon.nova-pro-v1:0',
+          concurrency: ctx.concurrency,
+          limit: 0,
+          dryRun: false,
+        });
+      } finally {
+        setConfigService(savedConfig);
+      }
 
       const afterReader = await ctx.conn.runAndReadAll(countSql);
       const pendingAfter: number = Number(
