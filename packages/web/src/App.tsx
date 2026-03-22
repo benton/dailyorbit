@@ -31,7 +31,6 @@ const ConsultantAdmin = lazy(() => import('./admin/ConsultantAdmin.tsx'));
 const HiddenItemsAdmin = lazy(() => import('./admin/HiddenItemsAdmin.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
-const QueryPage = lazy(() => import('./query/QueryPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
 const AlertsPage = lazy(() => import('./alerts/AlertsPage.tsx'));
 
@@ -120,16 +119,6 @@ export default function App() {
               path="/news/:id"
             />
             {/* Auth-required user pages */}
-            <Route
-              element={
-                <RequireAuth>
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <QueryPage />
-                  </Suspense>
-                </RequireAuth>
-              }
-              path="/query"
-            />
             <Route
               element={
                 <RequireAuth>

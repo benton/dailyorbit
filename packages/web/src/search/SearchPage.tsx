@@ -667,7 +667,7 @@ function FilingFilterForm({
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
       <div>
         <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">File Number</Label>
         <Input
@@ -753,7 +753,7 @@ function SatelliteFilterForm({
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
       <AutocompleteInput
         entity="satellites"
         field="us_name"
@@ -821,7 +821,7 @@ function EarthStationFilterForm({
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
       <AutocompleteInput
         entity="earth-stations"
         field="callsign"

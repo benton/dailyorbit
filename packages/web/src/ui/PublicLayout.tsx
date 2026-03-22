@@ -82,7 +82,6 @@ export default function PublicLayout() {
           <NavLink label="Home" to="/" />
           <NavLink label="Search" to="/search" />
           <NavLink label="News" to="/news" />
-          <NavLink label="Ask" to="/query" />
           {isAuthenticated && <NavLink label="Chat" to="/chat" />}
           {isAuthenticated && <AlertBadge />}
           <div className="ml-auto flex items-center gap-3">
