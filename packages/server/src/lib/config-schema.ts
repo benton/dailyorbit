@@ -157,6 +157,18 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Application base URL for links in emails',
   },
+  tlsCert: {
+    key: 'tlsCert',
+    defaultValue: '',
+    encrypted: true,
+    description: 'TLS certificate chain (PEM) for HTTPS termination',
+  },
+  tlsKey: {
+    key: 'tlsKey',
+    defaultValue: '',
+    encrypted: true,
+    description: 'TLS private key (PEM) for HTTPS termination',
+  },
   icfsUsername: {
     key: 'icfsUsername',
     defaultValue: '',

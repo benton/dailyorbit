@@ -1,0 +1,38 @@
+{
+  "vpc-provider:account=665226324657:filter.vpc-id=vpc-6201f10b:region=us-east-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-6201f10b",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "665226324657",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-1c4d8875",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "us-east-2a",
+            "routeTableId": "rtb-65da290c"
+          },
+          {
+            "subnetId": "subnet-02d1c27a",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "us-east-2b",
+            "routeTableId": "rtb-65da290c"
+          },
+          {
+            "subnetId": "subnet-5efaca14",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "us-east-2c",
+            "routeTableId": "rtb-65da290c"
+          }
+        ]
+      }
+    ]
+  },
+  "hosted-zone:account=665226324657:domainName=dailyorbit.org:region=us-east-2": {
+    "Id": "/hostedzone/Z03120809OKXLY9V16DY",
+    "Name": "dailyorbit.org."
+  }
+}

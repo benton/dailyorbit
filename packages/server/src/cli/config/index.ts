@@ -94,15 +94,30 @@ const setCommand = defineCommand({
     },
     value: {
       type: 'positional',
-      description: 'New value',
-      required: true,
+      description: 'New value (omit if using --from-file)',
+      required: false,
+    },
+    fromFile: {
+      type: 'string',
+      description: 'Read value from file instead of positional argument',
     },
   },
   async run({ args }) {
+    const { readFileSync } = await import('node:fs');
+    let value: string;
+    if (args.fromFile) {
+      const { resolveFromRoot } = await import('../shared/context.ts');
+      value = readFileSync(resolveFromRoot(args.fromFile), 'utf-8');
+    } else if (args.value) {
+      value = args.value;
+    } else {
+      console.error('Provide a value or --from-file');
+      process.exit(1);
+    }
     const config = await createConfigService(args.database, args.keyFile);
-    await config.set(args.key as ConfigKey, args.value);
+    await config.set(args.key as ConfigKey, value);
     console.log(
-      `Set ${args.key} = ${CONFIG_SCHEMA[args.key as ConfigKey]?.encrypted ? '[ENCRYPTED]' : args.value}`,
+      `Set ${args.key} = ${CONFIG_SCHEMA[args.key as ConfigKey]?.encrypted ? '[ENCRYPTED]' : value}`,
     );
   },
 });

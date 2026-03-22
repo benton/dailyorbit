@@ -1,19 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# ── ZFS Pool Setup ────────────────────────────────────────────────────────────
-yum install -y zfs-utils
-modprobe zfs
-
-# Discover NVMe ephemeral devices (exclude root EBS)
-EPHEMERALS=$(nvme list | grep "Instance Storage" | awk '{print $1}')
-
-# Create a striped zpool across all ephemeral drives
-zpool create -f datapool $EPHEMERALS
-zfs set compression=lz4 datapool
-zfs set atime=off datapool
-mkdir -p /data
-zfs set mountpoint=/data datapool
+exec > >(tee /var/log/user-data.log) 2>&1
+echo "=== user-data start: $(date -u) ==="
 
 # ── Elastic IP Association ────────────────────────────────────────────────────
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
@@ -23,35 +12,26 @@ INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
 
 aws ec2 associate-address \
   --instance-id "$INSTANCE_ID" \
-  --allocation-id "{{EIP_ALLOCATION_ID}}"
+  --allocation-id "{{EIP_ALLOCATION_ID}}" \
+  --region "{{REGION}}"
 
-# ── TLS Certificate Fetch ────────────────────────────────────────────────────
-mkdir -p /tmp/tls
-mount -t tmpfs -o size=1m,mode=700 tmpfs /tmp/tls
-
-aws secretsmanager get-secret-value \
-  --secret-id "daily-orbit/tls-cert" \
-  --query SecretString --output text > /tmp/tls/cert.pem
-
-aws secretsmanager get-secret-value \
-  --secret-id "daily-orbit/tls-key" \
-  --query SecretString --output text > /tmp/tls/key.pem
-
-chmod 600 /tmp/tls/key.pem
+echo "EIP associated to $INSTANCE_ID"
 
 # ── Data Restore from S3 ─────────────────────────────────────────────────────
+mkdir -p /data
+
 aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}" /data/daily-orbit.duckdb \
   || echo "No DB snapshot found — container will initialize fresh"
 
 aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
-  || true
+  || echo "No encryption key found"
 
 mkdir -p /data/attachments
 aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
   || echo "No attachments found in S3"
 
 # ── Install Docker and Launch Container ───────────────────────────────────────
-yum install -y docker
+yum install -y docker cronie
 systemctl enable docker
 systemctl start docker
 
@@ -64,11 +44,7 @@ docker run -d \
   --restart unless-stopped \
   --network host \
   -v /data:/app/data \
-  -v /tmp/tls:/app/tls:ro \
-  -e SERVE_STATIC=true \
   -e NODE_ENV=production \
-  -e TLS_CERT_PATH=/app/tls/cert.pem \
-  -e TLS_KEY_PATH=/app/tls/key.pem \
   {{ECR_URI}}:{{CONTAINER_TAG}}
 
 # ── Data Snapshot Cron ────────────────────────────────────────────────────────
@@ -112,3 +88,5 @@ TimeoutStartSec=90
 WantedBy=halt.target reboot.target shutdown.target
 EOF
 systemctl enable db-snapshot-on-shutdown
+
+echo "=== user-data complete: $(date -u) ==="

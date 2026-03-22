@@ -5,9 +5,13 @@ import { fileURLToPath } from 'node:url';
 export interface SeedConfig {
   stackName: string;
   domainName: string;
+  apiDomainName: string;
   certificateArn: string;
+  apiCertificateArn: string;
+  cloudfrontCertificateArn: string;
   vpcId: string | null;
   instanceType: string;
+  keyPairName: string | null;
   dbSnapshotBucket: string;
   dbSnapshotKey: string;
   ecrRepositoryName: string;
@@ -20,6 +24,7 @@ export interface SeedConfig {
 const DEFAULTS: Partial<SeedConfig> = {
   vpcId: null,
   instanceType: 'r6id.xlarge',
+  keyPairName: null,
   dbSnapshotKey: 'db/latest.duckdb',
   ecrRepositoryName: 'daily-orbit',
   containerTag: 'latest',

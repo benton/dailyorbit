@@ -1,9 +1,12 @@
 {
   "stackName": "daily-orbit-prod",
   "domainName": "dailyorbit.org",
+  "apiDomainName": "api.dailyorbit.org",
   "certificateArn": "arn:aws:acm:us-east-1:123456789012:certificate/EXAMPLE-GUID",
+  "apiCertificateArn": "arn:aws:acm:us-east-1:123456789012:certificate/EXAMPLE-API-GUID",
   "vpcId": null,
   "instanceType": "r6id.xlarge",
+  "keyPairName": null,
   "dbSnapshotBucket": "daily-orbit-backups",
   "dbSnapshotKey": "db/latest.duckdb",
   "ecrRepositoryName": "daily-orbit",

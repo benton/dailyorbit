@@ -169,12 +169,16 @@ export const serveApiCommand = defineCommand({
 
     const { serve } = await import('@hono/node-server');
     const { default: app } = await import('../../app.ts');
+    const { SecretValue } = await import('../../lib/encryption.ts');
 
-    const tlsCert: string | undefined = process.env.TLS_CERT_PATH;
-    const tlsKey: string | undefined = process.env.TLS_KEY_PATH;
+    const tlsCertRaw = config.get('tlsCert');
+    const tlsKeyRaw = config.get('tlsKey');
+    const tlsCert: string =
+      tlsCertRaw instanceof SecretValue ? tlsCertRaw.unwrap() : '';
+    const tlsKey: string =
+      tlsKeyRaw instanceof SecretValue ? tlsKeyRaw.unwrap() : '';
 
     if (tlsCert && tlsKey) {
-      const { readFileSync } = await import('node:fs');
       const { createServer: createHttpsServer } = await import('node:https');
       const { Hono } = await import('hono');
 
@@ -184,8 +188,8 @@ export const serveApiCommand = defineCommand({
           port: 443,
           createServer: createHttpsServer,
           serverOptions: {
-            cert: readFileSync(tlsCert),
-            key: readFileSync(tlsKey),
+            cert: tlsCert,
+            key: tlsKey,
           },
         },
         () => {

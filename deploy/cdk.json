@@ -1,6 +1,6 @@
 {
-  "app": "npx ts-node --esm bin/app.ts",
+  "app": "npx tsx bin/app.ts",
   "context": {
-    "@aws-cdk/core:bootstrapQualifier": "daily-orbit"
+    "@aws-cdk/core:bootstrapQualifier": "dailyorbit"
   }
 }

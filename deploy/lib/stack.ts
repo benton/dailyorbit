@@ -12,11 +12,14 @@ import {
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import type { SeedConfig } from './config.js';
 
 export interface DailyOrbitStackProps extends StackProps {
@@ -49,6 +52,8 @@ export class DailyOrbitStack extends Stack {
     });
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS');
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP redirect');
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9000), 'App HTTP (dev)');
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
 
     const eip: ec2.CfnEIP = new ec2.CfnEIP(this, 'Eip', {
       tags: [{ key: 'Name', value: `${config.stackName}-eip` }],
@@ -59,41 +64,20 @@ export class DailyOrbitStack extends Stack {
       domainName: config.domainName,
     });
 
-    new route53.ARecord(this, 'ApexRecord', {
+    // API subdomain → Elastic IP
+    new route53.ARecord(this, 'ApiRecord', {
       zone: hostedZone,
+      recordName: config.apiDomainName,
       target: route53.RecordTarget.fromIpAddresses(eip.ref),
     });
 
-    new route53.ARecord(this, 'WwwRecord', {
-      zone: hostedZone,
-      recordName: 'www',
-      target: route53.RecordTarget.fromIpAddresses(eip.ref),
-    });
+    // ── 5d. Storage ──────────────────────────────────────────────────────
+    // Import the existing S3 bucket (created outside CDK)
+    const snapshotBucket: s3.IBucket = s3.Bucket.fromBucketName(
+      this, 'SnapshotBucket', config.dbSnapshotBucket,
+    );
 
-    // ── 5c. Secrets ────────────────────────────────────────────────────────
-    const tlsCertSecret: secretsmanager.Secret = new secretsmanager.Secret(this, 'TlsCert', {
-      secretName: 'daily-orbit/tls-cert',
-      description: 'TLS certificate chain (PEM) for daily-orbit HTTPS termination',
-    });
-
-    const tlsKeySecret: secretsmanager.Secret = new secretsmanager.Secret(this, 'TlsKey', {
-      secretName: 'daily-orbit/tls-key',
-      description: 'TLS private key (PEM) for daily-orbit HTTPS termination',
-    });
-
-    // ── 5d. Storage ────────────────────────────────────────────────────────
-    const snapshotBucket: s3.Bucket = new s3.Bucket(this, 'SnapshotBucket', {
-      bucketName: config.dbSnapshotBucket,
-      versioned: true,
-      removalPolicy: RemovalPolicy.RETAIN,
-      lifecycleRules: [
-        {
-          noncurrentVersionExpiration: Duration.days(30),
-        },
-      ],
-    });
-
-    // ── 5e. Container Registry ─────────────────────────────────────────────
+    // ── 5e. Container Registry ───────────────────────────────────────────
     const ecrRepo: ecr.Repository = new ecr.Repository(this, 'EcrRepo', {
       repositoryName: config.ecrRepositoryName,
       imageTagMutability: ecr.TagMutability.MUTABLE,
@@ -107,7 +91,7 @@ export class DailyOrbitStack extends Stack {
       ],
     });
 
-    // ── 5f. IAM ────────────────────────────────────────────────────────────
+    // ── 5f. IAM ──────────────────────────────────────────────────────────
     const instanceRole: iam.Role = new iam.Role(this, 'InstanceRole', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       description: 'Daily Orbit EC2 instance role',
@@ -119,20 +103,11 @@ export class DailyOrbitStack extends Stack {
     // S3 snapshot bucket
     snapshotBucket.grantReadWrite(instanceRole);
 
-    // Secrets Manager TLS secrets
-    tlsCertSecret.grantRead(instanceRole);
-    tlsKeySecret.grantRead(instanceRole);
-
     // EC2 EIP association
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ec2:AssociateAddress'],
         resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'ec2:ResourceTag/aws:cloudformation:stack-name': this.stackName,
-          },
-        },
       }),
     );
 
@@ -152,7 +127,7 @@ export class DailyOrbitStack extends Stack {
       }),
     );
 
-    // ── 5g. Compute ────────────────────────────────────────────────────────
+    // ── 5g. Compute ──────────────────────────────────────────────────────
     const __dirname: string = dirname(fileURLToPath(import.meta.url));
     const userDataRaw: string = readFileSync(resolve(__dirname, 'user-data.sh'), 'utf-8');
 
@@ -178,6 +153,9 @@ export class DailyOrbitStack extends Stack {
       userData,
       securityGroup,
       requireImdsv2: true,
+      keyPair: config.keyPairName
+        ? ec2.KeyPair.fromKeyPairName(this, 'KeyPair', config.keyPairName)
+        : undefined,
       blockDevices: [
         {
           deviceName: '/dev/xvda',
@@ -206,15 +184,65 @@ export class DailyOrbitStack extends Stack {
       }),
     });
 
-    // ── 5h. Outputs ────────────────────────────────────────────────────────
+    // ── 6. CloudFront (frontend) ───────────────────────────────────────
+    const frontendBucket: s3.Bucket = new s3.Bucket(this, 'FrontendBucket', {
+      bucketName: `${config.stackName}-frontend`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
+    const cloudfrontCert: acm.ICertificate = acm.Certificate.fromCertificateArn(
+      this, 'CloudFrontCert', config.cloudfrontCertificateArn,
+    );
+
+    const distribution: cloudfront.Distribution = new cloudfront.Distribution(this, 'Distribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      domainNames: [config.domainName],
+      certificate: cloudfrontCert,
+      defaultRootObject: 'index.html',
+      // SPA: route all 403/404s to index.html for client-side routing
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: Duration.seconds(0),
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: Duration.seconds(0),
+        },
+      ],
+    });
+
+    // dailyorbit.org → CloudFront
+    new route53.ARecord(this, 'ApexRecord', {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+    });
+
+    new route53.ARecord(this, 'WwwRecord', {
+      zone: hostedZone,
+      recordName: 'www',
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+    });
+
+    // ── 5h. Outputs ──────────────────────────────────────────────────────
     new CfnOutput(this, 'ElasticIpAddress', {
       value: eip.ref,
       description: 'Elastic IP address',
     });
 
-    new CfnOutput(this, 'AppUrl', {
-      value: `https://${config.domainName}`,
-      description: 'Application URL',
+    new CfnOutput(this, 'ApiUrl', {
+      value: `https://${config.apiDomainName}`,
+      description: 'API URL',
     });
 
     new CfnOutput(this, 'EcrRepositoryUri', {
@@ -225,6 +253,21 @@ export class DailyOrbitStack extends Stack {
     new CfnOutput(this, 'SnapshotBucketName', {
       value: snapshotBucket.bucketName,
       description: 'S3 snapshot bucket name',
+    });
+
+    new CfnOutput(this, 'FrontendBucketName', {
+      value: frontendBucket.bucketName,
+      description: 'S3 bucket for frontend static assets',
+    });
+
+    new CfnOutput(this, 'DistributionDomainName', {
+      value: distribution.distributionDomainName,
+      description: 'CloudFront distribution domain',
+    });
+
+    new CfnOutput(this, 'FrontendUrl', {
+      value: `https://${config.domainName}`,
+      description: 'Frontend URL',
     });
   }
 }
