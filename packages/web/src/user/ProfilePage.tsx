@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
+import { unhideAll } from '../lib/hidden-items.ts';
 import { useSettings } from '../lib/settings-context.tsx';
 import { Button } from '../ui/button.tsx';
 import { Input } from '../ui/input.tsx';
@@ -125,6 +126,40 @@ export default function ProfilePage() {
             label="Wide View"
             onChange={(v: boolean) => updateSetting('wideView', v)}
           />
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 className="mb-4 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          Hidden Items
+        </h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              Unhide All Items
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Make all your personally hidden filings and news items visible again
+            </p>
+          </div>
+          <Button
+            className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+            onClick={() => {
+              if (
+                !confirm(
+                  'Unhide all hidden items? This will make all your personally hidden filings and news items visible again.',
+                )
+              ) {
+                return;
+              }
+              void unhideAll().then((count: number) => {
+                alert(`${String(count)} item(s) unhidden.`);
+              });
+            }}
+            size="sm"
+          >
+            Unhide All
+          </Button>
         </div>
       </div>
     </div>
