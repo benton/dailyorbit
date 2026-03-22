@@ -68,7 +68,8 @@ export async function runBatchAttribution(
   const reader = await conn.runAndReadAll(
     `SELECT filing_key, address_attention, applicant_frn
      FROM filing
-     WHERE company_id IS NULL`,
+     WHERE company_id IS NULL
+       AND company_match_attempted_at IS NULL`,
   );
 
   const rows = reader.getRowObjectsJS();
@@ -91,11 +92,15 @@ export async function runBatchAttribution(
 
     if (companyId != null) {
       await conn.run(
-        `UPDATE filing SET company_id = $1 WHERE filing_key = $2`,
+        `UPDATE filing SET company_id = $1, company_match_attempted_at = current_timestamp WHERE filing_key = $2`,
         [companyId, filingKey] as DuckDBValue[],
       );
       attributed++;
     } else {
+      await conn.run(
+        `UPDATE filing SET company_match_attempted_at = current_timestamp WHERE filing_key = $1`,
+        [filingKey] as DuckDBValue[],
+      );
       skipped++;
     }
 
