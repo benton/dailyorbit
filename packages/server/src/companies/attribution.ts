@@ -64,7 +64,15 @@ async function clusterByFrn(
 export async function runBatchAttribution(
   conn: DuckDBConnection,
   onProgress?: (processed: number, total: number) => void,
-): Promise<{ attributed: number; skipped: number }> {
+): Promise<{ attributed: number; skipped: number; previouslySkipped: number }> {
+  const prevReader = await conn.runAndReadAll(
+    `SELECT COUNT(*)::INTEGER AS cnt FROM filing
+     WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+  );
+  const previouslySkipped: number = Number(
+    prevReader.getRowObjectsJS()[0]?.cnt ?? 0,
+  );
+
   const reader = await conn.runAndReadAll(
     `SELECT filing_key, address_attention, applicant_frn
      FROM filing
@@ -110,7 +118,7 @@ export async function runBatchAttribution(
     }
   }
 
-  return { attributed, skipped };
+  return { attributed, skipped, previouslySkipped };
 }
 
 /**

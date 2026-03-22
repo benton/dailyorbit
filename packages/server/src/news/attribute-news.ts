@@ -14,6 +14,7 @@ type AliasEntry = {
 type AttributionResult = {
   attributed: number;
   skipped: number;
+  previouslySkipped: number;
 };
 
 /**
@@ -39,8 +40,16 @@ export async function attributeNewsItems(
 
   if (aliases.length === 0) {
     console.log('No company aliases found — skipping attribution.');
-    return { attributed: 0, skipped: 0 };
+    return { attributed: 0, skipped: 0, previouslySkipped: 0 };
   }
+
+  const prevReader = await conn.runAndReadAll(
+    `SELECT COUNT(*)::INTEGER AS cnt FROM news_item
+     WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+  );
+  const previouslySkipped: number = Number(
+    prevReader.getRowObjectsJS()[0]?.cnt ?? 0,
+  );
 
   const items: NewsItem[] = await getNewsItemsNeedingAttribution(conn, limit);
 
@@ -82,5 +91,5 @@ export async function attributeNewsItems(
     attributed++;
   }
 
-  return { attributed, skipped };
+  return { attributed, skipped, previouslySkipped };
 }

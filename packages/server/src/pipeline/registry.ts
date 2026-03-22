@@ -447,7 +447,7 @@ const STAGES: PipelineStage[] = [
         itemsProcessed: result.attributed,
         itemsFailed: 0,
         durationMs: Date.now() - start,
-        summary: `Attributed ${String(result.attributed)}, skipped ${String(result.skipped)}`,
+        summary: `Attributed ${String(result.attributed)}, skipped ${String(result.skipped)}${result.previouslySkipped > 0 ? `, ${String(result.previouslySkipped)} previously skipped` : ''}`,
       };
     },
   },
@@ -475,7 +475,7 @@ const STAGES: PipelineStage[] = [
         itemsProcessed: result.created,
         itemsFailed: 0,
         durationMs: Date.now() - start,
-        summary: `Created ${String(result.created)} events, skipped ${String(result.skipped)}`,
+        summary: `Created ${String(result.created)} events, skipped ${String(result.skipped)}${result.previouslySkipped > 0 ? `, ${String(result.previouslySkipped)} previously skipped` : ''}`,
       };
     },
   },
@@ -658,7 +658,7 @@ const STAGES: PipelineStage[] = [
         itemsProcessed: result.attributed,
         itemsFailed: 0,
         durationMs: Date.now() - start,
-        summary: `Attributed ${String(result.attributed)}, skipped ${String(result.skipped)}`,
+        summary: `Attributed ${String(result.attributed)}, skipped ${String(result.skipped)}${result.previouslySkipped > 0 ? `, ${String(result.previouslySkipped)} previously skipped` : ''}`,
       };
     },
   },

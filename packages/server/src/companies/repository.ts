@@ -564,7 +564,16 @@ export async function listRecentOwnershipEvents(
 export async function extractOwnershipEvents(
   conn: DuckDBConnection,
   onProgress?: (processed: number, total: number) => void,
-): Promise<{ created: number; skipped: number }> {
+): Promise<{ created: number; skipped: number; previouslySkipped: number }> {
+  const prevReader = await conn.runAndReadAll(
+    `SELECT COUNT(*)::INTEGER AS cnt FROM filing
+     WHERE ownership_match_attempted_at IS NOT NULL
+       AND file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
+  );
+  const previouslySkipped: number = Number(
+    prevReader.getRowObjectsJS()[0]?.cnt ?? 0,
+  );
+
   // Find T/C and ASG filings that don't already have ownership events
   const reader = await conn.runAndReadAll(
     `SELECT f.file_number, f.app_type_code, f.transferor_name, f.transferee_name,
@@ -659,5 +668,5 @@ export async function extractOwnershipEvents(
     }
   }
 
-  return { created, skipped };
+  return { created, skipped, previouslySkipped };
 }
