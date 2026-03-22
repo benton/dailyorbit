@@ -1,4 +1,10 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
+import {
+  type PaginatedRequest,
+  type PaginatedResponse,
+  buildPaginatedQuery,
+  buildPaginatedResponse,
+} from '../lib/pagination.ts';
 
 export type PipelineRunMode = 'probe' | 'full';
 
@@ -128,6 +134,89 @@ export async function getLastSuccessfulRun(
   );
   const rows = reader.getRowObjectsJS() as PipelineRunRow[];
   return rows.length > 0 ? rows[0]! : null;
+}
+
+/** Row type for pipeline runs joined with ICFS stage stats. */
+export type PipelineRunWithIcfsStats = {
+  id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: string;
+  triggered_by: string;
+  mode: PipelineRunMode;
+  summary: string | null;
+  items_discovered: number;
+  items_processed: number;
+  items_failed: number;
+  stage_summary: string | null;
+};
+
+/** Get recent pipeline runs joined with ICFS ingest stage stats (for charting). */
+export async function getRunsWithIcfsStats(
+  conn: DuckDBConnection,
+  limit: number,
+): Promise<PipelineRunWithIcfsStats[]> {
+  const reader = await conn.runAndReadAll(
+    `SELECT pr.id, pr.started_at::VARCHAR AS started_at, pr.finished_at::VARCHAR AS finished_at,
+            pr.status, pr.triggered_by, pr.mode, pr.summary,
+            COALESCE(psr.items_discovered, 0)::INTEGER AS items_discovered,
+            COALESCE(psr.items_processed, 0)::INTEGER AS items_processed,
+            COALESCE(psr.items_failed, 0)::INTEGER AS items_failed,
+            psr.summary AS stage_summary
+     FROM pipeline_run pr
+     LEFT JOIN pipeline_stage_run psr ON psr.pipeline_run_id = pr.id
+       AND psr.stage_id = 'ingest.icfs'
+     ORDER BY pr.started_at DESC
+     LIMIT $1`,
+    [limit],
+  );
+  return reader.getRowObjectsJS() as PipelineRunWithIcfsStats[];
+}
+
+const HISTORY_ALLOWED_COLUMNS: ReadonlySet<string> = new Set([
+  'started_at',
+  'finished_at',
+  'status',
+  'mode',
+  'items_discovered',
+  'items_processed',
+  'items_failed',
+]);
+
+/** Return a paginated list of pipeline runs with ICFS stage stats. */
+export async function listPipelineRuns(
+  conn: DuckDBConnection,
+  request: PaginatedRequest,
+): Promise<PaginatedResponse<PipelineRunWithIcfsStats>> {
+  const baseSql: string = `
+    SELECT pr.id, pr.started_at::VARCHAR AS started_at, pr.finished_at::VARCHAR AS finished_at,
+           pr.status, pr.triggered_by, pr.mode, pr.summary,
+           COALESCE(psr.items_discovered, 0)::INTEGER AS items_discovered,
+           COALESCE(psr.items_processed, 0)::INTEGER AS items_processed,
+           COALESCE(psr.items_failed, 0)::INTEGER AS items_failed,
+           psr.summary AS stage_summary
+    FROM pipeline_run pr
+    LEFT JOIN pipeline_stage_run psr ON psr.pipeline_run_id = pr.id
+      AND psr.stage_id = 'ingest.icfs'
+  `;
+
+  const { sql, params, countSql, countParams } = buildPaginatedQuery(
+    baseSql,
+    [],
+    request,
+    HISTORY_ALLOWED_COLUMNS,
+    'started_at',
+  );
+
+  const countReader = await conn.runAndReadAll(countSql, countParams);
+  const totalRows: number = Number(
+    (countReader.getRowObjectsJS() as Array<{ total: number }>)[0]?.total ?? 0,
+  );
+
+  const reader = await conn.runAndReadAll(sql, params);
+  const data = reader.getRowObjectsJS() as PipelineRunWithIcfsStats[];
+
+  return buildPaginatedResponse(data, totalRows, request);
 }
 
 /** Get all stage runs for a given pipeline run, ordered by start time. */

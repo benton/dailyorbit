@@ -15,9 +15,12 @@ import { ConflictError, getRunner } from './runner.ts';
 import type { LogLine, RunSummary } from './runner.ts';
 import { getScheduler } from './scheduler.ts';
 import { ensurePipelineTrackingTables } from './schema.ts';
+import type { PaginatedRequest } from '../lib/pagination.ts';
 import {
   getRecentRuns,
+  getRunsWithIcfsStats,
   getStageRunsForPipeline,
+  listPipelineRuns,
 } from './tracking-repository.ts';
 
 export const pipelineRoutes = new Hono();
@@ -229,10 +232,48 @@ pipelineRoutes.post('/reset-matches/:stageId', async (c) => {
   }
 });
 
-// ── GET /history ──────────────────────────────────────────────────────
+// ── GET /history/stats — chart data ──────────────────────────────────
+
+pipelineRoutes.get('/history/stats', async (c) => {
+  const limit: number = Math.min(Number(c.req.query('limit') ?? '200'), 500);
+  const db = await getDb();
+  const conn = await DuckDBConnection.create(db);
+  try {
+    await ensurePipelineTrackingTables(conn);
+    const runs = await getRunsWithIcfsStats(conn, limit);
+    return c.json(runs);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── GET /history — paginated list ────────────────────────────────────
 
 pipelineRoutes.get('/history', async (c) => {
-  const limit: number = Math.min(Number(c.req.query('limit') ?? '50'), 200);
+  const query: Record<string, string> = c.req.query();
+
+  // Support both legacy ?limit= and paginated params
+  if (query.page != null || query.pageSize != null || query.sort != null) {
+    const request: PaginatedRequest = {};
+    if (query.page != null) request.page = Number(query.page);
+    if (query.pageSize != null) request.pageSize = Number(query.pageSize);
+    if (query.sort != null) request.sort = query.sort;
+    if (query.order === 'asc' || query.order === 'desc')
+      request.order = query.order;
+
+    const db = await getDb();
+    const conn = await DuckDBConnection.create(db);
+    try {
+      await ensurePipelineTrackingTables(conn);
+      const result = await listPipelineRuns(conn, request);
+      return c.json(result);
+    } finally {
+      conn.closeSync();
+    }
+  }
+
+  // Legacy: simple array response
+  const limit: number = Math.min(Number(query.limit ?? '50'), 200);
   const db = await getDb();
   const conn = await DuckDBConnection.create(db);
   try {
@@ -269,10 +310,12 @@ pipelineRoutes.get('/scheduler', (c) => {
 // ── POST /scheduler/start — start the scheduler ────────────────────
 
 pipelineRoutes.post('/scheduler/start', async (c) => {
-  const body = await c.req.json<{
-    probeIntervalMs?: number;
-    refreshIntervalMs?: number;
-  }>().catch(() => ({}));
+  const body = await c.req
+    .json<{
+      probeIntervalMs?: number;
+      refreshIntervalMs?: number;
+    }>()
+    .catch(() => ({}));
   const scheduler = getScheduler(body);
   scheduler.start();
   return c.json(scheduler.status());
