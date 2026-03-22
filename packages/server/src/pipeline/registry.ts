@@ -496,6 +496,7 @@ const STAGES: PipelineStage[] = [
     description: 'Enrich company data from GLEIF and Wikidata',
     defaultConcurrency: 1,
     parallelizable: false,
+    resettable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { enrichAllCompanies } = await import('../enrichment/pipeline.ts');
       const start: number = Date.now();

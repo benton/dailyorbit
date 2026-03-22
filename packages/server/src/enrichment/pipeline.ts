@@ -129,7 +129,10 @@ export async function enrichAllCompanies(
   onProgress?: (processed: number, total: number) => void,
 ): Promise<EnrichmentSummary> {
   const reader = await conn.runAndReadAll(
-    `SELECT id FROM company WHERE gleif_lei IS NULL OR wikidata_id IS NULL ORDER BY id`,
+    `SELECT id FROM company
+     WHERE (gleif_lei IS NULL OR wikidata_id IS NULL)
+       AND enrichment_attempted_at IS NULL
+     ORDER BY id`,
   );
 
   const rows = reader.getRowObjectsJS();
@@ -150,6 +153,12 @@ export async function enrichAllCompanies(
     } catch {
       errors++;
     }
+
+    // Always stamp attempt regardless of outcome
+    await conn.run(
+      `UPDATE company SET enrichment_attempted_at = current_timestamp WHERE id = $1`,
+      [companyId] as DuckDBValue[],
+    );
 
     if (onProgress != null) {
       onProgress(enriched + skipped + errors, total);

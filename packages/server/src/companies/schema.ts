@@ -54,6 +54,11 @@ export async function ensureCompanyTables(
       description           VARCHAR
     )
   `);
+
+  // Track enrichment attempts
+  await conn.run(
+    `ALTER TABLE company ADD COLUMN IF NOT EXISTS enrichment_attempted_at TIMESTAMP`,
+  );
 }
 
 /**

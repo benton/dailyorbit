@@ -205,6 +205,10 @@ pipelineRoutes.post('/reset-matches/:stageId', async (c) => {
       count: `SELECT COUNT(*)::INTEGER AS cnt FROM attachment WHERE indexed_by = 'failed'`,
       update: `UPDATE attachment SET indexed_by = NULL, indexed_at = NULL WHERE indexed_by = 'failed'`,
     },
+    'companies.enrich': {
+      count: `SELECT COUNT(*)::INTEGER AS cnt FROM company WHERE (gleif_lei IS NULL OR wikidata_id IS NULL) AND enrichment_attempted_at IS NOT NULL`,
+      update: `UPDATE company SET enrichment_attempted_at = NULL WHERE (gleif_lei IS NULL OR wikidata_id IS NULL) AND enrichment_attempted_at IS NOT NULL`,
+    },
   };
 
   const queries = RESET_QUERIES[stageId];
