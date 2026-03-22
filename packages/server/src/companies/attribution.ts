@@ -150,10 +150,16 @@ export async function seedCompanies(
           aliasesAdded++;
         }
       }
-      // Add prefix aliases
+      // Add prefix aliases (only if not already present)
       for (const prefix of entry.prefixAliases ?? []) {
-        await addAlias(conn, existing.id, prefix, 'prefix');
-        aliasesAdded++;
+        const prefixExists: Company | null = await getCompanyByAlias(
+          conn,
+          prefix,
+        );
+        if (prefixExists == null) {
+          await addAlias(conn, existing.id, prefix, 'prefix');
+          aliasesAdded++;
+        }
       }
       continue;
     }
@@ -167,8 +173,13 @@ export async function seedCompanies(
     nameToId.set(entry.name, company.id);
     created++;
 
-    // Add aliases
+    // Always add canonical name as alias so subsequent runs find the company
+    await addAlias(conn, company.id, entry.name);
+    aliasesAdded++;
+
+    // Add aliases (skip canonical name if already in list)
     for (const alias of entry.aliases) {
+      if (alias === entry.name) continue;
       await addAlias(conn, company.id, alias);
       aliasesAdded++;
     }

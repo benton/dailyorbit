@@ -226,11 +226,34 @@ describe('attribution engine', () => {
       await seedCompanies(conn, testSeed);
       const result2 = await seedCompanies(conn, testSeed);
       expect(result2.created).toEqual(0);
+      expect(result2.aliasesAdded).toEqual(0);
 
       const reader = await conn.runAndReadAll(
         `SELECT count(*)::INTEGER AS cnt FROM company`,
       );
       expect(Number(reader.getRowObjectsJS()[0]!.cnt)).toEqual(1);
+    });
+
+    it('is idempotent — prefix aliases are not re-counted on second run', async () => {
+      const testSeed = [
+        {
+          name: 'TestCorp',
+          ticker: null,
+          exchange: null,
+          website: null,
+          parentRef: null,
+          aliases: ['TestCorp'],
+          prefixAliases: ['TestCorp of '],
+        },
+      ];
+
+      const result1 = await seedCompanies(conn, testSeed);
+      expect(result1.created).toEqual(1);
+      expect(result1.aliasesAdded).toBeGreaterThan(0);
+
+      const result2 = await seedCompanies(conn, testSeed);
+      expect(result2.created).toEqual(0);
+      expect(result2.aliasesAdded).toEqual(0);
     });
 
     it('seeds prefix aliases with correct alias_type', async () => {
