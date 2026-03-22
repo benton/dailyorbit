@@ -414,6 +414,34 @@ export async function runAttachmentPipeline(
     }
   }
 
+  // Early exit: when stopAfterDownload is set, skip extraction, summarization, and FTS rebuild
+  if (options.stopAfterDownload === true) {
+    untrackConnection(conn);
+    conn.closeSync();
+
+    const durationMs: number = Date.now() - start;
+    log(
+      `Pipeline complete: ${String(filingsProcessed)} filings, ${String(totalDiscovered)} discovered, ${String(attachmentsDownloaded)} downloaded, ${String(attachmentsFailed)} failed (${String(Math.round(durationMs / 1000))}s)`,
+    );
+
+    return {
+      filingsProcessed,
+      attachmentsDiscovered: totalDiscovered,
+      attachmentsDownloaded,
+      attachmentsFailed,
+      attachmentsSkipped,
+      downloadsSkipped: downloadSkipped,
+      textsExtracted: 0,
+      textsSkippedNoText: 0,
+      textsSkippedAuthError: 0,
+      textsFailed: 0,
+      summariesGenerated: 0,
+      summariesCopied: 0,
+      summariesFailed: 0,
+      durationMs,
+    };
+  }
+
   // Stage 5: Extract text from newly downloaded PDFs (skip if cancelled)
   let textsExtracted: number = 0;
   let textsSkippedNoText: number = 0;
@@ -572,7 +600,11 @@ export async function runAttachmentPipeline(
   let summariesCopied: number = 0;
   let summariesFailed: number = 0;
 
-  if (options.discoverOnly !== true && options.skipSummarization !== true && !isCancelled()) {
+  if (
+    options.discoverOnly !== true &&
+    options.skipSummarization !== true &&
+    !isCancelled()
+  ) {
     const filingKeysForSummarization: number[] = filings.map(
       (f) => f.filingKey,
     );

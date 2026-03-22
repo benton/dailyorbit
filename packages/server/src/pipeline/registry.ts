@@ -102,6 +102,7 @@ const STAGES: PipelineStage[] = [
         scope: {},
         concurrency: ctx.concurrency,
         signal: ctx.signal,
+        stopAfterDownload: true,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {

@@ -109,7 +109,9 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                   key={search.id}
                   onClick={() => handleSelect(search)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {handleSelect(search);}
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleSelect(search);
+                    }
                   }}
                   role="button"
                   tabIndex={0}

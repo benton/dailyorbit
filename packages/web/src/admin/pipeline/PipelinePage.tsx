@@ -1,4 +1,4 @@
-import { StopCircle } from 'lucide-react';
+import { PlayCircle, StopCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LogLine } from './LogPanel.tsx';
 import type { StageStatus } from './PipelineStep.tsx';
@@ -64,7 +64,9 @@ export default function PipelinePage() {
       }
       // Initialize concurrency overrides from server defaults (only on first load)
       setConcurrencyOverrides((prev: Record<string, number>) => {
-        if (Object.keys(prev).length > 0) {return prev;}
+        if (Object.keys(prev).length > 0) {
+          return prev;
+        }
         const defaults: Record<string, number> = {};
         for (const s of data.stages) {
           defaults[s.id] = s.defaultConcurrency;
@@ -237,18 +239,33 @@ export default function PipelinePage() {
           </p>
           {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
-        {running && (
-          <Button
-            onClick={() => void handleStop()}
-            size="sm"
-            title="Stop all pipeline stages"
-            type="button"
-            variant="destructive"
-          >
-            <StopCircle className="mr-1.5 h-4 w-4" />
-            Stop All
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!running && (
+            <Button
+              disabled={stages.length === 0}
+              onClick={() => void runStages(stages.map((s: StageInfo) => s.id))}
+              size="sm"
+              title="Run all pipeline stages in order"
+              type="button"
+              variant="default"
+            >
+              <PlayCircle className="mr-1.5 h-4 w-4" />
+              Run All
+            </Button>
+          )}
+          {running && (
+            <Button
+              onClick={() => void handleStop()}
+              size="sm"
+              title="Stop all pipeline stages"
+              type="button"
+              variant="destructive"
+            >
+              <StopCircle className="mr-1.5 h-4 w-4" />
+              Stop All
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Pipeline stages */}

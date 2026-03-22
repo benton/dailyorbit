@@ -19,7 +19,7 @@ export function FlagToggle({ contentKey, contentType, initialFlagged, onToggle }
     try {
       if (flagged) {
         // To unflag, we need to get the flag ID first — fetch active flags and dismiss
-        const flags = await apiFetch<Array<{ content_key: string; id: number; }>>(
+        const flags = await apiFetch<Array<{ content_key: string; id: number }>>(
           `/api/user/flags?content_type=${encodeURIComponent(contentType)}`,
         );
         const match = flags.find((f) => f.content_key === contentKey);
