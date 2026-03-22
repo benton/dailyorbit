@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { ensureNewsTables } from './schema.ts';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import {
   createNewsSource,
   listNewsItems,
@@ -54,6 +55,7 @@ describe('rss-fetcher', () => {
       `CREATE TABLE IF NOT EXISTS company (id INTEGER PRIMARY KEY, name VARCHAR, parent_company_id INTEGER)`,
     );
     await ensureNewsTables(conn);
+    await ensureHiddenItemTables(conn);
   });
 
   afterEach(() => {

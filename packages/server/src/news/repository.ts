@@ -311,6 +311,7 @@ export async function listNewsItems(
     newsSourceId?: number;
     companyId?: number;
     extractStatus?: ExtractStatus;
+    showHidden?: boolean;
   },
 ): Promise<PaginatedResponse<NewsItem>> {
   const conditions: string[] = [];
@@ -331,6 +332,16 @@ export async function listNewsItems(
     conditions.push(`ni.extract_status = $${String(idx)}`);
     params.push(filters.extractStatus as DuckDBValue);
     idx++;
+  }
+
+  if (!filters?.showHidden) {
+    conditions.push(`NOT EXISTS (
+      SELECT 1 FROM hidden_item h
+      WHERE h.content_type = 'news'
+        AND h.content_key = CAST(ni.id AS VARCHAR)
+        AND h.removed_at IS NULL
+        AND h.scope = 'system'
+    )`);
   }
 
   const whereClause: string =

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import { searchByVector } from './vector-search.ts';
 
 describe('searchByVector', () => {
@@ -108,6 +109,8 @@ describe('searchByVector', () => {
       `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id)
        VALUES ('filing', 'SAT-MOD-20240301-00003', 0, '${downVector}'::FLOAT[512], 'test-model')`,
     );
+
+    await ensureHiddenItemTables(conn);
   });
 
   afterEach(() => {

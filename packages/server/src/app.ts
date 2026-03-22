@@ -24,6 +24,7 @@ import { userSettingsRoutes } from './user-settings/routes.ts';
 import { viewingHistoryRoutes } from './viewing-history/routes.ts';
 import { savedSearchRoutes } from './saved-search/routes.ts';
 import { contentFlagRoutes } from './content-flag/routes.ts';
+import { hiddenItemRoutes } from './hidden-item/routes.ts';
 import { alertRoutes } from './alerts/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
 import { queryRoutes } from './query/routes.ts';
@@ -33,6 +34,7 @@ import {
 } from './consultant/routes.ts';
 import { chatRoutes } from './chat/routes.ts';
 import { testAdminRoutes } from './test-utils/routes.ts';
+import { hiddenItemAdminRoutes } from './hidden-item/admin-routes.ts';
 
 const app = new Hono();
 
@@ -83,6 +85,7 @@ app.route('/api/user/settings', userSettingsRoutes);
 app.route('/api/user/viewing-history', viewingHistoryRoutes);
 app.route('/api/user/saved-searches', savedSearchRoutes);
 app.route('/api/user/flags', contentFlagRoutes);
+app.route('/api/user/hidden-items', hiddenItemRoutes);
 app.route('/api/user/alerts', alertRoutes);
 app.route('/api/admin/config', configRoutes);
 app.route('/api/admin/stats', statsRoutes);
@@ -91,6 +94,7 @@ app.route('/api/admin/inference', buildInferenceRoutes());
 app.route('/api/admin/news', newsAdminRoutes);
 app.route('/api/admin/users', userAdminRoutes);
 app.route('/api/admin/pipeline', pipelineRoutes);
+app.route('/api/admin/hidden-items', hiddenItemAdminRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
 app.route('/api/earth-stations', earthStationRoutes);

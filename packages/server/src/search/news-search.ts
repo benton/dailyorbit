@@ -25,6 +25,7 @@ export async function searchNewsByKeyword(
   conn: DuckDBConnection,
   query: string,
   limit: number,
+  showHidden?: boolean,
 ): Promise<NewsSearchHit[]> {
   const q: string = query.trim();
   if (q === '') return [];
@@ -44,6 +45,17 @@ export async function searchNewsByKeyword(
     FROM news_item ni
     JOIN news_source ns ON ni.news_source_id = ns.id
     WHERE fts_main_news_item.match_bm25(ni.id, '${escapedQ}', fields := 'title,full_text,summary') IS NOT NULL
+      ${
+        !showHidden
+          ? `AND NOT EXISTS (
+        SELECT 1 FROM hidden_item h
+        WHERE h.content_type = 'news'
+          AND h.content_key = CAST(ni.id AS VARCHAR)
+          AND h.removed_at IS NULL
+          AND h.scope = 'system'
+      )`
+          : ''
+      }
     ORDER BY score DESC
     LIMIT ${String(limit)}
   `;

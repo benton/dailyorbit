@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import { executeSavedSearch } from './execute.ts';
 import type { FilingSearchFilters } from '../search/types.ts';
 
@@ -38,6 +39,7 @@ describe('saved search execution', () => {
       INSERT INTO filing VALUES
         (1, 'SAT-LOA-20250101-00001', 'E123', 'SpaceX Inc', 'SAT', 'LOA', 'A', '2025-01-15', NULL, '2025-01-15');
     `);
+    await ensureHiddenItemTables(conn);
   });
 
   afterAll(() => {

@@ -6,6 +6,7 @@ import { getConfigService } from '../lib/config.ts';
 import { BedrockClient } from '../inference/bedrock-client.ts';
 import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
 import { EmbeddingService } from '../inference/embedding-service.ts';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 import {
   autocomplete,
   searchEarthStations,
@@ -86,11 +87,13 @@ searchRoutes.get('/filings', async (c) => {
   if (statuses != null) filters.status_code = statuses;
   if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
   if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
+  if (q.show_hidden === 'true') filters.show_hidden = true;
   const pagination: PaginatedRequest = parsePagination(q);
 
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
+    await ensureHiddenItemTables(conn);
     const result = await searchFilings(conn, filters, pagination);
     return c.json(result);
   } finally {
@@ -161,6 +164,7 @@ searchRoutes.get('/content', async (c) => {
   if (statuses != null) filters.status_code = statuses;
   if (q.date_filed_from != null) filters.date_filed_from = q.date_filed_from;
   if (q.date_filed_to != null) filters.date_filed_to = q.date_filed_to;
+  if (q.show_hidden === 'true') filters.show_hidden = true;
 
   const pagination: PaginatedRequest = parsePagination(q);
 
@@ -171,6 +175,7 @@ searchRoutes.get('/content', async (c) => {
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   try {
+    await ensureHiddenItemTables(conn);
     const result = await searchFilingContent(
       conn,
       contentQuery,

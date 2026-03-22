@@ -1,8 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { useCallback, useMemo } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
+import { HideToggle } from '../ui/HideToggle.tsx';
 
 type NewsListItem = {
   author: string | null;
@@ -52,9 +54,29 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
 
 export default function NewsPage() {
   const navigate = useNavigate();
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState<boolean>(false);
+
+  const checkHiddenKeys = useCallback(async (keys: Array<string>): Promise<void> => {
+    if (keys.length === 0) {
+      return;
+    }
+    try {
+      const result = await apiFetch<{ hidden: Array<string> }>(
+        '/api/user/hidden-items/bulk-check',
+        {
+          body: JSON.stringify({ content_keys: keys, content_type: 'news' }),
+          method: 'POST',
+        },
+      );
+      setHiddenKeys(new Set(result.hidden));
+    } catch {
+      // Silently ignore — hidden state is non-critical
+    }
+  }, []);
 
   const fetchNews = useCallback(
-    (params: DataTableFetchParams): Promise<PaginatedResponse<NewsListItem>> => {
+    async (params: DataTableFetchParams): Promise<PaginatedResponse<NewsListItem>> => {
       const parts: Array<string> = [
         `page=${String(params.page)}`,
         `pageSize=${String(params.pageSize)}`,
@@ -65,9 +87,17 @@ export default function NewsPage() {
       if (params.order != null) {
         parts.push(`order=${params.order}`);
       }
-      return apiFetch<PaginatedResponse<NewsListItem>>(`/api/news?${parts.join('&')}`);
+      if (showHidden) {
+        parts.push('show_hidden=true');
+      }
+      const result = await apiFetch<PaginatedResponse<NewsListItem>>(
+        `/api/news?${parts.join('&')}`,
+      );
+      const keys: Array<string> = result.data.map((r: NewsListItem) => String(r.id));
+      void checkHiddenKeys(keys);
+      return result;
     },
-    [],
+    [checkHiddenKeys, showHidden],
   );
 
   const onRowClick = useCallback(
@@ -77,7 +107,42 @@ export default function NewsPage() {
     [navigate],
   );
 
-  const cols = useMemo(() => newsColumns, []);
+  const cols = useMemo((): Array<ColumnDef<NewsListItem, unknown>> => {
+    const hideCol: ColumnDef<NewsListItem, unknown> = {
+      cell: ({ row }) => {
+        const isHidden: boolean = hiddenKeys.has(String(row.original.id));
+        return (
+          <div className="flex items-center gap-1">
+            <HideToggle
+              contentKey={String(row.original.id)}
+              contentType="news"
+              initialHidden={isHidden}
+              onToggle={(nowHidden: boolean) => {
+                setHiddenKeys((prev: Set<string>) => {
+                  const next: Set<string> = new Set(prev);
+                  if (nowHidden) {
+                    next.add(String(row.original.id));
+                  } else {
+                    next.delete(String(row.original.id));
+                  }
+                  return next;
+                });
+              }}
+            />
+            {showHidden && isHidden && (
+              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+                Hidden
+              </span>
+            )}
+          </div>
+        );
+      },
+      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      id: 'hide',
+      size: 80,
+    };
+    return [...newsColumns, hideCol];
+  }, [hiddenKeys, showHidden]);
 
   return (
     <div className="space-y-4">
@@ -85,6 +150,15 @@ export default function NewsPage() {
       <p className="text-sm text-neutral-500 dark:text-neutral-400">
         Satellite industry news aggregated from RSS feeds.
       </p>
+      <label className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+        <input
+          checked={showHidden}
+          onChange={(e) => setShowHidden(e.target.checked)}
+          type="checkbox"
+        />
+        <Eye className="h-3.5 w-3.5" />
+        Show hidden items
+      </label>
       <DataTable<NewsListItem>
         columns={cols}
         defaultOrder="desc"
