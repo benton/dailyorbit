@@ -4,6 +4,8 @@ import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { findExistingSummaryByChecksum } from '../../attachments/repository.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../../inference/instrumented-client.ts';
+import { ensureInferenceLogTable } from '../../inference/schema.ts';
 import { InferenceService } from '../../inference/inference-service.ts';
 import {
   CHUNK_USER_PROMPT,
@@ -325,7 +327,12 @@ export const summarizeCommand = defineCommand({
     });
     setConfigService(shim as never);
 
-    const client = new BedrockClient(region);
+    const dbInstance = await createDb(args.database);
+    const conn: DuckDBConnection = await DuckDBConnection.create(dbInstance);
+
+    await ensureInferenceLogTable(conn);
+    const raw = new BedrockClient(region);
+    const client = new InstrumentedBedrockClient(raw, conn, 'summarize');
     const service = new InferenceService(client);
 
     // Resolve prompts: DB config value > built-in default
@@ -333,9 +340,6 @@ export const summarizeCommand = defineCommand({
     //  ConfigService would have the admin-customized values.)
     const systemPrompt: string = DEFAULT_SUMMARIZATION_SYSTEM_PROMPT;
     const userPromptTemplate: string = DEFAULT_SUMMARIZATION_USER_PROMPT;
-
-    const dbInstance = await createDb(args.database);
-    const conn: DuckDBConnection = await DuckDBConnection.create(dbInstance);
 
     try {
       const remaining: number = await countRemaining(conn);

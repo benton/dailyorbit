@@ -1,6 +1,6 @@
 import type { ConverseStreamCommandInput } from '@aws-sdk/client-bedrock-runtime';
 import { renderPrompt } from '../inference/prompts.ts';
-import type { BedrockClient } from '../inference/bedrock-client.ts';
+import type { BedrockClientLike } from '../inference/bedrock-client.ts';
 import type { QuerySSEEvent, RetrievedSource } from './types.ts';
 
 export const DEFAULT_GENERATE_SYSTEM_PROMPT: string = `You are an FCC filing analyst. Answer the user's question using ONLY the provided sources. Cite sources using [brackets] with the source ID. If the sources don't contain enough information, say so. Never invent facts or sources.`;
@@ -29,7 +29,7 @@ export type GeneratePrompts = {
 export async function* generateAnswer(
   question: string,
   sources: RetrievedSource[],
-  client: BedrockClient,
+  client: BedrockClientLike,
   modelId: string,
   prompts?: GeneratePrompts,
 ): AsyncGenerator<QuerySSEEvent> {

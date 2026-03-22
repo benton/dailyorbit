@@ -5,6 +5,7 @@ import { getDb } from '../lib/db.ts';
 import { getConfigService } from '../lib/config.ts';
 import { trackConnection } from '../lib/graceful-shutdown.ts';
 import { BedrockClient } from '../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
 import { EmbeddingService } from '../inference/embedding-service.ts';
 import type { EmbeddingContext } from '../search/content-search.ts';
 import { rewriteQuery } from '../query/rewrite.ts';
@@ -14,6 +15,7 @@ import { listConsultants } from '../consultant/repository.ts';
 import { buildTeamPreamble } from './team-preamble.ts';
 import { generateChatAnswer } from './generate-chat.ts';
 import { generateTitle } from './auto-title.ts';
+import { computeCost } from '../inference/pricing.ts';
 import {
   createConversation,
   getConversationById,
@@ -42,7 +44,10 @@ async function withConn<T>(
   }
 }
 
-function getEmbeddingContext(region: string): EmbeddingContext | undefined {
+function getEmbeddingContext(
+  region: string,
+  logConn: DuckDBConnection | null,
+): EmbeddingContext | undefined {
   try {
     const config = getConfigService();
     const modelId: string =
@@ -53,7 +58,8 @@ function getEmbeddingContext(region: string): EmbeddingContext | undefined {
     const normalize: boolean =
       (config.get('embeddingNormalize') as string) !== 'false';
 
-    const client = new BedrockClient(region);
+    const raw = new BedrockClient(region);
+    const client = new InstrumentedBedrockClient(raw, logConn, 'chat');
     const service = new EmbeddingService(client);
     return { service, modelId, dimensions, normalize };
   } catch {
@@ -176,9 +182,12 @@ chatRoutes.post('/:id/messages', async (c) => {
   const rewriteSystemPrompt: string =
     (config.get('queryRewriteSystemPrompt') as string) || '';
 
-  const client = new BedrockClient(region);
-  const embeddingCtx: EmbeddingContext | undefined =
-    getEmbeddingContext(region);
+  const raw = new BedrockClient(region);
+  const client = new InstrumentedBedrockClient(raw, null, 'chat');
+  const embeddingCtx: EmbeddingContext | undefined = getEmbeddingContext(
+    region,
+    null,
+  );
 
   return streamSSE(c, async (stream) => {
     const startMs: number = performance.now();
@@ -195,6 +204,8 @@ chatRoutes.post('/:id/messages', async (c) => {
       const db = await getDb();
       const conn: DuckDBConnection = await DuckDBConnection.create(db);
       trackConnection(conn);
+      // Set logging connection on instrumented clients
+      client.setConnection(conn);
       try {
         // 1. Persist user message
         const seq: number = await getNextSequence(conn, conversationId);
@@ -271,8 +282,22 @@ chatRoutes.post('/:id/messages', async (c) => {
           result = await gen.next();
         }
         const genUsage = result.value;
+        const activeModelId: string = consultant.modelId ?? generateModelId;
 
-        // 6. Persist assistant message
+        // 6. Compute costs
+        const rewriteCostCents: number = computeCost(
+          rewriteModelId,
+          rewriteUsage.input,
+          rewriteUsage.output,
+        );
+        const genCostCents: number = computeCost(
+          activeModelId,
+          genUsage.inputTokens,
+          genUsage.outputTokens,
+        );
+        const totalCostCents: number = rewriteCostCents + genCostCents;
+
+        // 7. Persist assistant message
         const assistantSeq: number = await getNextSequence(
           conn,
           conversationId,
@@ -284,21 +309,21 @@ chatRoutes.post('/:id/messages', async (c) => {
           sources: retrieval.sources,
           inputTokens: genUsage.inputTokens,
           outputTokens: genUsage.outputTokens,
-          costCents: 0,
-          modelId: consultant.modelId ?? generateModelId,
+          costCents: genCostCents,
+          modelId: activeModelId,
           consultantId: consultant.id,
           sequence: assistantSeq,
         });
 
-        // 7. Update conversation totals
+        // 8. Update conversation totals
         await updateConversationTotals(conn, conversationId, {
           inputTokens: rewriteUsage.input + genUsage.inputTokens,
           outputTokens: rewriteUsage.output + genUsage.outputTokens,
-          costCents: 0,
+          costCents: totalCostCents,
           consultantId: consultant.id,
         });
 
-        // 8. Usage event
+        // 9. Usage event
         const totalMs: number = Math.round(performance.now() - startMs);
         await emit({
           type: 'usage',
@@ -310,7 +335,7 @@ chatRoutes.post('/:id/messages', async (c) => {
             },
             retrievalMs: retrieval.retrievalMs,
             totalMs,
-            costCents: 0,
+            costCents: totalCostCents,
           },
         });
 

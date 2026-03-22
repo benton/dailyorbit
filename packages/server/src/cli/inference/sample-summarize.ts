@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../../inference/instrumented-client.ts';
+import { ensureInferenceLogTable } from '../../inference/schema.ts';
 import { InferenceService } from '../../inference/inference-service.ts';
 import { setConfigService } from '../../lib/config.ts';
 import type {
@@ -407,12 +409,14 @@ export const sampleSummarizeCommand = defineCommand({
     const shim = new StandaloneConfig(region, modelIds[0]!);
     setConfigService(shim as never);
 
-    const client = new BedrockClient(region);
-    const service = new InferenceService(client);
-
     // Open DB and sample
     const dbInstance = await createDb(args.database);
     const conn: DuckDBConnection = await DuckDBConnection.create(dbInstance);
+
+    await ensureInferenceLogTable(conn);
+    const raw = new BedrockClient(region);
+    const client = new InstrumentedBedrockClient(raw, conn, 'sample_summarize');
+    const service = new InferenceService(client);
 
     try {
       console.log(`Sampling ${String(sampleSize)} attachments...`);

@@ -4,6 +4,7 @@ import type { PaginatedRequest } from '../lib/pagination.ts';
 import { getDb } from '../lib/db.ts';
 import { getConfigService } from '../lib/config.ts';
 import { BedrockClient } from '../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
 import { EmbeddingService } from '../inference/embedding-service.ts';
 import {
   autocomplete,
@@ -60,7 +61,8 @@ function getEmbeddingContext(): EmbeddingContext | undefined {
     const region: string =
       (config.get('bedrockRegion') as string) || 'us-east-2';
 
-    const client = new BedrockClient(region);
+    const raw = new BedrockClient(region);
+    const client = new InstrumentedBedrockClient(raw, null, 'search');
     const service = new EmbeddingService(client);
     return { service, modelId, dimensions, normalize };
   } catch {

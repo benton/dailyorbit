@@ -1,5 +1,7 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import { BedrockClient } from '../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
+import { ensureInferenceLogTable } from '../inference/schema.ts';
 import { InferenceService } from '../inference/inference-service.ts';
 import { renderPrompt } from '../inference/prompts.ts';
 import { NEWS_ARTICLE_SUMMARIZER } from '../inference/summarizers/news-article.ts';
@@ -209,7 +211,9 @@ export async function summarizeNewsItems(
   });
   setConfigService(shim as never);
 
-  const client = new BedrockClient(opts.region);
+  await ensureInferenceLogTable(conn);
+  const raw = new BedrockClient(opts.region);
+  const client = new InstrumentedBedrockClient(raw, conn, 'news_summarize');
   const service = new InferenceService(client);
 
   const systemPrompt: string = config.defaultSystemPrompt;

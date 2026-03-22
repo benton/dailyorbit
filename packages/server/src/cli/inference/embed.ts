@@ -3,6 +3,8 @@ import { DuckDBConnection, type DuckDBValue } from '@duckdb/node-api';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { BedrockClient } from '../../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../../inference/instrumented-client.ts';
+import { ensureInferenceLogTable } from '../../inference/schema.ts';
 import { EmbeddingService } from '../../inference/embedding-service.ts';
 import type { EmbeddingResponse } from '../../inference/types.ts';
 import {
@@ -260,6 +262,14 @@ export const embedCommand = defineCommand({
     try {
       // Ensure VSS extension and embedding table exist
       await ensureEmbeddingSchema(conn);
+      await ensureInferenceLogTable(conn);
+
+      const raw = new BedrockClient(region);
+      const instrumentedClient = new InstrumentedBedrockClient(
+        raw,
+        conn,
+        'embed_cli',
+      );
 
       for (const source of sources) {
         const cfg: SourceConfig = SOURCE_CONFIGS[source];
@@ -287,8 +297,7 @@ export const embedCommand = defineCommand({
           continue;
         }
 
-        const client = new BedrockClient(region);
-        const service = new EmbeddingService(client);
+        const service = new EmbeddingService(instrumentedClient);
 
         let processed: number = 0;
         let totalChunks: number = 0;

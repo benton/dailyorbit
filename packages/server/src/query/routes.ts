@@ -4,6 +4,7 @@ import { streamSSE } from 'hono/streaming';
 import { getDb } from '../lib/db.ts';
 import { getConfigService } from '../lib/config.ts';
 import { BedrockClient } from '../inference/bedrock-client.ts';
+import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
 import { EmbeddingService } from '../inference/embedding-service.ts';
 import type { EmbeddingContext } from '../search/content-search.ts';
 import { rewriteQuery } from './rewrite.ts';
@@ -25,7 +26,8 @@ function getEmbeddingContext(region: string): EmbeddingContext | undefined {
     const normalize: boolean =
       (config.get('embeddingNormalize') as string) !== 'false';
 
-    const client = new BedrockClient(region);
+    const raw = new BedrockClient(region);
+    const client = new InstrumentedBedrockClient(raw, null, 'query_generate');
     const service = new EmbeddingService(client);
     return { service, modelId, dimensions, normalize };
   } catch {
@@ -65,7 +67,11 @@ queryRoutes.post('/', async (c) => {
   const generateUserPrompt: string =
     (config.get('queryGenerateUserPrompt') as string) || '';
 
-  const client = new BedrockClient(region);
+  const client = new InstrumentedBedrockClient(
+    new BedrockClient(region),
+    null,
+    'query',
+  );
   const embeddingCtx: EmbeddingContext | undefined =
     getEmbeddingContext(region);
 

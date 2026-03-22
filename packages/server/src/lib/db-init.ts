@@ -11,6 +11,7 @@ import { ensureNewsTables } from '../news/schema.ts';
 import { ensureConsultantTables } from '../consultant/schema.ts';
 import { ensureChatTables } from '../chat/schema.ts';
 import { ensureSavedSearchTables } from '../saved-search/schema.ts';
+import { ensureInferenceLogTable } from '../inference/schema.ts';
 
 /**
  * Initialize a fresh database with the base schema.
@@ -39,6 +40,7 @@ export async function initializeDatabase(db: DuckDBInstance): Promise<void> {
   await ensureConsultantTables(conn);
   await ensureChatTables(conn);
   await ensureSavedSearchTables(conn);
+  await ensureInferenceLogTable(conn);
 
   conn.closeSync();
 }

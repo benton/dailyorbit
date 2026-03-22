@@ -3,7 +3,7 @@ import type {
   Message as BedrockMessage,
 } from '@aws-sdk/client-bedrock-runtime';
 import { renderPrompt } from '../inference/prompts.ts';
-import type { BedrockClient } from '../inference/bedrock-client.ts';
+import type { BedrockClientLike } from '../inference/bedrock-client.ts';
 import type { RetrievedSource } from '../query/types.ts';
 import { DEFAULT_GENERATE_USER_PROMPT } from '../query/generate.ts';
 import type { Message } from './types.ts';
@@ -25,7 +25,7 @@ export type ChatGenerateOptions = {
   history: Message[];
   consultant: Consultant;
   teamPreamble: string;
-  client: BedrockClient;
+  client: BedrockClientLike;
   fallbackModelId: string;
   userPromptTemplate?: string;
 };
