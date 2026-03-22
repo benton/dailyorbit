@@ -18,13 +18,13 @@ Physical attachment files on disk are never touched — only database rows are a
 ./daily-orbit test rewind --since 2026-03-18 --yes
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--since <date>` | Remove filings with `_first_seen_at >= date` |
-| `--last <n>` | Remove the N most recently ingested filings (by `_first_seen_at` desc) |
-| `--full` | Also delete embeddings and rebuild FTS index (expensive to re-derive) |
-| `--dry-run` | Print what would be deleted with counts per table, but don't execute |
-| `--yes` | Skip confirmation prompt |
+| Flag             | Description                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| `--since <date>` | Remove filings with `_first_seen_at >= date`                           |
+| `--last <n>`     | Remove the N most recently ingested filings (by `_first_seen_at` desc) |
+| `--full`         | Also delete embeddings and rebuild FTS index (expensive to re-derive)  |
+| `--dry-run`      | Print what would be deleted with counts per table, but don't execute   |
+| `--yes`          | Skip confirmation prompt                                               |
 
 `--since` and `--last` are mutually exclusive. One is required.
 
@@ -49,16 +49,16 @@ CREATE TEMP TABLE rewind_filings AS
 
 Executed in a single transaction:
 
-| Step | Table | Condition | Default | `--full` only |
-|------|-------|-----------|---------|---------------|
-| 1 | `alert_run` | all rows (resets watermarks) | x | |
-| 2 | `user_content_flag` | `content_type='filing' AND content_key IN (file_numbers)` | x | |
-| 3 | `user_filing_view` | `file_number IN (file_numbers)` | x | |
-| 4 | `pleading` | `filing_key IN (filing_keys)` | x | |
-| 5 | `attachment` | `filing_key IN (filing_keys)` | x | |
-| 6 | `filing` | target set | x | |
-| 7 | `embedding` | `source_table IN ('filing','attachment','pleading') AND source_key IN (keys)` | | x |
-| 8 | FTS rebuild | `PRAGMA create_fts_index(...)` with overwrite | | x |
+| Step | Table               | Condition                                                                     | Default | `--full` only |
+| ---- | ------------------- | ----------------------------------------------------------------------------- | ------- | ------------- |
+| 1    | `alert_run`         | all rows (resets watermarks)                                                  | x       |               |
+| 2    | `user_content_flag` | `content_type='filing' AND content_key IN (file_numbers)`                     | x       |               |
+| 3    | `user_filing_view`  | `file_number IN (file_numbers)`                                               | x       |               |
+| 4    | `pleading`          | `filing_key IN (filing_keys)`                                                 | x       |               |
+| 5    | `attachment`        | `filing_key IN (filing_keys)`                                                 | x       |               |
+| 6    | `filing`            | target set                                                                    | x       |               |
+| 7    | `embedding`         | `source_table IN ('filing','attachment','pleading') AND source_key IN (keys)` |         | x             |
+| 8    | FTS rebuild         | `PRAGMA create_fts_index(...)` with overwrite                                 |         | x             |
 
 ### Cost Rationale
 
@@ -136,10 +136,10 @@ Done. Run './daily-orbit ingest ibfs' to re-ingest (will re-extract, re-summariz
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `packages/server/src/cli/test/index.ts` | `test` subcommand group |
-| `packages/server/src/cli/test/rewind.ts` | CLI command definition |
+| File                                       | Purpose                                  |
+| ------------------------------------------ | ---------------------------------------- |
+| `packages/server/src/cli/test/index.ts`    | `test` subcommand group                  |
+| `packages/server/src/cli/test/rewind.ts`   | CLI command definition                   |
 | `packages/server/src/test-utils/rewind.ts` | Core rewind logic (testable without CLI) |
 
 Core logic is separated from the CLI so it can be called from integration tests later.
