@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Consultant, Conversation, Message } from './types.ts';
 import { ToastProvider, useToast } from '../ui/toast.tsx';
 import {
@@ -9,6 +9,7 @@ import {
   fetchConversations,
   renameConversation,
 } from './api.ts';
+import ChatCostBadge from './ChatCostBadge.tsx';
 import ChatInput from './ChatInput.tsx';
 import ConsultantSelector from './ConsultantSelector.tsx';
 import ConversationSidebar from './ConversationSidebar.tsx';
@@ -30,6 +31,8 @@ function ChatPageInner() {
   const [messages, setMessages] = useState<Array<Message>>([]);
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [isNewConversation, setIsNewConversation] = useState<boolean>(true);
+  const [displayCostCents, setDisplayCostCents] = useState<number>(0);
+  const baseCostRef = useRef<number>(0);
   const { toast } = useToast();
   const { cancel, reset, sendMessage, state: streamState } = useChatStream();
 
@@ -65,6 +68,9 @@ function ChatPageInner() {
         // Set consultant to match conversation's current consultant
         const consultant: Consultant | undefined = consultantMap.get(conv.consultantId);
         if (consultant != null) {setSelectedConsultant(consultant);}
+        // Initialize cost from conversation total
+        baseCostRef.current = conv.totalCostCents;
+        setDisplayCostCents(conv.totalCostCents);
       } catch (error: unknown) {
         const msg: string = error instanceof Error ? error.message : 'Failed to load conversation';
         toast(msg, 'error');
@@ -79,17 +85,28 @@ function ChatPageInner() {
     void (async () => {
       const conv = await fetchConversation(activeConvId);
       setMessages(conv.messages);
+      // Reset cost to authoritative server value
+      baseCostRef.current = conv.totalCostCents;
+      setDisplayCostCents(conv.totalCostCents);
       const convs = await fetchConversations();
       setConversations(convs);
     })();
     reset();
   }, [streamState.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Live-update cost from SSE usage events during streaming
+  useEffect(() => {
+    if (streamState.usage?.costCents == null) {return;}
+    setDisplayCostCents(baseCostRef.current + streamState.usage.costCents);
+  }, [streamState.usage]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Handle new conversation
   const handleNew = useCallback(() => {
     setActiveConvId(null);
     setMessages([]);
     setIsNewConversation(true);
+    setDisplayCostCents(0);
+    baseCostRef.current = 0;
     reset();
   }, [reset]);
 
@@ -216,7 +233,12 @@ function ChatPageInner() {
             </div>
           </div>
         ) : (
-          /* Message thread */
+          <>
+          {/* Cost badge header */}
+          <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-1 dark:border-neutral-800">
+            <ChatCostBadge costCents={displayCostCents} />
+          </div>
+          {/* Message thread */}
           <MessageThread
             consultants={consultantMap}
             isStreaming={isStreaming}
@@ -224,6 +246,7 @@ function ChatPageInner() {
             streamingAnswer={streamState.answer}
             streamingSources={streamState.sources}
           />
+          </>
         )}
 
         {/* Status bar */}
