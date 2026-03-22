@@ -267,6 +267,7 @@ class PipelineRunner {
           db,
           conn,
           concurrency: effectiveConcurrency,
+          signal,
           log: (level: 'info' | 'error' | 'progress', message: string) => {
             this.emitLog(buffer, runId, stageId, level, message);
           },
@@ -285,14 +286,25 @@ class PipelineRunner {
 
         try {
           const result: StageResult = await stage.run(ctx);
+          const wasCancelled: boolean = signal.aborted;
           this.stageStates.set(stageId, {
             id: stageId,
-            status: 'success',
+            status: wasCancelled ? 'idle' : 'success',
             lastResult: result,
             startedAt: this.stageStates.get(stageId)?.startedAt,
             finishedAt: new Date().toISOString(),
           });
-          completed++;
+          if (wasCancelled) {
+            this.emitLog(
+              buffer,
+              runId,
+              stageId,
+              'info',
+              'Stopped (run cancelled)',
+            );
+          } else {
+            completed++;
+          }
           await finishStageRun(conn, dbStageRunId, {
             status: 'completed',
             itemsDiscovered: result.itemsDiscovered ?? 0,

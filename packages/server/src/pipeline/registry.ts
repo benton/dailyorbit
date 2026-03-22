@@ -22,6 +22,7 @@ export type PipelineContext = {
   db: DuckDBInstance;
   conn: DuckDBConnection;
   concurrency: number;
+  signal: AbortSignal;
   log: (level: 'info' | 'error' | 'progress', message: string) => void;
   onProgress: (processed: number, total: number) => void;
 };
@@ -100,6 +101,7 @@ const STAGES: PipelineStage[] = [
         storageBasePath: 'data/attachments',
         scope: {},
         concurrency: ctx.concurrency,
+        signal: ctx.signal,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {
