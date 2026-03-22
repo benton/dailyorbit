@@ -185,7 +185,8 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     key: 'schedulerAutoStart',
     defaultValue: 'false',
     encrypted: false,
-    description: 'Start the pipeline scheduler automatically when the API server starts',
+    description:
+      'Start the pipeline scheduler automatically when the API server starts',
   },
 } as const;
 

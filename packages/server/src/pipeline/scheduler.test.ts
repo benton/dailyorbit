@@ -1,12 +1,5 @@
 import { DuckDBInstance } from '@duckdb/node-api';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   PipelineContext,
   PipelineStage,
@@ -63,9 +56,7 @@ const { __resetDb } = (await import('../lib/db.ts')) as unknown as {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-function makeFakeIngest(
-  processedCount: number = 0,
-): PipelineStage {
+function makeFakeIngest(processedCount: number = 0): PipelineStage {
   return {
     id: 'ingest.icfs',
     group: 'ingest',

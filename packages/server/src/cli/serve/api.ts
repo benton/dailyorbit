@@ -168,7 +168,9 @@ export const serveApiCommand = defineCommand({
     initializeAuth(config);
 
     // Auto-start scheduler if configured
-    const autoStart: string = String(config.get('schedulerAutoStart') ?? 'false');
+    const autoStart: string = String(
+      config.get('schedulerAutoStart') ?? 'false',
+    );
     if (autoStart === 'true') {
       const { getScheduler } = await import('../../pipeline/scheduler.ts');
       const scheduler = getScheduler();

@@ -10,9 +10,17 @@ type SchedulerStatus = {
   probeIntervalMs: number;
   refreshIntervalMs: number;
   lastProbeAt: string | null;
-  lastProbeResult: { stagesCompleted: number; stagesFailed: number; totalDurationMs: number } | null;
+  lastProbeResult: {
+    stagesCompleted: number;
+    stagesFailed: number;
+    totalDurationMs: number;
+  } | null;
   lastRefreshAt: string | null;
-  lastRefreshResult: { stagesCompleted: number; stagesFailed: number; totalDurationMs: number } | null;
+  lastRefreshResult: {
+    stagesCompleted: number;
+    stagesFailed: number;
+    totalDurationMs: number;
+  } | null;
   nextProbeAt: string | null;
   nextRefreshAt: string | null;
   refreshInProgress: boolean;
@@ -69,9 +77,7 @@ export default function SchedulerPanel() {
   useEffect(() => {
     void (async () => {
       try {
-        const entries = await apiFetch<Array<{ key: string; value: string }>>(
-          '/api/admin/config',
-        );
+        const entries = await apiFetch<Array<{ key: string; value: string }>>('/api/admin/config');
         const entry = entries.find((e) => e.key === 'schedulerAutoStart');
         if (entry != null) {
           setAutoStart(entry.value === 'true');
@@ -239,15 +245,13 @@ export default function SchedulerPanel() {
             {formatTime(status.lastProbeAt)}
             {status.lastProbeResult != null && (
               <span className="ml-1 text-neutral-400">
-                ({formatMs(status.lastProbeResult.totalDurationMs)},
-                {' '}{String(status.lastProbeResult.stagesCompleted)} stages)
+                ({formatMs(status.lastProbeResult.totalDurationMs)},{' '}
+                {String(status.lastProbeResult.stagesCompleted)} stages)
               </span>
             )}
           </div>
           {status.nextProbeAt != null && (
-            <div className="mt-0.5 text-neutral-400">
-              Next: {formatTime(status.nextProbeAt)}
-            </div>
+            <div className="mt-0.5 text-neutral-400">Next: {formatTime(status.nextProbeAt)}</div>
           )}
         </div>
 
@@ -260,15 +264,13 @@ export default function SchedulerPanel() {
             {formatTime(status.lastRefreshAt)}
             {status.lastRefreshResult != null && (
               <span className="ml-1 text-neutral-400">
-                ({formatMs(status.lastRefreshResult.totalDurationMs)},
-                {' '}{String(status.lastRefreshResult.stagesCompleted)} stages)
+                ({formatMs(status.lastRefreshResult.totalDurationMs)},{' '}
+                {String(status.lastRefreshResult.stagesCompleted)} stages)
               </span>
             )}
           </div>
           {status.nextRefreshAt != null && (
-            <div className="mt-0.5 text-neutral-400">
-              Next: {formatTime(status.nextRefreshAt)}
-            </div>
+            <div className="mt-0.5 text-neutral-400">Next: {formatTime(status.nextRefreshAt)}</div>
           )}
         </div>
       </div>
@@ -276,7 +278,8 @@ export default function SchedulerPanel() {
       {/* Intervals display when running */}
       {isRunning && (
         <div className="mt-2 text-xs text-neutral-400">
-          Probe: {formatInterval(status.probeIntervalMs)} · Refresh: {formatInterval(status.refreshIntervalMs)}
+          Probe: {formatInterval(status.probeIntervalMs)} · Refresh:{' '}
+          {formatInterval(status.refreshIntervalMs)}
         </div>
       )}
     </div>

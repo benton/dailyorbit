@@ -122,15 +122,11 @@ export async function runIcfsIngest(
     if (options.skipKnown === true) {
       const prev = await getLatestSnapshot(conn);
       if (prev != null && prev.snapshot_hash === snapshotHash) {
-        await saveSnapshot(
-          conn,
-          snapshotHash,
-          [],
-          0,
-          options.pipelineRunId,
-        );
+        await saveSnapshot(conn, snapshotHash, [], 0, options.pipelineRunId);
         const durationMs: number = Date.now() - start;
-        log(`Snapshot unchanged (${snapshotHash.slice(0, 8)}…), no new filings`);
+        log(
+          `Snapshot unchanged (${snapshotHash.slice(0, 8)}…), no new filings`,
+        );
         return {
           filingsDiscovered: fileNumbers.length,
           filingsIngested: 0,

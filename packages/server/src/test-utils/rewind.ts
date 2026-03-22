@@ -238,7 +238,7 @@ async function deleteDependentRows(
   conn: DuckDBConnection,
 ): Promise<TableCount[]> {
   // Step 0: discovery_snapshot — delete all rows (forces fresh probe)
-  const snapshotCount: number = await tableExists(conn, 'discovery_snapshot')
+  const snapshotCount: number = (await tableExists(conn, 'discovery_snapshot'))
     ? await deleteAndCount(conn, 'discovery_snapshot', '1=1')
     : 0;
 
