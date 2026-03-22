@@ -79,8 +79,8 @@ export default function PipelineStep({
         {cfg.label}
       </Badge>
 
-      {/* Reset failed matches button (only for idle resettable stages) */}
-      {resettable && status === 'idle' && onReset != null && (
+      {/* Reset failed matches button (visible when not running) */}
+      {resettable && status !== 'running' && onReset != null && (
         <Button
           disabled={disabled}
           onClick={() => onReset(id)}
