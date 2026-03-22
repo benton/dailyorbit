@@ -184,6 +184,7 @@ chatRoutes.post('/:id/messages', async (c) => {
 
   const raw = new BedrockClient(region);
   const client = new InstrumentedBedrockClient(raw, null, 'chat');
+  client.userId = userId;
   const embeddingCtx: EmbeddingContext | undefined = getEmbeddingContext(
     region,
     null,

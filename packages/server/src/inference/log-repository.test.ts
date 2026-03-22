@@ -60,6 +60,24 @@ describe('InferenceLogRepository', () => {
       );
       expect(reader.getRows()[0]![0]).toBeNull();
     });
+
+    it('stores user_id when provided', async () => {
+      await logInference(conn, { ...ENTRY, userId: 'user-abc' });
+
+      const reader = await conn.runAndReadAll(
+        'SELECT user_id FROM inference_log',
+      );
+      expect(reader.getRows()[0]![0]).toEqual('user-abc');
+    });
+
+    it('allows null user_id', async () => {
+      await logInference(conn, ENTRY);
+
+      const reader = await conn.runAndReadAll(
+        'SELECT user_id FROM inference_log',
+      );
+      expect(reader.getRows()[0]![0]).toBeNull();
+    });
   });
 
   describe('logInferenceBatch', () => {

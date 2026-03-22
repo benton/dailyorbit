@@ -20,6 +20,9 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
   /** Optional caller tag written to each log entry (e.g. 'chat', 'summarize'). */
   caller: string | undefined;
 
+  /** Optional user ID for user-attributed cost tracking. */
+  userId: string | undefined;
+
   constructor(
     inner: BedrockClientLike,
     conn: DuckDBConnection | null,
@@ -44,6 +47,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       modelId: input.modelId ?? 'unknown',
       operation: 'converse',
       caller: this.caller,
+      userId: this.userId,
       inputTokens: result.usage?.inputTokens ?? 0,
       outputTokens: result.usage?.outputTokens ?? 0,
       latencyMs,
@@ -72,6 +76,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       modelId: input.modelId ?? 'unknown',
       operation: 'converse_stream',
       caller: this.caller,
+      userId: this.userId,
       inputTokens,
       outputTokens,
       latencyMs,
@@ -85,6 +90,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
       modelId: req.modelId,
       operation: 'embed',
       caller: this.caller,
+      userId: this.userId,
       inputTokens: result.inputTokenCount,
       outputTokens: 0,
       latencyMs: result.latencyMs,
@@ -98,6 +104,7 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
     modelId: string;
     operation: 'converse' | 'converse_stream' | 'embed';
     caller?: string | undefined;
+    userId?: string | undefined;
     inputTokens: number;
     outputTokens: number;
     latencyMs: number;

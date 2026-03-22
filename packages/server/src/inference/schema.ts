@@ -13,6 +13,7 @@ export async function ensureInferenceLogTable(
       model_id        VARCHAR NOT NULL,
       operation       VARCHAR NOT NULL,
       caller          VARCHAR,
+      user_id         VARCHAR,
       input_tokens    INTEGER NOT NULL DEFAULT 0,
       output_tokens   INTEGER NOT NULL DEFAULT 0,
       latency_ms      INTEGER NOT NULL DEFAULT 0,
@@ -33,5 +34,10 @@ export async function ensureInferenceLogTable(
   await conn.run(`
     CREATE INDEX IF NOT EXISTS idx_inference_log_caller
     ON inference_log(caller)
+  `);
+
+  await conn.run(`
+    CREATE INDEX IF NOT EXISTS idx_inference_log_user
+    ON inference_log(user_id)
   `);
 }

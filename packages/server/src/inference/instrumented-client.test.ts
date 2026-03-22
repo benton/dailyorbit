@@ -78,20 +78,22 @@ type LogRow = {
   modelId: string;
   operation: string;
   caller: string | null;
+  userId: string | null;
   inputTokens: number;
   outputTokens: number;
 };
 
 async function readLogRows(conn: DuckDBConnection): Promise<LogRow[]> {
   const reader = await conn.runAndReadAll(
-    'SELECT model_id, operation, caller, input_tokens, output_tokens FROM inference_log ORDER BY id',
+    'SELECT model_id, operation, caller, user_id, input_tokens, output_tokens FROM inference_log ORDER BY id',
   );
   return reader.getRows().map((row) => ({
     modelId: String(row[0]),
     operation: String(row[1]),
     caller: row[2] != null ? String(row[2]) : null,
-    inputTokens: Number(row[3]),
-    outputTokens: Number(row[4]),
+    userId: row[3] != null ? String(row[3]) : null,
+    inputTokens: Number(row[4]),
+    outputTokens: Number(row[5]),
   }));
 }
 
@@ -137,6 +139,7 @@ describe('InstrumentedBedrockClient', () => {
         modelId: 'us.amazon.nova-pro-v1:0',
         operation: 'converse',
         caller: 'test_caller',
+        userId: null,
         inputTokens: 100,
         outputTokens: 50,
       });
@@ -168,6 +171,7 @@ describe('InstrumentedBedrockClient', () => {
         modelId: 'us.amazon.nova-pro-v1:0',
         operation: 'converse_stream',
         caller: 'chat',
+        userId: null,
         inputTokens: 200,
         outputTokens: 80,
       });
@@ -199,6 +203,7 @@ describe('InstrumentedBedrockClient', () => {
         modelId: 'amazon.titan-embed-text-v2:0',
         operation: 'embed',
         caller: 'embed_cli',
+        userId: null,
         inputTokens: 42,
         outputTokens: 0,
       });
@@ -247,6 +252,41 @@ describe('InstrumentedBedrockClient', () => {
       const rows: LogRow[] = await readLogRows(conn);
       expect(rows).toHaveLength(1);
       expect(rows[0]!.caller).toEqual('lazy');
+    });
+  });
+
+  describe('userId', () => {
+    it('logs user_id when set on the client', async () => {
+      const inner: BedrockClientLike = createMockClient();
+      const client = new InstrumentedBedrockClient(inner, conn, 'chat');
+      client.userId = 'user-123';
+
+      await client.converse({
+        modelId: 'us.amazon.nova-pro-v1:0',
+        messages: [{ role: 'user', content: [{ text: 'hi' }] }],
+      });
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const rows: LogRow[] = await readLogRows(conn);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.userId).toEqual('user-123');
+    });
+
+    it('logs null user_id for batch operations', async () => {
+      const inner: BedrockClientLike = createMockClient();
+      const client = new InstrumentedBedrockClient(inner, conn, 'summarize');
+
+      await client.converse({
+        modelId: 'us.amazon.nova-pro-v1:0',
+        messages: [{ role: 'user', content: [{ text: 'hi' }] }],
+      });
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      const rows: LogRow[] = await readLogRows(conn);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.userId).toBeNull();
     });
   });
 });

@@ -4,6 +4,7 @@ export type InferenceLogEntry = {
   readonly modelId: string;
   readonly operation: 'converse' | 'converse_stream' | 'embed';
   readonly caller?: string | undefined;
+  readonly userId?: string | undefined;
   readonly inputTokens: number;
   readonly outputTokens: number;
   readonly latencyMs: number;
@@ -19,8 +20,8 @@ export type InferenceLogSummaryRow = {
 };
 
 const INSERT_SQL: string = `
-  INSERT INTO inference_log (model_id, operation, caller, input_tokens, output_tokens, latency_ms)
-  VALUES ($1, $2, $3, $4, $5, $6)
+  INSERT INTO inference_log (model_id, operation, caller, user_id, input_tokens, output_tokens, latency_ms)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
 `;
 
 /** Insert a single inference log entry. */
@@ -32,6 +33,7 @@ export async function logInference(
     entry.modelId,
     entry.operation,
     entry.caller ?? null,
+    entry.userId ?? null,
     entry.inputTokens,
     entry.outputTokens,
     entry.latencyMs,
