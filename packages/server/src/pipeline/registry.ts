@@ -279,7 +279,7 @@ const STAGES: PipelineStage[] = [
     group: 'attachments',
     name: 'Embed Attachments',
     description: 'Generate vector embeddings for attachment text',
-    defaultConcurrency: 15,
+    defaultConcurrency: 10,
     parallelizable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       // Mirrors the CLI embed command for source=attachment
@@ -289,7 +289,8 @@ const STAGES: PipelineStage[] = [
         await import('../inference/embedding-service.ts');
       const { ensureEmbeddingSchema } =
         await import('../search/embedding-schema.ts');
-      const { splitText } = await import('../inference/text-chunker.ts');
+      const { splitText, embedChunk, EMBEDDING_MAX_CHARS, EMBEDDING_OVERLAP } =
+        await import('../inference/text-chunker.ts');
       const { computeTextChecksum } = await import('../lib/text-utils.ts');
       const { processWithConcurrency } = await import('../lib/concurrency.ts');
 
@@ -335,7 +336,7 @@ const STAGES: PipelineStage[] = [
             const text: string = String(row.full_text);
             const sourceKey: string = String(row.source_key);
             const textChecksum: string = computeTextChecksum(text);
-            const chunks: string[] = splitText(text, 20000, 500);
+            const chunks: string[] = splitText(text, EMBEDDING_MAX_CHARS, EMBEDDING_OVERLAP);
 
             // Delete existing embeddings
             await conn.run(
@@ -344,11 +345,11 @@ const STAGES: PipelineStage[] = [
             );
 
             for (let ci: number = 0; ci < chunks.length; ci++) {
-              const resp = await service.embedQuery(
+              const resp = await embedChunk(
+                service,
                 chunks[ci]!,
                 modelId,
                 dimensions,
-                true,
               );
               await conn.run(
                 `INSERT INTO embedding (source_table, source_key, chunk_index, embedding, model_id, text_checksum)

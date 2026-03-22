@@ -2,6 +2,59 @@
 // Text splitting for map-reduce chunked summarization
 // ---------------------------------------------------------------------------
 
+import type { EmbeddingService } from './embedding-service.ts';
+import type { EmbeddingResponse } from './types.ts';
+
+// ---------------------------------------------------------------------------
+// Embedding chunk-size constants (shared by CLI and pipeline)
+// ---------------------------------------------------------------------------
+
+/**
+ * Conservative char limit for Titan V2's 8,192 token input.
+ * Observed worst-case ratio on FCC legal text is ~2.28 chars/token
+ * (abbreviation-heavy filings), so 16k chars ≈ 7,018 tokens — 14%
+ * headroom under the 8,192 limit.
+ */
+export const EMBEDDING_MAX_CHARS: number = 16_000;
+
+/** Overlap chars between consecutive chunks for context continuity. */
+export const EMBEDDING_OVERLAP: number = 500;
+
+/** Titan V2 hard token limit. */
+const TOKEN_LIMIT: number = 8192;
+
+/** Matches the token count from Bedrock's "Too many input tokens" error. */
+const TOKEN_LIMIT_RE: RegExp = /request input token count: (\d+)/;
+
+/**
+ * Embed a chunk of text, retrying once with truncation if it exceeds the
+ * token limit. Uses the reported token count to estimate the chars-per-token
+ * ratio and truncates to fit within the limit with 10% headroom.
+ */
+export async function embedChunk(
+  service: EmbeddingService,
+  text: string,
+  modelId: string,
+  dimensions: number,
+): Promise<EmbeddingResponse> {
+  try {
+    return await service.embedQuery(text, modelId, dimensions, true);
+  } catch (err: unknown) {
+    const msg: string = err instanceof Error ? err.message : String(err);
+    const match: RegExpMatchArray | null = msg.match(TOKEN_LIMIT_RE);
+    if (match == null) throw err;
+
+    const actualTokens: number = parseInt(match[1]!, 10);
+    const charsPerToken: number = text.length / actualTokens;
+    const safeChars: number = Math.floor(TOKEN_LIMIT * 0.9 * charsPerToken);
+    const truncated: string = text.slice(0, safeChars);
+
+    return service.embedQuery(truncated, modelId, dimensions, true);
+  }
+}
+
+// ---------------------------------------------------------------------------
+
 const PARAGRAPH_BOUNDARY: RegExp = /\n\n+/;
 const SENTENCE_BOUNDARY: RegExp = /(?<=\.\s)/;
 
