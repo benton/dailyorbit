@@ -50,6 +50,10 @@ export async function ensureNewsTables(conn: DuckDBConnection): Promise<void> {
   `);
 
   await conn.run(
+    `ALTER TABLE news_item ADD COLUMN IF NOT EXISTS company_match_attempted_at TIMESTAMP`,
+  );
+
+  await conn.run(
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_news_item_source_url ON news_item(source_url)`,
   );
   await conn.run(

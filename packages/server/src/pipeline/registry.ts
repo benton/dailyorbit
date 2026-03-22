@@ -645,6 +645,7 @@ const STAGES: PipelineStage[] = [
     description: 'Match news items to company entities',
     defaultConcurrency: 1,
     parallelizable: false,
+    resettable: true,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewsTables } = await import('../news/schema.ts');
       const { ensureCompanyTables } = await import('../companies/schema.ts');

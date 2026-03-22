@@ -497,6 +497,7 @@ export async function getNewsItemsNeedingAttribution(
     `SELECT * FROM news_item
      WHERE company_id IS NULL
        AND full_text IS NOT NULL
+       AND company_match_attempted_at IS NULL
      ORDER BY published_at DESC NULLS LAST
      LIMIT $1`,
     [limit] as DuckDBValue[],
@@ -509,8 +510,18 @@ export async function setNewsItemCompany(
   id: number,
   companyId: number,
 ): Promise<void> {
-  await conn.run(`UPDATE news_item SET company_id = $1 WHERE id = $2`, [
-    companyId,
-    id,
-  ] as DuckDBValue[]);
+  await conn.run(
+    `UPDATE news_item SET company_id = $1, company_match_attempted_at = current_timestamp WHERE id = $2`,
+    [companyId, id] as DuckDBValue[],
+  );
+}
+
+export async function stampNewsItemMatchAttempted(
+  conn: DuckDBConnection,
+  id: number,
+): Promise<void> {
+  await conn.run(
+    `UPDATE news_item SET company_match_attempted_at = current_timestamp WHERE id = $1`,
+    [id] as DuckDBValue[],
+  );
 }

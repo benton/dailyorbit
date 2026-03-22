@@ -197,6 +197,10 @@ pipelineRoutes.post('/reset-matches/:stageId', async (c) => {
       count: `SELECT COUNT(*)::INTEGER AS cnt FROM filing WHERE ownership_match_attempted_at IS NOT NULL AND file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
       update: `UPDATE filing SET ownership_match_attempted_at = NULL WHERE ownership_match_attempted_at IS NOT NULL AND file_number NOT IN (SELECT filing_file_number FROM ownership_event)`,
     },
+    'news.attribute': {
+      count: `SELECT COUNT(*)::INTEGER AS cnt FROM news_item WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+      update: `UPDATE news_item SET company_match_attempted_at = NULL WHERE company_id IS NULL AND company_match_attempted_at IS NOT NULL`,
+    },
   };
 
   const queries = RESET_QUERIES[stageId];

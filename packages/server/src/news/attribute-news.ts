@@ -3,6 +3,7 @@ import type { NewsItem } from './types.ts';
 import {
   getNewsItemsNeedingAttribution,
   setNewsItemCompany,
+  stampNewsItemMatchAttempted,
 } from './repository.ts';
 
 type AliasEntry = {
@@ -62,6 +63,7 @@ export async function attributeNewsItems(
     }
 
     if (companyCounts.size === 0) {
+      await stampNewsItemMatchAttempted(conn, item.id);
       skipped++;
       continue;
     }
