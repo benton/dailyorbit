@@ -51,6 +51,8 @@ export type AttachmentPipelineOptions = {
   concurrency?: number;
   verbose?: boolean;
   onProgress?: (msg: string) => void;
+  /** Stop after download+validation — skip extraction, summarization, and FTS rebuild (default: false) */
+  stopAfterDownload?: boolean;
   /** Skip the summarization stage (default: false) */
   skipSummarization?: boolean;
   /** AWS region for Bedrock inference (default: from config or 'us-east-2') */
