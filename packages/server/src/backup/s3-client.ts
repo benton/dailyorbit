@@ -1,5 +1,6 @@
-import { PutObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
-import { createReadStream, statSync } from 'node:fs';
+import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+import { createReadStream } from 'node:fs';
 
 export type S3UploaderConfig = {
   bucket: string;
@@ -23,17 +24,21 @@ export function createS3Uploader(config: S3UploaderConfig): S3Uploader {
 
   async function upload(localPath: string, s3Key: string): Promise<void> {
     const fullKey: string = `${config.prefix}${s3Key}`;
-    const stat = statSync(localPath);
     const stream = createReadStream(localPath);
 
-    await client.send(
-      new PutObjectCommand({
+    const multipartUpload = new Upload({
+      client,
+      params: {
         Bucket: config.bucket,
         Key: fullKey,
         Body: stream,
-        ContentLength: stat.size,
-      }),
-    );
+      },
+      // 100 MB parts, up to 4 concurrent uploads
+      partSize: 100 * 1024 * 1024,
+      queueSize: 4,
+    });
+
+    await multipartUpload.done();
   }
 
   async function listSnapshots(): Promise<S3SnapshotEntry[]> {
