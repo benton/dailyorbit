@@ -52,7 +52,16 @@ export function createBackupService(config: BackupServiceConfig): BackupService 
       // 4. Also upload as latest.duckdb for boot restore fallback
       await config.uploader.upload(snapPath, 'latest.duckdb');
 
-      // 5. Clean up temp file
+      // 5. Upload encryption key if it exists
+      const keyPath: string = config.dbPath.replace('.duckdb', '.key');
+      try {
+        statSync(keyPath);
+        await config.uploader.upload(keyPath, 'daily-orbit.key');
+      } catch {
+        // Key file doesn't exist — skip
+      }
+
+      // 6. Clean up temp file
       unlinkSync(snapPath);
 
       // 6. Record success
