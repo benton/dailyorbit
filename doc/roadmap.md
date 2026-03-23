@@ -24,9 +24,9 @@
 - v1.4.0 [x] Ingestion pipeline admin UI
 - v1.5.0 [x] News items UI - user and admin
 - v1.6.0 [x] Premium feature: Query-modifying RAG / interrogation mode
-- v1.7.0 [ ] LLM-powered question answering / different "consultants"
-- v1.8.0 [ ] RAG Search module
-- v1.9.0 [ ] Per-use, per-request inference cost accounting
+- v1.7.0 [x] LLM-powered question answering / different "consultants"
+- v1.8.0 [x] RAG Search module
+- v1.9.0 [x] Per-use, per-request inference cost accounting
 
 ## Medium Term: The Daily Orbit Newspaper
 
@@ -50,4 +50,7 @@
 
 ## Bug fixes
 
+- v?.x.x [ ] CloudwatchLogs w structured output
+- v?.x.x [ ] show software version on admin dashboard
+- v?.x.x [ ] Basic EC2 instance metrics dashboard?
 - v?.x.x [ ] Exponential backoff during ingest
