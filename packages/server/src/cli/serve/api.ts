@@ -1,8 +1,16 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { createLogger, setLogger, type AppLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
+
+const pkg: { version: string } = JSON.parse(
+  readFileSync(
+    resolve(import.meta.dirname ?? '.', '../../package.json'),
+    'utf-8',
+  ),
+);
+const version: string = pkg.version;
 
 const DEFAULT_DATABASE: string = 'data/daily-orbit.duckdb';
 const DEFAULT_KEY_FILE: string = 'data/daily-orbit.key';
@@ -98,6 +106,7 @@ export const serveApiCommand = defineCommand({
 
     const log: AppLogger = createLogger();
     setLogger(log);
+    log.info({ version }, 'Daily Orbit starting');
 
     const dbPath: string = resolveFromRoot(args.database);
     const keyPath: string = resolveFromRoot(args.keyFile);
@@ -208,7 +217,7 @@ export const serveApiCommand = defineCommand({
           },
         },
         () => {
-          log.info({ port: 443 }, 'Server started (HTTPS)');
+          log.info({ port: 443, version }, 'Server started (HTTPS)');
         },
       );
 
@@ -223,7 +232,7 @@ export const serveApiCommand = defineCommand({
       serve({ fetch: redirect.fetch, port: 80 });
     } else {
       serve({ fetch: app.fetch, port }, () => {
-        log.info({ port }, 'Server started');
+        log.info({ port, version }, 'Server started');
       });
     }
   },

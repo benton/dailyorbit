@@ -16,6 +16,7 @@ export type DatasetStats = {
   filings_by_subsystem: SubsystemCount[];
   attachment_stats: AttachmentStats;
   db_size_bytes: number;
+  version?: string;
 };
 
 export type ApplicantNode = {
