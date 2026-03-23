@@ -5,8 +5,7 @@ include:
   - template: Security/Container-Scanning.gitlab-ci.yml
 
 stages:
-  - test
-  - build
+  - build-and-test
   - deploy
 
 variables:
@@ -16,12 +15,23 @@ variables:
   VITE_SERVER_URL: "https://api.dailyorbit.org"
   FRONTEND_BUCKET: "daily-orbit-prod-frontend"
   AWS_DEFAULT_REGION: "us-east-2"
+  SAST_DEFAULT_ANALYZERS: "semgrep"
+
+# Override stages for included template jobs so they run in build-and-test
+code_quality:
+  stage: build-and-test
+
+semgrep-sast:
+  stage: build-and-test
+
+secret_detection:
+  stage: build-and-test
 
 # ---------------------------------------------------------------------------
-# Build — only runs after test stage passes
+# Build
 # ---------------------------------------------------------------------------
 build:
-  stage: build
+  stage: build-and-test
   image: docker:27
   services:
     - docker:27-dind
@@ -55,7 +65,7 @@ build:
 # Test
 # ---------------------------------------------------------------------------
 test:
-  stage: test
+  stage: build-and-test
   image: node:23-slim
   variables:
     CI: "true"
@@ -72,7 +82,7 @@ test:
 
 # Container scanning runs in build stage after the image is pushed
 container_scanning:
-  stage: build
+  stage: build-and-test
   needs: [build]
   variables:
     CS_DOCKER_IMAGE_PLATFORM: "linux/arm64"
@@ -82,6 +92,7 @@ container_scanning:
 # ---------------------------------------------------------------------------
 deploy:
   stage: deploy
+  needs: [build, test]
   image: docker:27
   services:
     - docker:27-dind
