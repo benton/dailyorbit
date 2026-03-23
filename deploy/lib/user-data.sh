@@ -54,8 +54,20 @@ else
 fi
 
 # ── Data Restore from S3 ─────────────────────────────────────────────────────
-aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}" /data/daily-orbit.duckdb \
-  || echo "No DB snapshot found — container will initialize fresh"
+# Find the most recent timestamped snapshot (YYYYMMDD-HHMM.duckdb) rather than
+# relying on latest.duckdb which may be stale if a snapshot upload partially failed.
+DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" \
+  | grep -E '[0-9]{8}-[0-9]{4}\.duckdb$' \
+  | sort | tail -1 | awk '{print $4}')
+
+if [ -n "$DB_SNAPSHOT" ]; then
+  echo "Restoring newest snapshot: $DB_SNAPSHOT"
+  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
+else
+  echo "No timestamped snapshot found, falling back to latest.duckdb"
+  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}" /data/daily-orbit.duckdb \
+    || echo "No DB snapshot found — container will initialize fresh"
+fi
 
 aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
   || echo "No encryption key found"
