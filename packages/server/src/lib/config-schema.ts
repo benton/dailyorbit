@@ -157,6 +157,30 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Application base URL for links in emails',
   },
+  snapshotBucket: {
+    key: 'snapshotBucket',
+    defaultValue: '',
+    encrypted: false,
+    description: 'S3 bucket for database snapshots (e.g., daily-orbit-data)',
+  },
+  snapshotPrefix: {
+    key: 'snapshotPrefix',
+    defaultValue: 'db/',
+    encrypted: false,
+    description: 'S3 key prefix for snapshot files',
+  },
+  snapshotRegion: {
+    key: 'snapshotRegion',
+    defaultValue: 'us-east-2',
+    encrypted: false,
+    description: 'AWS region for the snapshot S3 bucket',
+  },
+  snapshotIntervalMinutes: {
+    key: 'snapshotIntervalMinutes',
+    defaultValue: '120',
+    encrypted: false,
+    description: 'Automatic snapshot interval in minutes (0 = disabled)',
+  },
   tlsCert: {
     key: 'tlsCert',
     defaultValue: '',
