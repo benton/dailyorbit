@@ -2,6 +2,7 @@ import { defineCommand } from 'citty';
 import { checkpointCommand } from './checkpoint.ts';
 import { queryCommand } from './query.ts';
 import { remediateHtmlCommand } from './remediate-html.ts';
+import { snapshotCommand } from './snapshot.ts';
 
 export const dbCommand = defineCommand({
   meta: {
@@ -12,5 +13,6 @@ export const dbCommand = defineCommand({
     checkpoint: checkpointCommand,
     query: queryCommand,
     'remediate-html': remediateHtmlCommand,
+    snapshot: snapshotCommand,
   },
 });
