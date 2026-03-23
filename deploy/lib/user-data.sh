@@ -75,15 +75,40 @@ aws ecr get-login-password --region {{REGION}} | \
   docker login --username AWS --password-stdin {{ECR_URI}}
 
 docker pull {{ECR_URI}}:{{CONTAINER_TAG}}
-docker run -d \
+
+# Create systemd unit for the application container
+cat > /etc/systemd/system/daily-orbit.service << 'SVCEOF'
+[Unit]
+Description=Daily Orbit API Server
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=120
+
+ExecStartPre=-/usr/bin/docker rm -f daily-orbit
+ExecStart=/usr/bin/docker run \
   --name daily-orbit \
-  --restart unless-stopped \
   --network host \
   --log-opt max-size=100m \
   --log-opt max-file=3 \
   -v /data:/app/data \
   -e NODE_ENV=production \
   {{ECR_URI}}:{{CONTAINER_TAG}}
+
+ExecStop=/usr/bin/docker stop daily-orbit
+ExecStopPost=-/usr/bin/docker rm -f daily-orbit
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable daily-orbit
+systemctl start daily-orbit
 
 # ── CloudWatch Agent ───────────────────────────────────────────────────────
 # Install the unified CloudWatch agent for ARM64
