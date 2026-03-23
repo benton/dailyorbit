@@ -30,6 +30,7 @@ import { contentFlagRoutes } from './content-flag/routes.ts';
 import { hiddenItemRoutes } from './hidden-item/routes.ts';
 import { alertRoutes } from './alerts/routes.ts';
 import { pipelineRoutes } from './pipeline/routes.ts';
+import { backupRoutes } from './backup/routes.ts';
 import { queryRoutes } from './query/routes.ts';
 import {
   consultantRoutes,
@@ -99,6 +100,7 @@ app.route('/api/admin/inference', buildInferenceRoutes());
 app.route('/api/admin/news', newsAdminRoutes);
 app.route('/api/admin/users', userAdminRoutes);
 app.route('/api/admin/pipeline', pipelineRoutes);
+app.route('/api/admin/backups', backupRoutes);
 app.route('/api/admin/hidden-items', hiddenItemAdminRoutes);
 app.route('/api/filings', filingRoutes);
 app.route('/api/satellites', satelliteRoutes);
