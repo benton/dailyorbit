@@ -9,10 +9,7 @@ import { resolve } from 'node:path';
  * production Docker image (which strips build-only files like
  * pnpm-workspace.yaml and packages/web/package.json).
  */
-const SENTINELS: string[] = [
-  'daily-orbit',
-  'packages/server/package.json',
-];
+const SENTINELS: string[] = ['daily-orbit', 'packages/server/package.json'];
 
 /**
  * Validate that the current working directory is the project root.
