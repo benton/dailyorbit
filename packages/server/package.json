@@ -7,8 +7,8 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "dev": "nodemon --exec 'node --no-warnings src/index.ts' --ext ts",
-    "dev:setup": "mkdir -pv data",
+    "dev": "echo 'Use: ./daily-orbit serve api --watch' && exit 1",
+    "dev:setup": "mkdir -pv ../../data",
     "format": "oxfmt",
     "lint": "oxlint .",
     "lint:format": "oxfmt",
