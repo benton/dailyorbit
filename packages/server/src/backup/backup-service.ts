@@ -41,7 +41,7 @@ export function createBackupService(
     try {
       // 1. Checkpoint WAL into main file
       log.info('[backup] Checkpointing WAL...');
-      await config.conn.run('CHECKPOINT');
+      await config.conn.run('FORCE CHECKPOINT');
 
       // 2. Copy DB file to temp location (async to avoid blocking event loop)
       log.info('[backup] Copying database file...');
@@ -52,11 +52,7 @@ export function createBackupService(
       log.info(`[backup] Uploading ${s3Key} (${snapStat.size} bytes)...`);
       await config.uploader.upload(snapPath, s3Key);
 
-      // 4. Server-side copy to latest.duckdb (no re-upload)
-      log.info('[backup] Copying to latest.duckdb (server-side)...');
-      await config.uploader.copyObject(s3Key, 'latest.duckdb');
-
-      // 5. Upload encryption key if it exists
+      // 4. Upload encryption key if it exists
       const keyPath: string = config.dbPath.replace('.duckdb', '.key');
       try {
         statSync(keyPath);
@@ -65,10 +61,10 @@ export function createBackupService(
         // Key file doesn't exist — skip
       }
 
-      // 6. Clean up temp file
+      // 5. Clean up temp file
       await unlink(snapPath);
 
-      // 7. Record success
+      // 6. Record success
       const fullS3Key: string = `${config.snapshotPrefix}${s3Key}`;
       await completeBackupSnapshot(config.conn, id, fullS3Key, snapStat.size);
       log.info(`[backup] Snapshot ${s3Key} uploaded successfully`);
