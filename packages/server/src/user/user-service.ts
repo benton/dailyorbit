@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import { getLogger } from '../lib/logger.ts';
 import { DuckDBConnection as DuckDBConn } from '@duckdb/node-api';
 import { hashPassword } from 'better-auth/crypto';
 import type { SecretValue } from '../lib/encryption.ts';
@@ -71,7 +72,7 @@ export class UserService {
 
     if (count === 0 && role == null) {
       assignedRole = 'admin';
-      console.warn('Warning: first user auto-promoted to admin — %s', email);
+      getLogger().warn(`Warning: first user auto-promoted to admin — ${email}`);
     }
 
     const id: string = randomUUID();

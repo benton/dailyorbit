@@ -1,6 +1,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb, resolveFromRoot } from '../shared/context.ts';
 import { headlessLogin } from '../../icfs/headless-login.ts';
@@ -45,6 +46,7 @@ export const loginCommand = defineCommand({
     },
   },
   async run({ args }) {
+    const log = getLogger();
     let username: string = args.username ?? '';
     let password: string = args.password ?? '';
 
@@ -65,11 +67,11 @@ export const loginCommand = defineCommand({
     }
 
     if (!username || !password) {
-      console.error(
+      log.error(
         'ICFS credentials required. Provide --username and --password, or store via:',
       );
-      console.error('  ./daily-orbit config set icfsUsername <email>');
-      console.error('  ./daily-orbit config set icfsPassword <password>');
+      log.error('  ./daily-orbit config set icfsUsername <email>');
+      log.error('  ./daily-orbit config set icfsPassword <password>');
       process.exit(1);
     }
 
@@ -81,20 +83,20 @@ export const loginCommand = defineCommand({
       await config.load();
       await config.set('icfsUsername', username);
       await config.set('icfsPassword', password);
-      console.log('Credentials saved to encrypted config.');
+      log.info('Credentials saved to encrypted config.');
     }
 
     const result = await headlessLogin({
       username,
       password,
       headless: !args.headed,
-      onStatus: (msg: string) => console.log(`  ${msg}`),
+      onStatus: (msg: string) => log.info(`  ${msg}`),
     });
 
     if (!result.ok) {
-      console.error(`Login failed: ${result.message}`);
+      log.error(`Login failed: ${result.message}`);
       if (result.reason === 'tfa_required') {
-        console.error('Falling back to manual extraction...');
+        log.error('Falling back to manual extraction...');
       }
       process.exit(1);
     }
@@ -103,8 +105,8 @@ export const loginCommand = defineCommand({
     mkdirSync(dirname(outputPath), { recursive: true });
     writeFileSync(outputPath, JSON.stringify(result.output, null, 2) + '\n');
 
-    console.log(`\nExtracted ${String(result.output.cookieCount)} cookies`);
-    console.log(`Written to ${outputPath}`);
-    console.log(`Estimated expiry: ${result.output.expiresAt}`);
+    log.info(`\nExtracted ${String(result.output.cookieCount)} cookies`);
+    log.info(`Written to ${outputPath}`);
+    log.info(`Estimated expiry: ${result.output.expiresAt}`);
   },
 });

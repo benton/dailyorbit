@@ -7,6 +7,7 @@ import {
   scopeArgs,
   storagePathArg,
 } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const downloadCommand = defineCommand({
@@ -56,6 +57,7 @@ export const downloadCommand = defineCommand({
     },
   },
   async run({ args }) {
+    const log = getLogger();
     const { runAttachmentPipeline } =
       await import('../../attachments/pipeline.ts');
 
@@ -68,7 +70,7 @@ export const downloadCommand = defineCommand({
         cookies: string;
       };
       authCookies = parsed.cookies;
-      console.log(`Loaded auth cookies from ${cookiePath}`);
+      log.info(`Loaded auth cookies from ${cookiePath}`);
     }
 
     const result = await runAttachmentPipeline({
@@ -93,15 +95,13 @@ export const downloadCommand = defineCommand({
       authCookies,
     });
 
-    console.log('\nSummary:');
-    console.log(`  Filings processed:      ${String(result.filingsProcessed)}`);
-    console.log(
+    log.info('\nSummary:');
+    log.info(`  Filings processed:      ${String(result.filingsProcessed)}`);
+    log.info(
       `  Attachments downloaded: ${String(result.attachmentsDownloaded)}`,
     );
-    console.log(
-      `  Attachments failed:     ${String(result.attachmentsFailed)}`,
-    );
-    console.log(
+    log.info(`  Attachments failed:     ${String(result.attachmentsFailed)}`);
+    log.info(
       `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

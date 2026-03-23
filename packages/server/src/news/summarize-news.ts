@@ -12,6 +12,7 @@ import type {
   InferenceRequest,
   InferenceResponse,
 } from '../inference/types.ts';
+import { getLogger } from '../lib/logger.ts';
 import type { NewsItem } from './types.ts';
 import {
   findExistingNewsItemSummaryByChecksum,
@@ -227,18 +228,19 @@ export async function summarizeNewsItems(
   const target: number =
     opts.limit > 0 ? Math.min(opts.limit, remaining) : remaining;
 
-  console.log(`News items needing summary: ${String(remaining)}`);
-  console.log(
+  const logger = getLogger();
+  logger.info(`News items needing summary: ${String(remaining)}`);
+  logger.info(
     `Target: ${String(target)} | Model: ${opts.modelId} | Concurrency: ${String(opts.concurrency)}`,
   );
 
   if (opts.dryRun) {
-    console.log('Dry run — exiting.');
+    logger.info('Dry run — exiting.');
     return;
   }
 
   if (target === 0) {
-    console.log('Nothing to summarize.');
+    logger.info('Nothing to summarize.');
     return;
   }
 
@@ -300,7 +302,7 @@ export async function summarizeNewsItems(
           totalOutputTokens += resp.usage.outputTokens;
         } catch (err: unknown) {
           const msg: string = err instanceof Error ? err.message : String(err);
-          process.stderr.write(`\nERROR [${item.sourceUrl}]: ${msg}\n`);
+          logger.error(`ERROR [${item.sourceUrl}]: ${msg}`);
           errors++;
         }
       },
@@ -310,20 +312,19 @@ export async function summarizeNewsItems(
     const elapsed: number = Math.round((performance.now() - startTime) / 1000);
     const rate: number = elapsed > 0 ? processed / elapsed : processed;
     const eta: number = rate > 0 ? Math.round((target - processed) / rate) : 0;
-    process.stdout.write(
-      `\r  ${String(processed)} / ${String(target)} | ${rate.toFixed(1)} docs/s | elapsed ${formatDuration(elapsed)} | ETA ${formatDuration(eta)} | errors: ${String(errors)}`,
+    logger.info(
+      `${String(processed)} / ${String(target)} | ${rate.toFixed(1)} docs/s | elapsed ${formatDuration(elapsed)} | ETA ${formatDuration(eta)} | errors: ${String(errors)}`,
     );
   }
 
   const wallSec: number = Math.round((performance.now() - startTime) / 1000);
-  console.log('\n');
-  console.log('=== News Summarization Complete ===');
-  console.log(`  Processed:      ${String(processed)}`);
-  console.log(`  Copied (dedup): ${String(copied)}`);
-  console.log(`  Errors:         ${String(errors)}`);
-  console.log(`  Input tokens:   ${String(totalInputTokens)}`);
-  console.log(`  Output tokens:  ${String(totalOutputTokens)}`);
-  console.log(`  Wall time:      ${formatDuration(wallSec)}`);
+  logger.info('=== News Summarization Complete ===');
+  logger.info(`  Processed:      ${String(processed)}`);
+  logger.info(`  Copied (dedup): ${String(copied)}`);
+  logger.info(`  Errors:         ${String(errors)}`);
+  logger.info(`  Input tokens:   ${String(totalInputTokens)}`);
+  logger.info(`  Output tokens:  ${String(totalOutputTokens)}`);
+  logger.info(`  Wall time:      ${formatDuration(wallSec)}`);
 }
 
 function formatDuration(totalSeconds: number): string {

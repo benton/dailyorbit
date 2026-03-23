@@ -1,5 +1,6 @@
 import { createInterface } from 'node:readline';
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb, resolveFromRoot } from '../shared/context.ts';
 
@@ -56,17 +57,18 @@ export const rewindCommand = defineCommand({
       // Plan phase: compute counts
       const plan = await planRewind(conn, { since, last, full });
 
+      const log = getLogger();
       // Display scope and counts
-      console.log(`\nRewind scope: ${plan.scope}\n`);
-      printTable(plan.counts);
+      log.info(`\nRewind scope: ${plan.scope}\n`);
+      printTable(log, plan.counts);
 
       if (!full && plan.fullCounts && plan.fullCounts.length > 0) {
-        console.log('\n  --full would also delete:');
-        printTable(plan.fullCounts);
+        log.info('\n  --full would also delete:');
+        printTable(log, plan.fullCounts);
       }
 
       if (dryRun) {
-        console.log('\nDry run — no changes made.');
+        log.info('\nDry run — no changes made.');
         return;
       }
 
@@ -74,40 +76,40 @@ export const rewindCommand = defineCommand({
       if (!yes) {
         const confirmed: boolean = await confirm('Proceed? [y/N] ');
         if (!confirmed) {
-          console.log('Aborted.');
+          log.info('Aborted.');
           return;
         }
       }
 
       // Execute
-      console.log('\nDeleting...');
+      log.info('\nDeleting...');
       const result = await executeRewind(conn, { since, last, full });
 
       for (const row of result.counts) {
         const countStr: string = String(row.count).padStart(6);
-        console.log(`  ${row.table}: ${countStr} deleted`);
+        log.info(`  ${row.table}: ${countStr} deleted`);
       }
 
       if (full && result.fullCounts) {
         for (const row of result.fullCounts) {
           const countStr: string = String(row.count).padStart(6);
-          console.log(`  ${row.table}: ${countStr} deleted`);
+          log.info(`  ${row.table}: ${countStr} deleted`);
         }
 
         // Rebuild FTS index
-        console.log('  FTS index: rebuilding...');
+        log.info('  FTS index: rebuilding...');
         const start: number = performance.now();
         const { rebuildAllFtsIndexes } =
           await import('../../search/fts-index.ts');
         await rebuildAllFtsIndexes(conn);
         const elapsed: string = ((performance.now() - start) / 1000).toFixed(1);
-        console.log(`  FTS index: rebuilt (${elapsed}s)`);
+        log.info(`  FTS index: rebuilt (${elapsed}s)`);
 
-        console.log(
+        log.info(
           "\nDone. Run './daily-orbit ingest ibfs' to re-ingest (will re-extract, re-summarize, and re-embed).",
         );
       } else {
-        console.log("\nDone. Run './daily-orbit ingest ibfs' to re-ingest.");
+        log.info("\nDone. Run './daily-orbit ingest ibfs' to re-ingest.");
       }
     } finally {
       conn.closeSync();
@@ -116,6 +118,7 @@ export const rewindCommand = defineCommand({
 });
 
 function printTable(
+  log: ReturnType<typeof getLogger>,
   rows: Array<{ table: string; count: number | string }>,
 ): void {
   const maxName: number = Math.max(...rows.map((r) => r.table.length));
@@ -125,7 +128,7 @@ function printTable(
       typeof row.count === 'number'
         ? String(row.count).padStart(8)
         : row.count.toString().padStart(8);
-    console.log(`  ${name}${count}`);
+    log.info(`  ${name}${count}`);
   }
 }
 

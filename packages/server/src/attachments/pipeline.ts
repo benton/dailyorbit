@@ -4,6 +4,7 @@ import {
   trackInstance,
   untrackConnection,
 } from '../lib/graceful-shutdown.ts';
+import { getLogger } from '../lib/logger.ts';
 import { extensionForContentType } from './content-type.ts';
 import { printProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
@@ -65,7 +66,11 @@ export async function runAttachmentPipeline(
   options: AttachmentPipelineOptions,
 ): Promise<AttachmentPipelineResult> {
   const start: number = Date.now();
-  const log: (msg: string) => void = options.onProgress ?? console.log;
+  const log: (msg: string) => void =
+    options.onProgress ??
+    ((msg: string): void => {
+      getLogger().info(msg);
+    });
   const delayMs: number = options.delayMs ?? 500;
   const concurrency: number = options.concurrency ?? 1;
   const providerName: 'fcc-report' | 'fcc-gov' =

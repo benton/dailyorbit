@@ -1,5 +1,6 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
@@ -66,7 +67,7 @@ export const evalCommand = defineCommand({
       // Exit with non-zero if too many failures
       const failRate: number = summary.failures.length / summary.totalCases;
       if (failRate > 0.3) {
-        console.error(
+        getLogger().error(
           `\nFail rate ${(failRate * 100).toFixed(0)}% exceeds 30% threshold`,
         );
         process.exit(1);

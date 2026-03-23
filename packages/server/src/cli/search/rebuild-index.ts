@@ -1,5 +1,6 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
@@ -21,11 +22,12 @@ export const rebuildIndexCommand = defineCommand({
     const db = await getDb();
     const conn: DuckDBConnection = await duckdb.DuckDBConnection.create(db);
     try {
-      console.log('Rebuilding FTS indexes...');
+      const log = getLogger();
+      log.info('Rebuilding FTS indexes...');
       const start: number = Date.now();
       await rebuildAllFtsIndexes(conn);
       const elapsed: number = Date.now() - start;
-      console.log(`FTS indexes rebuilt in ${(elapsed / 1000).toFixed(1)}s`);
+      log.info(`FTS indexes rebuilt in ${(elapsed / 1000).toFixed(1)}s`);
     } finally {
       conn.closeSync();
     }

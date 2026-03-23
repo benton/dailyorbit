@@ -2,6 +2,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Cookie } from 'playwright';
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 import {
   formatCookieOutput,
@@ -25,6 +26,7 @@ export const extractCookiesCommand = defineCommand({
     },
   },
   async run({ args }) {
+    const log = getLogger();
     const outputPath: string = resolveFromRoot(args.output);
 
     // Dynamic import — Playwright is a devDependency, not available in production
@@ -33,13 +35,13 @@ export const extractCookiesCommand = defineCommand({
       const pw = await import('playwright');
       chromium = pw.chromium;
     } catch {
-      console.error(
+      log.error(
         'Playwright is not installed. Run: pnpx playwright install chromium',
       );
       process.exit(1);
     }
 
-    console.log(
+    log.info(
       'Launching browser — log in to ICFS, then press Enter here to extract cookies.\n',
     );
 
@@ -69,7 +71,7 @@ export const extractCookiesCommand = defineCommand({
     try {
       output = formatCookieOutput(allCookies, new Date());
     } catch {
-      console.error('No ServiceNow cookies found. Did you complete login?');
+      log.error('No ServiceNow cookies found. Did you complete login?');
       process.exit(1);
     }
 
@@ -80,13 +82,13 @@ export const extractCookiesCommand = defineCommand({
     const snCookies: Cookie[] = allCookies.filter((c: Cookie) =>
       c.domain.includes(SERVICENOW_DOMAIN),
     );
-    console.log(`\nExtracted ${String(snCookies.length)} cookies:`);
+    log.info(`\nExtracted ${String(snCookies.length)} cookies:`);
     for (const c of snCookies) {
       const expiry: string =
         c.expires > 0 ? new Date(c.expires * 1000).toISOString() : 'session';
-      console.log(`  ${c.name} (expires: ${expiry})`);
+      log.info(`  ${c.name} (expires: ${expiry})`);
     }
-    console.log(`\nWritten to ${outputPath}`);
-    console.log(`Estimated expiry: ${output.expiresAt}`);
+    log.info(`\nWritten to ${outputPath}`);
+    log.info(`Estimated expiry: ${output.expiresAt}`);
   },
 });

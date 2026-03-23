@@ -1,6 +1,7 @@
 import { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
 import { trackConnection } from '../../lib/graceful-shutdown.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -26,7 +27,7 @@ export const queryCommand = defineCommand({
     const rows = reader.getRowObjectsJS();
 
     if (rows.length === 0) {
-      console.log('(no rows)');
+      getLogger().info('(no rows)');
       return;
     }
 

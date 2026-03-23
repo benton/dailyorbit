@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { databaseArg } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const validateCommand = defineCommand({
@@ -30,12 +31,13 @@ export const validateCommand = defineCommand({
       verbose: args.verbose,
     });
 
-    console.log('\nSummary:');
-    console.log(`  Total processed:  ${String(result.total)}`);
-    console.log(`  Corrected:        ${String(result.corrected)}`);
-    console.log(`  Confirmed:        ${String(result.confirmed)}`);
-    console.log(`  Failed:           ${String(result.failed)}`);
-    console.log(
+    const log = getLogger();
+    log.info('\nSummary:');
+    log.info(`  Total processed:  ${String(result.total)}`);
+    log.info(`  Corrected:        ${String(result.corrected)}`);
+    log.info(`  Confirmed:        ${String(result.confirmed)}`);
+    log.info(`  Failed:           ${String(result.failed)}`);
+    log.info(
       `  Duration:         ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

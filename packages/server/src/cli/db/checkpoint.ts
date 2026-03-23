@@ -1,6 +1,7 @@
 import { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
 import { trackConnection } from '../../lib/graceful-shutdown.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -19,6 +20,6 @@ export const checkpointCommand = defineCommand({
     trackConnection(conn);
 
     await conn.run('CHECKPOINT');
-    console.log('Checkpoint complete');
+    getLogger().info('Checkpoint complete');
   },
 });

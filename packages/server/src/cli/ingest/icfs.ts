@@ -1,4 +1,5 @@
 import { defineCommand } from 'citty';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -49,15 +50,16 @@ export const icfsCommand = defineCommand({
     const delayMs: number = Number(args.delay);
     const concurrency: number = Number(args.concurrency);
 
+    const log = getLogger();
     if (!fileNumbers && !dateFrom) {
-      console.error(
+      log.error(
         'Error: --date-from is required unless --file-numbers is provided',
       );
       process.exit(1);
     }
 
     const dbInstance = await createDb(args.database);
-    console.log(`Database: ${args.database}`);
+    log.info(`Database: ${args.database}`);
 
     const { runIcfsIngest } = await import('../../icfs/pipeline.ts');
     const result = await runIcfsIngest({
@@ -66,18 +68,18 @@ export const icfsCommand = defineCommand({
       dateTo,
       delayMs,
       concurrency,
-      onProgress: (msg: string) => console.log(msg),
+      onProgress: (msg: string) => log.info(msg),
       ...(fileNumbers != null ? { fileNumbers } : {}),
       ...(subsystems != null ? { subsystems } : {}),
       ...(appTypes != null ? { appTypes } : {}),
     });
 
-    console.log('\nSummary:');
-    console.log(`  Filings discovered: ${String(result.filingsDiscovered)}`);
-    console.log(`  Filings ingested:   ${String(result.filingsIngested)}`);
-    console.log(`  Filings not found:  ${String(result.filingsNotFound)}`);
-    console.log(`  Filings failed:     ${String(result.filingsFailed)}`);
-    console.log(
+    log.info('\nSummary:');
+    log.info(`  Filings discovered: ${String(result.filingsDiscovered)}`);
+    log.info(`  Filings ingested:   ${String(result.filingsIngested)}`);
+    log.info(`  Filings not found:  ${String(result.filingsNotFound)}`);
+    log.info(`  Filings failed:     ${String(result.filingsFailed)}`);
+    log.info(
       `  Duration:           ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

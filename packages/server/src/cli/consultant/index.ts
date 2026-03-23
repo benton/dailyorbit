@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { DuckDBConnection } from '@duckdb/node-api';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -23,7 +24,7 @@ const seedCommand = defineCommand({
       const { seedConsultants } = await import('../../consultant/seed.ts');
       const result = await seedConsultants(conn);
 
-      console.log(
+      getLogger().info(
         `Seed complete: ${String(result.created)} created, ${String(result.skipped)} skipped (already exist)`,
       );
     } finally {

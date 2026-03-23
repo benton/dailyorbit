@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
+import { getLogger } from '../lib/logger.ts';
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import {
   DuckDBConnection as DuckDBConn,
@@ -55,7 +56,11 @@ export type IngestResult = {
  */
 export async function runIngest(options: IngestOptions): Promise<IngestResult> {
   const start: number = Date.now();
-  const log: (message: string) => void = options.onProgress ?? console.log;
+  const log: (message: string) => void =
+    options.onProgress ??
+    ((msg: string): void => {
+      getLogger().info(msg);
+    });
 
   // Stage 1: Load table definitions from DDL
   log('Loading table definitions...');

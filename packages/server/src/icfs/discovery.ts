@@ -1,4 +1,5 @@
 import { processQueue } from '../attachments/queue.ts';
+import { getLogger } from '../lib/logger.ts';
 import { searchFilings } from './client.ts';
 import type { IcfsSearchResult } from './types.ts';
 
@@ -56,7 +57,9 @@ export async function discoverNewFilings(
       concurrency,
       delayMs: options?.delayMs ?? 0,
       onError: (error: unknown, query: string) => {
-        console.error(`Discovery query failed: ${query} — ${String(error)}`);
+        getLogger().error(
+          `Discovery query failed: ${query} — ${String(error)}`,
+        );
       },
     },
   );

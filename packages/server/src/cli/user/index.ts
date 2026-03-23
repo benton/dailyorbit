@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { DuckDBConnection } from '@duckdb/node-api';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -58,11 +59,12 @@ export const userCommand = defineCommand({
             role,
           );
 
-          console.log('User created:');
-          console.log(`  ID:    ${user.id}`);
-          console.log(`  Email: ${user.email}`);
-          console.log(`  Name:  ${user.name}`);
-          console.log(`  Role:  ${user.role}`);
+          const log = getLogger();
+          log.info('User created:');
+          log.info(`  ID:    ${user.id}`);
+          log.info(`  Email: ${user.email}`);
+          log.info(`  Name:  ${user.name}`);
+          log.info(`  Role:  ${user.role}`);
         } finally {
           conn.closeSync();
         }
@@ -107,12 +109,12 @@ export const userCommand = defineCommand({
             args.email,
           );
           if (userId == null) {
-            console.error('Error: user not found');
+            getLogger().error('Error: user not found');
             process.exit(1);
           }
 
           await service.disableUser(userId, args.reason);
-          console.log(`User ${userId} disabled.`);
+          getLogger().info(`User ${userId} disabled.`);
         } finally {
           conn.closeSync();
         }
@@ -142,7 +144,9 @@ export const userCommand = defineCommand({
       },
       async run({ args }) {
         if (!args.confirm) {
-          console.error('Error: pass --confirm to permanently delete the user');
+          getLogger().error(
+            'Error: pass --confirm to permanently delete the user',
+          );
           process.exit(1);
         }
 
@@ -163,12 +167,12 @@ export const userCommand = defineCommand({
             args.email,
           );
           if (userId == null) {
-            console.error('Error: user not found');
+            getLogger().error('Error: user not found');
             process.exit(1);
           }
 
           await service.deleteUser(userId);
-          console.log(`User ${userId} deleted.`);
+          getLogger().info(`User ${userId} deleted.`);
         } finally {
           conn.closeSync();
         }
@@ -215,12 +219,12 @@ export const userCommand = defineCommand({
             args.email,
           );
           if (userId == null) {
-            console.error('Error: user not found');
+            getLogger().error('Error: user not found');
             process.exit(1);
           }
 
           await service.resetPassword(userId, new SecretValue(args.password));
-          console.log(`Password reset for user ${userId}.`);
+          getLogger().info(`Password reset for user ${userId}.`);
         } finally {
           conn.closeSync();
         }
@@ -273,13 +277,13 @@ export const userCommand = defineCommand({
             args.email,
           );
           if (userId == null) {
-            console.error('Error: user not found');
+            getLogger().error('Error: user not found');
             process.exit(1);
           }
 
           const user = await service.getUser(userId);
           if (user == null) {
-            console.error('Error: user not found');
+            getLogger().error('Error: user not found');
             process.exit(1);
           }
 
@@ -306,11 +310,12 @@ export const userCommand = defineCommand({
             appBaseUrl,
           });
 
-          console.log(
+          const log = getLogger();
+          log.info(
             `Sending test email to ${user.email} via ${emailConfig.transport}...`,
           );
           await emailService.sendMail(mail);
-          console.log('Test email sent successfully.');
+          log.info('Test email sent successfully.');
         } finally {
           conn.closeSync();
         }
@@ -331,6 +336,6 @@ async function resolveUserId(
     const user = await service.getUserByEmail(email);
     return user?.id ?? null;
   }
-  console.error('Error: provide --email or --id');
+  getLogger().error('Error: provide --email or --id');
   process.exit(1);
 }
