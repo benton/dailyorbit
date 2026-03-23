@@ -21,6 +21,14 @@ describe('alert evaluator', () => {
   let conn: DuckDBConnection;
   const userId: string = 'test-user-001';
 
+  /** Backdate a saved search's updated_at so filings with later timestamps are "newer". */
+  async function backdateSearch(searchId: number): Promise<void> {
+    await conn.run(
+      `UPDATE saved_search SET updated_at = '2026-01-01 00:00:00' WHERE id = $1`,
+      [searchId],
+    );
+  }
+
   beforeAll(async () => {
     db = await DuckDBInstance.create(':memory:');
     conn = await DuckDBConnection.create(db);
@@ -72,26 +80,55 @@ describe('alert evaluator', () => {
     await ensureContentFlagTables(conn);
     await ensureAlertTables(conn);
     await ensureHiddenItemTables(conn);
-
-    // Seed a filing that was "just discovered"
-    await conn.run(`
-      INSERT INTO filing VALUES
-        (1, 'SAT-LOA-20260321-00001', 'E100', 'SpaceX Inc', 'SAT', 'LOA', 'A', '2026-03-21', NULL, current_timestamp);
-    `);
   });
 
   afterAll(() => {
     conn.closeSync();
   });
 
+  it('should NOT alert on filings discovered before the alert was enabled', async () => {
+    // Filing discovered in the past
+    await conn.run(`
+      INSERT INTO filing VALUES
+        (10, 'SAT-LOA-20260101-00010', 'E100', 'SpaceX Inc', 'SAT', 'LOA', 'A', '2026-01-01', NULL, '2026-01-01 00:00:00');
+    `);
+
+    // Create and enable alert after the filing already exists
+    const searchId: number = await createSavedSearch(conn, userId, {
+      name: 'Old SAT filings',
+      content_type: 'filing',
+      filters: { subsystem_code: ['SAT'] },
+    });
+    await updateSavedSearch(conn, searchId, userId, { alert_enabled: true });
+
+    const pipelineRunId: number = await insertPipelineRun(conn, 'schedule');
+    await finishPipelineRun(conn, pipelineRunId, 'completed');
+
+    const result = await evaluateAlerts(conn, pipelineRunId);
+    expect(result.searchesEvaluated).toEqual(1);
+    expect(result.totalMatched).toEqual(0);
+    expect(result.totalFlagged).toEqual(0);
+
+    // Clean up for subsequent tests
+    await conn.run(`DELETE FROM filing WHERE filing_key = 10`);
+    await updateSavedSearch(conn, searchId, userId, { alert_enabled: false });
+  });
+
   it('should flag new content matching an alert-enabled saved search', async () => {
-    // Create a saved search and enable alerting
+    // Create and enable alert, then backdate so the filing is "newer"
     const searchId: number = await createSavedSearch(conn, userId, {
       name: 'All SAT filings',
       content_type: 'filing',
       filters: { subsystem_code: ['SAT'] },
     });
     await updateSavedSearch(conn, searchId, userId, { alert_enabled: true });
+    await backdateSearch(searchId);
+
+    // Filing discovered after the backdated search updated_at
+    await conn.run(`
+      INSERT INTO filing VALUES
+        (1, 'SAT-LOA-20260321-00001', 'E100', 'SpaceX Inc', 'SAT', 'LOA', 'A', '2026-03-21', NULL, '2026-03-21 00:00:00');
+    `);
 
     // Create a pipeline run to reference
     const pipelineRunId: number = await insertPipelineRun(conn, 'schedule');
@@ -116,7 +153,6 @@ describe('alert evaluator', () => {
     await finishPipelineRun(conn, pipelineRunId, 'completed');
 
     const result = await evaluateAlerts(conn, pipelineRunId);
-    // Should match but not flag (already flagged from previous run)
     expect(result.searchesEvaluated).toEqual(1);
 
     const flags = await getActiveFlagsForUser(conn, userId, 'filing');

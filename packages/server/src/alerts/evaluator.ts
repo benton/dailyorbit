@@ -76,7 +76,8 @@ async function getAlertEnabledSearches(
 /**
  * Determine the watermark timestamp for a saved search.
  * Returns the executed_at of the most recent alert_run for this search,
- * or the search's created_at if it has never been evaluated.
+ * or the search's updated_at if it has never been evaluated (so that only
+ * items ingested *after* the alert was enabled will trigger notifications).
  */
 async function getWatermark(
   conn: DuckDBConnection,
@@ -86,9 +87,11 @@ async function getWatermark(
   if (lastRun != null) {
     return lastRun.executed_at;
   }
-  // First evaluation — use epoch so the initial run catches all existing
-  // matches. Subsequent runs use the prior alert_run's executed_at watermark.
-  return '1970-01-01 00:00:00';
+  // First evaluation — use the search's updated_at as the watermark so only
+  // newly ingested items trigger alerts. When a user enables alerting on a
+  // saved search, updated_at is bumped, providing a natural "enabled at"
+  // timestamp.
+  return savedSearch.updated_at;
 }
 
 /**

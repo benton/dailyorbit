@@ -23,6 +23,14 @@ describe('alert email integration', () => {
   let conn: DuckDBConnection;
   const userId: string = 'email-test-user';
 
+  /** Backdate a saved search's updated_at so filings with current_timestamp are "newer". */
+  async function backdateSearch(searchId: number): Promise<void> {
+    await conn.run(
+      `UPDATE saved_search SET updated_at = '2026-01-01 00:00:00' WHERE id = $1`,
+      [searchId],
+    );
+  }
+
   beforeAll(async () => {
     db = await DuckDBInstance.create(':memory:');
     conn = await DuckDBConnection.create(db);
@@ -67,10 +75,6 @@ describe('alert email integration', () => {
         attachment_key INTEGER NOT NULL, file_number VARCHAR NOT NULL,
         summary VARCHAR, attachment_name VARCHAR
       );
-
-      INSERT INTO filing VALUES
-        (1, 'SAT-LOA-20260321-00001', 'E100', 'SpaceX Inc', 'SAT', 'LOA',
-         'A', '2026-03-21', NULL, current_timestamp);
     `);
 
     await ensurePipelineTrackingTables(conn);
@@ -86,13 +90,21 @@ describe('alert email integration', () => {
   });
 
   it('should send email digest and mark flags as emailed', async () => {
-    // Create and enable saved search
+    // Create and enable saved search, then backdate it so the filing is "newer"
     const searchId: number = await createSavedSearch(conn, userId, {
       name: 'All SAT filings',
       content_type: 'filing',
       filters: { subsystem_code: ['SAT'] },
     });
     await updateSavedSearch(conn, searchId, userId, { alert_enabled: true });
+    await backdateSearch(searchId);
+
+    // Filing discovered after the backdated search updated_at
+    await conn.run(`
+      INSERT INTO filing VALUES
+        (1, 'SAT-LOA-20260321-00001', 'E100', 'SpaceX Inc', 'SAT', 'LOA',
+         'A', '2026-03-21', NULL, '2026-03-21 00:00:00');
+    `);
 
     // Create pipeline run
     const runId: number = await insertPipelineRun(conn, 'schedule');
@@ -139,13 +151,13 @@ describe('alert email integration', () => {
       'http://localhost:5173',
     );
 
-    // Watermark should prevent re-matching, so no new matches
+    // Watermark from prior alert_run should prevent re-matching
     expect(result.totalMatched).toEqual(0);
     expect(result.emailsSent).toEqual(0);
   });
 
-  it('should NOT re-email content matched by a new search for the same user', async () => {
-    // Create a second search that also matches the same filing
+  it('should NOT alert on pre-existing content when a new search is enabled', async () => {
+    // Create a second search — the filing already exists before this search
     const searchId2: number = await createSavedSearch(conn, userId, {
       name: 'LOA filings',
       content_type: 'filing',
@@ -167,13 +179,13 @@ describe('alert email integration', () => {
       'http://localhost:5173',
     );
 
-    // The new search matches the same filing (watermark is epoch for new search)
-    // but emailed_at dedup should prevent re-emailing
+    // The new search's watermark is its updated_at (when alert was enabled),
+    // which is after the filing was ingested, so no new matches
     expect(result.searchesEvaluated).toEqual(2);
-    expect(result.totalMatched).toEqual(1); // new search finds the filing
-    expect(result.emailsSent).toEqual(0); // but it was already emailed
+    expect(result.totalMatched).toEqual(0);
+    expect(result.emailsSent).toEqual(0);
 
-    // Verify the flag exists but was NOT re-emailed
+    // Only the original flag from the first search exists
     const flags: ContentFlagRow[] = (
       await conn.runAndReadAll(
         `SELECT id, saved_search_id, emailed_at::VARCHAR AS emailed_at
@@ -184,7 +196,6 @@ describe('alert email integration', () => {
       )
     ).getRowObjectsJS() as ContentFlagRow[];
 
-    // Two flags exist (one per search), but only the first was emailed
-    expect(flags.length).toEqual(2);
+    expect(flags.length).toEqual(1);
   });
 });
