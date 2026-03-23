@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
+import { getLogger } from './lib/logger.ts';
+import { requestLogger } from './lib/request-logger.ts';
 import { configRoutes } from './config/routes.ts';
 import { earthStationRoutes } from './earth-stations/routes.ts';
 import { filingRoutes } from './filings/routes.ts';
@@ -48,6 +50,8 @@ app.use(
 );
 
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.use('*', requestLogger(getLogger()));
 
 app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
