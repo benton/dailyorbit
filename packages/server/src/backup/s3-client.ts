@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { CopyObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { createReadStream } from 'node:fs';
 
@@ -16,6 +16,7 @@ export type S3SnapshotEntry = {
 
 export type S3Uploader = {
   upload: (localPath: string, s3Key: string) => Promise<void>;
+  copyObject: (sourceKey: string, destKey: string) => Promise<void>;
   listSnapshots: () => Promise<S3SnapshotEntry[]>;
 };
 
@@ -41,6 +42,18 @@ export function createS3Uploader(config: S3UploaderConfig): S3Uploader {
     await multipartUpload.done();
   }
 
+  async function copyObject(sourceKey: string, destKey: string): Promise<void> {
+    const fullSource: string = `${config.prefix}${sourceKey}`;
+    const fullDest: string = `${config.prefix}${destKey}`;
+    await client.send(
+      new CopyObjectCommand({
+        Bucket: config.bucket,
+        CopySource: `${config.bucket}/${fullSource}`,
+        Key: fullDest,
+      }),
+    );
+  }
+
   async function listSnapshots(): Promise<S3SnapshotEntry[]> {
     const result = await client.send(
       new ListObjectsV2Command({
@@ -61,5 +74,5 @@ export function createS3Uploader(config: S3UploaderConfig): S3Uploader {
     return entries;
   }
 
-  return { upload, listSnapshots };
+  return { upload, copyObject, listSnapshots };
 }
