@@ -173,10 +173,10 @@ set -euo pipefail
 docker exec daily-orbit ./daily-orbit db checkpoint || true
 
 # Copy DB to temp location, then push to S3
-cp /data/daily-orbit.duckdb /tmp/daily-orbit-snap.duckdb
-aws s3 cp /tmp/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}"
-aws s3 cp /tmp/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/db/$(date +%Y%m%d-%H%M).duckdb"
-rm /tmp/daily-orbit-snap.duckdb
+cp /data/daily-orbit.duckdb /data/daily-orbit-snap.duckdb
+aws s3 cp /data/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}"
+aws s3 cp /data/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/db/$(date +%Y%m%d-%H%M).duckdb"
+rm /data/daily-orbit-snap.duckdb
 
 # Also push the encryption key
 aws s3 cp /data/daily-orbit.key "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" || true
