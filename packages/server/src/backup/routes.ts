@@ -11,6 +11,14 @@ import {
 import { createBackupService, type BackupService } from './backup-service.ts';
 import { createS3Uploader } from './s3-client.ts';
 
+/** Convert bigint fields to number for JSON serialization */
+function toJsonSafe(snapshot: BackupSnapshot): Record<string, unknown> {
+  return {
+    ...snapshot,
+    size_bytes: snapshot.size_bytes != null ? Number(snapshot.size_bytes) : null,
+  };
+}
+
 let backupService: BackupService | null = null;
 
 async function getBackupService(): Promise<BackupService> {
@@ -48,7 +56,7 @@ backupRoutes.get('/', async (c) => {
   const limit: number = Number(c.req.query('limit') ?? '20');
   const snapshots: BackupSnapshot[] = await listBackupSnapshots(conn, limit);
   conn.closeSync();
-  return c.json(snapshots);
+  return c.json(snapshots.map(toJsonSafe));
 });
 
 // GET /api/admin/backups/latest — get the most recent backup
@@ -61,7 +69,7 @@ backupRoutes.get('/latest', async (c) => {
   if (snapshot == null) {
     return c.json({ message: 'No backups found' }, 404);
   }
-  return c.json(snapshot);
+  return c.json(toJsonSafe(snapshot));
 });
 
 // GET /api/admin/backups/status — is a backup currently running?
