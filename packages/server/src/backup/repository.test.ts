@@ -56,7 +56,7 @@ describe('backup repository', () => {
       new Date(s.started_at).getTime(),
     );
     for (let i: number = 1; i < timestamps.length; i++) {
-      expect(timestamps[i - 1]).toBeGreaterThanOrEqual(timestamps[i]);
+      expect(timestamps[i - 1]).toBeGreaterThanOrEqual(timestamps[i]!);
     }
   });
 });
