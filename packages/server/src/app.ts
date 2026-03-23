@@ -1,14 +1,11 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { getLogger } from './lib/logger.ts';
 import { requestLogger } from './lib/request-logger.ts';
-
-const APP_VERSION: string = JSON.parse(
-  readFileSync(resolve(import.meta.dirname ?? '.', '../package.json'), 'utf-8'),
-).version;
+import { APP_VERSION } from './version.ts';
 import { configRoutes } from './config/routes.ts';
 import { earthStationRoutes } from './earth-stations/routes.ts';
 import { filingRoutes } from './filings/routes.ts';

@@ -280,10 +280,14 @@ describe('attribution engine', () => {
       expect(String(rows[0]!.alias_type)).toEqual('prefix');
     });
 
-    it('seeds from the actual COMPANY_SEED_DATA without error', { timeout: 15_000 }, async () => {
-      const result = await seedCompanies(conn, COMPANY_SEED_DATA);
-      expect(result.created).toBeGreaterThan(25);
-      expect(result.aliasesAdded).toBeGreaterThan(50);
-    });
+    it(
+      'seeds from the actual COMPANY_SEED_DATA without error',
+      { timeout: 15_000 },
+      async () => {
+        const result = await seedCompanies(conn, COMPANY_SEED_DATA);
+        expect(result.created).toBeGreaterThan(25);
+        expect(result.aliasesAdded).toBeGreaterThan(50);
+      },
+    );
   });
 });

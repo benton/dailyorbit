@@ -1,15 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { getDb, getDbPath } from '../lib/db.ts';
-
-const APP_VERSION: string = JSON.parse(
-  readFileSync(
-    resolve(import.meta.dirname ?? '.', '../../package.json'),
-    'utf-8',
-  ),
-).version;
+import { APP_VERSION } from '../version.ts';
 import {
   getApplicantFilings,
   getDatasetStats,

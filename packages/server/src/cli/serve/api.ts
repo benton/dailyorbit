@@ -1,16 +1,11 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { createLogger, setLogger, type AppLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
+import { APP_VERSION } from '../../version.ts';
 
-const pkg: { version: string } = JSON.parse(
-  readFileSync(
-    resolve(import.meta.dirname ?? '.', '../../package.json'),
-    'utf-8',
-  ),
-);
-const version: string = pkg.version;
+const version: string = APP_VERSION;
 
 const DEFAULT_DATABASE: string = 'data/daily-orbit.duckdb';
 const DEFAULT_KEY_FILE: string = 'data/daily-orbit.key';

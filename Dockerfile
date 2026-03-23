@@ -41,8 +41,9 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_modules
 
-# Built server bundle
+# Built server bundle + package.json (needed for version at runtime)
 COPY --from=build /app/packages/server/dist ./packages/server/dist
+COPY --from=build /app/packages/server/package.json ./packages/server/package.json
 
 # Built frontend assets
 COPY --from=build /app/packages/web/dist ./packages/web/dist
