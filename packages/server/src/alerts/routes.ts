@@ -111,22 +111,32 @@ alertRoutes.get('/flagged', async (c) => {
     await ensureSavedSearchTables(conn);
 
     const reader = await conn.runAndReadAll(
-      `SELECT f.id AS flag_id, f.content_type, f.content_key, f.reason,
-              f.saved_search_id, f.created_at::VARCHAR AS flagged_at,
-              ss.name AS search_name,
-              CASE f.content_type
-                WHEN 'filing' THEN (SELECT fl.address_attention FROM filing fl WHERE fl.file_number = f.content_key)
-                WHEN 'news' THEN (SELECT ni.title FROM news_item ni WHERE ni.id = CAST(f.content_key AS INTEGER))
-              END AS item_title,
-              CASE f.content_type
-                WHEN 'filing' THEN (SELECT fl.subsystem_code || '-' || fl.app_type_code FROM filing fl WHERE fl.file_number = f.content_key)
-                WHEN 'news' THEN (SELECT ns.name FROM news_item ni JOIN news_source ns ON ns.id = ni.news_source_id WHERE ni.id = CAST(f.content_key AS INTEGER))
-              END AS item_subtitle
-       FROM user_content_flag f
-       LEFT JOIN saved_search ss ON ss.id = f.saved_search_id
-       WHERE f.user_id = $1 AND f.source = 'alert' AND f.dismissed_at IS NULL
-       ORDER BY ss.name, f.created_at DESC`,
-      [user.id],
+      `SELECT flag_id, content_type, content_key, reason,
+              saved_search_id, flagged_at, search_name,
+              item_title, item_subtitle
+       FROM (
+         SELECT f.id AS flag_id, f.content_type, f.content_key, f.reason,
+                f.saved_search_id, f.created_at::VARCHAR AS flagged_at,
+                ss.name AS search_name,
+                (SELECT fl.address_attention FROM filing fl WHERE fl.file_number = f.content_key) AS item_title,
+                (SELECT fl.subsystem_code || '-' || fl.app_type_code FROM filing fl WHERE fl.file_number = f.content_key) AS item_subtitle
+         FROM user_content_flag f
+         LEFT JOIN saved_search ss ON ss.id = f.saved_search_id
+         WHERE f.user_id = $1 AND f.source = 'alert' AND f.dismissed_at IS NULL
+           AND f.content_type = 'filing'
+         UNION ALL
+         SELECT f.id AS flag_id, f.content_type, f.content_key, f.reason,
+                f.saved_search_id, f.created_at::VARCHAR AS flagged_at,
+                ss.name AS search_name,
+                (SELECT ni.title FROM news_item ni WHERE ni.id = CAST(f.content_key AS INTEGER)) AS item_title,
+                (SELECT ns.name FROM news_item ni JOIN news_source ns ON ns.id = ni.news_source_id WHERE ni.id = CAST(f.content_key AS INTEGER)) AS item_subtitle
+         FROM user_content_flag f
+         LEFT JOIN saved_search ss ON ss.id = f.saved_search_id
+         WHERE f.user_id = $2 AND f.source = 'alert' AND f.dismissed_at IS NULL
+           AND f.content_type = 'news'
+       ) sub
+       ORDER BY search_name, flagged_at DESC`,
+      [user.id, user.id],
     );
     return c.json(reader.getRowObjectsJS());
   } finally {
