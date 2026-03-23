@@ -51,14 +51,10 @@ describe('backup integration', () => {
 
     await service.runBackup('test');
 
-    // Should have uploaded timestamped only (latest is a server-side copy)
+    // Should have uploaded timestamped snapshot only (no latest.duckdb copy)
     expect(uploads.length).toBe(1);
     expect(uploads[0]!.s3Key).toMatch(/^\d{8}-\d{4}\.duckdb$/);
-    // latest.duckdb created via server-side S3 copy, not re-upload
-    expect(mockUploader.copyObject).toHaveBeenCalledWith(
-      expect.stringMatching(/^\d{8}-\d{4}\.duckdb$/),
-      'latest.duckdb',
-    );
+    expect(mockUploader.copyObject).not.toHaveBeenCalled();
 
     // Should have recorded in backup_snapshot table
     const snapshots: BackupSnapshot[] = await listBackupSnapshots(conn, 1);
