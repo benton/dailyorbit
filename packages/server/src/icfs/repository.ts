@@ -138,7 +138,9 @@ export async function upsertIcfsFiling(
         transferee_city = $39,
         transferee_zip_code = $40,
         icfs_service_types = $41,
-        icfs_last_fetched_at = current_timestamp
+        icfs_last_fetched_at = current_timestamp,
+        _last_seen_at = current_timestamp,
+        _modified_at = current_timestamp
       WHERE file_number = $42`,
       [
         s.sysId,
@@ -202,7 +204,8 @@ export async function upsertIcfsFiling(
         nature_of_service, brief_description,
         transferor_name, transferor_street, transferor_city, transferor_zip_code,
         transferee_name, transferee_street, transferee_city, transferee_zip_code,
-        icfs_service_types, icfs_last_fetched_at
+        icfs_service_types, icfs_last_fetched_at,
+        _first_seen_at, _last_seen_at, _modified_at
       ) VALUES (
         $1, $2, $3, $4,
         $5, $6, $7, $8,
@@ -217,7 +220,8 @@ export async function upsertIcfsFiling(
         $35, $36,
         $37, $38, $39, $40,
         $41, $42, $43, $44,
-        $45, current_timestamp
+        $45, current_timestamp,
+        current_timestamp, current_timestamp, current_timestamp
       )`,
       [
         filingKey,

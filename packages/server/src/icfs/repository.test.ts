@@ -42,7 +42,10 @@ const CREATE_FILING_TABLE: string = `
     act_pub_notice_date TIMESTAMP,
     description VARCHAR,
     address_attention VARCHAR,
-    contact_attention VARCHAR
+    contact_attention VARCHAR,
+    _first_seen_at TIMESTAMP,
+    _last_seen_at TIMESTAMP,
+    _modified_at TIMESTAMP
   )
 `;
 
