@@ -1,10 +1,13 @@
 .DEFAULT_GOAL := build
 
-.PHONY: help setup dev test build format clean \
+.PHONY: help dep setup dev test build format clean \
        deploy-synth deploy-diff deploy-up deploy-destroy deploy-frontend deploy-refresh
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+dep: ## Install dependencies
+	pnpm install
 
 setup: ## Install deps and prepare directories
 	pnpm install
