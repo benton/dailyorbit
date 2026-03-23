@@ -79,9 +79,60 @@ docker run -d \
   --name daily-orbit \
   --restart unless-stopped \
   --network host \
+  --log-opt max-size=100m \
+  --log-opt max-file=3 \
   -v /data:/app/data \
   -e NODE_ENV=production \
   {{ECR_URI}}:{{CONTAINER_TAG}}
+
+# ── CloudWatch Agent ───────────────────────────────────────────────────────
+# Install the unified CloudWatch agent for ARM64
+curl -fsSL "https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb" \
+  -o /tmp/amazon-cloudwatch-agent.deb
+dpkg -i /tmp/amazon-cloudwatch-agent.deb
+rm /tmp/amazon-cloudwatch-agent.deb
+
+# Write agent config — ship container logs, user-data log, and snapshot log
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << CWCONFIG
+{
+  "agent": {
+    "region": "{{REGION}}"
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/lib/docker/containers/*/*.log",
+            "log_group_name": "/daily-orbit/app",
+            "log_stream_name": "{instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%S"
+          },
+          {
+            "file_path": "/var/log/user-data.log",
+            "log_group_name": "/daily-orbit/user-data",
+            "log_stream_name": "{instance_id}",
+            "timestamp_format": "%Y-%m-%d %H:%M:%S"
+          },
+          {
+            "file_path": "/var/log/db-snapshot.log",
+            "log_group_name": "/daily-orbit/db-snapshot",
+            "log_stream_name": "{instance_id}",
+            "timestamp_format": "%Y-%m-%d %H:%M:%S"
+          }
+        ]
+      }
+    }
+  }
+}
+CWCONFIG
+
+# Start the agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 # ── Data Snapshot Cron ────────────────────────────────────────────────────────
 cat > /usr/local/bin/db-snapshot.sh << 'SCRIPT'
