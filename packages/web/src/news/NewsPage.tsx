@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { DataTable, type DataTableFetchParams, type PaginatedResponse } from '../ui/DataTable.tsx';
 import { HideToggle } from '../ui/HideToggle.tsx';
+import { useAuth } from '../user/AuthContext.tsx';
 
 type NewsListItem = {
   author: string | null;
@@ -53,6 +54,7 @@ const newsColumns: Array<ColumnDef<NewsListItem, unknown>> = [
 ];
 
 export default function NewsPage() {
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState<boolean>(false);
@@ -94,7 +96,9 @@ export default function NewsPage() {
         `/api/news?${parts.join('&')}`,
       );
       const keys: Array<string> = result.data.map((r: NewsListItem) => String(r.id));
-      void checkHiddenKeys(keys);
+      if (isAuthenticated) {
+        void checkHiddenKeys(keys);
+      }
       return result;
     },
     [checkHiddenKeys, showHidden],
@@ -141,8 +145,8 @@ export default function NewsPage() {
       id: 'hide',
       size: 80,
     };
-    return [...newsColumns, hideCol];
-  }, [hiddenKeys, showHidden]);
+    return isAuthenticated ? [...newsColumns, hideCol] : newsColumns;
+  }, [hiddenKeys, showHidden, isAuthenticated]);
 
   return (
     <div className="space-y-4">
@@ -150,15 +154,17 @@ export default function NewsPage() {
       <p className="text-sm text-neutral-500 dark:text-neutral-400">
         Satellite industry news aggregated from RSS feeds.
       </p>
-      <label className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
-        <input
-          checked={showHidden}
-          onChange={(e) => setShowHidden(e.target.checked)}
-          type="checkbox"
-        />
-        <Eye className="h-3.5 w-3.5" />
-        Show hidden items
-      </label>
+      {isAuthenticated && (
+        <label className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+          <input
+            checked={showHidden}
+            onChange={(e) => setShowHidden(e.target.checked)}
+            type="checkbox"
+          />
+          <Eye className="h-3.5 w-3.5" />
+          Show hidden items
+        </label>
+      )}
       <DataTable<NewsListItem>
         columns={cols}
         defaultOrder="desc"

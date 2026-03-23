@@ -13,6 +13,7 @@ import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { HideToggle } from '../ui/HideToggle.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
+import { useAuth } from '../user/AuthContext.tsx';
 import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
 import { SaveSearchModal } from './SaveSearchModal.tsx';
 
@@ -962,6 +963,7 @@ function buildEarthStationQueryString(
 // ── Main SearchPage component ────────────────────────────────────────
 
 export default function SearchPage() {
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1375,7 +1377,7 @@ export default function SearchPage() {
       id: 'hide',
       size: 80,
     };
-    return [selectCol, ...filingColumns, flagCol, hideCol];
+    return [selectCol, ...filingColumns, flagCol, ...(isAuthenticated ? [hideCol] : [])];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1384,6 +1386,7 @@ export default function SearchPage() {
     lastPageKeys,
     toggleSelected,
     toggleSelectAll,
+    isAuthenticated,
   ]);
 
   const satelliteCols = useMemo(() => satelliteColumns, []);
@@ -1468,7 +1471,7 @@ export default function SearchPage() {
       id: 'hide',
       size: 80,
     };
-    return [selectCol, ...contentColumns, flagCol, hideCol];
+    return [selectCol, ...contentColumns, flagCol, ...(isAuthenticated ? [hideCol] : [])];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1477,6 +1480,7 @@ export default function SearchPage() {
     lastPageKeys,
     toggleSelected,
     toggleSelectAll,
+    isAuthenticated,
   ]);
 
   return (
@@ -1484,7 +1488,7 @@ export default function SearchPage() {
       {/* Page heading */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Search</h1>
-        <SavedSearchPicker onLoad={handleLoadSavedSearch} />
+        {isAuthenticated && <SavedSearchPicker onLoad={handleLoadSavedSearch} />}
       </div>
 
       {/* Content search bar */}
@@ -1567,21 +1571,23 @@ export default function SearchPage() {
               <Button onClick={handleClear} size="sm" variant="outline">
                 Clear
               </Button>
-              {activeTab === 'filings' && (
+              {isAuthenticated && activeTab === 'filings' && (
                 <Button onClick={() => setShowSaveModal(true)} size="sm" variant="outline">
                   <Bookmark className="mr-1.5 h-3.5 w-3.5" />
                   Save Search
                 </Button>
               )}
-              <label className="ml-4 flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
-                <input
-                  checked={showHidden}
-                  onChange={(e) => setShowHidden(e.target.checked)}
-                  type="checkbox"
-                />
-                <Eye className="h-3.5 w-3.5" />
-                Show hidden items
-              </label>
+              {isAuthenticated && (
+                <label className="ml-4 flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+                  <input
+                    checked={showHidden}
+                    onChange={(e) => setShowHidden(e.target.checked)}
+                    type="checkbox"
+                  />
+                  <Eye className="h-3.5 w-3.5" />
+                  Show hidden items
+                </label>
+              )}
             </div>
           </div>
         )}
