@@ -4,6 +4,7 @@ import { planRewind, executeRewind } from './rewind.ts';
 import { ensureAlertTables } from '../alerts/schema.ts';
 import { ensureContentFlagTables } from '../content-flag/schema.ts';
 import { ensureViewingHistoryTables } from '../viewing-history/schema.ts';
+import { ensureHiddenItemTables } from '../hidden-item/schema.ts';
 
 const SCHEMA_SQL: string = `
   CREATE TABLE IF NOT EXISTS filing (
@@ -59,6 +60,8 @@ describe('rewind', () => {
     await conn.run('DROP TABLE IF EXISTS user_filing_view');
     await conn.run('DROP TABLE IF EXISTS user_news_view');
     await conn.run('DROP TABLE IF EXISTS user_view_watermark');
+    await conn.run('DROP TABLE IF EXISTS hidden_item');
+    await conn.run('DROP TABLE IF EXISTS discovery_snapshot');
     await conn.run('DROP TABLE IF EXISTS pleading');
     await conn.run('DROP TABLE IF EXISTS attachment');
     await conn.run('DROP TABLE IF EXISTS filing');
@@ -67,6 +70,7 @@ describe('rewind', () => {
     await ensureAlertTables(conn);
     await ensureContentFlagTables(conn);
     await ensureViewingHistoryTables(conn);
+    await ensureHiddenItemTables(conn);
   });
 
   describe('validation', () => {
@@ -126,7 +130,7 @@ describe('rewind', () => {
     it('counts the N most recently ingested filings', async () => {
       const result = await planRewind(conn, { last: 1 });
 
-      expect(result.scope).toBe('1 most recently ingested filings');
+      expect(result.scope).toBe('1 most recently filed filings (hidden excluded)');
 
       const filingCount = result.counts.find((c) => c.table === 'filing');
       expect(filingCount?.count).toBe(1); // most recent: filing_key 3
@@ -143,6 +147,7 @@ describe('rewind', () => {
 
       // Verify counts
       expect(result.counts).toEqual([
+        { table: 'discovery_snapshot', count: 0 },
         { table: 'alert_run', count: 1 },
         { table: 'user_content_flag', count: 1 },
         { table: 'user_filing_view', count: 1 },

@@ -10,7 +10,8 @@ import { listAvailableModels } from './models.ts';
 
 const REGION = 'us-east-2';
 const HAS_AWS_CREDS: boolean =
-  process.env.AWS_PROFILE != null || process.env.AWS_ACCESS_KEY_ID != null;
+  process.env.CI == null &&
+  (process.env.AWS_PROFILE != null || process.env.AWS_ACCESS_KEY_ID != null);
 
 const TEST_KEY: Buffer = randomBytes(32);
 let db: DuckDBInstance;
