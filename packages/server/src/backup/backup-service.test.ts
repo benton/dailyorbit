@@ -21,6 +21,7 @@ describe('BackupService', () => {
   it('runs a backup and records it in backup_snapshot', async () => {
     const mockUploader: S3Uploader = {
       upload: vi.fn().mockResolvedValue(undefined),
+      copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };
 
@@ -47,6 +48,7 @@ describe('BackupService', () => {
       upload: vi.fn().mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100)),
       ),
+      copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };
 
@@ -72,6 +74,7 @@ describe('BackupService', () => {
   it('reports running status', () => {
     const mockUploader: S3Uploader = {
       upload: vi.fn().mockResolvedValue(undefined),
+      copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };
 

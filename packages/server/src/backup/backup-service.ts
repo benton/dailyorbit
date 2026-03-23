@@ -1,5 +1,6 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
-import { copyFileSync, statSync, unlinkSync } from 'node:fs';
+import { copyFile, stat, unlink } from 'node:fs/promises';
+import { statSync } from 'node:fs';
 import { getLogger } from '../lib/logger.ts';
 import {
   insertBackupSnapshot,
@@ -40,17 +41,18 @@ export function createBackupService(config: BackupServiceConfig): BackupService 
       log.info('[backup] Checkpointing WAL...');
       await config.conn.run('CHECKPOINT');
 
-      // 2. Copy DB file to temp location
+      // 2. Copy DB file to temp location (async to avoid blocking event loop)
       log.info('[backup] Copying database file...');
-      copyFileSync(config.dbPath, snapPath);
-      const stat = statSync(snapPath);
+      await copyFile(config.dbPath, snapPath);
+      const snapStat = await stat(snapPath);
 
       // 3. Upload timestamped snapshot
-      log.info(`[backup] Uploading ${s3Key} (${stat.size} bytes)...`);
+      log.info(`[backup] Uploading ${s3Key} (${snapStat.size} bytes)...`);
       await config.uploader.upload(snapPath, s3Key);
 
-      // 4. Also upload as latest.duckdb for boot restore fallback
-      await config.uploader.upload(snapPath, 'latest.duckdb');
+      // 4. Server-side copy to latest.duckdb (no re-upload)
+      log.info('[backup] Copying to latest.duckdb (server-side)...');
+      await config.uploader.copyObject(s3Key, 'latest.duckdb');
 
       // 5. Upload encryption key if it exists
       const keyPath: string = config.dbPath.replace('.duckdb', '.key');
@@ -62,11 +64,11 @@ export function createBackupService(config: BackupServiceConfig): BackupService 
       }
 
       // 6. Clean up temp file
-      unlinkSync(snapPath);
+      await unlink(snapPath);
 
-      // 6. Record success
+      // 7. Record success
       const fullS3Key: string = `${config.snapshotPrefix}${s3Key}`;
-      await completeBackupSnapshot(config.conn, id, fullS3Key, stat.size);
+      await completeBackupSnapshot(config.conn, id, fullS3Key, snapStat.size);
       log.info(`[backup] Snapshot ${s3Key} uploaded successfully`);
     } catch (err: unknown) {
       const msg: string = err instanceof Error ? err.message : String(err);
@@ -74,7 +76,7 @@ export function createBackupService(config: BackupServiceConfig): BackupService 
       await failBackupSnapshot(config.conn, id, msg);
       // Clean up temp file if it exists
       try {
-        unlinkSync(snapPath);
+        await unlink(snapPath);
       } catch {
         // ignore
       }

@@ -34,6 +34,7 @@ describe('backup integration', () => {
           uploads.push({ localPath, s3Key });
         },
       ),
+      copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };
 
@@ -46,10 +47,14 @@ describe('backup integration', () => {
 
     await service.runBackup('test');
 
-    // Should have uploaded timestamped + latest (no key file exists so just 2)
-    expect(uploads.length).toBe(2);
+    // Should have uploaded timestamped only (latest is a server-side copy)
+    expect(uploads.length).toBe(1);
     expect(uploads[0]!.s3Key).toMatch(/^\d{8}-\d{4}\.duckdb$/);
-    expect(uploads[1]!.s3Key).toBe('latest.duckdb');
+    // latest.duckdb created via server-side S3 copy, not re-upload
+    expect(mockUploader.copyObject).toHaveBeenCalledWith(
+      expect.stringMatching(/^\d{8}-\d{4}\.duckdb$/),
+      'latest.duckdb',
+    );
 
     // Should have recorded in backup_snapshot table
     const snapshots: BackupSnapshot[] = await listBackupSnapshots(conn, 1);

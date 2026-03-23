@@ -9,6 +9,7 @@ describe('createS3Uploader', () => {
       region: 'us-east-2',
     });
     expect(typeof uploader.upload).toBe('function');
+    expect(typeof uploader.copyObject).toBe('function');
     expect(typeof uploader.listSnapshots).toBe('function');
   });
 });
