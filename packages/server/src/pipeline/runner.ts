@@ -317,6 +317,7 @@ class PipelineRunner {
             status: 'completed',
             itemsDiscovered: result.itemsDiscovered ?? 0,
             itemsProcessed: result.itemsProcessed,
+            itemsSkipped: result.itemsSkipped ?? 0,
             itemsFailed: result.itemsFailed,
             summary: result.summary ?? '',
           });

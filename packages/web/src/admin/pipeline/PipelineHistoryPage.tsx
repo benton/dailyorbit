@@ -17,6 +17,7 @@ type PipelineRunStats = {
   items_discovered: number;
   items_failed: number;
   items_processed: number;
+  items_skipped: number;
   mode: string;
   stage_summary: string | null;
   started_at: string;
@@ -31,6 +32,7 @@ type StageRun = {
   items_discovered: number;
   items_failed: number;
   items_processed: number;
+  items_skipped: number;
   pipeline_run_id: number;
   stage_id: string;
   started_at: string;
@@ -128,6 +130,11 @@ const columns: Array<ColumnDef<PipelineRunStats, unknown>> = [
     size: 90,
   },
   {
+    accessorKey: 'items_skipped',
+    header: 'Skipped',
+    size: 90,
+  },
+  {
     accessorKey: 'items_failed',
     header: 'Failed',
     size: 80,
@@ -175,6 +182,7 @@ function StageDetail({ runId }: { runId: number }) {
             <th className="px-3 py-1.5 text-left font-medium">Duration</th>
             <th className="px-3 py-1.5 text-right font-medium">Discovered</th>
             <th className="px-3 py-1.5 text-right font-medium">Processed</th>
+            <th className="px-3 py-1.5 text-right font-medium">Skipped</th>
             <th className="px-3 py-1.5 text-right font-medium">Failed</th>
             <th className="px-3 py-1.5 text-left font-medium">Summary</th>
           </tr>
@@ -189,6 +197,7 @@ function StageDetail({ runId }: { runId: number }) {
               <td className="px-3 py-1.5">{formatDuration(s.started_at, s.finished_at)}</td>
               <td className="px-3 py-1.5 text-right">{s.items_discovered}</td>
               <td className="px-3 py-1.5 text-right">{s.items_processed}</td>
+              <td className="px-3 py-1.5 text-right">{s.items_skipped}</td>
               <td className="px-3 py-1.5 text-right">{s.items_failed}</td>
               <td className="px-3 py-1.5 text-neutral-500">{s.summary ?? ''}</td>
             </tr>
@@ -222,7 +231,7 @@ export default function PipelineHistoryPage() {
 
         // Transform for charting: x = time, y = items_processed, fill = status
         const chartData: Array<{ count: number; status: string; time: Date }> = runs
-          .filter((r: PipelineRunStats) => r.started_at != null)
+          .filter((r: PipelineRunStats) => r.started_at != null && r.mode === 'probe')
           .map((r: PipelineRunStats) => ({
             count: r.items_processed,
             status: r.status,
@@ -248,7 +257,7 @@ export default function PipelineHistoryPage() {
           vg.xLabel('Time'),
           vg.yDomain([0, yMax]),
           vg.yGrid(true),
-          vg.yLabel('Filings Ingested'),
+          vg.yLabel('New Filings Detected'),
         );
 
         if (!cancelled && chartRef.current != null) {
@@ -300,7 +309,7 @@ export default function PipelineHistoryPage() {
       {/* Histogram */}
       <section>
         <h2 className="mb-2 text-lg font-semibold text-neutral-700 dark:text-neutral-300">
-          Filings Ingested per Run
+          New Filings Detected per Run
         </h2>
         {chartLoading && <p className="text-sm text-neutral-500">Loading chart...</p>}
         <div className="overflow-x-auto" ref={chartRef} />

@@ -13,6 +13,7 @@ import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 export type StageResult = {
   itemsDiscovered?: number;
   itemsProcessed: number;
+  itemsSkipped?: number;
   itemsFailed: number;
   durationMs: number;
   summary?: string;
@@ -110,7 +111,10 @@ function makeAlertStage(searchType: AlertSearchType): PipelineStage {
 
       const config = getConfigService();
       const emailService = createEmailService({
-        transport: String(config.get('emailTransport')) as 'ses' | 'smtp' | 'test',
+        transport: String(config.get('emailTransport')) as
+          | 'ses'
+          | 'smtp'
+          | 'test',
         region: String(config.get('emailRegion')),
         senderAddress: String(config.get('emailSenderAddress')),
       });
@@ -174,9 +178,10 @@ const STAGES: PipelineStage[] = [
       return {
         itemsDiscovered: result.filingsDiscovered,
         itemsProcessed: result.filingsIngested,
+        itemsSkipped: result.skippedKnown,
         itemsFailed: result.filingsFailed,
         durationMs: Date.now() - start,
-        summary: `Discovered ${String(result.filingsDiscovered)}, ingested ${String(result.filingsIngested)}`,
+        summary: `Discovered ${String(result.filingsDiscovered)}, ingested ${String(result.filingsIngested)}, skipped ${String(result.skippedKnown)}`,
       };
     },
   },

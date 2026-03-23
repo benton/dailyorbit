@@ -27,6 +27,7 @@ export type StageRunRow = {
   status: string;
   items_discovered: number;
   items_processed: number;
+  items_skipped: number;
   items_failed: number;
   summary: string | null;
 };
@@ -35,6 +36,7 @@ export type FinishStageInput = {
   status: string;
   itemsDiscovered?: number;
   itemsProcessed?: number;
+  itemsSkipped?: number;
   itemsFailed?: number;
   summary?: string;
 };
@@ -90,13 +92,15 @@ export async function finishStageRun(
          status = $1,
          items_discovered = $2,
          items_processed = $3,
-         items_failed = $4,
-         summary = $5
-     WHERE id = $6`,
+         items_skipped = $4,
+         items_failed = $5,
+         summary = $6
+     WHERE id = $7`,
     [
       input.status,
       input.itemsDiscovered ?? 0,
       input.itemsProcessed ?? 0,
+      input.itemsSkipped ?? 0,
       input.itemsFailed ?? 0,
       input.summary ?? null,
       stageRunId,
@@ -147,6 +151,7 @@ export type PipelineRunWithIcfsStats = {
   summary: string | null;
   items_discovered: number;
   items_processed: number;
+  items_skipped: number;
   items_failed: number;
   stage_summary: string | null;
 };
@@ -161,6 +166,7 @@ export async function getRunsWithIcfsStats(
             pr.status, pr.triggered_by, pr.mode, pr.summary,
             COALESCE(psr.items_discovered, 0)::INTEGER AS items_discovered,
             COALESCE(psr.items_processed, 0)::INTEGER AS items_processed,
+            COALESCE(psr.items_skipped, 0)::INTEGER AS items_skipped,
             COALESCE(psr.items_failed, 0)::INTEGER AS items_failed,
             psr.summary AS stage_summary
      FROM pipeline_run pr
@@ -180,6 +186,7 @@ const HISTORY_ALLOWED_COLUMNS: ReadonlySet<string> = new Set([
   'mode',
   'items_discovered',
   'items_processed',
+  'items_skipped',
   'items_failed',
 ]);
 
@@ -193,6 +200,7 @@ export async function listPipelineRuns(
            pr.status, pr.triggered_by, pr.mode, pr.summary,
            COALESCE(psr.items_discovered, 0)::INTEGER AS items_discovered,
            COALESCE(psr.items_processed, 0)::INTEGER AS items_processed,
+           COALESCE(psr.items_skipped, 0)::INTEGER AS items_skipped,
            COALESCE(psr.items_failed, 0)::INTEGER AS items_failed,
            psr.summary AS stage_summary
     FROM pipeline_run pr
@@ -227,7 +235,7 @@ export async function getStageRunsForPipeline(
   const reader = await conn.runAndReadAll(
     `SELECT id, pipeline_run_id, stage_id,
             started_at::VARCHAR AS started_at, finished_at::VARCHAR AS finished_at,
-            status, items_discovered, items_processed, items_failed, summary
+            status, items_discovered, items_processed, items_skipped, items_failed, summary
      FROM pipeline_stage_run WHERE pipeline_run_id = $1 ORDER BY started_at`,
     [pipelineRunId],
   );
