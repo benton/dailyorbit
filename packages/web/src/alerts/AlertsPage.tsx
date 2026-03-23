@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { apiFetch } from '../lib/api.ts';
 
 type FlaggedItem = {
   content_key: string;
@@ -37,11 +38,8 @@ export default function AlertsPage() {
 
   const fetchFlags = useCallback(async () => {
     try {
-      const res: Response = await fetch('/api/user/alerts/flagged');
-      if (res.ok) {
-        const data = (await res.json()) as Array<FlaggedItem>;
-        setFlags(data);
-      }
+      const data = await apiFetch<Array<FlaggedItem>>('/api/user/alerts/flagged');
+      setFlags(data);
     } catch {
       /* silent */
     } finally {
@@ -66,9 +64,7 @@ export default function AlertsPage() {
   }, [flags]);
 
   const handleDismiss = useCallback(async (flagId: number) => {
-    await fetch(`/api/user/flags/${String(flagId)}/dismiss`, {
-      method: 'POST',
-    });
+    await apiFetch(`/api/user/flags/${String(flagId)}/dismiss`, { method: 'POST' });
     setFlags((prev: Array<FlaggedItem>) => prev.filter((f: FlaggedItem) => f.flag_id !== flagId));
   }, []);
 
@@ -77,9 +73,7 @@ export default function AlertsPage() {
       const groupFlags: Array<FlaggedItem> = grouped.get(groupName) ?? [];
       await Promise.all(
         groupFlags.map((f: FlaggedItem) =>
-          fetch(`/api/user/flags/${String(f.flag_id)}/dismiss`, {
-            method: 'POST',
-          }),
+          apiFetch(`/api/user/flags/${String(f.flag_id)}/dismiss`, { method: 'POST' }),
         ),
       );
       const ids: Set<number> = new Set(groupFlags.map((f: FlaggedItem) => f.flag_id));
