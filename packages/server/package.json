@@ -1,6 +1,6 @@
 {
   "name": "@daily-orbit/server",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "bin": {
     "daily-orbit": "./dist/bin.js"
   },
