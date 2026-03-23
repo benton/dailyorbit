@@ -74,6 +74,8 @@ test:
 container_scanning:
   stage: build
   needs: [build]
+  variables:
+    CS_DOCKER_IMAGE_PLATFORM: "linux/arm64"
 
 # ---------------------------------------------------------------------------
 # Deploy — tagged releases only, manual gate
