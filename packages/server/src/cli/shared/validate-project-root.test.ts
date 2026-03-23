@@ -26,18 +26,15 @@ describe('validateProjectRoot', () => {
   it('throws with details about which sentinels are missing', () => {
     process.chdir(tempDir);
     expect(() => validateProjectRoot()).toThrow(
-      /daily-orbit.*pnpm-workspace\.yaml/,
+      /daily-orbit.*packages\/server\/package\.json/,
     );
   });
 
   it('passes when all sentinel files exist', () => {
     // Create the sentinel structure
     writeFileSync(join(tempDir, 'daily-orbit'), '#!/bin/bash');
-    writeFileSync(join(tempDir, 'pnpm-workspace.yaml'), 'packages:');
     mkdirSync(join(tempDir, 'packages', 'server'), { recursive: true });
-    mkdirSync(join(tempDir, 'packages', 'web'), { recursive: true });
     writeFileSync(join(tempDir, 'packages', 'server', 'package.json'), '{}');
-    writeFileSync(join(tempDir, 'packages', 'web', 'package.json'), '{}');
 
     process.chdir(tempDir);
     expect(() => validateProjectRoot()).not.toThrow();

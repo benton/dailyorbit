@@ -4,12 +4,14 @@ import { resolve } from 'node:path';
 /**
  * Sentinel files/dirs that MUST exist in the project root.
  * If cwd is wrong (e.g. packages/server/), these won't be found.
+ *
+ * Only includes paths that exist in BOTH the dev monorepo and the
+ * production Docker image (which strips build-only files like
+ * pnpm-workspace.yaml and packages/web/package.json).
  */
 const SENTINELS: string[] = [
   'daily-orbit',
   'packages/server/package.json',
-  'packages/web/package.json',
-  'pnpm-workspace.yaml',
 ];
 
 /**
