@@ -242,7 +242,7 @@ export async function evaluateAlertsWithEmail(
         conn,
         search.content_type,
         alertFilters,
-        { page: 1, pageSize: 500 },
+        { page: 1, pageSize: 500, sort: 'date_filed', order: 'desc' },
         watermark,
       );
 

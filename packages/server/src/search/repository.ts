@@ -163,6 +163,8 @@ export async function searchFilings(
     pagination,
     FILING_SORTABLE_COLUMNS,
     'date_filed',
+    'desc',
+    'file_number',
   );
 
   const dataReader = await conn.runAndReadAll(sql, queryParams);

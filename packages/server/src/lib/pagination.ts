@@ -75,8 +75,17 @@ export function buildPaginatedQuery(
   request: PaginatedRequest,
   allowedColumns: ReadonlySet<string>,
   defaultSort: string,
+  defaultOrder: SortOrder = 'asc',
+  tiebreaker?: string,
 ): PaginatedQueryResult {
-  const { page, pageSize, sort, order } = normalizePaginatedRequest(request);
+  const {
+    page,
+    pageSize,
+    sort,
+    order: reqOrder,
+  } = normalizePaginatedRequest(request);
+  // Use the caller's default order when the client didn't specify one
+  const order: SortOrder = request.order != null ? reqOrder : defaultOrder;
 
   const sortColumn: string =
     sort != null && allowedColumns.has(sort) ? sort : defaultSort;
@@ -92,7 +101,11 @@ export function buildPaginatedQuery(
 
   // Build the data query with ORDER BY + LIMIT + OFFSET
   // Column name is safe because it was validated against the whitelist
-  const sql: string = `${baseSql} ORDER BY "${sortColumn}" ${order} LIMIT ${pageSize} OFFSET ${offset}`;
+  const tieClause: string =
+    tiebreaker != null && tiebreaker !== sortColumn
+      ? `, "${tiebreaker}" ${order}`
+      : '';
+  const sql: string = `${baseSql} ORDER BY "${sortColumn}" ${order}${tieClause} LIMIT ${pageSize} OFFSET ${offset}`;
 
   // Build the count query by wrapping the base SQL
   const countSql: string = `SELECT COUNT(*) AS total FROM (${baseSql}) AS _count`;
