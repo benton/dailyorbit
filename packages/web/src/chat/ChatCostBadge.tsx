@@ -3,7 +3,9 @@
  * with a minimum display of $0.01 for any non-zero amount.
  */
 export function formatCostCents(cents: number): string {
-  if (cents <= 0) return '$0.00';
+  if (cents <= 0) {
+    return '$0.00';
+  }
 
   const rounded: number = Math.max(1, Math.round(cents));
   return `$${(rounded / 100).toFixed(2)}`;
@@ -14,7 +16,9 @@ type ChatCostBadgeProps = {
 };
 
 export default function ChatCostBadge({ costCents }: ChatCostBadgeProps) {
-  if (costCents <= 0) return null;
+  if (costCents <= 0) {
+    return null;
+  }
 
   return (
     <span className="inline-block text-xs text-neutral-400 tabular-nums dark:text-neutral-500">

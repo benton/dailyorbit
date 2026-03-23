@@ -29,7 +29,7 @@ describe('formatCostCents', () => {
   it('formats dollar-scale amounts', () => {
     expect(formatCostCents(1000)).toBe('$10.00');
     expect(formatCostCents(1250)).toBe('$12.50');
-    expect(formatCostCents(10000)).toBe('$100.00');
+    expect(formatCostCents(10_000)).toBe('$100.00');
   });
 
   it('treats negative values as zero', () => {

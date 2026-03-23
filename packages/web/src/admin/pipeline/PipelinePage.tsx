@@ -217,17 +217,17 @@ export default function PipelinePage() {
 
   const handleReset = useCallback(async (stageId: string) => {
     try {
-      const resp = await apiFetch<{ stageId: string; reset: number }>(
+      const resp = await apiFetch<{ reset: number; stageId: string }>(
         `/api/admin/pipeline/reset-matches/${stageId}`,
         { method: 'POST' },
       );
       setLogLines((prev: Array<LogLine>) => [
         ...prev,
         {
-          runId: 'reset',
-          stage: stageId,
           level: 'info' as const,
           message: `Reset ${String(resp.reset)} failed match attempts — next run will retry them`,
+          runId: 'reset',
+          stage: stageId,
           timestamp: new Date().toISOString(),
         },
       ]);

@@ -6,9 +6,6 @@ import { Button } from '../../ui/button.tsx';
 // ── Types ───────────────────────────────────────────────────────────
 
 type SchedulerStatus = {
-  running: boolean;
-  probeIntervalMs: number;
-  refreshIntervalMs: number;
   lastProbeAt: string | null;
   lastProbeResult: {
     stagesCompleted: number;
@@ -23,28 +20,39 @@ type SchedulerStatus = {
   } | null;
   nextProbeAt: string | null;
   nextRefreshAt: string | null;
+  probeIntervalMs: number;
   refreshInProgress: boolean;
+  refreshIntervalMs: number;
+  running: boolean;
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function formatMs(ms: number): string {
-  if (ms < 1000) return `${String(ms)}ms`;
+  if (ms < 1000) {
+    return `${String(ms)}ms`;
+  }
   const seconds: number = Math.round(ms / 1000);
-  if (seconds < 60) return `${String(seconds)}s`;
+  if (seconds < 60) {
+    return `${String(seconds)}s`;
+  }
   const minutes: number = Math.round(seconds / 60);
   return `${String(minutes)}m`;
 }
 
 function formatTime(iso: string | null): string {
-  if (iso == null) return '—';
+  if (iso == null) {
+    return '—';
+  }
   const d = new Date(iso);
   return d.toLocaleTimeString();
 }
 
 function formatInterval(ms: number): string {
   const seconds: number = ms / 1000;
-  if (seconds < 60) return `${String(seconds)}s`;
+  if (seconds < 60) {
+    return `${String(seconds)}s`;
+  }
   const minutes: number = seconds / 60;
   return `${String(minutes)} min`;
 }
@@ -101,11 +109,11 @@ export default function SchedulerPanel() {
       const data: SchedulerStatus = await apiFetch<SchedulerStatus>(
         '/api/admin/pipeline/scheduler/start',
         {
-          method: 'POST',
           body: JSON.stringify({
             probeIntervalMs: probeInterval * 1000,
             refreshIntervalMs: refreshInterval * 60_000,
           }),
+          method: 'POST',
         },
       );
       setStatus(data);
@@ -130,16 +138,20 @@ export default function SchedulerPanel() {
     setAutoStart(checked);
     try {
       await apiFetch('/api/admin/config/schedulerAutoStart', {
-        method: 'PUT',
         body: JSON.stringify({ value: checked ? 'true' : 'false' }),
+        method: 'PUT',
       });
     } catch {
       setAutoStart(!checked); // revert on failure
     }
   }, []);
 
-  if (loading) return null;
-  if (status == null) return null;
+  if (loading) {
+    return null;
+  }
+  if (status == null) {
+    return null;
+  }
 
   const isRunning: boolean = status.running;
 

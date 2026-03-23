@@ -28,8 +28,12 @@ function shortModel(modelId: string): string {
 
 /** Format cost in cents to a dollar string. */
 function formatCost(cents: number): string {
-  if (cents === 0) return '$0.00';
-  if (cents < 0.01) return '<$0.01';
+  if (cents === 0) {
+    return '$0.00';
+  }
+  if (cents < 0.01) {
+    return '<$0.01';
+  }
   return `$${(cents / 100).toFixed(4)}`;
 }
 
@@ -88,7 +92,9 @@ export default function InferenceCosts() {
         accessorKey: 'conversation_id',
         cell: ({ row }) => {
           const cid: string | null = row.original.conversationId;
-          if (cid == null) return '';
+          if (cid == null) {
+            return '';
+          }
           return <span className="font-mono text-xs">{cid.slice(0, 8)}</span>;
         },
         header: 'Chat',
@@ -108,10 +114,10 @@ export default function InferenceCosts() {
       },
       {
         accessorFn: (row) => row.costCents,
-        id: 'cost',
         cell: ({ row }) => <span className="font-mono">{formatCost(row.original.costCents)}</span>,
         enableSorting: false,
         header: 'Cost',
+        id: 'cost',
         size: 90,
       },
       {
