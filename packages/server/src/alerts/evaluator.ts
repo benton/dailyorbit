@@ -11,7 +11,11 @@ import {
   getEmailedContentKeys,
   markFlagsEmailed,
 } from '../content-flag/repository.ts';
-import { insertAlertRun, getLastAlertRun } from './repository.ts';
+import {
+  insertAlertRun,
+  getLastAlertRun,
+  markAlertRunEmailed,
+} from './repository.ts';
 import { getSettingsByUserId } from '../user-settings/repository.ts';
 import { renderAlertDigest } from '../email/alert-digest.ts';
 import type { DigestSearchGroup, DigestItem } from '../email/alert-digest.ts';
@@ -35,6 +39,7 @@ type SearchMatchResult = {
   search: AlertEnabledSearch;
   contentKeys: string[];
   flagIds: number[];
+  alertRunId: number;
 };
 
 /** Fetch alert-enabled saved searches, optionally filtered by search_type. */
@@ -266,12 +271,12 @@ export async function evaluateAlertsWithEmail(
         flagIds.push(flagId);
       }
 
-      await insertAlertRun(conn, {
+      const alertRunId: number = await insertAlertRun(conn, {
         savedSearchId: search.id,
         pipelineRunId,
         itemsMatched: contentKeys.length,
         itemsFlagged: flagIds.length,
-        emailSent: false, // Updated after email delivery
+        emailSent: false,
       });
 
       searchesEvaluated++;
@@ -282,7 +287,7 @@ export async function evaluateAlertsWithEmail(
       if (contentKeys.length > 0) {
         const existing: SearchMatchResult[] =
           userMatches.get(search.user_id) ?? [];
-        existing.push({ search, contentKeys, flagIds });
+        existing.push({ search, contentKeys, flagIds, alertRunId });
         userMatches.set(search.user_id, existing);
       }
     } catch (err: unknown) {
@@ -367,11 +372,19 @@ export async function evaluateAlertsWithEmail(
           html: digest.html,
         });
 
-        // Mark flags as emailed
+        // Mark flags as emailed and update alert run records
         await markFlagsEmailed(conn, flagIdsToMark);
+        const alertRunIds: Set<number> = new Set(
+          matchResults.map((mr) => mr.alertRunId),
+        );
+        for (const runId of alertRunIds) {
+          await markAlertRunEmailed(conn, runId);
+        }
         emailsSent++;
-      } catch {
-        // Best-effort email delivery — don't fail the pipeline
+      } catch (err: unknown) {
+        // Best-effort email delivery — log but don't fail the pipeline
+        const msg: string = err instanceof Error ? err.message : String(err);
+        console.error(`[alerts] Email delivery failed for user ${userId}: ${msg}`);
       }
     }
   }

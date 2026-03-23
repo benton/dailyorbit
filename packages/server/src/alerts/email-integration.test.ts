@@ -135,6 +135,16 @@ describe('alert email integration', () => {
     );
     const flagRow = flagReader.getRowObjectsJS()[0] as Record<string, unknown>;
     expect(flagRow.emailed_at).not.toBeNull();
+
+    // Verify alert_run.email_sent is true
+    const runReader = await conn.runAndReadAll(
+      `SELECT email_sent FROM alert_run
+       WHERE pipeline_run_id = $1 AND items_flagged > 0
+       ORDER BY executed_at DESC LIMIT 1`,
+      [runId],
+    );
+    const runRow = runReader.getRowObjectsJS()[0] as Record<string, unknown>;
+    expect(runRow.email_sent).toEqual(true);
   });
 
   it('should NOT re-email the same content on subsequent runs', async () => {

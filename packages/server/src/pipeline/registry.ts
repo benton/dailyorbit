@@ -100,6 +100,7 @@ function makeAlertStage(searchType: AlertSearchType): PipelineStage {
       const { ensureViewingHistoryTables } =
         await import('../viewing-history/schema.ts');
       const { createEmailService } = await import('../email/email-service.ts');
+      const { getConfigService } = await import('../lib/config.ts');
       const start: number = Date.now();
 
       await ensureAlertTables(ctx.conn);
@@ -107,16 +108,13 @@ function makeAlertStage(searchType: AlertSearchType): PipelineStage {
       await ensureContentFlagTables(ctx.conn);
       await ensureViewingHistoryTables(ctx.conn);
 
-      const emailTransport: string =
-        process.env.NODE_ENV === 'production' ? 'ses' : 'test';
+      const config = getConfigService();
       const emailService = createEmailService({
-        transport: emailTransport as 'ses' | 'test',
-        region: process.env.AWS_REGION ?? 'us-east-2',
-        senderAddress:
-          process.env.ALERT_SENDER_ADDRESS ?? 'alerts@daily-orbit.example.com',
+        transport: String(config.get('emailTransport')) as 'ses' | 'smtp' | 'test',
+        region: String(config.get('emailRegion')),
+        senderAddress: String(config.get('emailSenderAddress')),
       });
-      const baseUrl: string =
-        process.env.APP_BASE_URL ?? 'http://localhost:5173';
+      const baseUrl: string = String(config.get('appBaseUrl'));
 
       const result = await evaluateAlertsWithEmail(
         ctx.conn,

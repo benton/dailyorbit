@@ -41,6 +41,17 @@ export async function insertAlertRun(
   return Number(reader.getRowObjectsJS()[0]!.id);
 }
 
+/** Mark an alert run's email_sent flag as true. */
+export async function markAlertRunEmailed(
+  conn: DuckDBConnection,
+  alertRunId: number,
+): Promise<void> {
+  await conn.run(
+    'UPDATE alert_run SET email_sent = true WHERE id = $1',
+    [alertRunId],
+  );
+}
+
 /** Get the most recent alert run for a given saved search. */
 export async function getLastAlertRun(
   conn: DuckDBConnection,
