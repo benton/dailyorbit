@@ -49,9 +49,9 @@ type RecentFilingsResponse = {
 };
 
 type TodaysFilingsResponse = {
-  visible: boolean;
   date: string | null;
   filings: Array<RecentFiling>;
+  visible: boolean;
 };
 
 type CompanyFilingVolume = {

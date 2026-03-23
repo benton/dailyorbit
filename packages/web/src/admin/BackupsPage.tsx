@@ -2,30 +2,30 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 
 type BackupSnapshot = {
-  id: number;
-  started_at: string;
+  error: string | null;
   finished_at: string | null;
-  status: string;
+  id: number;
   s3_key: string | null;
   size_bytes: number | null;
+  started_at: string;
+  status: string;
   triggered_by: string;
-  error: string | null;
 };
 
 type BackupStatus = {
-  running: boolean;
   configured?: boolean;
+  running: boolean;
 };
 
 const cardClass: string =
   'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024) { return `${bytes} B`; }
   const kb: number = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  if (kb < 1024) { return `${kb.toFixed(1)} KB`; }
   const mb: number = kb / 1024;
-  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  if (mb < 1024) { return `${mb.toFixed(1)} MB`; }
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
@@ -34,7 +34,7 @@ function formatDate(iso: string): string {
 }
 
 export default function BackupsPage() {
-  const [snapshots, setSnapshots] = useState<BackupSnapshot[]>([]);
+  const [snapshots, setSnapshots] = useState<Array<BackupSnapshot>>([]);
   const [status, setStatus] = useState<BackupStatus>({ running: false });
   const [loading, setLoading] = useState<boolean>(true);
   const [triggering, setTriggering] = useState<boolean>(false);
@@ -43,13 +43,13 @@ export default function BackupsPage() {
   const fetchData = useCallback(async () => {
     try {
       const [snapshotData, statusData] = await Promise.all([
-        apiFetch<BackupSnapshot[]>('/api/admin/backups'),
+        apiFetch<Array<BackupSnapshot>>('/api/admin/backups'),
         apiFetch<BackupStatus>('/api/admin/backups/status'),
       ]);
       setSnapshots(snapshotData);
       setStatus(statusData);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load backup data');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to load backup data');
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ export default function BackupsPage() {
       await apiFetch('/api/admin/backups/trigger', { method: 'POST' });
       // Refresh after a short delay to pick up the new running backup
       setTimeout(() => void fetchData(), 1000);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to trigger backup');
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : 'Failed to trigger backup');
     } finally {
       setTriggering(false);
     }

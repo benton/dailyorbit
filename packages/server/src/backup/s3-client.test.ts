@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createS3Uploader, type S3Uploader } from './s3-client.ts';
 
 describe('createS3Uploader', () => {
