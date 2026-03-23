@@ -1377,7 +1377,11 @@ export default function SearchPage() {
       id: 'hide',
       size: 80,
     };
-    return [selectCol, ...filingColumns, flagCol, ...(isAuthenticated ? [hideCol] : [])];
+    return [
+      ...(isAuthenticated ? [selectCol] : []),
+      ...filingColumns,
+      ...(isAuthenticated ? [flagCol, hideCol] : []),
+    ];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1471,7 +1475,11 @@ export default function SearchPage() {
       id: 'hide',
       size: 80,
     };
-    return [selectCol, ...contentColumns, flagCol, ...(isAuthenticated ? [hideCol] : [])];
+    return [
+      ...(isAuthenticated ? [selectCol] : []),
+      ...contentColumns,
+      ...(isAuthenticated ? [flagCol, hideCol] : []),
+    ];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1594,7 +1602,7 @@ export default function SearchPage() {
       </div>
 
       {/* Bulk flagging toolbar */}
-      {selectedKeys.size > 0 && (
+      {isAuthenticated && selectedKeys.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950">
           <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
             {selectedKeys.size} selected

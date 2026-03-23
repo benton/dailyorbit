@@ -101,7 +101,7 @@ export default function NewsPage() {
       }
       return result;
     },
-    [checkHiddenKeys, showHidden],
+    [checkHiddenKeys, isAuthenticated, showHidden],
   );
 
   const onRowClick = useCallback(

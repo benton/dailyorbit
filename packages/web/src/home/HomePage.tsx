@@ -6,15 +6,17 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flag, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { cn } from '../lib/cn.ts';
 import { filingUrl } from '../lib/filing-url.ts';
 import { getSubsystem, SUBSYSTEM_CODES, SUBSYSTEM_COLORS } from '../lib/subsystems.ts';
+import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { useRowTooltip } from '../ui/SummaryTooltip.tsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table.tsx';
+import { useAuth } from '../user/AuthContext.tsx';
 
 type SubsystemCount = { count: number; subsystem_code: string };
 type PublicStats = {
@@ -306,9 +308,11 @@ function CollapsibleCard({
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [flaggedKeys, setFlaggedKeys] = useState<Set<string>>(new Set());
 
   const volumeRef = useRef<HTMLDivElement>(null);
   const [volumeLoading, setVolumeLoading] = useState<boolean>(true);
@@ -372,6 +376,24 @@ export default function HomePage() {
     };
   }, []);
 
+  const checkFlaggedKeys = useCallback(
+    async (keys: Array<string>): Promise<void> => {
+      if (keys.length === 0) {
+        return;
+      }
+      try {
+        const result = await apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
+          body: JSON.stringify({ content_keys: keys, content_type: 'filing' }),
+          method: 'POST',
+        });
+        setFlaggedKeys(new Set(result.flagged));
+      } catch {
+        // Silently ignore — flag state is non-critical
+      }
+    },
+    [],
+  );
+
   // Today's filings
   useEffect(() => {
     let cancelled: boolean = false;
@@ -380,6 +402,9 @@ export default function HomePage() {
         if (!cancelled) {
           setTodayVisible(data.visible);
           setTodayFilings(data.filings);
+          if (isAuthenticated) {
+            void checkFlaggedKeys(data.filings.map((f: RecentFiling) => f.file_number));
+          }
         }
       })
       .catch(() => {})
@@ -391,7 +416,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated, checkFlaggedKeys]);
 
   // Top-line stats
   useEffect(() => {
@@ -566,6 +591,37 @@ export default function HomePage() {
     [navigate],
   );
 
+  // Today's filings columns — append flag toggle for authenticated users
+  const todayFilingCols = useMemo((): Array<ColumnDef<RecentFiling, unknown>> => {
+    if (!isAuthenticated) {
+      return recentFilingColumns;
+    }
+    const flagCol: ColumnDef<RecentFiling, unknown> = {
+      cell: ({ row }) => (
+        <FlagToggle
+          contentKey={row.original.file_number}
+          contentType="filing"
+          initialFlagged={flaggedKeys.has(row.original.file_number)}
+          onToggle={(nowFlagged: boolean) => {
+            setFlaggedKeys((prev: Set<string>) => {
+              const next: Set<string> = new Set(prev);
+              if (nowFlagged) {
+                next.add(row.original.file_number);
+              } else {
+                next.delete(row.original.file_number);
+              }
+              return next;
+            });
+          }}
+        />
+      ),
+      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      id: 'flag',
+      size: 40,
+    };
+    return [...recentFilingColumns, flagCol];
+  }, [isAuthenticated, flaggedKeys]);
+
   if (loading) {
     return <p className="text-sm text-neutral-500">Loading...</p>;
   }
@@ -669,7 +725,7 @@ export default function HomePage() {
               <p className="text-sm text-neutral-500">No filings recorded today.</p>
             ) : (
               <SimpleDataTable<RecentFiling>
-                columns={recentFilingColumns}
+                columns={todayFilingCols}
                 data={todayFilings}
                 defaultOrder="asc"
                 defaultSort="file_number"
