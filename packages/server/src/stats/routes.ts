@@ -53,6 +53,24 @@ function lastBusinessDayLabel(): string {
   return date.toLocaleDateString('en-US', { weekday: 'long' });
 }
 
+/** Returns today's date in YYYY-MM-DD format using US Eastern timezone. */
+function todayEastern(): string {
+  const now: Date = new Date();
+  return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+/** Returns true if the current Eastern time hour is >= 8 (8:00 AM through 11:59 PM). */
+function isEasternBusinessHours(): boolean {
+  const now: Date = new Date();
+  const hourStr: string = now.toLocaleString('en-US', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone: 'America/New_York',
+  });
+  const hour: number = parseInt(hourStr, 10);
+  return hour >= 8;
+}
+
 // ── Public stats routes (/api/stats) ────────────────────────────────
 
 const publicStatsRoutes = new Hono();
@@ -105,6 +123,22 @@ publicStatsRoutes.get('/recent-filings', async (c) => {
     const dayLabel: string = lastBusinessDayLabel();
     const filings = await getRecentFilings(conn, targetDate);
     return c.json({ date: targetDate, dayLabel, filings });
+  } finally {
+    conn.closeSync();
+  }
+});
+
+publicStatsRoutes.get('/todays-filings', async (c) => {
+  if (!isEasternBusinessHours()) {
+    return c.json({ visible: false, date: null, filings: [] });
+  }
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
+  try {
+    const todayDate: string = todayEastern();
+    const filings = await getRecentFilings(conn, todayDate);
+    return c.json({ visible: true, date: todayDate, filings });
   } finally {
     conn.closeSync();
   }

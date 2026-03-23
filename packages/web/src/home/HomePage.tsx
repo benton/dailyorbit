@@ -48,6 +48,12 @@ type RecentFilingsResponse = {
   filings: Array<RecentFiling>;
 };
 
+type TodaysFilingsResponse = {
+  visible: boolean;
+  date: string | null;
+  filings: Array<RecentFiling>;
+};
+
 type CompanyFilingVolume = {
   company_name: string;
   count: number;
@@ -316,6 +322,10 @@ export default function HomePage() {
   const [recentDayLabel, setRecentDayLabel] = useState<string>('Yesterday');
   const [recentLoading, setRecentLoading] = useState<boolean>(true);
 
+  const [todayFilings, setTodayFilings] = useState<Array<RecentFiling>>([]);
+  const [todayVisible, setTodayVisible] = useState<boolean>(false);
+  const [todayLoading, setTodayLoading] = useState<boolean>(true);
+
   const [topLine, setTopLine] = useState<TopLineStats | null>(null);
 
   const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
@@ -355,6 +365,27 @@ export default function HomePage() {
       .finally(() => {
         if (!cancelled) {
           setRecentLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Today's filings
+  useEffect(() => {
+    let cancelled: boolean = false;
+    apiFetch<TodaysFilingsResponse>('/api/stats/todays-filings')
+      .then((data: TodaysFilingsResponse) => {
+        if (!cancelled) {
+          setTodayVisible(data.visible);
+          setTodayFilings(data.filings);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) {
+          setTodayLoading(false);
         }
       });
     return () => {
@@ -623,6 +654,32 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Today's Filings */}
+      {todayVisible && !todayLoading && (
+        <div className={cardClass}>
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            Today&apos;s Filings
+          </p>
+          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            Filings recorded today (Eastern time).
+          </p>
+          <div className="mt-3">
+            {todayFilings.length === 0 ? (
+              <p className="text-sm text-neutral-500">No filings recorded today.</p>
+            ) : (
+              <SimpleDataTable<RecentFiling>
+                columns={recentFilingColumns}
+                data={todayFilings}
+                defaultOrder="asc"
+                defaultSort="file_number"
+                onRowClick={onRecentFilingClick}
+                rowTooltip={(row: RecentFiling) => row.summary}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Recent Business Day Filings */}
       <div className={cardClass}>
