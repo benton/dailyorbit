@@ -1,6 +1,8 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 
-export async function ensureBackupTables(conn: DuckDBConnection): Promise<void> {
+export async function ensureBackupTables(
+  conn: DuckDBConnection,
+): Promise<void> {
   await conn.run(`
     CREATE SEQUENCE IF NOT EXISTS backup_snapshot_id_seq START 1;
     CREATE TABLE IF NOT EXISTS backup_snapshot (

@@ -54,19 +54,18 @@ else
 fi
 
 # ── Data Restore from S3 ─────────────────────────────────────────────────────
-# Find the most recent timestamped snapshot (YYYYMMDD-HHMM.duckdb) rather than
-# relying on latest.duckdb which may be stale if a snapshot upload partially failed.
-DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" \
-  | grep -E '[0-9]{8}-[0-9]{4}\.duckdb$' \
-  | sort | tail -1 | awk '{print $4}')
+# Find the most recent timestamped snapshot (YYYYMMDD-HHMM.duckdb).
+# The in-process BackupService is the sole producer of these snapshots.
+DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" --recursive \
+  | grep -oE 'db/[0-9]{8}-[0-9]{4}\.duckdb$' \
+  | sort | tail -1)
 
 if [ -n "$DB_SNAPSHOT" ]; then
   echo "Restoring newest snapshot: $DB_SNAPSHOT"
-  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
+  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
 else
-  echo "No timestamped snapshot found, falling back to latest.duckdb"
-  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}" /data/daily-orbit.duckdb \
-    || echo "No DB snapshot found — container will initialize fresh"
+  echo "FATAL: No timestamped snapshot found in s3://{{DB_SNAPSHOT_BUCKET}}/db/"
+  echo "Container will initialize a fresh database on startup."
 fi
 
 aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
@@ -77,7 +76,7 @@ aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
   || echo "No attachments found in S3"
 
 # ── Install Docker, DuckDB CLI, and Launch Container ─────────────────────────
-apt-get install -y docker.io cron
+apt-get install -y docker.io
 curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.2.2/duckdb_cli-linux-aarch64.zip" \
   -o /tmp/duckdb.zip
 unzip -qo /tmp/duckdb.zip -d /usr/local/bin
@@ -85,8 +84,6 @@ rm /tmp/duckdb.zip
 chmod +x /usr/local/bin/duckdb
 systemctl enable docker
 systemctl start docker
-systemctl enable cron
-systemctl start cron
 
 aws ecr get-login-password --region {{REGION}} | \
   docker login --username AWS --password-stdin {{ECR_URI}}
@@ -155,12 +152,6 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << CWCON
             "log_group_name": "/daily-orbit/user-data",
             "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%d %H:%M:%S"
-          },
-          {
-            "file_path": "/var/log/db-snapshot.log",
-            "log_group_name": "/daily-orbit/db-snapshot",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%Y-%m-%d %H:%M:%S"
           }
         ]
       }
@@ -176,41 +167,18 @@ CWCONFIG
   -s \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-# ── Data Snapshot Cron ────────────────────────────────────────────────────────
-cat > /usr/local/bin/db-snapshot.sh << 'SCRIPT'
-#!/bin/bash
-set -euo pipefail
-
-# Checkpoint DuckDB to fold WAL into main file
-docker exec daily-orbit ./daily-orbit db checkpoint || true
-
-# Copy DB to temp location, then push to S3
-cp /data/daily-orbit.duckdb /data/daily-orbit-snap.duckdb
-aws s3 cp /data/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/{{DB_SNAPSHOT_KEY}}"
-aws s3 cp /data/daily-orbit-snap.duckdb "s3://{{DB_SNAPSHOT_BUCKET}}/db/$(date +%Y%m%d-%H%M).duckdb"
-rm /data/daily-orbit-snap.duckdb
-
-# Also push the encryption key
-aws s3 cp /data/daily-orbit.key "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" || true
-
-# Sync attachments (only uploads new/changed files)
-aws s3 sync /data/attachments/ "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" --size-only
-SCRIPT
-chmod +x /usr/local/bin/db-snapshot.sh
-
-echo "*/{{SNAPSHOT_INTERVAL}} * * * * root /usr/local/bin/db-snapshot.sh >> /var/log/db-snapshot.log 2>&1" \
-  > /etc/cron.d/db-snapshot
-
 # ── Spot Interruption / Shutdown Hook ─────────────────────────────────────────
+# Trigger an in-process backup via the CLI before the container stops.
 cat > /etc/systemd/system/db-snapshot-on-shutdown.service << 'EOF'
 [Unit]
 Description=Snapshot DuckDB to S3 on shutdown
 DefaultDependencies=no
 Before=shutdown.target reboot.target halt.target
+After=daily-orbit.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/db-snapshot.sh
+ExecStart=/usr/bin/docker exec daily-orbit ./daily-orbit db snapshot
 TimeoutStartSec=90
 
 [Install]

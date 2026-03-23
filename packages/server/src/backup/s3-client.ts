@@ -1,4 +1,8 @@
-import { CopyObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import {
+  CopyObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { createReadStream } from 'node:fs';
 

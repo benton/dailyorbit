@@ -149,11 +149,9 @@ export class DailyOrbitStack extends Stack {
     const userDataRendered: string = userDataRaw
       .replaceAll('{{EIP_ALLOCATION_ID}}', eip.attrAllocationId)
       .replaceAll('{{DB_SNAPSHOT_BUCKET}}', config.dbSnapshotBucket)
-      .replaceAll('{{DB_SNAPSHOT_KEY}}', config.dbSnapshotKey)
       .replaceAll('{{REGION}}', this.region)
       .replaceAll('{{ECR_URI}}', ecrUri)
-      .replaceAll('{{CONTAINER_TAG}}', config.containerTag)
-      .replaceAll('{{SNAPSHOT_INTERVAL}}', String(config.snapshotIntervalMinutes));
+      .replaceAll('{{CONTAINER_TAG}}', config.containerTag);
 
     const userData: ec2.UserData = ec2.UserData.custom(userDataRendered);
 

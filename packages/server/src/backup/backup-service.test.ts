@@ -45,9 +45,11 @@ describe('BackupService', () => {
 
   it('prevents concurrent backups', async () => {
     const mockUploader: S3Uploader = {
-      upload: vi.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100)),
-      ),
+      upload: vi
+        .fn()
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 100)),
+        ),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };

@@ -46,10 +46,9 @@ export async function markAlertRunEmailed(
   conn: DuckDBConnection,
   alertRunId: number,
 ): Promise<void> {
-  await conn.run(
-    'UPDATE alert_run SET email_sent = true WHERE id = $1',
-    [alertRunId],
-  );
+  await conn.run('UPDATE alert_run SET email_sent = true WHERE id = $1', [
+    alertRunId,
+  ]);
 }
 
 /** Get the most recent alert run for a given saved search. */

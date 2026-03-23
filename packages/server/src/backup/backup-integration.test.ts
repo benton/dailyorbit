@@ -23,17 +23,21 @@ describe('backup integration', () => {
 
   afterAll(() => {
     conn.closeSync();
-    try { unlinkSync(tmpDb); } catch { /* ignore */ }
+    try {
+      unlinkSync(tmpDb);
+    } catch {
+      /* ignore */
+    }
   });
 
   it('runs a full backup cycle: checkpoint -> copy -> upload -> record', async () => {
     const uploads: Array<{ localPath: string; s3Key: string }> = [];
     const mockUploader: S3Uploader = {
-      upload: vi.fn().mockImplementation(
-        async (localPath: string, s3Key: string) => {
+      upload: vi
+        .fn()
+        .mockImplementation(async (localPath: string, s3Key: string) => {
           uploads.push({ localPath, s3Key });
-        },
-      ),
+        }),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
     };

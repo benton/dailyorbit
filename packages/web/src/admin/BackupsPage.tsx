@@ -21,11 +21,17 @@ const cardClass: string =
   'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) { return `${bytes} B`; }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
   const kb: number = bytes / 1024;
-  if (kb < 1024) { return `${kb.toFixed(1)} KB`; }
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`;
+  }
   const mb: number = kb / 1024;
-  if (mb < 1024) { return `${mb.toFixed(1)} MB`; }
+  if (mb < 1024) {
+    return `${mb.toFixed(1)} MB`;
+  }
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
@@ -87,9 +93,7 @@ export default function BackupsPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Backups
-          </h1>
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Backups</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Database snapshot history and manual trigger.
           </p>
@@ -104,15 +108,18 @@ export default function BackupsPage() {
         </button>
       </div>
 
-      {error != null && (
-        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error != null && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {status.configured === false && (
-        <div className={`${cardClass} mb-4 border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950`}>
+        <div
+          className={`${cardClass} mb-4 border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950`}
+        >
           <p className="text-sm text-amber-800 dark:text-amber-200">
             S3 snapshot bucket is not configured. Set <code>snapshotBucket</code> in{' '}
-            <a className="underline" href="/admin/settings">Settings</a> to enable backups.
+            <a className="underline" href="/admin/settings">
+              Settings
+            </a>{' '}
+            to enable backups.
           </p>
         </div>
       )}
@@ -126,13 +133,15 @@ export default function BackupsPage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <p className="text-xs text-neutral-400">Status</p>
-              <p className={`text-sm font-medium ${
-                latest.status === 'completed'
-                  ? 'text-green-600 dark:text-green-400'
-                  : latest.status === 'failed'
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-yellow-600 dark:text-yellow-400'
-              }`}>
+              <p
+                className={`text-sm font-medium ${
+                  latest.status === 'completed'
+                    ? 'text-green-600 dark:text-green-400'
+                    : latest.status === 'failed'
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-yellow-600 dark:text-yellow-400'
+                }`}
+              >
                 {latest.status}
               </p>
             </div>
@@ -151,9 +160,7 @@ export default function BackupsPage() {
               <p className="text-sm">{latest.triggered_by}</p>
             </div>
           </div>
-          {latest.error != null && (
-            <p className="mt-2 text-xs text-red-500">{latest.error}</p>
-          )}
+          {latest.error != null && <p className="mt-2 text-xs text-red-500">{latest.error}</p>}
         </div>
       )}
 
@@ -174,26 +181,23 @@ export default function BackupsPage() {
           </thead>
           <tbody>
             {snapshots.map((s: BackupSnapshot) => (
-              <tr
-                className="border-b border-neutral-100 dark:border-neutral-800"
-                key={s.id}
-              >
+              <tr className="border-b border-neutral-100 dark:border-neutral-800" key={s.id}>
                 <td className="py-2">{formatDate(s.started_at)}</td>
-                <td className={`py-2 ${
-                  s.status === 'completed'
-                    ? 'text-green-600 dark:text-green-400'
-                    : s.status === 'failed'
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-yellow-600 dark:text-yellow-400'
-                }`}>
+                <td
+                  className={`py-2 ${
+                    s.status === 'completed'
+                      ? 'text-green-600 dark:text-green-400'
+                      : s.status === 'failed'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-yellow-600 dark:text-yellow-400'
+                  }`}
+                >
                   {s.status}
                 </td>
                 <td className="py-2">
                   {s.size_bytes != null ? formatBytes(Number(s.size_bytes)) : '\u2014'}
                 </td>
-                <td className="py-2 font-mono text-xs text-neutral-500">
-                  {s.s3_key ?? '\u2014'}
-                </td>
+                <td className="py-2 font-mono text-xs text-neutral-500">{s.s3_key ?? '\u2014'}</td>
                 <td className="py-2">{s.triggered_by}</td>
               </tr>
             ))}

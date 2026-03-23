@@ -13,10 +13,8 @@ export interface SeedConfig {
   instanceType: string;
   keyPairName: string | null;
   dbSnapshotBucket: string;
-  dbSnapshotKey: string;
   ecrRepositoryName: string;
   containerTag: string;
-  snapshotIntervalMinutes: number;
   healthCheckPath: string;
   tags: Record<string, string>;
 }
@@ -25,10 +23,8 @@ const DEFAULTS: Partial<SeedConfig> = {
   vpcId: null,
   instanceType: 'r6gd.xlarge',
   keyPairName: null,
-  dbSnapshotKey: 'db/latest.duckdb',
   ecrRepositoryName: 'daily-orbit',
   containerTag: 'latest',
-  snapshotIntervalMinutes: 60,
   healthCheckPath: '/api/health',
   tags: {
     Project: 'daily-orbit',

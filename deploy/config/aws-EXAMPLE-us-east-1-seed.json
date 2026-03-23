@@ -9,10 +9,8 @@
   "instanceType": "r6gd.xlarge",
   "keyPairName": null,
   "dbSnapshotBucket": "daily-orbit-backups",
-  "dbSnapshotKey": "db/latest.duckdb",
   "ecrRepositoryName": "daily-orbit",
   "containerTag": "latest",
-  "snapshotIntervalMinutes": 60,
   "healthCheckPath": "/api/health",
   "tags": {
     "Project": "daily-orbit",

@@ -15,7 +15,8 @@ import { createS3Uploader } from './s3-client.ts';
 function toJsonSafe(snapshot: BackupSnapshot): Record<string, unknown> {
   return {
     ...snapshot,
-    size_bytes: snapshot.size_bytes != null ? Number(snapshot.size_bytes) : null,
+    size_bytes:
+      snapshot.size_bytes != null ? Number(snapshot.size_bytes) : null,
   };
 }
 
@@ -42,7 +43,12 @@ async function getBackupService(): Promise<BackupService> {
   const uploader = createS3Uploader({ bucket, prefix, region });
   const dbPath: string = getDbPath();
 
-  backupService = createBackupService({ conn, uploader, dbPath, snapshotPrefix: prefix });
+  backupService = createBackupService({
+    conn,
+    uploader,
+    dbPath,
+    snapshotPrefix: prefix,
+  });
   return backupService;
 }
 
@@ -100,4 +106,4 @@ backupRoutes.post('/trigger', async (c) => {
   }
 });
 
-export { backupRoutes };
+export { backupRoutes, getBackupService };

@@ -175,7 +175,7 @@ export const serveApiCommand = defineCommand({
     const { initializeAuth } = await import('../../lib/auth.ts');
     initializeAuth(config);
 
-    // Auto-start scheduler if configured
+    // Auto-start pipeline scheduler if configured
     const autoStart: string = String(
       config.get('schedulerAutoStart') ?? 'false',
     );
@@ -184,6 +184,31 @@ export const serveApiCommand = defineCommand({
       const scheduler = getScheduler();
       scheduler.start();
       log.info('Pipeline scheduler auto-started');
+    }
+
+    // Auto-start backup scheduler
+    const snapshotInterval: number = Number(
+      config.get('snapshotIntervalMinutes') ?? '0',
+    );
+    if (snapshotInterval > 0) {
+      try {
+        const { getBackupService } = await import('../../backup/routes.ts');
+        const { createBackupScheduler } =
+          await import('../../backup/scheduler.ts');
+        const backupSvc = await getBackupService();
+        const backupScheduler = createBackupScheduler(backupSvc);
+        backupScheduler.start(snapshotInterval);
+        log.info(
+          { intervalMinutes: snapshotInterval },
+          'Backup scheduler auto-started',
+        );
+      } catch (err: unknown) {
+        const msg: string = err instanceof Error ? err.message : String(err);
+        log.warn(
+          { error: msg },
+          'Backup scheduler not started — backup config may be missing',
+        );
+      }
     }
 
     const { serve } = await import('@hono/node-server');

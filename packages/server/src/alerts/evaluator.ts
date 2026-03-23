@@ -384,7 +384,9 @@ export async function evaluateAlertsWithEmail(
       } catch (err: unknown) {
         // Best-effort email delivery — log but don't fail the pipeline
         const msg: string = err instanceof Error ? err.message : String(err);
-        console.error(`[alerts] Email delivery failed for user ${userId}: ${msg}`);
+        console.error(
+          `[alerts] Email delivery failed for user ${userId}: ${msg}`,
+        );
       }
     }
   }

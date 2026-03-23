@@ -27,7 +27,12 @@ describe('backup repository', () => {
     const id: number = await insertBackupSnapshot(conn, 'manual');
     expect(id).toBeGreaterThan(0);
 
-    await completeBackupSnapshot(conn, id, 'db/20260323-1200.duckdb', 1024 * 1024);
+    await completeBackupSnapshot(
+      conn,
+      id,
+      'db/20260323-1200.duckdb',
+      1024 * 1024,
+    );
 
     const snapshot: BackupSnapshot | null = await getLatestBackupSnapshot(conn);
     expect(snapshot).not.toBeNull();

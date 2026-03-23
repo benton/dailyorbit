@@ -21,7 +21,9 @@ export type BackupService = {
   isRunning: () => boolean;
 };
 
-export function createBackupService(config: BackupServiceConfig): BackupService {
+export function createBackupService(
+  config: BackupServiceConfig,
+): BackupService {
   const log = getLogger();
   let running: boolean = false;
 
