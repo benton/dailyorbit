@@ -34,4 +34,9 @@ export async function ensurePipelineTrackingTables(
   await conn.run(
     `ALTER TABLE pipeline_run ADD COLUMN IF NOT EXISTS mode VARCHAR DEFAULT 'full'`,
   );
+
+  // Migration: add items_skipped column to pipeline_stage_run
+  await conn.run(
+    `ALTER TABLE pipeline_stage_run ADD COLUMN IF NOT EXISTS items_skipped INTEGER DEFAULT 0`,
+  );
 }
