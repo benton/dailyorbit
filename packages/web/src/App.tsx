@@ -30,6 +30,7 @@ const OwnershipEventsPage = lazy(() => import('./companies/OwnershipEventsPage.t
 const NewsSourcesAdmin = lazy(() => import('./admin/NewsSourcesAdmin.tsx'));
 const ConsultantAdmin = lazy(() => import('./admin/ConsultantAdmin.tsx'));
 const HiddenItemsAdmin = lazy(() => import('./admin/HiddenItemsAdmin.tsx'));
+const BackupsPage = lazy(() => import('./admin/BackupsPage.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
@@ -245,6 +246,14 @@ export default function App() {
                 </Suspense>
               }
               path="hidden-items"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <BackupsPage />
+                </Suspense>
+              }
+              path="backups"
             />
           </Route>
         </Routes>
