@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { databaseArg } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const extractCommand = defineCommand({
@@ -35,12 +36,13 @@ export const extractCommand = defineCommand({
       verbose: args.verbose,
     });
 
-    console.log('\nSummary:');
-    console.log(`  Total processed:    ${String(result.total)}`);
-    console.log(`  Extracted:          ${String(result.extracted)}`);
-    console.log(`  Skipped (no text):  ${String(result.skippedNoText)}`);
-    console.log(`  Failed:             ${String(result.failed)}`);
-    console.log(
+    const log = getLogger();
+    log.info('\nSummary:');
+    log.info(`  Total processed:    ${String(result.total)}`);
+    log.info(`  Extracted:          ${String(result.extracted)}`);
+    log.info(`  Skipped (no text):  ${String(result.skippedNoText)}`);
+    log.info(`  Failed:             ${String(result.failed)}`);
+    log.info(
       `  Duration:           ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

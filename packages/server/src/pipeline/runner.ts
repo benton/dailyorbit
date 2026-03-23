@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { getDb } from '../lib/db.ts';
+import { getLogger } from '../lib/logger.ts';
 import {
   trackConnection,
   untrackConnection,
@@ -403,9 +404,12 @@ class PipelineRunner {
     };
     buffer.push(line);
     this.emitter.emit('log', line);
-    const fn: (msg: string) => void =
-      level === 'error' ? console.error : console.log;
-    fn(`[pipeline:${stage}] ${message}`);
+    const logger = getLogger();
+    if (level === 'error') {
+      logger.error({ stage, runId }, message);
+    } else {
+      logger.info({ stage, runId }, message);
+    }
   }
 }
 

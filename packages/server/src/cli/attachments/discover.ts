@@ -6,6 +6,7 @@ import {
   scopeArgs,
   storagePathArg,
 } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const discoverCommand = defineCommand({
@@ -61,12 +62,13 @@ export const discoverCommand = defineCommand({
       verbose: args.verbose,
     });
 
-    console.log('\nSummary:');
-    console.log(`  Filings processed:      ${String(result.filingsProcessed)}`);
-    console.log(
+    const log = getLogger();
+    log.info('\nSummary:');
+    log.info(`  Filings processed:      ${String(result.filingsProcessed)}`);
+    log.info(
       `  Attachments discovered: ${String(result.attachmentsDiscovered)}`,
     );
-    console.log(
+    log.info(
       `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

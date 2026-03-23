@@ -74,7 +74,7 @@ The stack (`deploy/lib/stack.ts`) provisions:
 - **Networking**: Security group (ports 22, 80, 443, 9000), Elastic IP
 - **DNS**: Route53 A records — `api.*` to EIP, apex and `www` to CloudFront
 - **ECR**: Container registry with 7-day untagged image expiry
-- **IAM**: Instance role with ECR pull, S3 read/write, EIP association, Bedrock invoke, SES send
+- **IAM**: Instance role with ECR pull, S3 read/write, EIP association, Bedrock invoke, SES send, CloudWatch Logs (create log groups/streams, put events)
 - **Compute**: Launch template (Ubuntu 24.04 ARM64, 30GB gp3 EBS) in a single-instance Spot ASG
 - **CloudFront**: Distribution with S3 origin (OAC), SPA error routing (403/404 to `index.html`)
 - **S3**: Frontend bucket (block public access, auto-delete on destroy)
@@ -89,9 +89,10 @@ The user-data script (`deploy/lib/user-data.sh`) runs on every instance launch:
 2. **EIP association** — Self-associate the Elastic IP via IMDSv2
 3. **ZFS setup** — Detect unformatted NVMe devices via `blkid` (ephemeral storage has no filesystem, EBS does). If found, install `zfsutils-linux`, create a striped pool with lz4 compression at `/data`. Otherwise, use EBS `/data`.
 4. **S3 restore** — Download `daily-orbit.duckdb`, `daily-orbit.key`, and `attachments/` from the snapshot bucket
-5. **Docker** — Install `docker.io`, pull from ECR, run container with `--network host` and `/data` volume
-6. **Snapshot cron** — Install cron job that checkpoints DuckDB, copies to S3 (latest + timestamped), syncs attachments
-7. **Shutdown hook** — Systemd oneshot service that runs the snapshot script before halt/reboot (catches Spot interruptions)
+5. **Docker** — Install `docker.io`, pull from ECR, run container with `--network host`, `/data` volume, and log rotation (`max-size=100m`, `max-file=3`)
+6. **CloudWatch agent** — Install the unified CloudWatch agent, configure it to ship container logs (`/daily-orbit/app`), user-data logs (`/daily-orbit/user-data`), and snapshot logs (`/daily-orbit/db-snapshot`) to CloudWatch Logs
+7. **Snapshot cron** — Install cron job that checkpoints DuckDB, copies to S3 (latest + timestamped), syncs attachments
+8. **Shutdown hook** — Systemd oneshot service that runs the snapshot script before halt/reboot (catches Spot interruptions)
 
 Template variables (`{{VAR}}`) are replaced by CDK at synth time.
 
@@ -196,6 +197,34 @@ sudo cat /var/log/db-snapshot.log            # snapshot log
 ```
 
 The SSH user is `ubuntu` (Ubuntu 24.04 AMI). Requires the key pair specified in the seed config.
+
+---
+
+## Logging
+
+The application uses structured JSON logging in production (`NODE_ENV=production`) via pino. In development, logs are human-readable.
+
+### CloudWatch Log Groups
+
+| Log Group | Source | Content |
+|---|---|---|
+| `/daily-orbit/app` | Docker container stdout | Structured JSON: HTTP requests, pipeline events, errors |
+| `/daily-orbit/user-data` | `/var/log/user-data.log` | Instance bootstrap output |
+| `/daily-orbit/db-snapshot` | `/var/log/db-snapshot.log` | Cron and shutdown snapshot output |
+
+### Viewing Logs
+
+```bash
+# Tail live application logs
+aws logs tail /daily-orbit/app --follow --region us-east-2
+
+# Search for errors in the last hour
+aws logs filter-log-events \
+  --log-group-name /daily-orbit/app \
+  --start-time $(date -d '1 hour ago' +%s)000 \
+  --filter-pattern '{ $.level >= 50 }' \
+  --region us-east-2
+```
 
 ---
 

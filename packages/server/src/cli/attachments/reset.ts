@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
 import { trackConnection } from '../../lib/graceful-shutdown.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg, storagePathArg } from '../shared/args.ts';
 import { createDb, resolveFromRoot } from '../shared/context.ts';
 
@@ -16,15 +17,16 @@ export const resetCommand = defineCommand({
     'storage-path': storagePathArg,
   },
   async run({ args }) {
+    const log = getLogger();
     const storagePath: string = resolveFromRoot(args['storage-path']);
 
     // Step 1: Delete local attachment files
     if (existsSync(storagePath)) {
-      console.log(`Deleting ${storagePath}/ ...`);
+      log.info(`Deleting ${storagePath}/ ...`);
       execFileSync('rm', ['-rf', storagePath]);
-      console.log('Done.');
+      log.info('Done.');
     } else {
-      console.log(`${storagePath}/ does not exist — skipping file deletion.`);
+      log.info(`${storagePath}/ does not exist — skipping file deletion.`);
     }
 
     // Step 2: Reset download status in database
@@ -36,7 +38,7 @@ export const resetCommand = defineCommand({
       `SELECT COUNT(*) AS cnt FROM attachment WHERE download_status IN ('downloaded', 'failed')`,
     );
     const count: number = Number(countReader.getRowObjectsJS()[0]!.cnt);
-    console.log(`Resetting ${String(count)} attachment rows to pending ...`);
+    log.info(`Resetting ${String(count)} attachment rows to pending ...`);
 
     await conn.run(`
       UPDATE attachment
@@ -48,6 +50,6 @@ export const resetCommand = defineCommand({
       WHERE download_status IN ('downloaded', 'failed')
     `);
 
-    console.log('Done. All attachments reset to pending.');
+    log.info('Done. All attachments reset to pending.');
   },
 });

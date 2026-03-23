@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { getLogger } from '../lib/logger.ts';
 
 /** Default FTP URL for the IBFS bulk data zip */
 export const DEFAULT_SOURCE_URL: string =
@@ -43,7 +44,11 @@ export function downloadAndExtract(
 ): DownloadResult {
   const sourceUrl: string = options.sourceUrl ?? DEFAULT_SOURCE_URL;
   const extractDir: string = options.extractDir ?? 'tmp/IBFS';
-  const log: (message: string) => void = options.onProgress ?? console.log;
+  const log: (message: string) => void =
+    options.onProgress ??
+    ((msg: string): void => {
+      getLogger().info(msg);
+    });
 
   const absExtractDir: string = resolve(extractDir);
   const zipPath: string = zipPathForExtractDir(absExtractDir);

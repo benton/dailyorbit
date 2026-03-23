@@ -4,6 +4,7 @@ import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 import { trackConnection } from '../../lib/graceful-shutdown.ts';
 import { htmlToMarkdown, containsHtml } from '../../lib/html-to-markdown.ts';
+import { getLogger } from '../../lib/logger.ts';
 
 type RemediationSummary = {
   pleadingsConverted: number;
@@ -44,7 +45,8 @@ export const remediateHtmlCommand = defineCommand({
     // ---------------------------------------------------------------
     // 1. Pleadings — HTML in exhibit_attachment_html
     // ---------------------------------------------------------------
-    console.log('Scanning pleadings for HTML content...');
+    const log = getLogger();
+    log.info('Scanning pleadings for HTML content...');
     const pleadingReader = await conn.runAndReadAll(
       `SELECT pleading_key, exhibit_attachment_html
        FROM pleading
@@ -53,7 +55,7 @@ export const remediateHtmlCommand = defineCommand({
     );
     const pleadingRows: Record<string, unknown>[] =
       pleadingReader.getRowObjectsJS();
-    console.log(`  Found ${String(pleadingRows.length)} pleadings with HTML`);
+    log.info(`  Found ${String(pleadingRows.length)} pleadings with HTML`);
 
     if (!dryRun && pleadingRows.length > 0) {
       const pleadingKeys: string[] = [];
@@ -81,7 +83,7 @@ export const remediateHtmlCommand = defineCommand({
           `\r  Converted ${String(progress)}/${String(pleadingRows.length)} pleadings`,
         );
       }
-      console.log('');
+      log.info('');
 
       // Delete stale embeddings for converted pleadings
       if (pleadingKeys.length > 0) {
@@ -95,7 +97,7 @@ export const remediateHtmlCommand = defineCommand({
         );
         const deleted: number = deleteResult.getRowObjectsJS().length;
         summary.embeddingsDeleted += deleted;
-        console.log(`  Deleted ${String(deleted)} stale pleading embeddings`);
+        log.info(`  Deleted ${String(deleted)} stale pleading embeddings`);
       }
     } else if (dryRun) {
       summary.pleadingsConverted = pleadingRows.length;
@@ -104,7 +106,7 @@ export const remediateHtmlCommand = defineCommand({
     // ---------------------------------------------------------------
     // 2. Filing descriptions — HTML in description
     // ---------------------------------------------------------------
-    console.log('Scanning filing descriptions for HTML content...');
+    log.info('Scanning filing descriptions for HTML content...');
     const filingReader = await conn.runAndReadAll(
       `SELECT filing_key, file_number, description
        FROM filing
@@ -112,7 +114,7 @@ export const remediateHtmlCommand = defineCommand({
     );
     const filingRows: Record<string, unknown>[] =
       filingReader.getRowObjectsJS();
-    console.log(`  Found ${String(filingRows.length)} filings with HTML`);
+    log.info(`  Found ${String(filingRows.length)} filings with HTML`);
 
     if (!dryRun && filingRows.length > 0) {
       const filingFileNumbers: string[] = [];
@@ -149,7 +151,7 @@ export const remediateHtmlCommand = defineCommand({
         );
         const deleted: number = deleteResult.getRowObjectsJS().length;
         summary.embeddingsDeleted += deleted;
-        console.log(`  Deleted ${String(deleted)} stale filing embeddings`);
+        log.info(`  Deleted ${String(deleted)} stale filing embeddings`);
       }
     } else if (dryRun) {
       summary.filingsConverted = filingRows.filter((r) =>
@@ -160,7 +162,7 @@ export const remediateHtmlCommand = defineCommand({
     // ---------------------------------------------------------------
     // 3. Attachment summaries — HTML in summary
     // ---------------------------------------------------------------
-    console.log('Scanning attachment summaries for HTML content...');
+    log.info('Scanning attachment summaries for HTML content...');
     const attachmentReader = await conn.runAndReadAll(
       `SELECT attachment_key, summary
        FROM attachment
@@ -168,7 +170,7 @@ export const remediateHtmlCommand = defineCommand({
     );
     const attachmentRows: Record<string, unknown>[] =
       attachmentReader.getRowObjectsJS();
-    console.log(
+    log.info(
       `  Found ${String(attachmentRows.length)} attachments with HTML in summary`,
     );
 
@@ -204,7 +206,7 @@ export const remediateHtmlCommand = defineCommand({
         );
         const deleted: number = deleteResult.getRowObjectsJS().length;
         summary.embeddingsDeleted += deleted;
-        console.log(`  Deleted ${String(deleted)} stale attachment embeddings`);
+        log.info(`  Deleted ${String(deleted)} stale attachment embeddings`);
       }
     } else if (dryRun) {
       summary.attachmentsConverted = attachmentRows.filter((r) =>
@@ -215,25 +217,19 @@ export const remediateHtmlCommand = defineCommand({
     // ---------------------------------------------------------------
     // Summary
     // ---------------------------------------------------------------
-    console.log('');
-    console.log(dryRun ? '=== DRY RUN ===' : '=== Remediation Complete ===');
-    console.log(
-      `  Pleadings converted:    ${String(summary.pleadingsConverted)}`,
-    );
-    console.log(
-      `  Filings converted:      ${String(summary.filingsConverted)}`,
-    );
-    console.log(
+    log.info('');
+    log.info(dryRun ? '=== DRY RUN ===' : '=== Remediation Complete ===');
+    log.info(`  Pleadings converted:    ${String(summary.pleadingsConverted)}`);
+    log.info(`  Filings converted:      ${String(summary.filingsConverted)}`);
+    log.info(
       `  Attachments converted:  ${String(summary.attachmentsConverted)}`,
     );
     if (!dryRun) {
-      console.log(
+      log.info(
         `  Embeddings deleted:     ${String(summary.embeddingsDeleted)}`,
       );
-      console.log('');
-      console.log(
-        'Run `daily-orbit inference embed` to re-embed affected rows.',
-      );
+      log.info('');
+      log.info('Run `daily-orbit inference embed` to re-embed affected rows.');
     }
   },
 });

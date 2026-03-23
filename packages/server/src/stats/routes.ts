@@ -1,6 +1,15 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { getDb, getDbPath } from '../lib/db.ts';
+
+const APP_VERSION: string = JSON.parse(
+  readFileSync(
+    resolve(import.meta.dirname ?? '.', '../../package.json'),
+    'utf-8',
+  ),
+).version;
 import {
   getApplicantFilings,
   getDatasetStats,
@@ -143,7 +152,7 @@ statsRoutes.get('/', async (c) => {
   trackConnection(conn);
   try {
     const stats = await getDatasetStats(conn, getDbPath());
-    return c.json(stats);
+    return c.json({ ...stats, version: APP_VERSION });
   } finally {
     conn.closeSync();
   }

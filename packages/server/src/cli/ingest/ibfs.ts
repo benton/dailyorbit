@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { databaseArg } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const ibfsCommand = defineCommand({
@@ -72,7 +73,8 @@ export const ibfsCommand = defineCommand({
     });
 
     if (result.tablesSkipped.length > 0) {
-      console.log(`Skipped tables: ${result.tablesSkipped.join(', ')}`);
+      const log = getLogger();
+      log.info(`Skipped tables: ${result.tablesSkipped.join(', ')}`);
     }
   },
 });

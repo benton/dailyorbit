@@ -15,6 +15,7 @@ type DatasetStats = {
   db_size_bytes: number;
   filing_count: number;
   filings_by_subsystem: Array<SubsystemCount>;
+  version?: string;
 };
 
 function formatBytes(bytes: number): string {
@@ -76,6 +77,11 @@ export default function Dashboard() {
         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Dashboard</h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Dataset overview and storage statistics.
+          {stats.version != null && (
+            <span className="ml-2 text-neutral-400 dark:text-neutral-500">
+              Server v{stats.version}
+            </span>
+          )}
         </p>
       </div>
 

@@ -1,5 +1,6 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { processWithConcurrency } from '../lib/concurrency.ts';
+import { getLogger } from '../lib/logger.ts';
 import {
   trackConnection,
   trackInstance,
@@ -35,7 +36,11 @@ export async function runValidationPipeline(
   options: ValidationPipelineOptions,
 ): Promise<ValidationPipelineResult> {
   const start: number = Date.now();
-  const log: (msg: string) => void = options.onProgress ?? console.log;
+  const log: (msg: string) => void =
+    options.onProgress ??
+    ((msg: string): void => {
+      getLogger().info(msg);
+    });
 
   const db: DuckDBInstance =
     options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));

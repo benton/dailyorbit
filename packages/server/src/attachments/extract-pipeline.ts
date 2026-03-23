@@ -1,5 +1,6 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { readFileSync } from 'node:fs';
+import { getLogger } from '../lib/logger.ts';
 import {
   trackConnection,
   trackInstance,
@@ -50,7 +51,11 @@ export async function runExtractionPipeline(
   options: ExtractionPipelineOptions,
 ): Promise<ExtractionPipelineResult> {
   const start: number = Date.now();
-  const log: (msg: string) => void = options.onProgress ?? console.log;
+  const log: (msg: string) => void =
+    options.onProgress ??
+    ((msg: string): void => {
+      getLogger().info(msg);
+    });
 
   const db: DuckDBInstance =
     options.dbInstance ?? (await DuckDBInstance.create(options.databaseUrl!));

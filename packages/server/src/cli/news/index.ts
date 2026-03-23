@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { DuckDBConnection } from '@duckdb/node-api';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -29,9 +30,10 @@ export const newsCommand = defineCommand({
             await import('../../news/seed-data.ts');
           const result = await seedNewsSources(conn, NEWS_SOURCE_SEED_DATA);
 
-          console.log('Seed complete:');
-          console.log(`  Sources created: ${String(result.created)}`);
-          console.log(`  Sources skipped: ${String(result.skipped)}`);
+          const log = getLogger();
+          log.info('Seed complete:');
+          log.info(`  Sources created: ${String(result.created)}`);
+          log.info(`  Sources skipped: ${String(result.skipped)}`);
         } finally {
           conn.closeSync();
         }
@@ -62,26 +64,27 @@ export const newsCommand = defineCommand({
 
           const { fetchAllDueSources } =
             await import('../../news/rss-fetcher.ts');
+          const log = getLogger();
           const { results, totalInserted } = await fetchAllDueSources(
             conn,
             1,
             (result) => {
               if (result.error != null) {
-                console.log(`  [FAIL] ${result.sourceName}: ${result.error}`);
+                log.info(`  [FAIL] ${result.sourceName}: ${result.error}`);
               } else {
-                console.log(
+                log.info(
                   `  [OK]   ${result.sourceName}: ${String(result.itemsInserted)} new, ${String(result.itemsSkipped)} skipped`,
                 );
               }
             },
           );
 
-          console.log('\nFetch complete:');
-          console.log(`  Sources processed: ${String(results.length)}`);
-          console.log(`  New items:         ${String(totalInserted)}`);
+          log.info('\nFetch complete:');
+          log.info(`  Sources processed: ${String(results.length)}`);
+          log.info(`  New items:         ${String(totalInserted)}`);
           const errors: number = results.filter((r) => r.error != null).length;
           if (errors > 0) {
-            console.log(`  Errors:            ${String(errors)}`);
+            log.info(`  Errors:            ${String(errors)}`);
           }
         } finally {
           conn.closeSync();
@@ -122,10 +125,11 @@ export const newsCommand = defineCommand({
             await import('../../news/article-extractor.ts');
           const result = await extractArticles(conn, limit, concurrency);
 
-          console.log('Extraction complete:');
-          console.log(`  Extracted: ${String(result.extracted)}`);
-          console.log(`  Failed:    ${String(result.failed)}`);
-          console.log(`  Skipped:   ${String(result.skipped)}`);
+          const log = getLogger();
+          log.info('Extraction complete:');
+          log.info(`  Extracted: ${String(result.extracted)}`);
+          log.info(`  Failed:    ${String(result.failed)}`);
+          log.info(`  Skipped:   ${String(result.skipped)}`);
         } finally {
           conn.closeSync();
         }
@@ -219,9 +223,10 @@ export const newsCommand = defineCommand({
             await import('../../news/attribute-news.ts');
           const result = await attributeNewsItems(conn, limit);
 
-          console.log('Attribution complete:');
-          console.log(`  Attributed: ${String(result.attributed)}`);
-          console.log(`  Skipped:    ${String(result.skipped)}`);
+          const log = getLogger();
+          log.info('Attribution complete:');
+          log.info(`  Attributed: ${String(result.attributed)}`);
+          log.info(`  Skipped:    ${String(result.skipped)}`);
         } finally {
           conn.closeSync();
         }

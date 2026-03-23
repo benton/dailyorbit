@@ -130,7 +130,9 @@ describe('rewind', () => {
     it('counts the N most recently ingested filings', async () => {
       const result = await planRewind(conn, { last: 1 });
 
-      expect(result.scope).toBe('1 most recently filed filings (hidden excluded)');
+      expect(result.scope).toBe(
+        '1 most recently filed filings (hidden excluded)',
+      );
 
       const filingCount = result.counts.find((c) => c.table === 'filing');
       expect(filingCount?.count).toBe(1); // most recent: filing_key 3

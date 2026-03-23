@@ -14,6 +14,7 @@ import {
   EMBEDDING_OVERLAP,
 } from '../../inference/text-chunker.ts';
 import { processWithConcurrency } from '../../lib/concurrency.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { computeTextChecksum } from '../../lib/text-utils.ts';
 import { ensureEmbeddingSchema } from '../../search/embedding-schema.ts';
 
@@ -271,29 +272,30 @@ export const embedCommand = defineCommand({
         'embed_cli',
       );
 
+      const log = getLogger();
       for (const source of sources) {
         const cfg: SourceConfig = SOURCE_CONFIGS[source];
-        console.log(`\n=== Embedding: ${source}.${cfg.textColumn} ===`);
+        log.info(`\n=== Embedding: ${source}.${cfg.textColumn} ===`);
 
         const remaining: number = await countRemaining(conn, cfg);
         const target: number =
           maxLimit > 0 ? Math.min(maxLimit, remaining) : remaining;
 
-        console.log(`  Rows needing embeddings: ${String(remaining)}`);
-        console.log(
+        log.info(`  Rows needing embeddings: ${String(remaining)}`);
+        log.info(
           `  Target: ${String(target)} | Model: ${modelId} | Dims: ${String(dimensions)} | Concurrency: ${String(concurrency)}`,
         );
-        console.log(
+        log.info(
           `  Chunk size: ${String(EMBEDDING_MAX_CHARS)} chars | Overlap: ${String(EMBEDDING_OVERLAP)} chars`,
         );
 
         if (dryRun) {
-          console.log('  Dry run — skipping.');
+          log.info('  Dry run — skipping.');
           continue;
         }
 
         if (target === 0) {
-          console.log('  Nothing to embed.');
+          log.info('  Nothing to embed.');
           continue;
         }
 
@@ -402,7 +404,7 @@ export const embedCommand = defineCommand({
         const wallSec: number = Math.round(
           (performance.now() - startTime) / 1000,
         );
-        console.log(
+        log.info(
           `\n  Done: ${String(processed)} rows, ${String(totalChunks)} chunks, ${String(totalTokens)} tokens, ${formatDuration(wallSec)}, avg latency ${processed > 0 ? String(Math.round(totalLatencyMs / processed)) : '0'}ms, ${String(errors)} errors`,
         );
       }

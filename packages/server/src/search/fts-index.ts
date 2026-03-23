@@ -1,5 +1,6 @@
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { getConfigValue, setConfigValue } from '../lib/config-repository.ts';
+import { getLogger } from '../lib/logger.ts';
 
 type FtsIndexDef = {
   table: string;
@@ -98,7 +99,7 @@ export async function rebuildAllFtsIndexes(
         msg.includes('does not have a column') ||
         msg.includes('does not exist')
       ) {
-        console.warn(`FTS index skipped for ${def.table}: ${msg}`);
+        getLogger().warn(`FTS index skipped for ${def.table}: ${msg}`);
       } else {
         throw err;
       }

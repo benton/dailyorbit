@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { DuckDBConnection } from '@duckdb/node-api';
+import { getLogger } from '../../lib/logger.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb } from '../shared/context.ts';
 
@@ -33,9 +34,10 @@ export const companiesCommand = defineCommand({
             await import('../../companies/seed-data.ts');
           const result = await seedCompanies(conn, COMPANY_SEED_DATA);
 
-          console.log('Seed complete:');
-          console.log(`  Companies created: ${String(result.created)}`);
-          console.log(`  Aliases added:     ${String(result.aliasesAdded)}`);
+          const log = getLogger();
+          log.info('Seed complete:');
+          log.info(`  Companies created: ${String(result.created)}`);
+          log.info(`  Aliases added:     ${String(result.aliasesAdded)}`);
         } finally {
           conn.closeSync();
         }
@@ -69,9 +71,10 @@ export const companiesCommand = defineCommand({
           });
           process.stdout.write('\n');
 
-          console.log('Attribution complete:');
-          console.log(`  Filings attributed: ${String(result.attributed)}`);
-          console.log(`  Filings skipped:    ${String(result.skipped)}`);
+          const log = getLogger();
+          log.info('Attribution complete:');
+          log.info(`  Filings attributed: ${String(result.attributed)}`);
+          log.info(`  Filings skipped:    ${String(result.skipped)}`);
         } finally {
           conn.closeSync();
         }
@@ -97,22 +100,19 @@ export const companiesCommand = defineCommand({
             await import('../../companies/repository.ts');
           const stats = await getAttributionStats(conn);
 
-          console.log('Attribution Stats:');
-          console.log(`  Total filings:       ${String(stats.totalFilings)}`);
-          console.log(
-            `  Attributed:          ${String(stats.attributedFilings)}`,
-          );
-          console.log(
+          const log = getLogger();
+          log.info('Attribution Stats:');
+          log.info(`  Total filings:       ${String(stats.totalFilings)}`);
+          log.info(`  Attributed:          ${String(stats.attributedFilings)}`);
+          log.info(
             `  Unattributed:        ${String(stats.unattributedFilings)}`,
           );
-          console.log(
-            `  Coverage:            ${String(stats.coveragePercent)}%`,
-          );
+          log.info(`  Coverage:            ${String(stats.coveragePercent)}%`);
 
           if (stats.topUnattributedNames.length > 0) {
-            console.log('\nTop unattributed applicant names:');
+            log.info('\nTop unattributed applicant names:');
             for (const entry of stats.topUnattributedNames) {
-              console.log(`  ${String(entry.count).padStart(6)} ${entry.name}`);
+              log.info(`  ${String(entry.count).padStart(6)} ${entry.name}`);
             }
           }
         } finally {
@@ -151,9 +151,10 @@ export const companiesCommand = defineCommand({
           );
           process.stdout.write('\n');
 
-          console.log('Ownership event extraction complete:');
-          console.log(`  Events created: ${String(result.created)}`);
-          console.log(
+          const log = getLogger();
+          log.info('Ownership event extraction complete:');
+          log.info(`  Events created: ${String(result.created)}`);
+          log.info(
             `  Filings skipped (no party match): ${String(result.skipped)}`,
           );
         } finally {
@@ -187,10 +188,11 @@ export const companiesCommand = defineCommand({
           );
           process.stdout.write('\n');
 
-          console.log('Enrichment complete:');
-          console.log(`  Companies enriched: ${String(result.enriched)}`);
-          console.log(`  Companies skipped:  ${String(result.skipped)}`);
-          console.log(`  Errors:             ${String(result.errors)}`);
+          const log = getLogger();
+          log.info('Enrichment complete:');
+          log.info(`  Companies enriched: ${String(result.enriched)}`);
+          log.info(`  Companies skipped:  ${String(result.skipped)}`);
+          log.info(`  Errors:             ${String(result.errors)}`);
         } finally {
           conn.closeSync();
         }

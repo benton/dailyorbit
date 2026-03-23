@@ -17,6 +17,7 @@ import {
 import { splitText } from '../../inference/text-chunker.ts';
 import { processWithConcurrency } from '../../lib/concurrency.ts';
 import { setConfigService } from '../../lib/config.ts';
+import { getLogger } from '../../lib/logger.ts';
 import type {
   InferenceRequest,
   InferenceResponse,
@@ -346,18 +347,19 @@ export const summarizeCommand = defineCommand({
       const target: number =
         maxLimit > 0 ? Math.min(maxLimit, remaining) : remaining;
 
-      console.log(`Attachments needing summary: ${String(remaining)}`);
-      console.log(
+      const log = getLogger();
+      log.info(`Attachments needing summary: ${String(remaining)}`);
+      log.info(
         `Target: ${String(target)} | Model: ${modelId} | Concurrency: ${String(concurrency)}`,
       );
 
       if (dryRun) {
-        console.log('Dry run — exiting.');
+        log.info('Dry run — exiting.');
         return;
       }
 
       if (target === 0) {
-        console.log('Nothing to summarize.');
+        log.info('Nothing to summarize.');
         return;
       }
 
@@ -454,15 +456,15 @@ export const summarizeCommand = defineCommand({
       const wallSec: number = Math.round(
         (performance.now() - startTime) / 1000,
       );
-      console.log('\n');
-      console.log('=== Summarization Complete ===');
-      console.log(`  Processed:      ${String(processed)}`);
-      console.log(`  Copied (dedup): ${String(copied)}`);
-      console.log(`  Errors:         ${String(errors)}`);
-      console.log(`  Input tokens:   ${String(totalInputTokens)}`);
-      console.log(`  Output tokens:  ${String(totalOutputTokens)}`);
-      console.log(`  Wall time:      ${formatDuration(wallSec)}`);
-      console.log(
+      log.info('\n');
+      log.info('=== Summarization Complete ===');
+      log.info(`  Processed:      ${String(processed)}`);
+      log.info(`  Copied (dedup): ${String(copied)}`);
+      log.info(`  Errors:         ${String(errors)}`);
+      log.info(`  Input tokens:   ${String(totalInputTokens)}`);
+      log.info(`  Output tokens:  ${String(totalOutputTokens)}`);
+      log.info(`  Wall time:      ${formatDuration(wallSec)}`);
+      log.info(
         `  Avg latency:    ${String(Math.round(totalLatencyMs / (processed - errors)))} ms/doc`,
       );
     } finally {

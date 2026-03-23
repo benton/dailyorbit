@@ -1,5 +1,6 @@
 import type { ArgDef } from 'citty';
 import { type FileNumber, normalizeFileNumber } from '../../lib/file-number.ts';
+import { getLogger } from '../../lib/logger.ts';
 
 export const databaseArg = {
   type: 'string',
@@ -63,7 +64,7 @@ export function parseFileNumbers(
     if (result.ok) {
       results.push(result.fileNumber);
     } else {
-      console.warn(`Skipping unparseable file number: ${s.trim()}`);
+      getLogger().warn(`Skipping unparseable file number: ${s.trim()}`);
     }
   }
   return results.length > 0 ? results : undefined;

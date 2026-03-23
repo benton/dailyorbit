@@ -6,6 +6,7 @@ import {
   scopeArgs,
   storagePathArg,
 } from '../shared/args.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 export const syncCommand = defineCommand({
@@ -73,35 +74,32 @@ export const syncCommand = defineCommand({
       verbose: args.verbose,
     });
 
-    console.log('\nSummary:');
-    console.log(`  Filings processed:      ${String(result.filingsProcessed)}`);
-    console.log(
+    const log = getLogger();
+    log.info('\nSummary:');
+    log.info(`  Filings processed:      ${String(result.filingsProcessed)}`);
+    log.info(
       `  Attachments discovered: ${String(result.attachmentsDiscovered)}`,
     );
-    console.log(
+    log.info(
       `  Attachments downloaded: ${String(result.attachmentsDownloaded)}`,
     );
-    console.log(
-      `  Attachments failed:     ${String(result.attachmentsFailed)}`,
-    );
+    log.info(`  Attachments failed:     ${String(result.attachmentsFailed)}`);
     if (result.downloadsSkipped > 0) {
-      console.log(
+      log.info(
         `  Downloads skipped (bad URL):${String(result.downloadsSkipped).padStart(1)}`,
       );
     }
-    console.log(`  Texts extracted:        ${String(result.textsExtracted)}`);
-    console.log(
+    log.info(`  Texts extracted:        ${String(result.textsExtracted)}`);
+    log.info(
       `  Texts skipped (no text):${String(result.textsSkippedNoText).padStart(2)}`,
     );
-    console.log(`  Texts failed:           ${String(result.textsFailed)}`);
-    console.log(
-      `  Summaries generated:    ${String(result.summariesGenerated)}`,
-    );
-    console.log(
+    log.info(`  Texts failed:           ${String(result.textsFailed)}`);
+    log.info(`  Summaries generated:    ${String(result.summariesGenerated)}`);
+    log.info(
       `  Summaries copied (dedup):${String(result.summariesCopied).padStart(1)}`,
     );
-    console.log(`  Summaries failed:       ${String(result.summariesFailed)}`);
-    console.log(
+    log.info(`  Summaries failed:       ${String(result.summariesFailed)}`);
+    log.info(
       `  Duration:               ${String(Math.round(result.durationMs / 1000))}s`,
     );
   },

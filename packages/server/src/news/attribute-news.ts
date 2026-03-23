@@ -1,4 +1,5 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
+import { getLogger } from '../lib/logger.ts';
 import type { NewsItem } from './types.ts';
 import {
   getNewsItemsNeedingAttribution,
@@ -39,7 +40,7 @@ export async function attributeNewsItems(
     }));
 
   if (aliases.length === 0) {
-    console.log('No company aliases found — skipping attribution.');
+    getLogger().info('No company aliases found — skipping attribution.');
     return { attributed: 0, skipped: 0, previouslySkipped: 0 };
   }
 

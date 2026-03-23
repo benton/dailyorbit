@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty';
 import { CONFIG_SCHEMA, type ConfigKey } from '../../lib/config-schema.ts';
+import { getLogger } from '../../lib/logger.ts';
 import { ConfigService } from '../../lib/config-service.ts';
 import { SecretValue, readKeyFile } from '../../lib/encryption.ts';
 import { databaseArg } from '../shared/args.ts';
@@ -69,13 +70,13 @@ const getCommand = defineCommand({
     const config = await createConfigService(args.database, args.keyFile);
     const schema = CONFIG_SCHEMA[args.key as ConfigKey];
     if (schema == null) {
-      console.error(`Unknown config key: ${args.key}`);
+      getLogger().error(`Unknown config key: ${args.key}`);
       process.exit(1);
     }
     const raw = config.get(args.key as ConfigKey);
     const display: string =
       raw instanceof SecretValue ? raw.unwrap() : (raw as string);
-    console.log(display);
+    getLogger().info(display);
   },
 });
 
@@ -111,12 +112,12 @@ const setCommand = defineCommand({
     } else if (args.value) {
       value = args.value;
     } else {
-      console.error('Provide a value or --from-file');
+      getLogger().error('Provide a value or --from-file');
       process.exit(1);
     }
     const config = await createConfigService(args.database, args.keyFile);
     await config.set(args.key as ConfigKey, value);
-    console.log(
+    getLogger().info(
       `Set ${args.key} = ${CONFIG_SCHEMA[args.key as ConfigKey]?.encrypted ? '[ENCRYPTED]' : value}`,
     );
   },
