@@ -12,8 +12,15 @@ describe('createLogger', () => {
 
   it('outputs JSON when env is production', () => {
     const chunks: string[] = [];
-    const dest = { write: (s: string): void => { chunks.push(s); } };
-    const log: AppLogger = createLogger({ env: 'production', destination: dest });
+    const dest = {
+      write: (s: string): void => {
+        chunks.push(s);
+      },
+    };
+    const log: AppLogger = createLogger({
+      env: 'production',
+      destination: dest,
+    });
     log.info({ event: 'test' }, 'hello');
     const parsed: Record<string, unknown> = JSON.parse(chunks[0]!);
     expect(parsed).toHaveProperty('time');
@@ -23,8 +30,15 @@ describe('createLogger', () => {
 
   it('includes ISO 8601 timestamp in JSON output', () => {
     const chunks: string[] = [];
-    const dest = { write: (s: string): void => { chunks.push(s); } };
-    const log: AppLogger = createLogger({ env: 'production', destination: dest });
+    const dest = {
+      write: (s: string): void => {
+        chunks.push(s);
+      },
+    };
+    const log: AppLogger = createLogger({
+      env: 'production',
+      destination: dest,
+    });
     log.info('timestamp check');
     const parsed: Record<string, unknown> = JSON.parse(chunks[0]!);
     expect(typeof parsed.time).toBe('string');
@@ -33,8 +47,15 @@ describe('createLogger', () => {
 
   it('creates child loggers with bound context', () => {
     const chunks: string[] = [];
-    const dest = { write: (s: string): void => { chunks.push(s); } };
-    const log: AppLogger = createLogger({ env: 'production', destination: dest });
+    const dest = {
+      write: (s: string): void => {
+        chunks.push(s);
+      },
+    };
+    const log: AppLogger = createLogger({
+      env: 'production',
+      destination: dest,
+    });
     const child: AppLogger = log.child({ module: 'pipeline' });
     child.info('stage started');
     const parsed: Record<string, unknown> = JSON.parse(chunks[0]!);

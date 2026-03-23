@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { defineCommand } from 'citty';
+import { createLogger, setLogger, type AppLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
 
 const DEFAULT_DATABASE: string = 'data/daily-orbit.duckdb';
@@ -95,6 +96,9 @@ export const serveApiCommand = defineCommand({
       return;
     }
 
+    const log: AppLogger = createLogger();
+    setLogger(log);
+
     const dbPath: string = resolveFromRoot(args.database);
     const keyPath: string = resolveFromRoot(args.keyFile);
     const port: number = Number(args.port);
@@ -103,17 +107,17 @@ export const serveApiCommand = defineCommand({
     const keyExists: boolean = existsSync(keyPath);
 
     if (dbExists && !keyExists) {
-      console.error(
-        `Error: database exists at ${dbPath} but key file is missing at ${keyPath}\n` +
-          'Both files must be present, or neither (for fresh initialization).',
+      log.error(
+        { dbPath, keyPath },
+        'Database exists but key file is missing — both must be present, or neither',
       );
       process.exit(1);
     }
 
     if (!dbExists && keyExists) {
-      console.error(
-        `Error: key file exists at ${keyPath} but database is missing at ${dbPath}\n` +
-          'Both files must be present, or neither (for fresh initialization).',
+      log.error(
+        { dbPath, keyPath },
+        'Key file exists but database is missing — both must be present, or neither',
       );
       process.exit(1);
     }
@@ -124,8 +128,8 @@ export const serveApiCommand = defineCommand({
     let encryptionKey: Buffer;
 
     if (!dbExists && !keyExists) {
-      console.warn(
-        'Warning: neither database nor key file found — initializing clean system.',
+      log.warn(
+        'Neither database nor key file found — initializing clean system',
       );
 
       const { mkdirSync } = await import('node:fs');
@@ -134,17 +138,17 @@ export const serveApiCommand = defineCommand({
 
       const { generateKeyFile } = await import('../../lib/encryption.ts');
       encryptionKey = generateKeyFile(keyPath);
-      console.log(`  Generated encryption key: ${keyPath}`);
+      log.info({ keyPath }, 'Generated encryption key');
 
       const db = await getDb();
       const { initializeDatabase } = await import('../../lib/db-init.ts');
       await initializeDatabase(db);
-      console.log(`  Initialized database:     ${dbPath}`);
+      log.info({ dbPath }, 'Initialized database');
 
       const { ConfigService } = await import('../../lib/config-service.ts');
       const config = new ConfigService(db, encryptionKey);
       await config.seedDefaults();
-      console.log('  Seeded default config');
+      log.info('Seeded default config');
     } else {
       const { readKeyFile } = await import('../../lib/encryption.ts');
       encryptionKey = readKeyFile(keyPath);
@@ -152,7 +156,7 @@ export const serveApiCommand = defineCommand({
       // Ensure schema is up to date for existing databases
       const { initializeDatabase } = await import('../../lib/db-init.ts');
       await initializeDatabase(db);
-      console.log(`Database: ${dbPath}`);
+      log.info({ dbPath }, 'Database loaded');
     }
 
     // Initialize config service
@@ -175,7 +179,7 @@ export const serveApiCommand = defineCommand({
       const { getScheduler } = await import('../../pipeline/scheduler.ts');
       const scheduler = getScheduler();
       scheduler.start();
-      console.log('Pipeline scheduler auto-started');
+      log.info('Pipeline scheduler auto-started');
     }
 
     const { serve } = await import('@hono/node-server');
@@ -204,7 +208,7 @@ export const serveApiCommand = defineCommand({
           },
         },
         () => {
-          console.log('Server running at https://0.0.0.0:443');
+          log.info({ port: 443 }, 'Server started (HTTPS)');
         },
       );
 
@@ -219,7 +223,7 @@ export const serveApiCommand = defineCommand({
       serve({ fetch: redirect.fetch, port: 80 });
     } else {
       serve({ fetch: app.fetch, port }, () => {
-        console.log(`Server running at http://localhost:${String(port)}`);
+        log.info({ port }, 'Server started');
       });
     }
   },
