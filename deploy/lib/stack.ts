@@ -127,6 +127,19 @@ export class DailyOrbitStack extends Stack {
       }),
     );
 
+    // CloudWatch Logs for structured log shipping
+    instanceRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'logs:CreateLogGroup',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
+          'logs:DescribeLogStreams',
+        ],
+        resources: ['*'],
+      }),
+    );
+
     // ── 5g. Compute ──────────────────────────────────────────────────────
     const __dirname: string = dirname(fileURLToPath(import.meta.url));
     const userDataRaw: string = readFileSync(resolve(__dirname, 'user-data.sh'), 'utf-8');
