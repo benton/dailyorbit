@@ -813,6 +813,138 @@ const STAGES: PipelineStage[] = [
 
   // ── Alerts: keyword (after search.rebuild-index) ────────────
   makeAlertStage('keyword'),
+
+  // ── Newspaper ────────────────────────────────────────────────
+  {
+    id: 'newspaper.ensure-edition',
+    group: 'newspaper',
+    name: 'Create Edition',
+    description:
+      "Create today's newspaper edition if it doesn't exist (gates on 9am ET)",
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
+      const { ensureEdition } = await import('../newspaper/repository.ts');
+      const start: number = Date.now();
+      await ensureNewspaperTables(ctx.conn);
+
+      // Gate: skip if before 9am Eastern
+      const eastern: string = new Date().toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+      });
+      const hour: number = new Date(eastern).getHours();
+      if (hour < 9) {
+        ctx.log('info', 'Before 9am ET — skipping newspaper generation');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const today: string = new Date().toISOString().split('T')[0]!;
+      const edition = await ensureEdition(ctx.conn, today);
+      ctx.log('info', `Edition ${edition.editionDate}: status=${edition.status}`);
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+      };
+    },
+  },
+  {
+    id: 'newspaper.daily-digest',
+    group: 'newspaper',
+    name: 'Daily Digest',
+    description:
+      'Generate "3 Miles Up" lead article from today\'s filings and news',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
+      const { getEditionByDate, upsertArticle, getArticle } = await import(
+        '../newspaper/repository.ts'
+      );
+      const { generateDailyDigest } = await import(
+        '../newspaper/generators/daily-digest.ts'
+      );
+      const { getConfigService } = await import('../lib/config.ts');
+      const { InferenceService } = await import(
+        '../inference/inference-service.ts'
+      );
+      const { InstrumentedBedrockClient } = await import(
+        '../inference/instrumented-client.ts'
+      );
+      const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const start: number = Date.now();
+      await ensureNewspaperTables(ctx.conn);
+
+      const today: string = new Date().toISOString().split('T')[0]!;
+      const edition = await getEditionByDate(ctx.conn, today);
+      if (!edition) {
+        ctx.log('info', 'No edition for today — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      // Skip if already generated
+      const existing = await getArticle(
+        ctx.conn,
+        edition.id,
+        'three-miles-up',
+      );
+      if (existing?.status === 'generated') {
+        ctx.log('info', 'Daily digest already generated — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const config = getConfigService();
+      const region: string = config.get('bedrockRegion') as string;
+      const client = new InstrumentedBedrockClient(
+        new BedrockClient(region),
+        ctx.conn,
+        'newspaper',
+      );
+      const inferenceService = new InferenceService(client);
+
+      const result = await generateDailyDigest({
+        conn: ctx.conn,
+        editionId: edition.id,
+        editionDate: today,
+        inferenceService,
+        config,
+        log: ctx.log,
+      });
+
+      await upsertArticle(ctx.conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'three-miles-up',
+        headline: result.headline,
+        body: result.body,
+        sourceData: JSON.stringify(result.sourceData),
+        generatedBy: config.get('newspaperCopyModel') as string,
+        displayOrder: 1,
+        status: 'generated',
+      });
+
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+      };
+    },
+  },
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -860,6 +992,11 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
       'alerts.evaluate-semantic',
       'alerts.evaluate-keyword',
     ],
+  },
+  {
+    id: 'newspaper',
+    name: 'Newspaper',
+    stageIds: ['newspaper.ensure-edition', 'newspaper.daily-digest'],
   },
 ];
 

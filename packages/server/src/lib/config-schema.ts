@@ -205,6 +205,47 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: true,
     description: 'ICFS/Okta password for headless login',
   },
+  newspaperCopyModel: {
+    key: 'newspaperCopyModel',
+    defaultValue: 'us.amazon.nova-pro-v1:0',
+    encrypted: false,
+    description: 'Bedrock model ID for newspaper article generation',
+  },
+  newspaperCopySystemPrompt: {
+    key: 'newspaperCopySystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for newspaper article generation (blank = built-in default)',
+  },
+  newspaperCopyUserPrompt: {
+    key: 'newspaperCopyUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt template for newspaper article generation (blank = built-in default)',
+  },
+  newspaperImageModel: {
+    key: 'newspaperImageModel',
+    defaultValue: 'amazon.nova-canvas-v1:0',
+    encrypted: false,
+    description:
+      'Bedrock model ID for newspaper image generation (Nova Canvas)',
+  },
+  newspaperEditorialSystemPrompt: {
+    key: 'newspaperEditorialSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for editorial generation (blank = shared newspaper prompt)',
+  },
+  newspaperEditorialUserPrompt: {
+    key: 'newspaperEditorialUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for editorial generation (blank = built-in default)',
+  },
   schedulerAutoStart: {
     key: 'schedulerAutoStart',
     defaultValue: 'false',

@@ -25,6 +25,12 @@ export const NEWS_SOURCE_SEED_DATA: ReadonlyArray<NewsSourceSeedEntry> = [
     enabled: true,
   },
   {
+    name: 'FCC Public Notices (IBFS)',
+    feedUrl: 'https://fcc.report/IBFS/Filing-List/Public-Notices.rss',
+    category: 'regulatory',
+    enabled: true,
+  },
+  {
     name: 'FCC Federal Register',
     feedUrl:
       'https://www.federalregister.gov/api/v1/documents.rss?conditions[agencies][]=federal-communications-commission',

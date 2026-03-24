@@ -1,0 +1,231 @@
+import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
+import type {
+  ArticleStatus,
+  EditionStatus,
+  EditionType,
+  NewspaperArticle,
+  NewspaperContentType,
+  NewspaperEdition,
+} from './types.ts';
+
+// ── Row mappers ─────────────────────────────────────────────────────
+
+function toISODate(val: unknown): string {
+  if (val instanceof Date) return val.toISOString().split('T')[0]!;
+  const s: string = String(val);
+  // If it looks like a full date string, parse and extract date part
+  if (s.length > 10 && !s.includes('T')) {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]!;
+  }
+  return s;
+}
+
+function rowToEdition(r: Record<string, unknown>): NewspaperEdition {
+  return {
+    id: Number(r.id),
+    editionDate: toISODate(r.edition_date),
+    editionType: String(r.edition_type) as EditionType,
+    status: String(r.status) as EditionStatus,
+    pipelineRunId: r.pipeline_run_id != null ? Number(r.pipeline_run_id) : null,
+    heroImagePath: r.hero_image_path != null ? String(r.hero_image_path) : null,
+    createdAt: String(r.created_at),
+    updatedAt: String(r.updated_at),
+  };
+}
+
+function rowToArticle(r: Record<string, unknown>): NewspaperArticle {
+  return {
+    id: Number(r.id),
+    editionId: Number(r.edition_id),
+    contentType: String(r.content_type) as NewspaperContentType,
+    slug: String(r.slug),
+    headline: r.headline != null ? String(r.headline) : null,
+    body: String(r.body),
+    sourceData: r.source_data != null ? String(r.source_data) : null,
+    generatedBy: r.generated_by != null ? String(r.generated_by) : null,
+    imagePath: r.image_path != null ? String(r.image_path) : null,
+    imagePrompt: r.image_prompt != null ? String(r.image_prompt) : null,
+    displayOrder: Number(r.display_order),
+    status: String(r.status) as ArticleStatus,
+    createdAt: String(r.created_at),
+    updatedAt: String(r.updated_at),
+  };
+}
+
+// ── Edition CRUD ────────────────────────────────────────────────────
+
+/**
+ * Upsert an edition for the given date. Creates if not exists, returns existing
+ * if already present. Idempotent.
+ */
+export async function ensureEdition(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<NewspaperEdition> {
+  // Try insert, ignore conflict on unique edition_date
+  await conn.run(
+    `INSERT INTO newspaper_edition (edition_date)
+     VALUES (CAST(? AS DATE))
+     ON CONFLICT (edition_date) DO NOTHING`,
+    [date] as DuckDBValue[],
+  );
+
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_edition WHERE edition_date = CAST(? AS DATE)`,
+    [date] as DuckDBValue[],
+  );
+  return rowToEdition(reader.getRowObjectsJS()[0]!);
+}
+
+export async function getEditionByDate(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<NewspaperEdition | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_edition WHERE edition_date = CAST(? AS DATE)`,
+    [date] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToEdition(rows[0]!);
+}
+
+export async function getLatestEdition(
+  conn: DuckDBConnection,
+): Promise<NewspaperEdition | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_edition ORDER BY edition_date DESC LIMIT 1`,
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToEdition(rows[0]!);
+}
+
+export async function listEditions(
+  conn: DuckDBConnection,
+  limit: number,
+  offset: number,
+): Promise<NewspaperEdition[]> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_edition
+     ORDER BY edition_date DESC
+     LIMIT ? OFFSET ?`,
+    [limit, offset] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().map(rowToEdition);
+}
+
+export async function updateEditionStatus(
+  conn: DuckDBConnection,
+  id: number,
+  status: EditionStatus,
+): Promise<void> {
+  await conn.run(
+    `UPDATE newspaper_edition
+     SET status = ?, updated_at = current_timestamp
+     WHERE id = ?`,
+    [status, id] as DuckDBValue[],
+  );
+}
+
+// ── Article CRUD ────────────────────────────────────────────────────
+
+/**
+ * Upsert an article by (edition_id, slug). Idempotent — updates on conflict.
+ */
+export async function upsertArticle(
+  conn: DuckDBConnection,
+  editionId: number,
+  article: {
+    contentType: NewspaperContentType;
+    slug: string;
+    headline?: string | null;
+    body?: string;
+    sourceData?: string | null;
+    generatedBy?: string | null;
+    imagePath?: string | null;
+    imagePrompt?: string | null;
+    displayOrder?: number;
+    status?: ArticleStatus;
+  },
+): Promise<NewspaperArticle> {
+  await conn.run(
+    `INSERT INTO newspaper_article
+       (edition_id, content_type, slug, headline, body, source_data,
+        generated_by, image_path, image_prompt, display_order, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (edition_id, slug) DO UPDATE SET
+       headline = COALESCE(EXCLUDED.headline, newspaper_article.headline),
+       body = COALESCE(EXCLUDED.body, newspaper_article.body),
+       source_data = COALESCE(EXCLUDED.source_data, newspaper_article.source_data),
+       generated_by = COALESCE(EXCLUDED.generated_by, newspaper_article.generated_by),
+       image_path = COALESCE(EXCLUDED.image_path, newspaper_article.image_path),
+       image_prompt = COALESCE(EXCLUDED.image_prompt, newspaper_article.image_prompt),
+       display_order = EXCLUDED.display_order,
+       status = EXCLUDED.status,
+       updated_at = now()`,
+    [
+      editionId,
+      article.contentType,
+      article.slug,
+      article.headline ?? null,
+      article.body ?? '',
+      article.sourceData ?? null,
+      article.generatedBy ?? null,
+      article.imagePath ?? null,
+      article.imagePrompt ?? null,
+      article.displayOrder ?? 0,
+      article.status ?? 'pending',
+    ] as DuckDBValue[],
+  );
+
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_article WHERE edition_id = ? AND slug = ?`,
+    [editionId, article.slug] as DuckDBValue[],
+  );
+  return rowToArticle(reader.getRowObjectsJS()[0]!);
+}
+
+export async function getArticlesByEdition(
+  conn: DuckDBConnection,
+  editionId: number,
+): Promise<NewspaperArticle[]> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_article
+     WHERE edition_id = ?
+     ORDER BY display_order ASC`,
+    [editionId] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().map(rowToArticle);
+}
+
+export async function getArticle(
+  conn: DuckDBConnection,
+  editionId: number,
+  slug: string,
+): Promise<NewspaperArticle | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_article WHERE edition_id = ? AND slug = ?`,
+    [editionId, slug] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToArticle(rows[0]!);
+}
+
+/**
+ * Reset an article to pending status for regeneration.
+ */
+export async function resetArticle(
+  conn: DuckDBConnection,
+  editionId: number,
+  slug: string,
+): Promise<void> {
+  await conn.run(
+    `UPDATE newspaper_article
+     SET status = 'pending', updated_at = current_timestamp
+     WHERE edition_id = ? AND slug = ?`,
+    [editionId, slug] as DuckDBValue[],
+  );
+}
