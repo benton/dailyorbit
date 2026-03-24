@@ -103,6 +103,59 @@ export const newspaperCommand = defineCommand({
 
             log.info(`Generated: "${result.headline}"`);
             log.info(`Body length: ${String(result.body.length)} characters`);
+          } else if (args.type === 'fake_ad') {
+            const { generateFakeAd } =
+              await import('../../newspaper/generators/fake-ad.ts');
+            const { ConfigService } =
+              await import('../../lib/config-service.ts');
+            const { setConfigService } = await import('../../lib/config.ts');
+            const { BedrockClient } =
+              await import('../../inference/bedrock-client.ts');
+            const { InstrumentedBedrockClient } =
+              await import('../../inference/instrumented-client.ts');
+            const { InferenceService } =
+              await import('../../inference/inference-service.ts');
+
+            const config = new ConfigService(
+              dbInstance,
+              Buffer.from(
+                process.env.ENCRYPTION_KEY ?? 'dev-key-not-for-production',
+              ),
+            );
+            await config.load();
+            setConfigService(config);
+
+            const region: string = config.get('bedrockRegion') as string;
+            const client = new InstrumentedBedrockClient(
+              new BedrockClient(region),
+              conn,
+              'newspaper',
+            );
+            const inferenceService = new InferenceService(client);
+
+            const result = await generateFakeAd({
+              conn,
+              editionId: edition.id,
+              editionDate,
+              inferenceService,
+              config,
+              log: (level: string, message: string) =>
+                log[level === 'error' ? 'error' : 'info'](message),
+            });
+
+            await upsertArticle(conn, edition.id, {
+              contentType: 'fake_ad',
+              slug: 'fake-ad',
+              headline: result.headline,
+              body: result.body,
+              sourceData: JSON.stringify(result.sourceData),
+              generatedBy: config.get('newspaperCopyModel') as string,
+              displayOrder: 90,
+              status: 'generated',
+            });
+
+            log.info(`Generated: "${result.headline}"`);
+            log.info(`Body length: ${String(result.body.length)} characters`);
           } else {
             log.error(`Unknown content type: ${args.type}`);
           }

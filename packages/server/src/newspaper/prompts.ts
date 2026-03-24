@@ -38,3 +38,49 @@ Recent industry news:
 {{{newsSummaries}}}
 
 Write 2-3 paragraphs. Reference specific file numbers and company names. Include links to Daily Orbit filing pages as [Company Name](/filings/FILE-NUMBER). At the bottom, include source attributions as "Source: [Publication Name](original-url)".`;
+
+// ── Fake Ad template variables ─────────────────────────────────────
+
+export const AD_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Monday, March 24, 2026',
+  },
+  {
+    name: 'companyNames',
+    description: 'List of real company names for inspiration',
+    source: 'db query',
+    example: '- Hughes Network Systems\n- SES S.A.',
+  },
+  {
+    name: 'recentFilingTypes',
+    description: 'Recent filing subsystem/type pairs',
+    source: 'db query',
+    example: '- SAT-LOA (Launch and Operate)\n- SES-MOD (Modification)',
+  },
+];
+
+// ── Default fake ad prompts ────────────────────────────────────────
+
+export const DEFAULT_AD_SYSTEM_PROMPT: string = `You are a copywriter for "The Daily Orbit" newspaper, specializing in tongue-in-cheek display advertisements that parody turn-of-the-century newspaper ads. Your ads are affectionate, never mean-spirited. They reference real satellite industry concepts but in an absurdly formal Victorian advertising voice.
+
+Output a single advertisement in this exact markdown format:
+
+# [COMPANY OR PRODUCT NAME]
+## [Tagline in quotes]
+
+[2-3 lines of flowery ad copy]
+
+*Est. [year] · [City]*`;
+
+export const DEFAULT_AD_USER_PROMPT: string = `Generate one fake display advertisement for today's edition ({{editionDate}}).
+
+Use one of these real companies for inspiration (pick one, or invent a plausible fictional company):
+{{{companyNames}}}
+
+Recent filing activity for flavor:
+{{{recentFilingTypes}}}
+
+The ad should reference satellite industry concepts (Ka-band, orbital slots, earth stations, spectrum coordination) in an absurdly formal way. Keep it to 5-6 lines max.`;

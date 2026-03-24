@@ -1022,6 +1022,88 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+  {
+    id: 'newspaper.fake-ad',
+    group: 'newspaper',
+    name: 'Fake Ad',
+    description: 'Generate a tongue-in-cheek display advertisement',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
+      const { getEditionByDate, upsertArticle, getArticle } =
+        await import('../newspaper/repository.ts');
+      const { generateFakeAd } =
+        await import('../newspaper/generators/fake-ad.ts');
+      const { getConfigService } = await import('../lib/config.ts');
+      const { InferenceService } =
+        await import('../inference/inference-service.ts');
+      const { InstrumentedBedrockClient } =
+        await import('../inference/instrumented-client.ts');
+      const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const start: number = Date.now();
+      await ensureNewspaperTables(ctx.conn);
+
+      const today: string = new Date().toISOString().split('T')[0]!;
+      const edition = await getEditionByDate(ctx.conn, today);
+      if (!edition) {
+        ctx.log('info', 'No edition for today — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      // Skip if already generated
+      const existing = await getArticle(ctx.conn, edition.id, 'fake-ad');
+      if (existing?.status === 'generated') {
+        ctx.log('info', 'Fake ad already generated — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const config = getConfigService();
+      const region: string = config.get('bedrockRegion') as string;
+      const client = new InstrumentedBedrockClient(
+        new BedrockClient(region),
+        ctx.conn,
+        'newspaper',
+      );
+      const inferenceService = new InferenceService(client);
+
+      const result = await generateFakeAd({
+        conn: ctx.conn,
+        editionId: edition.id,
+        editionDate: today,
+        inferenceService,
+        config,
+        log: ctx.log,
+      });
+
+      await upsertArticle(ctx.conn, edition.id, {
+        contentType: 'fake_ad',
+        slug: 'fake-ad',
+        headline: result.headline,
+        body: result.body,
+        sourceData: JSON.stringify(result.sourceData),
+        generatedBy: config.get('newspaperCopyModel') as string,
+        displayOrder: 90,
+        status: 'generated',
+      });
+
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+      };
+    },
+  },
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -1077,6 +1159,7 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
       'newspaper.ensure-edition',
       'newspaper.daily-digest',
       'newspaper.hero-image',
+      'newspaper.fake-ad',
     ],
   },
 ];
