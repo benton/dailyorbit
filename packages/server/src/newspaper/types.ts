@@ -77,3 +77,31 @@ export type GenerateOptions = {
   config: ConfigService;
   log: (level: 'info' | 'error', message: string) => void;
 };
+
+// ── Weekly generation helpers ───────────────────────────────────
+
+/**
+ * Returns the ISO 8601 week number for the given date.
+ * Week 1 is the week containing the first Thursday of the year.
+ */
+export function getISOWeekNumber(date: Date): number {
+  const d: Date = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
+  // Set to nearest Thursday: current date + 4 - current day number (Monday=1, Sunday=7)
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart: Date = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNumber: number = Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+  return weekNumber;
+}
+
+/**
+ * Returns true if today is Monday (day 1), i.e. weekly content should be generated.
+ * Accepts an optional override for testing.
+ */
+export function isWeeklyGenerationDay(now?: Date): boolean {
+  const d: Date = now ?? new Date();
+  return d.getDay() === 1; // 1 = Monday
+}
