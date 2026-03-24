@@ -497,7 +497,7 @@ export async function generatePortraitLibrary(
 
   for (const [i, entry] of PORTRAIT_PROMPTS.entries()) {
     if (options?.startIndex != null && i < options.startIndex) continue;
-    if (options?.limit != null && generated >= options.limit) break;
+    if (options?.limit != null && generated + failed >= options.limit) break;
 
     const imagePath: string = join(
       baseDir,
@@ -516,8 +516,8 @@ export async function generatePortraitLibrary(
         modelId,
         prompt: fullPrompt,
         negativePrompt: PORTRAIT_NEGATIVE,
-        width: 256,
-        height: 320,
+        width: 320,
+        height: 400,
         seed: i * 42,
       });
       await writeFile(imagePath, response.images[0]!);

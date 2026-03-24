@@ -1,8 +1,15 @@
 import { defineCommand } from 'citty';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { getLogger } from '../../lib/logger.ts';
+import { readKeyFile } from '../../lib/encryption.ts';
 import { databaseArg } from '../shared/args.ts';
-import { createDb } from '../shared/context.ts';
+import { createDb, resolveFromRoot } from '../shared/context.ts';
+
+const keyFileArg = {
+  type: 'string',
+  description: 'Path to encryption key file',
+  default: 'data/daily-orbit.key',
+} as const;
 
 export const newspaperCommand = defineCommand({
   meta: {
@@ -17,6 +24,7 @@ export const newspaperCommand = defineCommand({
       },
       args: {
         database: databaseArg,
+        keyFile: keyFileArg,
         date: {
           type: 'string',
           description: 'Edition date (YYYY-MM-DD, default: today)',
@@ -26,6 +34,12 @@ export const newspaperCommand = defineCommand({
           type: 'string',
           description: 'Content type to generate (default: daily_digest)',
           default: 'daily_digest',
+        },
+        region: {
+          type: 'string',
+          description:
+            'AWS region override (default: from bedrockRegion config)',
+          default: '',
         },
       },
       async run({ args }) {
@@ -63,16 +77,13 @@ export const newspaperCommand = defineCommand({
             const { InferenceService } =
               await import('../../inference/inference-service.ts');
 
-            const config = new ConfigService(
-              dbInstance,
-              Buffer.from(
-                process.env.ENCRYPTION_KEY ?? 'dev-key-not-for-production',
-              ),
-            );
+            const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
+            const config = new ConfigService(dbInstance, key);
             await config.load();
             setConfigService(config);
 
-            const region: string = config.get('bedrockRegion') as string;
+            const region: string =
+              args.region || (config.get('bedrockRegion') as string);
             const client = new InstrumentedBedrockClient(
               new BedrockClient(region),
               conn,
@@ -116,16 +127,13 @@ export const newspaperCommand = defineCommand({
             const { InferenceService } =
               await import('../../inference/inference-service.ts');
 
-            const config = new ConfigService(
-              dbInstance,
-              Buffer.from(
-                process.env.ENCRYPTION_KEY ?? 'dev-key-not-for-production',
-              ),
-            );
+            const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
+            const config = new ConfigService(dbInstance, key);
             await config.load();
             setConfigService(config);
 
-            const region: string = config.get('bedrockRegion') as string;
+            const region: string =
+              args.region || (config.get('bedrockRegion') as string);
             const client = new InstrumentedBedrockClient(
               new BedrockClient(region),
               conn,
@@ -319,11 +327,18 @@ export const newspaperCommand = defineCommand({
       },
       args: {
         database: databaseArg,
+        keyFile: keyFileArg,
         type: {
           type: 'string',
           description:
             'What to generate: portraits, headers, or all (default: all)',
           default: 'all',
+        },
+        region: {
+          type: 'string',
+          description:
+            'AWS region for image model (default: from bedrockRegion config)',
+          default: '',
         },
         start: {
           type: 'string',
@@ -355,16 +370,13 @@ export const newspaperCommand = defineCommand({
           const { InstrumentedBedrockClient } =
             await import('../../inference/instrumented-client.ts');
 
-          const config = new ConfigService(
-            dbInstance,
-            Buffer.from(
-              process.env.ENCRYPTION_KEY ?? 'dev-key-not-for-production',
-            ),
-          );
+          const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
+          const config = new ConfigService(dbInstance, key);
           await config.load();
           setConfigService(config);
 
-          const region: string = config.get('bedrockRegion') as string;
+          const region: string =
+            args.region || (config.get('bedrockRegion') as string);
           const imageClient = new InstrumentedBedrockClient(
             new BedrockClient(region),
             conn,
