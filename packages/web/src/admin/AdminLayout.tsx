@@ -79,6 +79,13 @@ export default function AdminLayout() {
           >
             Backups
           </Link>
+          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <Link
+            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            to="/admin/newspaper"
+          >
+            Newspaper
+          </Link>
           <div className="ml-auto flex items-center gap-3">
             <button
               className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"

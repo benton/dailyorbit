@@ -26,6 +26,14 @@ import {
   QUERY_GENERATE_VARIABLES,
 } from '../query/prompts.ts';
 import type { InferenceRequest } from './types.ts';
+import {
+  DEFAULT_DIGEST_SYSTEM_PROMPT,
+  DEFAULT_DIGEST_USER_PROMPT,
+  DEFAULT_EDITORIAL_SYSTEM_PROMPT,
+  DEFAULT_EDITORIAL_USER_PROMPT,
+  EDITORIAL_VARIABLES,
+  NEWSPAPER_COPY_VARIABLES,
+} from '../newspaper/prompts.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */
 export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
@@ -75,6 +83,16 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
   /** GET /prompt-templates — Return prompt template metadata for the admin UI. */
   routes.get('/prompt-templates', (c) => {
     return c.json({
+      newspaperCopy: {
+        defaultSystemPrompt: DEFAULT_DIGEST_SYSTEM_PROMPT,
+        defaultUserPrompt: DEFAULT_DIGEST_USER_PROMPT,
+        variables: NEWSPAPER_COPY_VARIABLES,
+      },
+      newspaperEditorial: {
+        defaultSystemPrompt: DEFAULT_EDITORIAL_SYSTEM_PROMPT,
+        defaultUserPrompt: DEFAULT_EDITORIAL_USER_PROMPT,
+        variables: EDITORIAL_VARIABLES,
+      },
       summarization: {
         defaultSystemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
         defaultUserPrompt: DEFAULT_SUMMARIZATION_USER_PROMPT,

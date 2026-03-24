@@ -95,11 +95,25 @@ function AiSettingsInner() {
   const [embeddingDimensions, setEmbeddingDimensions] = useState<string>('1024');
   const [embeddingNormalize, setEmbeddingNormalize] = useState<boolean>(true);
 
+  // Newspaper config state
+  const [newspaperCopyModel, setNewspaperCopyModel] = useState<string>('');
+  const [newspaperImageModel, setNewspaperImageModel] = useState<string>('');
+  const [newspaperCopySystemPrompt, setNewspaperCopySystemPrompt] = useState<string>('');
+  const [newspaperCopyUserPrompt, setNewspaperCopyUserPrompt] = useState<string>('');
+  const [newspaperCopyMeta, setNewspaperCopyMeta] = useState<PromptTemplateMeta | null>(null);
+  const [newspaperEditorialSystemPrompt, setNewspaperEditorialSystemPrompt] = useState<string>('');
+  const [newspaperEditorialUserPrompt, setNewspaperEditorialUserPrompt] = useState<string>('');
+  const [newspaperEditorialMeta, setNewspaperEditorialMeta] = useState<PromptTemplateMeta | null>(
+    null,
+  );
+
   const fetchConfig = useCallback(async () => {
     try {
       const [entries, templates] = await Promise.all([
         apiFetch<Array<ConfigEntry>>('/api/admin/config'),
         apiFetch<{
+          newspaperCopy: PromptTemplateMeta;
+          newspaperEditorial: PromptTemplateMeta;
           newsSummarization: PromptTemplateMeta;
           queryGenerate: PromptTemplateMeta;
           queryRewrite: PromptTemplateMeta;
@@ -158,6 +172,34 @@ function AiSettingsInner() {
       }
       setQueryRewriteMeta(templates.queryRewrite);
       setQueryGenMeta(templates.queryGenerate);
+
+      // Newspaper config
+      const newspaperCopyModelEntry = entries.find((e) => e.key === 'newspaperCopyModel');
+      const newspaperImageModelEntry = entries.find((e) => e.key === 'newspaperImageModel');
+      const newspaperCopySysEntry = entries.find((e) => e.key === 'newspaperCopySystemPrompt');
+      const newspaperCopyUserEntry = entries.find((e) => e.key === 'newspaperCopyUserPrompt');
+      const newspaperEditSysEntry = entries.find((e) => e.key === 'newspaperEditorialSystemPrompt');
+      const newspaperEditUserEntry = entries.find((e) => e.key === 'newspaperEditorialUserPrompt');
+      if (newspaperCopyModelEntry) {
+        setNewspaperCopyModel(newspaperCopyModelEntry.value);
+      }
+      if (newspaperImageModelEntry) {
+        setNewspaperImageModel(newspaperImageModelEntry.value);
+      }
+      if (newspaperCopySysEntry) {
+        setNewspaperCopySystemPrompt(newspaperCopySysEntry.value);
+      }
+      if (newspaperCopyUserEntry) {
+        setNewspaperCopyUserPrompt(newspaperCopyUserEntry.value);
+      }
+      if (newspaperEditSysEntry) {
+        setNewspaperEditorialSystemPrompt(newspaperEditSysEntry.value);
+      }
+      if (newspaperEditUserEntry) {
+        setNewspaperEditorialUserPrompt(newspaperEditUserEntry.value);
+      }
+      setNewspaperCopyMeta(templates.newspaperCopy);
+      setNewspaperEditorialMeta(templates.newspaperEditorial);
 
       // Embedding config
       const embModelEntry = entries.find((e) => e.key === 'embeddingModel');
@@ -229,6 +271,12 @@ function AiSettingsInner() {
         saveKey('embeddingModel', embeddingModel),
         saveKey('embeddingDimensions', embeddingDimensions),
         saveKey('embeddingNormalize', String(embeddingNormalize)),
+        saveKey('newspaperCopyModel', newspaperCopyModel),
+        saveKey('newspaperImageModel', newspaperImageModel),
+        saveKey('newspaperCopySystemPrompt', newspaperCopySystemPrompt),
+        saveKey('newspaperCopyUserPrompt', newspaperCopyUserPrompt),
+        saveKey('newspaperEditorialSystemPrompt', newspaperEditorialSystemPrompt),
+        saveKey('newspaperEditorialUserPrompt', newspaperEditorialUserPrompt),
       ]);
       toast('AI settings saved', 'success');
     } catch (error) {
@@ -251,6 +299,12 @@ function AiSettingsInner() {
     embeddingModel,
     embeddingDimensions,
     embeddingNormalize,
+    newspaperCopyModel,
+    newspaperImageModel,
+    newspaperCopySystemPrompt,
+    newspaperCopyUserPrompt,
+    newspaperEditorialSystemPrompt,
+    newspaperEditorialUserPrompt,
     toast,
   ]);
 
@@ -448,6 +502,84 @@ function AiSettingsInner() {
           title="Query Answer Generation Prompts"
           userPrompt={queryGenUserPrompt}
           variables={queryGenMeta.variables}
+        />
+      )}
+
+      {/* Newspaper Copy Model */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <h2 className="mb-4 text-lg font-medium">Newspaper</h2>
+        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+          Models and prompts for the newspaper edition generator.
+        </p>
+
+        <h3 className="mb-2 text-sm font-medium">Copy Generation Model</h3>
+        <div className="mb-6 space-y-3">
+          {SUMMARIZATION_MODELS.map((m) => (
+            <label
+              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              key={m.id}
+              style={
+                newspaperCopyModel === m.id
+                  ? {
+                      backgroundColor: 'var(--color-blue-50)',
+                      borderColor: 'var(--color-blue-500)',
+                    }
+                  : undefined
+              }
+            >
+              <input
+                checked={newspaperCopyModel === m.id}
+                className="h-4 w-4 accent-blue-600"
+                name="newspaper-copy-model"
+                onChange={() => setNewspaperCopyModel(m.id)}
+                type="radio"
+                value={m.id}
+              />
+              <div>
+                <div className="text-sm font-medium">{m.label}</div>
+                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <h3 className="mb-2 text-sm font-medium">Image Generation Model</h3>
+        <div>
+          <Input
+            onChange={(e) => setNewspaperImageModel(e.target.value)}
+            placeholder="e.g. amazon.nova-canvas-v1:0"
+            value={newspaperImageModel}
+          />
+        </div>
+      </div>
+
+      {/* Newspaper Copy Prompts */}
+      {newspaperCopyMeta != null && (
+        <PromptEditor
+          defaultSystemPrompt={newspaperCopyMeta.defaultSystemPrompt}
+          defaultUserPrompt={newspaperCopyMeta.defaultUserPrompt}
+          description="Prompts used for the daily digest, fake ads, company spotlights, and other text content."
+          onSystemPromptChange={setNewspaperCopySystemPrompt}
+          onUserPromptChange={setNewspaperCopyUserPrompt}
+          systemPrompt={newspaperCopySystemPrompt}
+          title="Newspaper Copy Prompts"
+          userPrompt={newspaperCopyUserPrompt}
+          variables={newspaperCopyMeta.variables}
+        />
+      )}
+
+      {/* Newspaper Editorial Prompts */}
+      {newspaperEditorialMeta != null && (
+        <PromptEditor
+          defaultSystemPrompt={newspaperEditorialMeta.defaultSystemPrompt}
+          defaultUserPrompt={newspaperEditorialMeta.defaultUserPrompt}
+          description="Optional override for the editorial. Uses persona rotation. Blank = uses default."
+          onSystemPromptChange={setNewspaperEditorialSystemPrompt}
+          onUserPromptChange={setNewspaperEditorialUserPrompt}
+          systemPrompt={newspaperEditorialSystemPrompt}
+          title="Newspaper Editorial Prompts (Override)"
+          userPrompt={newspaperEditorialUserPrompt}
+          variables={newspaperEditorialMeta.variables}
         />
       )}
 

@@ -12,6 +12,7 @@ import {
   getLatestEdition,
   listEditions,
   listImagesByType,
+  resetArticle,
 } from './repository.ts';
 import { getPortraitForPerson } from './portrait-assignment.ts';
 
@@ -234,6 +235,30 @@ newspaperRoutes.get('/images/library/:subpath{.+}', async (c) => {
   } catch {
     return c.json({ error: 'Not found' }, 404);
   }
+});
+
+/** POST /api/newspaper/edition/:date/regenerate/:slug — reset article to pending for regeneration */
+newspaperRoutes.post('/edition/:date/regenerate/:slug', async (c) => {
+  const date: string = c.req.param('date');
+  const slug: string = c.req.param('slug');
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const result = await withConn(async (conn) => {
+    const edition = await getEditionByDate(conn, date);
+    if (!edition) return null;
+    await resetArticle(conn, edition.id, slug);
+    const articles = await getArticlesByEdition(conn, edition.id);
+    const article = articles.find((a) => a.slug === slug);
+    return article ?? null;
+  });
+
+  if (result == null) {
+    return c.json({ error: 'Edition or article not found' }, 404);
+  }
+  return c.json({ success: true, article: result });
 });
 
 export { newspaperRoutes };

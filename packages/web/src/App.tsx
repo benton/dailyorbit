@@ -31,6 +31,9 @@ const NewsSourcesAdmin = lazy(() => import('./admin/NewsSourcesAdmin.tsx'));
 const ConsultantAdmin = lazy(() => import('./admin/ConsultantAdmin.tsx'));
 const HiddenItemsAdmin = lazy(() => import('./admin/HiddenItemsAdmin.tsx'));
 const BackupsPage = lazy(() => import('./admin/BackupsPage.tsx'));
+const EditionBrowser = lazy(() => import('./admin/newspaper/EditionBrowser.tsx'));
+const EditionDetail = lazy(() => import('./admin/newspaper/EditionDetail.tsx'));
+const PortraitLibrary = lazy(() => import('./admin/newspaper/PortraitLibrary.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
@@ -246,6 +249,30 @@ export default function App() {
                 </Suspense>
               }
               path="backups"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <EditionDetail />
+                </Suspense>
+              }
+              path="newspaper/:date"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <PortraitLibrary />
+                </Suspense>
+              }
+              path="newspaper/portraits"
+            />
+            <Route
+              element={
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <EditionBrowser />
+                </Suspense>
+              }
+              path="newspaper"
             />
           </Route>
         </Routes>
