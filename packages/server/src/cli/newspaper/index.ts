@@ -310,5 +310,122 @@ export const newspaperCommand = defineCommand({
         }
       },
     }),
+
+    'generate-library': defineCommand({
+      meta: {
+        name: 'generate-library',
+        description:
+          'Generate the static image library (portraits and section headers)',
+      },
+      args: {
+        database: databaseArg,
+        type: {
+          type: 'string',
+          description:
+            'What to generate: portraits, headers, or all (default: all)',
+          default: 'all',
+        },
+        start: {
+          type: 'string',
+          description: 'Start index for portrait generation (default: 0)',
+          default: '0',
+        },
+        limit: {
+          type: 'string',
+          description:
+            'Max portraits to generate in this run (default: unlimited)',
+          default: '',
+        },
+      },
+      async run({ args }) {
+        const log = getLogger();
+        const dbInstance = await createDb(args.database);
+        const conn: DuckDBConnection =
+          await DuckDBConnection.create(dbInstance);
+
+        try {
+          const { ensureNewspaperTables } =
+            await import('../../newspaper/schema.ts');
+          await ensureNewspaperTables(conn);
+
+          const { ConfigService } = await import('../../lib/config-service.ts');
+          const { setConfigService } = await import('../../lib/config.ts');
+          const { BedrockClient } =
+            await import('../../inference/bedrock-client.ts');
+          const { InstrumentedBedrockClient } =
+            await import('../../inference/instrumented-client.ts');
+
+          const config = new ConfigService(
+            dbInstance,
+            Buffer.from(
+              process.env.ENCRYPTION_KEY ?? 'dev-key-not-for-production',
+            ),
+          );
+          await config.load();
+          setConfigService(config);
+
+          const region: string = config.get('bedrockRegion') as string;
+          const imageClient = new InstrumentedBedrockClient(
+            new BedrockClient(region),
+            conn,
+            'newspaper',
+          );
+
+          const genType: string = args.type;
+
+          if (genType === 'portraits' || genType === 'all') {
+            const { generatePortraitLibrary } =
+              await import('../../newspaper/generators/portrait-library.ts');
+            const startIndex: number = parseInt(args.start, 10);
+            const opts: { startIndex: number; limit?: number } = {
+              startIndex,
+            };
+            if (args.limit) {
+              opts.limit = parseInt(args.limit, 10);
+            }
+
+            log.info('Generating portrait library...');
+            const result = await generatePortraitLibrary(
+              conn,
+              imageClient,
+              config,
+              (msg: string) => log.info(msg),
+              opts,
+            );
+            log.info(
+              `Portraits: ${String(result.generated)} generated, ${String(result.skipped)} skipped, ${String(result.failed)} failed`,
+            );
+          }
+
+          if (genType === 'headers' || genType === 'all') {
+            const { generateSectionHeaders } =
+              await import('../../newspaper/generators/section-headers.ts');
+
+            log.info('Generating section headers...');
+            const result = await generateSectionHeaders(
+              conn,
+              imageClient,
+              config,
+              (msg: string) => log.info(msg),
+            );
+            log.info(
+              `Headers: ${String(result.generated)} generated, ${String(result.skipped)} skipped, ${String(result.failed)} failed`,
+            );
+          }
+
+          if (
+            genType !== 'portraits' &&
+            genType !== 'headers' &&
+            genType !== 'all'
+          ) {
+            log.error(
+              `Unknown type: ${genType}. Use portraits, headers, or all.`,
+            );
+          }
+        } finally {
+          conn.closeSync();
+        }
+      },
+    }),
   },
 });

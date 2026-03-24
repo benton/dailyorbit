@@ -2,12 +2,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { ensureNewspaperTables } from './schema.ts';
 import {
+  countImagesByType,
   ensureEdition,
   getArticle,
   getArticlesByEdition,
   getEditionByDate,
+  getImageByPath,
   getLatestEdition,
+  insertImage,
   listEditions,
+  listImagesByType,
   resetArticle,
   updateEditionStatus,
   upsertArticle,
@@ -232,6 +236,142 @@ describe('newspaper repository', () => {
 
       const article = await getArticle(conn, edition.id, 'three-miles-up');
       expect(article!.status).toEqual('pending');
+    });
+  });
+
+  // ── Image Library CRUD ──────────────────────────────────────────
+
+  describe('insertImage', () => {
+    it('inserts and returns an image record with all fields', async () => {
+      const image = await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'data/newspaper/images/library/portraits/000.webp',
+        prompt: 'Steel engraving portrait bust, young man',
+        tags: ['standard', 'male', 'young'],
+        generatedBy: 'amazon.nova-canvas-v1:0',
+      });
+
+      expect(image.id).toBeGreaterThan(0);
+      expect(image.imageType).toEqual('portrait');
+      expect(image.imagePath).toEqual(
+        'data/newspaper/images/library/portraits/000.webp',
+      );
+      expect(image.prompt).toEqual('Steel engraving portrait bust, young man');
+      expect(image.tags).toEqual(['standard', 'male', 'young']);
+      expect(image.generatedBy).toEqual('amazon.nova-canvas-v1:0');
+    });
+
+    it('assigns unique sequential ids', async () => {
+      const a = await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'portraits/000.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+      const b = await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'portraits/001.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+
+      expect(b.id).toBeGreaterThan(a.id);
+    });
+  });
+
+  describe('getImageByPath', () => {
+    it('returns null when no image exists at path', async () => {
+      const result = await getImageByPath(conn, 'nonexistent.webp');
+      expect(result).toBeNull();
+    });
+
+    it('returns the image for a given path', async () => {
+      await insertImage(conn, {
+        imageType: 'section_header',
+        imagePath: 'headers/the-wire.webp',
+        prompt: 'banner prompt',
+        tags: [],
+        generatedBy: 'model-1',
+      });
+
+      const result = await getImageByPath(conn, 'headers/the-wire.webp');
+      expect(result).not.toBeNull();
+      expect(result!.imageType).toEqual('section_header');
+      expect(result!.imagePath).toEqual('headers/the-wire.webp');
+    });
+  });
+
+  describe('listImagesByType', () => {
+    it('returns only images of the requested type, ordered by id', async () => {
+      await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'portraits/000.webp',
+        prompt: null,
+        tags: ['standard'],
+        generatedBy: null,
+      });
+      await insertImage(conn, {
+        imageType: 'section_header',
+        imagePath: 'headers/the-wire.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+      await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'portraits/001.webp',
+        prompt: null,
+        tags: ['distinguished'],
+        generatedBy: null,
+      });
+
+      const portraits = await listImagesByType(conn, 'portrait');
+      expect(portraits).toHaveLength(2);
+      expect(portraits.map((p) => p.imagePath)).toEqual([
+        'portraits/000.webp',
+        'portraits/001.webp',
+      ]);
+
+      const headers = await listImagesByType(conn, 'section_header');
+      expect(headers).toHaveLength(1);
+      expect(headers[0]!.imagePath).toEqual('headers/the-wire.webp');
+    });
+
+    it('returns empty array when no images of the type exist', async () => {
+      const result = await listImagesByType(conn, 'portrait');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('countImagesByType', () => {
+    it('counts images of a given type', async () => {
+      await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'p/000.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+      await insertImage(conn, {
+        imageType: 'portrait',
+        imagePath: 'p/001.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+      await insertImage(conn, {
+        imageType: 'section_header',
+        imagePath: 'h/wire.webp',
+        prompt: null,
+        tags: [],
+        generatedBy: null,
+      });
+
+      expect(await countImagesByType(conn, 'portrait')).toEqual(2);
+      expect(await countImagesByType(conn, 'section_header')).toEqual(1);
+      expect(await countImagesByType(conn, 'logo')).toEqual(0);
     });
   });
 });

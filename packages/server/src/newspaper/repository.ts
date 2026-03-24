@@ -6,6 +6,7 @@ import type {
   NewspaperArticle,
   NewspaperContentType,
   NewspaperEdition,
+  NewspaperImage,
 } from './types.ts';
 
 // ── Row mappers ─────────────────────────────────────────────────────
@@ -228,4 +229,81 @@ export async function resetArticle(
      WHERE edition_id = ? AND slug = ?`,
     [editionId, slug] as DuckDBValue[],
   );
+}
+
+// ── Image Library CRUD ─────────────────────────────────────────────
+
+function rowToImage(r: Record<string, unknown>): NewspaperImage {
+  return {
+    id: Number(r.id),
+    imageType: String(r.image_type) as NewspaperImage['imageType'],
+    imagePath: String(r.image_path),
+    prompt: r.prompt != null ? String(r.prompt) : null,
+    tags: Array.isArray(r.tags) ? (r.tags as string[]).map(String) : [],
+    generatedBy: r.generated_by != null ? String(r.generated_by) : null,
+    createdAt: String(r.created_at),
+  };
+}
+
+export async function insertImage(
+  conn: DuckDBConnection,
+  image: Omit<NewspaperImage, 'id' | 'createdAt'>,
+): Promise<NewspaperImage> {
+  // DuckDB node API cannot bind array params directly; build tags literal in SQL.
+  const tagsLiteral: string =
+    image.tags.length > 0
+      ? `[${image.tags.map((t: string) => `'${t.replace(/'/g, "''")}'`).join(', ')}]::VARCHAR[]`
+      : `[]::VARCHAR[]`;
+
+  await conn.run(
+    `INSERT INTO newspaper_image (image_type, image_path, prompt, tags, generated_by)
+     VALUES (?, ?, ?, ${tagsLiteral}, ?)`,
+    [
+      image.imageType,
+      image.imagePath,
+      image.prompt,
+      image.generatedBy,
+    ] as DuckDBValue[],
+  );
+
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_image WHERE image_path = ?`,
+    [image.imagePath] as DuckDBValue[],
+  );
+  return rowToImage(reader.getRowObjectsJS()[0]!);
+}
+
+export async function getImageByPath(
+  conn: DuckDBConnection,
+  imagePath: string,
+): Promise<NewspaperImage | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_image WHERE image_path = ?`,
+    [imagePath] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToImage(rows[0]!);
+}
+
+export async function listImagesByType(
+  conn: DuckDBConnection,
+  imageType: string,
+): Promise<NewspaperImage[]> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM newspaper_image WHERE image_type = ? ORDER BY id ASC`,
+    [imageType] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().map(rowToImage);
+}
+
+export async function countImagesByType(
+  conn: DuckDBConnection,
+  imageType: string,
+): Promise<number> {
+  const reader = await conn.runAndReadAll(
+    `SELECT count(*)::INTEGER AS cnt FROM newspaper_image WHERE image_type = ?`,
+    [imageType] as DuckDBValue[],
+  );
+  return Number(reader.getRowObjectsJS()[0]!.cnt);
 }

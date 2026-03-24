@@ -8,9 +8,12 @@ import { ensureNewspaperTables } from './schema.ts';
 import {
   getArticlesByEdition,
   getEditionByDate,
+  getImageByPath,
   getLatestEdition,
   listEditions,
+  listImagesByType,
 } from './repository.ts';
+import { getPortraitForPerson } from './portrait-assignment.ts';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -132,6 +135,100 @@ newspaperRoutes.get('/images/:date/:filename', async (c) => {
         'Content-Type': contentType,
         'Content-Length': String(data.length),
         'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+});
+
+// ── Library routes (/api/newspaper/library) ──────────────────────────
+
+/** GET /api/newspaper/library/portraits — list all portraits */
+newspaperRoutes.get('/library/portraits', async (c) => {
+  const portraits = await withConn((conn) =>
+    listImagesByType(conn, 'portrait'),
+  );
+  return c.json(portraits);
+});
+
+/** GET /api/newspaper/library/portraits/:name — get portrait for a person name */
+newspaperRoutes.get('/library/portraits/:name', async (c) => {
+  const personName: string = decodeURIComponent(c.req.param('name'));
+
+  const portrait = await withConn((conn) =>
+    getPortraitForPerson(conn, personName),
+  );
+
+  if (portrait == null) {
+    return c.json({ error: 'Portrait library not generated' }, 404);
+  }
+  return c.json(portrait);
+});
+
+/** GET /api/newspaper/library/section-headers — list all section headers */
+newspaperRoutes.get('/library/section-headers', async (c) => {
+  const headers = await withConn((conn) =>
+    listImagesByType(conn, 'section_header'),
+  );
+  return c.json(headers);
+});
+
+/** GET /api/newspaper/library/section-headers/:name — get specific header by name */
+newspaperRoutes.get('/library/section-headers/:name', async (c) => {
+  const name: string = c.req.param('name');
+  const dataDir: string = resolve('data');
+  const imagePath: string = join(
+    dataDir,
+    'newspaper',
+    'images',
+    'library',
+    'headers',
+    `${name}.webp`,
+  );
+
+  const header = await withConn((conn) => getImageByPath(conn, imagePath));
+
+  if (header == null) {
+    return c.json({ error: 'Section header not found' }, 404);
+  }
+  return c.json(header);
+});
+
+/** GET /api/newspaper/images/library/:subpath+ — serve library images */
+newspaperRoutes.get('/images/library/:subpath{.+}', async (c) => {
+  const subpath: string = c.req.param('subpath');
+
+  // Reject path traversal
+  if (subpath.includes('..') || /[\\]/.test(subpath)) {
+    return c.json({ error: 'Invalid path' }, 400);
+  }
+
+  const filePath: string = join(IMAGES_ROOT, 'library', subpath);
+  const resolved: string = resolve(filePath);
+
+  if (!resolved.startsWith(IMAGES_ROOT)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  const ext: string = resolved.substring(resolved.lastIndexOf('.'));
+  const contentType: string | undefined = IMAGE_CONTENT_TYPES[ext];
+  if (contentType == null) {
+    return c.json({ error: 'Unsupported image type' }, 400);
+  }
+
+  try {
+    const info = await stat(resolved);
+    if (!info.isFile()) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const data: Buffer = await readFile(resolved);
+    return new Response(data, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(data.length),
+        'Cache-Control': 'public, max-age=604800',
       },
     });
   } catch {
