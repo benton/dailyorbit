@@ -37,36 +37,31 @@ export const newspaperCommand = defineCommand({
           await DuckDBConnection.create(dbInstance);
 
         try {
-          const { ensureNewspaperTables } = await import(
-            '../../newspaper/schema.ts'
-          );
+          const { ensureNewspaperTables } =
+            await import('../../newspaper/schema.ts');
           const { ensureNewsTables } = await import('../../news/schema.ts');
           await ensureNewspaperTables(conn);
           await ensureNewsTables(conn);
 
-          const { ensureEdition, upsertArticle } = await import(
-            '../../newspaper/repository.ts'
-          );
+          const { ensureEdition, upsertArticle } =
+            await import('../../newspaper/repository.ts');
           const edition = await ensureEdition(conn, editionDate);
-          log.info(`Edition: ${edition.editionDate} (id=${String(edition.id)})`);
+          log.info(
+            `Edition: ${edition.editionDate} (id=${String(edition.id)})`,
+          );
 
           if (args.type === 'daily_digest') {
-            const { generateDailyDigest } = await import(
-              '../../newspaper/generators/daily-digest.ts'
-            );
-            const { ConfigService } = await import(
-              '../../lib/config-service.ts'
-            );
+            const { generateDailyDigest } =
+              await import('../../newspaper/generators/daily-digest.ts');
+            const { ConfigService } =
+              await import('../../lib/config-service.ts');
             const { setConfigService } = await import('../../lib/config.ts');
-            const { BedrockClient } = await import(
-              '../../inference/bedrock-client.ts'
-            );
-            const { InstrumentedBedrockClient } = await import(
-              '../../inference/instrumented-client.ts'
-            );
-            const { InferenceService } = await import(
-              '../../inference/inference-service.ts'
-            );
+            const { BedrockClient } =
+              await import('../../inference/bedrock-client.ts');
+            const { InstrumentedBedrockClient } =
+              await import('../../inference/instrumented-client.ts');
+            const { InferenceService } =
+              await import('../../inference/inference-service.ts');
 
             const config = new ConfigService(
               dbInstance,
@@ -107,9 +102,7 @@ export const newspaperCommand = defineCommand({
             });
 
             log.info(`Generated: "${result.headline}"`);
-            log.info(
-              `Body length: ${String(result.body.length)} characters`,
-            );
+            log.info(`Body length: ${String(result.body.length)} characters`);
           } else {
             log.error(`Unknown content type: ${args.type}`);
           }
@@ -144,14 +137,12 @@ export const newspaperCommand = defineCommand({
           await DuckDBConnection.create(dbInstance);
 
         try {
-          const { ensureNewspaperTables } = await import(
-            '../../newspaper/schema.ts'
-          );
+          const { ensureNewspaperTables } =
+            await import('../../newspaper/schema.ts');
           await ensureNewspaperTables(conn);
 
-          const { getEditionByDate, resetArticle } = await import(
-            '../../newspaper/repository.ts'
-          );
+          const { getEditionByDate, resetArticle } =
+            await import('../../newspaper/repository.ts');
           const edition = await getEditionByDate(conn, args.date);
           if (!edition) {
             log.error(`No edition found for ${args.date}`);
@@ -190,12 +181,12 @@ export const newspaperCommand = defineCommand({
           await DuckDBConnection.create(dbInstance);
 
         try {
-          const { ensureNewspaperTables } = await import(
-            '../../newspaper/schema.ts'
-          );
+          const { ensureNewspaperTables } =
+            await import('../../newspaper/schema.ts');
           await ensureNewspaperTables(conn);
 
-          const { listEditions } = await import('../../newspaper/repository.ts');
+          const { listEditions } =
+            await import('../../newspaper/repository.ts');
           const editions = await listEditions(conn, limit, 0);
 
           if (editions.length === 0) {
@@ -234,14 +225,12 @@ export const newspaperCommand = defineCommand({
           await DuckDBConnection.create(dbInstance);
 
         try {
-          const { ensureNewspaperTables } = await import(
-            '../../newspaper/schema.ts'
-          );
+          const { ensureNewspaperTables } =
+            await import('../../newspaper/schema.ts');
           await ensureNewspaperTables(conn);
 
-          const { getEditionByDate, getArticlesByEdition } = await import(
-            '../../newspaper/repository.ts'
-          );
+          const { getEditionByDate, getArticlesByEdition } =
+            await import('../../newspaper/repository.ts');
           const edition = await getEditionByDate(conn, args.date);
           if (!edition) {
             log.info(`No edition found for ${args.date}`);
@@ -249,9 +238,7 @@ export const newspaperCommand = defineCommand({
           }
 
           log.info(`\n=== The Daily Orbit — ${edition.editionDate} ===`);
-          log.info(
-            `Type: ${edition.editionType}  Status: ${edition.status}\n`,
-          );
+          log.info(`Type: ${edition.editionType}  Status: ${edition.status}\n`);
 
           const articles = await getArticlesByEdition(conn, edition.id);
           if (articles.length === 0) {

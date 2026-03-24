@@ -133,7 +133,8 @@ describe('generateDailyDigest', () => {
       conn,
       editionId: 1,
       editionDate: '2026-03-24',
-      inferenceService: inferenceService as unknown as GenerateOptions['inferenceService'],
+      inferenceService:
+        inferenceService as unknown as GenerateOptions['inferenceService'],
       config: config as unknown as GenerateOptions['config'],
       log: vi.fn(),
     });
@@ -164,7 +165,8 @@ describe('generateDailyDigest', () => {
       conn,
       editionId: 1,
       editionDate: '2026-03-24',
-      inferenceService: inferenceService as unknown as GenerateOptions['inferenceService'],
+      inferenceService:
+        inferenceService as unknown as GenerateOptions['inferenceService'],
       config: config as unknown as GenerateOptions['config'],
       log: vi.fn(),
     });
@@ -199,7 +201,8 @@ describe('generateDailyDigest', () => {
       [sourceId],
     );
 
-    const responseText: string = '# Industry Shakeup\n\nViasat continues merger talks.';
+    const responseText: string =
+      '# Industry Shakeup\n\nViasat continues merger talks.';
     const inferenceService = makeMockInferenceService(responseText);
     const config = makeMockConfig();
 
@@ -207,7 +210,8 @@ describe('generateDailyDigest', () => {
       conn,
       editionId: 1,
       editionDate: '2026-03-24',
-      inferenceService: inferenceService as unknown as GenerateOptions['inferenceService'],
+      inferenceService:
+        inferenceService as unknown as GenerateOptions['inferenceService'],
       config: config as unknown as GenerateOptions['config'],
       log: vi.fn(),
     });

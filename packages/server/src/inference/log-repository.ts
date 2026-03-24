@@ -9,7 +9,11 @@ import { computeCost } from './pricing.ts';
 
 export type InferenceLogEntry = {
   readonly modelId: string;
-  readonly operation: 'converse' | 'converse_stream' | 'embed';
+  readonly operation:
+    | 'converse'
+    | 'converse_stream'
+    | 'embed'
+    | 'generate_image';
   readonly caller?: string | undefined;
   readonly userId?: string | undefined;
   readonly conversationId?: string | undefined;

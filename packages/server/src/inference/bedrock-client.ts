@@ -11,6 +11,8 @@ import {
 import type {
   EmbeddingRequest,
   EmbeddingResponse,
+  ImageGenerationRequest,
+  ImageGenerationResponse,
   InferenceRequest,
   InferenceResponse,
 } from './types.ts';
@@ -79,6 +81,7 @@ export type BedrockClientLike = {
     input: ConverseStreamCommandInput,
   ): AsyncGenerator<ConverseStreamOutput>;
   embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
+  generateImage(req: ImageGenerationRequest): Promise<ImageGenerationResponse>;
 };
 
 /** Thin wrapper around BedrockRuntimeClient that calls Converse. */
@@ -128,6 +131,46 @@ export class BedrockClient implements BedrockClientLike {
     return {
       embedding: parsed.embedding,
       inputTokenCount: parsed.inputTextTokenCount,
+      latencyMs,
+    };
+  }
+
+  /** Generate images using a Nova Canvas / Titan Image model via InvokeModel. */
+  async generateImage(
+    req: ImageGenerationRequest,
+  ): Promise<ImageGenerationResponse> {
+    const body: string = JSON.stringify({
+      taskType: 'TEXT_IMAGE',
+      textToImageParams: {
+        text: req.prompt,
+        negativeText:
+          req.negativePrompt ?? 'photograph, realistic, color, modern, blurry',
+      },
+      imageGenerationConfig: {
+        numberOfImages: req.numberOfImages ?? 1,
+        width: req.width ?? 1024,
+        height: req.height ?? 768,
+        cfgScale: req.cfgScale ?? 8,
+        ...(req.seed != null ? { seed: req.seed } : {}),
+      },
+    });
+
+    const start: number = performance.now();
+    const command = new InvokeModelCommand({
+      modelId: req.modelId,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: new TextEncoder().encode(body),
+    });
+
+    const response = await this.client.send(command);
+    const latencyMs: number = Math.round(performance.now() - start);
+    const parsed: { images: string[] } = JSON.parse(
+      new TextDecoder().decode(response.body),
+    );
+
+    return {
+      images: parsed.images.map((b64: string) => Buffer.from(b64, 'base64')),
       latencyMs,
     };
   }

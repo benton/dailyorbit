@@ -78,3 +78,31 @@ export type EmbeddingResponse = {
   /** Wall-clock latency in milliseconds. */
   readonly latencyMs: number;
 };
+
+/** A request to generate images via Bedrock. */
+export type ImageGenerationRequest = {
+  /** Bedrock image model ID (e.g. amazon.nova-canvas-v1:0). */
+  readonly modelId: string;
+  /** Text prompt describing the desired image. */
+  readonly prompt: string;
+  /** Text describing what to avoid in the image. */
+  readonly negativePrompt?: string;
+  /** Image width in pixels. Default 1024. */
+  readonly width?: number;
+  /** Image height in pixels. Default 768. */
+  readonly height?: number;
+  /** Number of images to generate. Default 1. */
+  readonly numberOfImages?: number;
+  /** Classifier-free guidance scale. Default 8. */
+  readonly cfgScale?: number;
+  /** Random seed for reproducibility. */
+  readonly seed?: number;
+};
+
+/** The response from an image generation call. */
+export type ImageGenerationResponse = {
+  /** Generated image data as PNG/WebP buffers. */
+  readonly images: Buffer[];
+  /** Wall-clock latency in milliseconds. */
+  readonly latencyMs: number;
+};

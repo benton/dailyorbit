@@ -9,7 +9,12 @@ import type {
 import { ensureInferenceLogTable } from './schema.ts';
 import { InstrumentedBedrockClient } from './instrumented-client.ts';
 import type { BedrockClientLike } from './bedrock-client.ts';
-import type { EmbeddingRequest, EmbeddingResponse } from './types.ts';
+import type {
+  EmbeddingRequest,
+  EmbeddingResponse,
+  ImageGenerationRequest,
+  ImageGenerationResponse,
+} from './types.ts';
 
 // ---------------------------------------------------------------------------
 // Mock inner client
@@ -66,6 +71,10 @@ function createMockClient(overrides?: {
 
     async embed(): Promise<EmbeddingResponse> {
       return embedResult;
+    },
+
+    async generateImage(): Promise<ImageGenerationResponse> {
+      return { images: [Buffer.from('fake-png')], latencyMs: 150 };
     },
   };
 }
@@ -252,6 +261,37 @@ describe('InstrumentedBedrockClient', () => {
       const rows: LogRow[] = await readLogRows(conn);
       expect(rows).toHaveLength(1);
       expect(rows[0]!.caller).toEqual('lazy');
+    });
+  });
+
+  describe('generateImage', () => {
+    it('delegates to inner client and logs image generation', async () => {
+      const inner: BedrockClientLike = createMockClient();
+      const client = new InstrumentedBedrockClient(inner, conn, 'newspaper');
+
+      const req: ImageGenerationRequest = {
+        modelId: 'amazon.nova-canvas-v1:0',
+        prompt: 'A steel engraving of a satellite',
+        numberOfImages: 2,
+      };
+
+      const result: ImageGenerationResponse = await client.generateImage(req);
+      expect(result.images).toHaveLength(1);
+      expect(result.images[0]).toEqual(Buffer.from('fake-png'));
+
+      // Wait for async log write
+      await new Promise((r) => setTimeout(r, 50));
+
+      const rows: LogRow[] = await readLogRows(conn);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toEqual({
+        modelId: 'amazon.nova-canvas-v1:0',
+        operation: 'generate_image',
+        caller: 'newspaper',
+        userId: null,
+        inputTokens: 0,
+        outputTokens: 2,
+      });
     });
   });
 

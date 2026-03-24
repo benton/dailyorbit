@@ -846,7 +846,10 @@ const STAGES: PipelineStage[] = [
 
       const today: string = new Date().toISOString().split('T')[0]!;
       const edition = await ensureEdition(ctx.conn, today);
-      ctx.log('info', `Edition ${edition.editionDate}: status=${edition.status}`);
+      ctx.log(
+        'info',
+        `Edition ${edition.editionDate}: status=${edition.status}`,
+      );
       return {
         itemsProcessed: 1,
         itemsFailed: 0,
@@ -864,19 +867,15 @@ const STAGES: PipelineStage[] = [
     parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
-      const { getEditionByDate, upsertArticle, getArticle } = await import(
-        '../newspaper/repository.ts'
-      );
-      const { generateDailyDigest } = await import(
-        '../newspaper/generators/daily-digest.ts'
-      );
+      const { getEditionByDate, upsertArticle, getArticle } =
+        await import('../newspaper/repository.ts');
+      const { generateDailyDigest } =
+        await import('../newspaper/generators/daily-digest.ts');
       const { getConfigService } = await import('../lib/config.ts');
-      const { InferenceService } = await import(
-        '../inference/inference-service.ts'
-      );
-      const { InstrumentedBedrockClient } = await import(
-        '../inference/instrumented-client.ts'
-      );
+      const { InferenceService } =
+        await import('../inference/inference-service.ts');
+      const { InstrumentedBedrockClient } =
+        await import('../inference/instrumented-client.ts');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
       const start: number = Date.now();
       await ensureNewspaperTables(ctx.conn);
@@ -894,11 +893,7 @@ const STAGES: PipelineStage[] = [
       }
 
       // Skip if already generated
-      const existing = await getArticle(
-        ctx.conn,
-        edition.id,
-        'three-miles-up',
-      );
+      const existing = await getArticle(ctx.conn, edition.id, 'three-miles-up');
       if (existing?.status === 'generated') {
         ctx.log('info', 'Daily digest already generated — skipping');
         return {
@@ -935,6 +930,88 @@ const STAGES: PipelineStage[] = [
         sourceData: JSON.stringify(result.sourceData),
         generatedBy: config.get('newspaperCopyModel') as string,
         displayOrder: 1,
+        status: 'generated',
+      });
+
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+      };
+    },
+  },
+  {
+    id: 'newspaper.hero-image',
+    group: 'newspaper',
+    name: 'Hero Image',
+    description: 'Generate front-page steel engraving from daily digest',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
+      const { getEditionByDate, upsertArticle, getArticle } =
+        await import('../newspaper/repository.ts');
+      const { generateHeroImage } =
+        await import('../newspaper/generators/hero-image.ts');
+      const { getConfigService } = await import('../lib/config.ts');
+      const { InstrumentedBedrockClient } =
+        await import('../inference/instrumented-client.ts');
+      const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const start: number = Date.now();
+      await ensureNewspaperTables(ctx.conn);
+
+      const today: string = new Date().toISOString().split('T')[0]!;
+      const edition = await getEditionByDate(ctx.conn, today);
+      if (!edition) {
+        ctx.log('info', 'No edition for today — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      // Skip if already generated
+      const existing = await getArticle(ctx.conn, edition.id, 'hero-image');
+      if (existing?.status === 'generated') {
+        ctx.log('info', 'Hero image already generated — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const config = getConfigService();
+      const region: string = config.get('bedrockRegion') as string;
+      const imageClient = new InstrumentedBedrockClient(
+        new BedrockClient(region),
+        ctx.conn,
+        'newspaper',
+      );
+
+      const result = await generateHeroImage({
+        conn: ctx.conn,
+        editionId: edition.id,
+        editionDate: today,
+        inferenceService: null as never, // not used by hero image generator
+        config,
+        imageClient,
+        log: ctx.log,
+      });
+
+      await upsertArticle(ctx.conn, edition.id, {
+        contentType: 'hero_image',
+        slug: 'hero-image',
+        headline: '',
+        body: '',
+        imagePath: result.imagePath ?? null,
+        imagePrompt: result.imagePrompt ?? null,
+        sourceData: JSON.stringify(result.sourceData),
+        generatedBy: config.get('newspaperImageModel') as string,
+        displayOrder: 0,
         status: 'generated',
       });
 
@@ -996,7 +1073,11 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
   {
     id: 'newspaper',
     name: 'Newspaper',
-    stageIds: ['newspaper.ensure-edition', 'newspaper.daily-digest'],
+    stageIds: [
+      'newspaper.ensure-edition',
+      'newspaper.daily-digest',
+      'newspaper.hero-image',
+    ],
   },
 ];
 

@@ -6,7 +6,12 @@ import type {
 } from '@aws-sdk/client-bedrock-runtime';
 import type { DuckDBConnection } from '@duckdb/node-api';
 import type { BedrockClientLike } from './bedrock-client.ts';
-import type { EmbeddingRequest, EmbeddingResponse } from './types.ts';
+import type {
+  EmbeddingRequest,
+  EmbeddingResponse,
+  ImageGenerationRequest,
+  ImageGenerationResponse,
+} from './types.ts';
 import { logInference } from './log-repository.ts';
 
 /**
@@ -105,10 +110,31 @@ export class InstrumentedBedrockClient implements BedrockClientLike {
     return result;
   }
 
+  async generateImage(
+    req: ImageGenerationRequest,
+  ): Promise<ImageGenerationResponse> {
+    const start: number = performance.now();
+    const result: ImageGenerationResponse = await this.inner.generateImage(req);
+    const latencyMs: number = Math.round(performance.now() - start);
+
+    this.logEntry({
+      modelId: req.modelId,
+      operation: 'generate_image',
+      caller: this.caller,
+      userId: this.userId,
+      conversationId: this.conversationId,
+      inputTokens: 0,
+      outputTokens: req.numberOfImages ?? 1,
+      latencyMs,
+    });
+
+    return result;
+  }
+
   /** Fire-and-forget log write. Errors are swallowed to avoid breaking the caller. */
   private logEntry(entry: {
     modelId: string;
-    operation: 'converse' | 'converse_stream' | 'embed';
+    operation: 'converse' | 'converse_stream' | 'embed' | 'generate_image';
     caller?: string | undefined;
     userId?: string | undefined;
     conversationId?: string | undefined;

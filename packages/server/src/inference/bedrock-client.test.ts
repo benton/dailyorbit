@@ -186,3 +186,102 @@ describe('BedrockClient.converseStream', () => {
     expect(collected).toHaveLength(0);
   });
 });
+
+describe('BedrockClient.generateImage', () => {
+  const FAKE_PNG: Buffer = Buffer.from('fake-png-data');
+  const FAKE_B64: string = FAKE_PNG.toString('base64');
+
+  /** Last body sent to the mock SDK client, for assertion. */
+  let lastSentBody: Record<string, unknown> = {};
+
+  function buildMockImageClient(responseImages: string[]): BedrockClient {
+    const client = new BedrockClient('us-east-2');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (client as any).client = {
+      send: async (cmd: any) => {
+        lastSentBody = JSON.parse(new TextDecoder().decode(cmd.input.body));
+        return {
+          body: new TextEncoder().encode(
+            JSON.stringify({ images: responseImages }),
+          ),
+          $metadata: {},
+        };
+      },
+    };
+    return client;
+  }
+
+  it('constructs correct InvokeModel body and decodes base64 response', async () => {
+    const client: BedrockClient = buildMockImageClient([FAKE_B64]);
+    const result = await client.generateImage({
+      modelId: 'amazon.nova-canvas-v1:0',
+      prompt: 'A steel engraving of a satellite dish',
+      negativePrompt: 'color, blurry',
+      width: 1024,
+      height: 768,
+      seed: 42,
+    });
+
+    // Verify response
+    expect(result.images).toHaveLength(1);
+    expect(result.images[0]).toEqual(FAKE_PNG);
+    expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+
+    // Verify request body structure
+    const body = lastSentBody;
+    expect(body).toEqual({
+      taskType: 'TEXT_IMAGE',
+      textToImageParams: {
+        text: 'A steel engraving of a satellite dish',
+        negativeText: 'color, blurry',
+      },
+      imageGenerationConfig: {
+        numberOfImages: 1,
+        width: 1024,
+        height: 768,
+        cfgScale: 8,
+        seed: 42,
+      },
+    });
+  });
+
+  it('applies default values when optional params omitted', async () => {
+    const client: BedrockClient = buildMockImageClient([FAKE_B64]);
+    await client.generateImage({
+      modelId: 'amazon.nova-canvas-v1:0',
+      prompt: 'A test prompt',
+    });
+
+    const body = lastSentBody as Record<string, Record<string, unknown>>;
+    expect(body.textToImageParams!.negativeText).toEqual(
+      'photograph, realistic, color, modern, blurry',
+    );
+    expect(body.imageGenerationConfig).toEqual({
+      numberOfImages: 1,
+      width: 1024,
+      height: 768,
+      cfgScale: 8,
+    });
+    // No seed key when not provided
+    expect(body.imageGenerationConfig).not.toHaveProperty('seed');
+  });
+
+  it('decodes multiple images from response', async () => {
+    const img1: Buffer = Buffer.from('image-one');
+    const img2: Buffer = Buffer.from('image-two');
+    const client: BedrockClient = buildMockImageClient([
+      img1.toString('base64'),
+      img2.toString('base64'),
+    ]);
+
+    const result = await client.generateImage({
+      modelId: 'amazon.nova-canvas-v1:0',
+      prompt: 'Two images please',
+      numberOfImages: 2,
+    });
+
+    expect(result.images).toHaveLength(2);
+    expect(result.images[0]).toEqual(img1);
+    expect(result.images[1]).toEqual(img2);
+  });
+});

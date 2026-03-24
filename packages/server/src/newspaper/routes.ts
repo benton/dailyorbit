@@ -1,3 +1,5 @@
+import { readFile, stat } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { Hono } from 'hono';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { getDb } from '../lib/db.ts';
@@ -74,6 +76,67 @@ newspaperRoutes.get('/editions', async (c) => {
 
   const editions = await withConn((conn) => listEditions(conn, limit, offset));
   return c.json(editions);
+});
+
+/** Content-type map for image extensions we serve. */
+const IMAGE_CONTENT_TYPES: Record<string, string> = {
+  '.webp': 'image/webp',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+};
+
+/** Base directory for generated newspaper images. */
+const IMAGES_ROOT: string = resolve('data', 'newspaper', 'images');
+
+/**
+ * GET /api/newspaper/images/:date/:filename — serve generated images.
+ * Only allows date-directory/filename pattern; prevents directory traversal.
+ */
+newspaperRoutes.get('/images/:date/:filename', async (c) => {
+  const date: string = c.req.param('date');
+  const filename: string = c.req.param('filename');
+
+  // Validate date format and filename (no path separators)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format' }, 400);
+  }
+  if (/[/\\]/.test(filename) || filename.includes('..')) {
+    return c.json({ error: 'Invalid filename' }, 400);
+  }
+
+  const filePath: string = join(IMAGES_ROOT, date, filename);
+  const resolved: string = resolve(filePath);
+
+  // Directory traversal guard: resolved path must be under IMAGES_ROOT
+  if (!resolved.startsWith(IMAGES_ROOT)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  // Determine content type from extension
+  const ext: string = filename.substring(filename.lastIndexOf('.'));
+  const contentType: string | undefined = IMAGE_CONTENT_TYPES[ext];
+  if (contentType == null) {
+    return c.json({ error: 'Unsupported image type' }, 400);
+  }
+
+  try {
+    const info = await stat(resolved);
+    if (!info.isFile()) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const data: Buffer = await readFile(resolved);
+    return new Response(data, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(data.length),
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
 });
 
 export { newspaperRoutes };

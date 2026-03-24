@@ -29,6 +29,10 @@ const PRICING: Record<string, ModelPricing> = {
 
   // Amazon Titan Embed
   'amazon.titan-embed-text-v2:0': { inputPer1k: 0.00002, outputPer1k: 0 },
+
+  // Image generation (outputTokens tracks image count, so outputPer1k = cost per 1k images)
+  'amazon.nova-canvas-v1:0': { inputPer1k: 0, outputPer1k: 8.0 },
+  'amazon.titan-image-generator-v2:0': { inputPer1k: 0, outputPer1k: 8.0 },
 };
 
 /**

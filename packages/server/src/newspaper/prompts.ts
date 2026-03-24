@@ -13,8 +13,7 @@ export const NEWSPAPER_COPY_VARIABLES: ReadonlyArray<TemplateVariable> = [
     name: 'filingSummaries',
     description: 'Markdown list of recent notable filings with summaries',
     source: 'db query',
-    example:
-      '- SAT-LOA-20260324-00042: Hughes Network Systems filed...',
+    example: '- SAT-LOA-20260324-00042: Hughes Network Systems filed...',
   },
   {
     name: 'newsSummaries',
