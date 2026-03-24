@@ -65,8 +65,14 @@ export default function App() {
       <SettingsProvider>
         <Routes>
           <Route element={<LoginPage />} path="/login" />
-          {/* Public routes — no auth required */}
-          <Route element={<PublicLayout />}>
+          {/* All routes require authentication */}
+          <Route
+            element={
+              <RequireAuth>
+                <PublicLayout />
+              </RequireAuth>
+            }
+          >
             <Route
               element={
                 <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
@@ -120,45 +126,31 @@ export default function App() {
               }
               path="/news/:id"
             />
-            {/* Auth-required user pages */}
             <Route
               element={
-                <RequireAuth>
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <ChatPage />
-                  </Suspense>
-                </RequireAuth>
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <ChatPage />
+                </Suspense>
               }
               path="/chat"
             />
             <Route
               element={
-                <RequireAuth>
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <AlertsPage />
-                  </Suspense>
-                </RequireAuth>
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <AlertsPage />
+                </Suspense>
               }
               path="/alerts"
             />
             <Route
               element={
-                <RequireAuth>
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <UserHomePage />
-                  </Suspense>
-                </RequireAuth>
+                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                  <UserHomePage />
+                </Suspense>
               }
               path="/filings/unread"
             />
-            <Route
-              element={
-                <RequireAuth>
-                  <ProfilePage />
-                </RequireAuth>
-              }
-              path="/profile"
-            />
+            <Route element={<ProfilePage />} path="/profile" />
           </Route>
           {/* Admin routes */}
           <Route

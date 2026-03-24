@@ -57,30 +57,9 @@ app.use('*', requestLogger(getLogger()));
 
 app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
-// Protected API routes — require authentication
-// Public endpoints are exempted: health, auth, stats, filings, satellites,
-// earth-stations, search, autocomplete, companies (pregenerated content).
-// User-specific and admin endpoints still require auth.
-const publicPrefixes: string[] = [
-  '/api/health',
-  '/api/auth/',
-  '/api/stats',
-  '/api/filings',
-  '/api/satellites',
-  '/api/earth-stations',
-  '/api/search',
-  '/api/autocomplete',
-  '/api/companies',
-  '/api/news',
-  '/api/consultants',
-];
-app.use('/api/*', async (c, next) => {
-  const path: string = c.req.path;
-  if (publicPrefixes.some((prefix: string) => path.startsWith(prefix))) {
-    return next();
-  }
-  return requireAuth()(c, next);
-});
+// Protected API routes — require authentication for ALL endpoints.
+// Only /api/health and /api/auth/* (handled above) are exempt.
+app.use('/api/*', requireAuth());
 
 // Admin routes — require admin role
 app.use('/api/admin/*', requireAdmin());

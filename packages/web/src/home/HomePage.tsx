@@ -376,23 +376,20 @@ export default function HomePage() {
     };
   }, []);
 
-  const checkFlaggedKeys = useCallback(
-    async (keys: Array<string>): Promise<void> => {
-      if (keys.length === 0) {
-        return;
-      }
-      try {
-        const result = await apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
-          body: JSON.stringify({ content_keys: keys, content_type: 'filing' }),
-          method: 'POST',
-        });
-        setFlaggedKeys(new Set(result.flagged));
-      } catch {
-        // Silently ignore — flag state is non-critical
-      }
-    },
-    [],
-  );
+  const checkFlaggedKeys = useCallback(async (keys: Array<string>): Promise<void> => {
+    if (keys.length === 0) {
+      return;
+    }
+    try {
+      const result = await apiFetch<{ flagged: Array<string> }>('/api/user/flags/bulk-check', {
+        body: JSON.stringify({ content_keys: keys, content_type: 'filing' }),
+        method: 'POST',
+      });
+      setFlaggedKeys(new Set(result.flagged));
+    } catch {
+      // Silently ignore — flag state is non-critical
+    }
+  }, []);
 
   // Today's filings
   useEffect(() => {
