@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import MastheadFilingVolume from './MastheadFilingVolume.tsx';
+import MastheadWeather from './MastheadWeather.tsx';
 import { libraryImageUrl } from './types.ts';
 
 type MastheadProps = {
@@ -10,8 +11,7 @@ function formatDateLine(dateStr: string): string {
   const date: Date = new Date(dateStr + 'T12:00:00');
   const volume: number = date.getFullYear() - 2025;
   const startOfYear: Date = new Date(date.getFullYear(), 0, 1);
-  const dayOfYear: number =
-    Math.floor((date.getTime() - startOfYear.getTime()) / 86_400_000) + 1;
+  const dayOfYear: number = Math.floor((date.getTime() - startOfYear.getTime()) / 86_400_000) + 1;
   const formatted: string = date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -24,7 +24,11 @@ function formatDateLine(dateStr: string): string {
 function roman(n: number): string {
   if (n <= 0) return 'I';
   const vals: Array<[number, string]> = [
-    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
   ];
   let result: string = '';
   let remaining: number = n;
@@ -42,7 +46,9 @@ export default function Masthead({ editionDate }: MastheadProps) {
 
   return (
     <header className="masthead">
-      <div className="masthead-wing masthead-wing-left" />
+      <div className="masthead-wing masthead-wing-left">
+        <MastheadWeather editionDate={editionDate} />
+      </div>
       <div className="masthead-center">
         <h1 className="masthead-title">The Daily Orbit</h1>
         {!emblemFailed && (

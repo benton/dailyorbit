@@ -8,11 +8,7 @@ type ArticleBodyProps = {
 };
 
 export default function ArticleBody({ body, className, dropCap, headline }: ArticleBodyProps) {
-  const classes: string = [
-    'article-body',
-    dropCap ? 'drop-cap' : '',
-    className ?? '',
-  ]
+  const classes: string = ['article-body', dropCap ? 'drop-cap' : '', className ?? '']
     .filter(Boolean)
     .join(' ');
 

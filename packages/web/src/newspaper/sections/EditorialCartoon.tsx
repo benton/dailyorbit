@@ -1,5 +1,5 @@
-import SectionHeader from '../SectionHeader.tsx';
 import type { Article } from '../types.ts';
+import SectionHeader from '../SectionHeader.tsx';
 import { editionImageUrl } from '../types.ts';
 
 type EditorialCartoonProps = {

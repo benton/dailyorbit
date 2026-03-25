@@ -1,7 +1,6 @@
 import Markdown from 'react-markdown';
-
-import SectionHeader from '../SectionHeader.tsx';
 import type { Article } from '../types.ts';
+import SectionHeader from '../SectionHeader.tsx';
 
 type ClassifiedsProps = {
   article: Article;

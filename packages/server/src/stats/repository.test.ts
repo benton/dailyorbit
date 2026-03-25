@@ -7,6 +7,7 @@ import {
   getDbSizeBytes,
   getFilingCount,
   getFilingsBySubsystem,
+  getRandomOrbitLocation,
   getYearlyFilingVolume,
   getTopApplicants,
 } from './repository.ts';
@@ -20,6 +21,16 @@ const CREATE_FILING_TABLE: string = `
     date_filed DATE,
     address_attention VARCHAR,
     status_code VARCHAR
+  )`;
+
+const CREATE_SPACE_STATION_TABLE: string = `
+  CREATE TABLE IF NOT EXISTS space_station (
+    space_station_key INTEGER NOT NULL PRIMARY KEY,
+    us_name VARCHAR NOT NULL,
+    itu_name VARCHAR,
+    orbit_location VARCHAR,
+    "verbose" VARCHAR,
+    inactive_date TIMESTAMP
   )`;
 
 const CREATE_ATTACHMENT_TABLE: string = `
@@ -41,6 +52,7 @@ describe('stats repository', () => {
     conn = await DuckDBConnection.create(db);
     await conn.run(CREATE_FILING_TABLE);
     await conn.run(CREATE_ATTACHMENT_TABLE);
+    await conn.run(CREATE_SPACE_STATION_TABLE);
   });
 
   afterEach(() => {
@@ -290,6 +302,38 @@ describe('stats repository', () => {
         { year: '1970', subsystem_code: 'SAT', count: 1 },
         { year: '2024', subsystem_code: 'SAT', count: 1 },
       ]);
+    });
+  });
+
+  describe('getRandomOrbitLocation', () => {
+    it('returns null when no active satellites exist', async () => {
+      const result = await getRandomOrbitLocation(conn);
+      expect(result).toEqual(null);
+    });
+
+    it('returns a random active satellite with orbit location', async () => {
+      await conn.run(`INSERT INTO space_station VALUES
+        (1, 'SATMEX-5', 'SATMEX-5', '116.8°W', NULL, NULL),
+        (2, 'INACTIVE-SAT', 'INACTIVE', '90.0°E', NULL, '2020-01-01')`);
+      const result = await getRandomOrbitLocation(conn);
+      expect(result).toEqual({ name: 'SATMEX-5', location: '116.8°W' });
+    });
+
+    it('excludes satellites with null orbit_location', async () => {
+      await conn.run(`INSERT INTO space_station VALUES
+        (1, 'NO-ORBIT', 'NO-ORBIT', NULL, NULL, NULL)`);
+      const result = await getRandomOrbitLocation(conn);
+      expect(result).toEqual(null);
+    });
+
+    it('returns one of the active satellites when multiple exist', async () => {
+      await conn.run(`INSERT INTO space_station VALUES
+        (1, 'SAT-A', 'SAT-A', '100.0°W', NULL, NULL),
+        (2, 'SAT-B', 'SAT-B', '50.0°E', NULL, NULL)`);
+      const result = await getRandomOrbitLocation(conn);
+      expect(result).not.toEqual(null);
+      expect(['SAT-A', 'SAT-B']).toContain(result!.name);
+      expect(['100.0°W', '50.0°E']).toContain(result!.location);
     });
   });
 });

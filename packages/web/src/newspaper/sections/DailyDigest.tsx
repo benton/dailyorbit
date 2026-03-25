@@ -1,6 +1,6 @@
+import type { Article } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import SectionHeader from '../SectionHeader.tsx';
-import type { Article } from '../types.ts';
 import { editionImageUrl } from '../types.ts';
 
 type DailyDigestProps = {
@@ -10,7 +10,12 @@ type DailyDigestProps = {
   heroImage: Article | undefined;
 };
 
-export default function DailyDigest({ article, cartoon, editionDate, heroImage }: DailyDigestProps) {
+export default function DailyDigest({
+  article,
+  cartoon,
+  editionDate,
+  heroImage,
+}: DailyDigestProps) {
   return (
     <div className="grid-lead">
       <SectionHeader name="three-miles-up" />

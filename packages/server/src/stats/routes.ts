@@ -15,6 +15,7 @@ import {
   getWeeklyFilingVolume,
   getYearlyFilingVolume,
   getTopApplicants,
+  getRandomOrbitLocation,
 } from './repository.ts';
 import { trackConnection } from '../lib/graceful-shutdown.ts';
 
@@ -187,6 +188,126 @@ publicStatsRoutes.get('/weekly-filing-volume', async (c) => {
   try {
     const volume = await getWeeklyFilingVolume(conn, mondayStr, fridayStr);
     return c.json(volume);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+// ── Weather cache (1-hour TTL) ──────────────────────────────────────
+
+type WeatherCache = {
+  data: { temp: number; condition: string };
+  fetchedAt: number;
+};
+
+const WEATHER_CACHE_TTL_MS: number = 60 * 60 * 1000;
+let weatherCache: WeatherCache | null = null;
+
+const WMO_CONDITIONS: Record<number, { label: string; symbol: string }> = {
+  0: { label: 'Clear sky', symbol: '☀' },
+  1: { label: 'Mainly clear', symbol: '☀' },
+  2: { label: 'Partly cloudy', symbol: '☁' },
+  3: { label: 'Overcast', symbol: '☁' },
+  45: { label: 'Fog', symbol: '〰' },
+  48: { label: 'Depositing rime fog', symbol: '〰' },
+  51: { label: 'Light drizzle', symbol: '☂' },
+  53: { label: 'Moderate drizzle', symbol: '☂' },
+  55: { label: 'Dense drizzle', symbol: '☂' },
+  56: { label: 'Freezing drizzle', symbol: '☂' },
+  57: { label: 'Dense freezing drizzle', symbol: '☂' },
+  61: { label: 'Slight rain', symbol: '☂' },
+  63: { label: 'Moderate rain', symbol: '☂' },
+  65: { label: 'Heavy rain', symbol: '☂' },
+  66: { label: 'Freezing rain', symbol: '☂' },
+  67: { label: 'Heavy freezing rain', symbol: '☂' },
+  71: { label: 'Slight snow', symbol: '❄' },
+  73: { label: 'Moderate snow', symbol: '❄' },
+  75: { label: 'Heavy snow', symbol: '❄' },
+  77: { label: 'Snow grains', symbol: '❄' },
+  80: { label: 'Slight rain showers', symbol: '☂' },
+  81: { label: 'Moderate rain showers', symbol: '☂' },
+  82: { label: 'Violent rain showers', symbol: '☂' },
+  95: { label: 'Thunderstorm', symbol: '⚡' },
+  96: { label: 'Thunderstorm with hail', symbol: '⚡' },
+  99: { label: 'Thunderstorm with heavy hail', symbol: '⚡' },
+};
+
+async function fetchOpenMeteoWeather(): Promise<{
+  temp: number;
+  condition: string;
+  symbol: string;
+}> {
+  const now: number = Date.now();
+  if (weatherCache && now - weatherCache.fetchedAt < WEATHER_CACHE_TTL_MS) {
+    const cachedCondition: string = weatherCache.data.condition;
+    const cachedSymbol: string =
+      Object.values(WMO_CONDITIONS).find((v) => v.label === cachedCondition)
+        ?.symbol ?? '☁';
+    return {
+      temp: weatherCache.data.temp,
+      condition: cachedCondition,
+      symbol: cachedSymbol,
+    };
+  }
+
+  const url: string =
+    'https://api.open-meteo.com/v1/forecast?latitude=38.9072&longitude=-77.0369&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America/New_York';
+  const resp: Response = await fetch(url);
+  const json = (await resp.json()) as {
+    current: { temperature_2m: number; weather_code: number };
+  };
+  const temp: number = Math.round(json.current.temperature_2m);
+  const code: number = json.current.weather_code;
+  const info = WMO_CONDITIONS[code] ?? { label: 'Partly cloudy', symbol: '☁' };
+
+  weatherCache = { data: { temp, condition: info.label }, fetchedAt: now };
+  return { temp, condition: info.label, symbol: info.symbol };
+}
+
+publicStatsRoutes.get('/masthead-weather', async (c) => {
+  const dateParam: string = c.req.query('date') ?? todayEastern();
+  const date: Date = new Date(dateParam + 'T12:00:00Z');
+  const dayOfWeek: number = date.getUTCDay(); // 0=Sun, 1=Mon, ..., 3=Wed
+
+  if (dayOfWeek === 1 || dayOfWeek === 3) {
+    // Monday or Wednesday → real weather
+    try {
+      const weather = await fetchOpenMeteoWeather();
+      return c.json({
+        type: 'real',
+        temp: weather.temp,
+        condition: weather.condition,
+        symbol: weather.symbol,
+        unit: '°F',
+      });
+    } catch {
+      // Fallback to orbital joke on fetch failure
+      return c.json({
+        type: 'orbital',
+        name: 'GEO',
+        location: '0°',
+      });
+    }
+  }
+
+  // Other days → orbital joke
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
+  try {
+    const orbit = await getRandomOrbitLocation(conn);
+    if (orbit) {
+      return c.json({
+        type: 'orbital',
+        name: orbit.name,
+        location: orbit.location,
+      });
+    }
+    return c.json({
+      type: 'orbital',
+      name: 'GEO',
+      location: '0°',
+    });
   } finally {
     conn.closeSync();
   }

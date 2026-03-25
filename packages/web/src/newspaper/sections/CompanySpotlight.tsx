@@ -45,7 +45,7 @@ export default function CompanySpotlight({ article, newsItems }: CompanySpotligh
           const subpath: string =
             libraryIdx >= 0
               ? data.imagePath.slice(libraryIdx + 'library/'.length)
-              : data.imagePath.split('/').pop() ?? '';
+              : (data.imagePath.split('/').pop() ?? '');
           setPortraitUrl(libraryImageUrl(subpath));
         }
       })
@@ -71,9 +71,7 @@ export default function CompanySpotlight({ article, newsItems }: CompanySpotligh
         )}
         <ArticleBody body={article.body} />
       </div>
-      {newsItems && newsItems.length > 0 && (
-        <WideBandTransmissions newsItems={newsItems} />
-      )}
+      {newsItems && newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
     </div>
   );
 }

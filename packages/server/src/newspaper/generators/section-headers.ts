@@ -129,7 +129,8 @@ export async function generateSectionHeaders(
         negativePrompt: HEADER_NEGATIVE,
         width: 800,
         height: 200,
-        seed: options?.baseSeed != null ? options.baseSeed + i : (i + 1000) * 42,
+        seed:
+          options?.baseSeed != null ? options.baseSeed + i : (i + 1000) * 42,
       });
       await writeFile(imagePath, response.images[0]!);
       await insertImage(conn, {

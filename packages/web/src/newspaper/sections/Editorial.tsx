@@ -1,8 +1,7 @@
 import Markdown from 'react-markdown';
-
+import type { Article } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import SectionHeader from '../SectionHeader.tsx';
-import type { Article } from '../types.ts';
 
 type EditorialProps = {
   article: Article;
@@ -20,9 +19,7 @@ export default function Editorial({ article, classifieds }: EditorialProps) {
       {classifieds && (
         <>
           <SectionHeader name="the-classifieds" />
-          <h3 className="article-headline-small">
-            {classifieds.headline ?? 'The Classifieds'}
-          </h3>
+          <h3 className="article-headline-small">{classifieds.headline ?? 'The Classifieds'}</h3>
           <div className="classifieds-body article-body">
             <Markdown>{classifieds.body}</Markdown>
           </div>

@@ -170,9 +170,7 @@ export class BedrockClient implements BedrockClientLike {
     );
 
     if (!parsed.images || parsed.images.length === 0) {
-      throw new Error(
-        parsed.error ?? 'Image generation returned no images',
-      );
+      throw new Error(parsed.error ?? 'Image generation returned no images');
     }
 
     return {

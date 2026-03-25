@@ -1,5 +1,5 @@
 /* ── Google Fonts (loaded only when newspaper view is active) ── */
-@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Slab:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@400;700;900&family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Slab:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 /* ── CSS Custom Properties ──────────────────────────────────── */
 :root {
@@ -15,7 +15,7 @@
   --np-accent-blue: #2b4570;
   --np-desk: #2a2520;
 
-  --np-font-masthead: 'UnifrakturCook', 'Old English Text MT', serif;
+  --np-font-masthead: 'Playfair Display SC', Georgia, serif;
   --np-font-headline: 'Abril Fatface', Georgia, serif;
   --np-font-body: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
   --np-font-ad: 'Josefin Slab', 'Courier New', serif;
@@ -152,6 +152,34 @@
   margin-top: 2px;
 }
 
+/* ── Weather Widget ───────────────────────────────────────── */
+.weather-symbol {
+  font-size: 24px;
+  color: var(--np-sepia-dark);
+  line-height: 1;
+}
+
+.weather-temp {
+  font-family: var(--np-font-headline);
+  font-size: 20px;
+  color: var(--np-ink-black);
+  line-height: 1;
+}
+
+.weather-location {
+  font-family: var(--np-font-headline);
+  font-size: 16px;
+  color: var(--np-ink-black);
+  line-height: 1.2;
+}
+
+.weather-forecast {
+  font-family: var(--np-font-body);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--np-sepia-medium);
+}
+
 .masthead-emblem {
   width: auto;
   height: 208px;
@@ -162,7 +190,7 @@
 
 .masthead-title {
   font-family: var(--np-font-masthead);
-  font-size: 60px;
+  font-size: 54px;
   line-height: 1.1;
   color: var(--np-ink-black);
   margin: 0;
@@ -194,9 +222,9 @@
   grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(180px, 1.2fr);
   grid-template-rows: auto auto auto;
   grid-template-areas:
-    "fakead  lead    lead    orbital"
-    "filings filings filings filings"
-    "company company editorial editorial";
+    'fakead  lead    lead    orbital'
+    'filings filings filings filings'
+    'company company editorial editorial';
   column-gap: 0;
   row-gap: 0;
 }
@@ -208,12 +236,24 @@
 }
 
 /* Grid area assignments */
-.grid-fakead       { grid-area: fakead; }
-.grid-lead         { grid-area: lead; }
-.grid-orbital      { grid-area: orbital; }
-.grid-company      { grid-area: company; }
-.grid-editorial    { grid-area: editorial; }
-.grid-filings      { grid-area: filings; }
+.grid-fakead {
+  grid-area: fakead;
+}
+.grid-lead {
+  grid-area: lead;
+}
+.grid-orbital {
+  grid-area: orbital;
+}
+.grid-company {
+  grid-area: company;
+}
+.grid-editorial {
+  grid-area: editorial;
+}
+.grid-filings {
+  grid-area: filings;
+}
 
 /* Column rules: right border on all cells except rightmost in each row */
 .grid-fakead,
@@ -331,9 +371,15 @@
   margin: 1rem 0 0.5rem;
 }
 
-.article-body h1 { font-size: 24px; }
-.article-body h2 { font-size: 20px; }
-.article-body h3 { font-size: 17px; }
+.article-body h1 {
+  font-size: 24px;
+}
+.article-body h2 {
+  font-size: 20px;
+}
+.article-body h3 {
+  font-size: 17px;
+}
 
 .article-body ul,
 .article-body ol {

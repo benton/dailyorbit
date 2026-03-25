@@ -117,7 +117,8 @@ export const PORTRAIT_PROMPTS: ReadonlyArray<PortraitEntry> = [
   },
   {
     tags: ['standard', 'male', 'elderly'],
-    prompt: 'elderly man with white beard, formal evening wear, distinguished bearing',
+    prompt:
+      'elderly man with white beard, formal evening wear, distinguished bearing',
   },
   {
     tags: ['standard', 'male', 'elderly'],
@@ -479,7 +480,12 @@ export async function generatePortraitLibrary(
   imageClient: ImageClient,
   config: ConfigService,
   log: (msg: string) => void,
-  options?: { startIndex?: number; limit?: number; baseSeed?: number; dataDir?: string },
+  options?: {
+    startIndex?: number;
+    limit?: number;
+    baseSeed?: number;
+    dataDir?: string;
+  },
 ): Promise<{ generated: number; skipped: number; failed: number }> {
   const modelId: string = config.get('newspaperImageModel') as string;
   const dataDir: string = options?.dataDir ?? 'data';

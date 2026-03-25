@@ -1,6 +1,6 @@
+import type { Article } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import SectionHeader from '../SectionHeader.tsx';
-import type { Article } from '../types.ts';
 
 type OrbitalForecastProps = {
   article: Article;

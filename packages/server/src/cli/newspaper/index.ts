@@ -346,9 +346,7 @@ export const newspaperCommand = defineCommand({
               const label: string = result.headline || def.slug;
               log.info(`[${def.slug}] done: "${label}"`);
             } catch (err) {
-              log.error(
-                `[${def.slug}] failed: ${(err as Error).message}`,
-              );
+              log.error(`[${def.slug}] failed: ${(err as Error).message}`);
             }
           }
         } finally {
@@ -537,8 +535,7 @@ export const newspaperCommand = defineCommand({
         },
         seed: {
           type: 'string',
-          description:
-            'Base seed for image generation (default: index * 42)',
+          description: 'Base seed for image generation (default: index * 42)',
           default: '',
         },
       },

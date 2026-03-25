@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { apiFetch } from '../lib/api.ts';
-import Masthead from './Masthead.tsx';
-import './newspaper.css';
-import CompanySpotlight from './sections/CompanySpotlight.tsx';
-import DailyDigest from './sections/DailyDigest.tsx';
-import Editorial from './sections/Editorial.tsx';
-import FakeAd from './sections/FakeAd.tsx';
-import OrbitalForecast from './sections/OrbitalForecast.tsx';
-import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
-import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
 import type {
   Article,
   EditionWithArticles,
@@ -18,6 +8,16 @@ import type {
   PaginatedNewsResponse,
   RecentFilingsResponse,
 } from './types.ts';
+import { apiFetch } from '../lib/api.ts';
+import './newspaper.css';
+import Masthead from './Masthead.tsx';
+import CompanySpotlight from './sections/CompanySpotlight.tsx';
+import DailyDigest from './sections/DailyDigest.tsx';
+import Editorial from './sections/Editorial.tsx';
+import FakeAd from './sections/FakeAd.tsx';
+import OrbitalForecast from './sections/OrbitalForecast.tsx';
+import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
+import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
 
 function findArticle(
   articles: Array<Article>,
@@ -92,11 +92,7 @@ export default function NewspaperView() {
         <Masthead editionDate={edition.editionDate} />
         <div className="newspaper-grid">
           {/* Row 1 */}
-          {fakeAd ? (
-            <FakeAd article={fakeAd} />
-          ) : (
-            <div className="grid-fakead" />
-          )}
+          {fakeAd ? <FakeAd article={fakeAd} /> : <div className="grid-fakead" />}
           {dailyDigest ? (
             <DailyDigest
               article={dailyDigest}
@@ -107,18 +103,11 @@ export default function NewspaperView() {
           ) : (
             <div className="grid-lead" />
           )}
-          {forecast ? (
-            <OrbitalForecast article={forecast} />
-          ) : (
-            <div className="grid-orbital" />
-          )}
+          {forecast ? <OrbitalForecast article={forecast} /> : <div className="grid-orbital" />}
 
           {/* Row 2 — Yesterday's Filings */}
           {recentFilings && recentFilings.filings.length > 0 && (
-            <YesterdaysFilings
-              dayLabel={recentFilings.dayLabel}
-              filings={recentFilings.filings}
-            />
+            <YesterdaysFilings dayLabel={recentFilings.dayLabel} filings={recentFilings.filings} />
           )}
 
           {/* Row 3 — Company Spotlight + News (left) | Editorial (right) */}
@@ -128,9 +117,7 @@ export default function NewspaperView() {
                 <CompanySpotlight article={spotlight} newsItems={newsItems} />
               ) : (
                 <div className="grid-company">
-                  {newsItems.length > 0 && (
-                    <WideBandTransmissions newsItems={newsItems} />
-                  )}
+                  {newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
                 </div>
               )}
               {editorial ? (

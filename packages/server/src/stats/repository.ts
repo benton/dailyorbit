@@ -307,3 +307,28 @@ export async function getWeeklyFilingVolume(
   }
   return days;
 }
+
+export type OrbitLocation = {
+  name: string;
+  location: string;
+};
+
+export async function getRandomOrbitLocation(
+  conn: DuckDBConnection,
+): Promise<OrbitLocation | null> {
+  const result = await conn.runAndReadAll(
+    `SELECT us_name, orbit_location
+     FROM space_station
+     WHERE orbit_location IS NOT NULL
+       AND inactive_date IS NULL
+     ORDER BY random()
+     LIMIT 1`,
+  );
+  const rows = result.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  const row = rows[0]!;
+  return {
+    name: String(row.us_name),
+    location: String(row.orbit_location),
+  };
+}

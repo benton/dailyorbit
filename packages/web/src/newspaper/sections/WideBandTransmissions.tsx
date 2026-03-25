@@ -1,5 +1,5 @@
-import SectionHeader from '../SectionHeader.tsx';
 import type { NewsListItem } from '../types.ts';
+import SectionHeader from '../SectionHeader.tsx';
 
 type WideBandTransmissionsProps = {
   newsItems: Array<NewsListItem>;
@@ -37,12 +37,8 @@ export default function WideBandTransmissions({ newsItems }: WideBandTransmissio
               {item.sourceName && item.publishedAt && <span> · </span>}
               {item.publishedAt && <span>{formatDate(item.publishedAt)}</span>}
             </div>
-            {item.companyName && (
-              <span className="news-brief-company">{item.companyName}</span>
-            )}
-            {item.summary && (
-              <p className="news-brief-summary">{item.summary}</p>
-            )}
+            {item.companyName && <span className="news-brief-company">{item.companyName}</span>}
+            {item.summary && <p className="news-brief-summary">{item.summary}</p>}
           </div>
         ))}
       </div>

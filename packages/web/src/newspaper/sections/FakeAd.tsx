@@ -1,5 +1,5 @@
-import ArticleBody from '../ArticleBody.tsx';
 import type { Article } from '../types.ts';
+import ArticleBody from '../ArticleBody.tsx';
 
 type FakeAdProps = {
   article: Article;

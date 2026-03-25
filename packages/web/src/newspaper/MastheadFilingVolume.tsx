@@ -11,22 +11,20 @@ type MastheadFilingVolumeProps = {
   editionDate: string;
 };
 
-export default function MastheadFilingVolume({
-  editionDate,
-}: MastheadFilingVolumeProps) {
+export default function MastheadFilingVolume({ editionDate }: MastheadFilingVolumeProps) {
   const [days, setDays] = useState<DailyFilingCount[]>([]);
   const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
-    apiFetch<DailyFilingCount[]>(
-      `/api/stats/weekly-filing-volume?before=${editionDate}`,
-    ).then((data: DailyFilingCount[]) => {
-      setDays(data);
-      setTotal(data.reduce((sum: number, d: DailyFilingCount) => sum + d.count, 0));
-    }).catch(() => {
-      setDays([]);
-      setTotal(0);
-    });
+    apiFetch<DailyFilingCount[]>(`/api/stats/weekly-filing-volume?before=${editionDate}`)
+      .then((data: DailyFilingCount[]) => {
+        setDays(data);
+        setTotal(data.reduce((sum: number, d: DailyFilingCount) => sum + d.count, 0));
+      })
+      .catch(() => {
+        setDays([]);
+        setTotal(0);
+      });
   }, [editionDate]);
 
   const maxCount: number = Math.max(...days.map((d: DailyFilingCount) => d.count), 1);

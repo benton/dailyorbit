@@ -29,9 +29,7 @@ export default function YesterdaysFilings({ dayLabel, filings }: YesterdaysFilin
             {filings.map((f: RecentFiling) => (
               <tr key={f.file_number}>
                 <td className="file-number">
-                  <a href={`/filings/${encodeURIComponent(f.file_number)}`}>
-                    {f.file_number}
-                  </a>
+                  <a href={`/filings/${encodeURIComponent(f.file_number)}`}>{f.file_number}</a>
                 </td>
                 <td>{f.subsystem_code}</td>
                 <td>{f.app_type_code}</td>
