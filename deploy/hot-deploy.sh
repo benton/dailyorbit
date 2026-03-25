@@ -16,8 +16,14 @@ VERSION=$(node -p "require('./packages/server/package.json').version")
 TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
 TAG="${VERSION}-hotdeploy-${TIMESTAMP}"
 
+VITE_SERVER_URL="https://api.dailyorbit.org"
+VITE_NEWSPAPER_IMAGES_URL="/newspaper"
+
 echo "==> Building Docker image: ${ECR_REPO}:${TAG}"
-docker build -t "${ECR_REPO}:${TAG}" .
+docker build \
+  --build-arg VITE_SERVER_URL="${VITE_SERVER_URL}" \
+  --build-arg VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
+  -t "${ECR_REPO}:${TAG}" .
 
 echo "==> Tagging for ECR"
 docker tag "${ECR_REPO}:${TAG}" "${ECR_URI}:${TAG}"
