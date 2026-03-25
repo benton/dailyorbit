@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import SectionHeader from '../SectionHeader.tsx';
@@ -17,6 +17,7 @@ type SpotlightSourceData = {
 type CompanySpotlightProps = {
   article: Article;
   newsItems?: Array<NewsListItem>;
+  children?: ReactNode;
 };
 
 function parseSourceData(raw: string | null): SpotlightSourceData {
@@ -30,7 +31,7 @@ function parseSourceData(raw: string | null): SpotlightSourceData {
   }
 }
 
-export default function CompanySpotlight({ article, newsItems }: CompanySpotlightProps) {
+export default function CompanySpotlight({ article, newsItems, children }: CompanySpotlightProps) {
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const sourceData: SpotlightSourceData = parseSourceData(article.sourceData);
   const companyName: string = sourceData.companyName ?? 'Unknown';
@@ -76,6 +77,7 @@ export default function CompanySpotlight({ article, newsItems }: CompanySpotligh
         <ArticleBody body={article.body} />
       </div>
       {newsItems && newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
+      {children}
     </div>
   );
 }

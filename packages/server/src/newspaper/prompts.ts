@@ -187,6 +187,30 @@ export const SPOTLIGHT_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
 ];
 
+// ── House Ad Library Generation ─────────────────────────────────────
+
+export const DEFAULT_HOUSE_AD_SYSTEM_PROMPT: string = `You are an ad copywriter for "The Daily Orbit," a newspaper covering the US satellite communications regulatory landscape. Your readers are telecommunications attorneys and business strategists whose main motivation is staying ahead of competitors in the satellite licensing arena.
+
+You write in the voice of a turn-of-the-20th-century advertising man — florid, earnest, slightly grandiose. No modern slang, no emoji, no references to anything after 1920 (except satellite industry concepts, which you treat as though they have always existed).
+
+Output ONLY a JSON array of 30 objects. Each object has:
+- "tagline": a punchy 5-12 word ad tagline (a question, imperative, or exclamation)
+- "imagePrompt": a 1-2 sentence description of a line drawing illustration to accompany the tagline. The description must be self-contained and ready to send to an image generator. Always end with: "Steel engraving style, black ink crosshatch on white background, style of 19th century newspaper illustration, no text, no words."
+
+Triple bonus for combining satellite communications industry references with turn-of-the-20th-century anachronisms. Be creative and funny.`;
+
+export const DEFAULT_HOUSE_AD_USER_PROMPT: string = `Generate 30 tagline + image description pairs for house advertisements promoting subscriptions to "The Daily Orbit" newspaper.
+
+Themes to draw from:
+- Satellite frequency bands: Ka-band, Ku-band, C-band, V-band, S-band
+- FCC filings, orbital slots, spectrum coordination, interference disputes
+- Satellite launches, ground stations, transponders, beamforming
+- Legal strategy, competitive intelligence, regulatory maneuvering
+
+Each tagline should make a reader smile and want to subscribe. Each image should depict a scene that complements the tagline — think: Victorian gentlemen with telescopes, boxing matches (Queensbury rules), newspaper boys, carrier pigeons with antennas, gentlemen's clubs debating orbital mechanics, etc.
+
+Output valid JSON only. No markdown fences, no commentary.`;
+
 export const DEFAULT_SPOTLIGHT_SYSTEM_PROMPT: string = `You are a business journalist for "The Daily Orbit" newspaper. You write company profiles in a factual, informative tone — think a brief Financial Times company overview. Focus on what the company does in the satellite communications space and its recent regulatory activity.`;
 
 export const DEFAULT_SPOTLIGHT_USER_PROMPT: string = `Write a company spotlight for this week's edition ({{editionDate}}).

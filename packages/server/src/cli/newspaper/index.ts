@@ -513,7 +513,7 @@ export const newspaperCommand = defineCommand({
         type: {
           type: 'string',
           description:
-            'What to generate: portraits, headers, or all (default: all)',
+            'What to generate: portraits, headers, house-ads, or all (default: all)',
           default: 'all',
         },
         region: {
@@ -622,13 +622,76 @@ export const newspaperCommand = defineCommand({
             );
           }
 
+          if (genType === 'house-ads' || genType === 'all') {
+            const { InferenceService } =
+              await import('../../inference/inference-service.ts');
+            const { BedrockClient: BC } =
+              await import('../../inference/bedrock-client.ts');
+            const {
+              generateHouseAdCopy,
+              generateHouseAdImages,
+              insertHouseAdEntries,
+            } = await import('../../newspaper/generators/house-ad-library.ts');
+
+            const bedrockRegion: string =
+              args.region || (config.get('bedrockRegion') as string);
+            const inferenceService = new InferenceService(
+              new BC(bedrockRegion),
+            );
+
+            const adCount: number = args.limit
+              ? parseInt(args.limit, 10)
+              : 30;
+            log.info(
+              `Generating house ad copy (${String(adCount)} tagline/image pairs)...`,
+            );
+            const entries = await generateHouseAdCopy(
+              inferenceService,
+              config,
+              adCount,
+            );
+            log.info(`Got ${String(entries.length)} house ad entries`);
+
+            log.info('Generating house ad images...');
+            const imageOpts: { baseSeed?: number } = {};
+            if (args.seed) {
+              imageOpts.baseSeed = parseInt(args.seed, 10);
+            }
+            const imgResult = await generateHouseAdImages(
+              entries,
+              conn,
+              imageClient,
+              config,
+              (msg: string) => log.info(msg),
+              imageOpts,
+            );
+            log.info(
+              `House ad images: ${String(imgResult.generated)} generated, ${String(imgResult.skipped)} skipped, ${String(imgResult.failed)} failed`,
+            );
+
+            log.info('Inserting house ad DB rows...');
+            const copyModel: string = config.get(
+              'newspaperCopyModel',
+            ) as string;
+            const dbResult = await insertHouseAdEntries(
+              entries,
+              conn,
+              copyModel,
+              (msg: string) => log.info(msg),
+            );
+            log.info(
+              `House ad rows: ${String(dbResult.inserted)} inserted, ${String(dbResult.skipped)} skipped`,
+            );
+          }
+
           if (
             genType !== 'portraits' &&
             genType !== 'headers' &&
+            genType !== 'house-ads' &&
             genType !== 'all'
           ) {
             log.error(
-              `Unknown type: ${genType}. Use portraits, headers, or all.`,
+              `Unknown type: ${genType}. Use portraits, headers, house-ads, or all.`,
             );
           }
         } finally {

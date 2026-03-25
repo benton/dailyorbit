@@ -52,6 +52,19 @@ export async function ensureNewspaperTables(
     `CREATE SEQUENCE IF NOT EXISTS newspaper_image_id_seq START 1`,
   );
 
+  await conn.run(`CREATE SEQUENCE IF NOT EXISTS house_ad_id_seq START 1`);
+
+  await conn.run(`
+    CREATE TABLE IF NOT EXISTS house_ad (
+      id              INTEGER PRIMARY KEY DEFAULT nextval('house_ad_id_seq'),
+      tagline         VARCHAR NOT NULL,
+      image_path      VARCHAR NOT NULL,
+      image_prompt    VARCHAR NOT NULL,
+      generated_by    VARCHAR,
+      created_at      TIMESTAMP DEFAULT current_timestamp
+    )
+  `);
+
   await conn.run(`
     CREATE TABLE IF NOT EXISTS newspaper_image (
       id              INTEGER PRIMARY KEY DEFAULT nextval('newspaper_image_id_seq'),

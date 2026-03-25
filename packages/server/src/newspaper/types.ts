@@ -51,7 +51,7 @@ export type NewspaperArticle = {
 
 export type NewspaperImage = {
   id: number;
-  imageType: 'portrait' | 'section_header' | 'logo';
+  imageType: 'portrait' | 'section_header' | 'logo' | 'house_ad';
   imagePath: string;
   prompt: string | null;
   tags: string[];
@@ -105,3 +105,12 @@ export function isWeeklyGenerationDay(now?: Date): boolean {
   const d: Date = now ?? new Date();
   return d.getDay() === 1; // 1 = Monday
 }
+
+export type HouseAd = {
+  id: number;
+  tagline: string;
+  imagePath: string;
+  imagePrompt: string;
+  generatedBy: string | null;
+  createdAt: string;
+};

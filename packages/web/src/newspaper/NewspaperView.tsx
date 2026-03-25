@@ -15,6 +15,7 @@ import CompanySpotlight from './sections/CompanySpotlight.tsx';
 import DailyDigest from './sections/DailyDigest.tsx';
 import Editorial from './sections/Editorial.tsx';
 import FakeAd from './sections/FakeAd.tsx';
+import HouseAd from './sections/HouseAd.tsx';
 import OrbitalForecast from './sections/OrbitalForecast.tsx';
 import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
 import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
@@ -112,14 +113,17 @@ export default function NewspaperView() {
             <YesterdaysFilings dayLabel={recentFilings.dayLabel} filings={recentFilings.filings} />
           )}
 
-          {/* Row 3 — Company Spotlight + News (left) | Editorial (right) */}
+          {/* Row 3 — Company Spotlight + News + House Ad (left) | Editorial (right) */}
           {hasSecondRow && (
             <>
               {spotlight ? (
-                <CompanySpotlight article={spotlight} newsItems={newsItems} />
+                <CompanySpotlight article={spotlight} newsItems={newsItems}>
+                  <HouseAd editionDate={edition.editionDate} />
+                </CompanySpotlight>
               ) : (
                 <div className="grid-company">
                   {newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
+                  <HouseAd editionDate={edition.editionDate} />
                 </div>
               )}
               {editorial ? (
