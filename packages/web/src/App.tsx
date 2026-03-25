@@ -34,6 +34,7 @@ const BackupsPage = lazy(() => import('./admin/BackupsPage.tsx'));
 const EditionBrowser = lazy(() => import('./admin/newspaper/EditionBrowser.tsx'));
 const EditionDetail = lazy(() => import('./admin/newspaper/EditionDetail.tsx'));
 const PortraitLibrary = lazy(() => import('./admin/newspaper/PortraitLibrary.tsx'));
+const NewspaperView = lazy(() => import('./newspaper/NewspaperView.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
@@ -155,6 +156,19 @@ export default function App() {
             />
             <Route element={<ProfilePage />} path="/profile" />
           </Route>
+          {/* Full-page newspaper view (no AdminLayout) */}
+          <Route
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
+                    <NewspaperView />
+                  </Suspense>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+            path="/admin/newspaper/:date/view"
+          />
           {/* Admin routes */}
           <Route
             element={

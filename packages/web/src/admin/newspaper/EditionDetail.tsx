@@ -107,13 +107,21 @@ export default function EditionDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         <Link
           className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
           to="/admin/newspaper"
         >
           &larr; All Editions
         </Link>
+        {edition.articles.some((a) => a.status === 'generated') && (
+          <Link
+            className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+            to={`/admin/newspaper/${edition.editionDate}/view`}
+          >
+            View as Newspaper
+          </Link>
+        )}
       </div>
 
       <div>

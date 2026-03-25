@@ -94,6 +94,7 @@ export default function EditionBrowser() {
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Generated</th>
+                <th className="px-4 py-3 font-medium">View</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -116,6 +117,14 @@ export default function EditionBrowser() {
                   </td>
                   <td className="px-4 py-3 text-neutral-500">
                     {formatRelativeTime(edition.createdAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                      to={`/admin/newspaper/${edition.editionDate}/view`}
+                    >
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}
