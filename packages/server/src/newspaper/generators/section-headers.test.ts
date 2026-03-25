@@ -109,8 +109,8 @@ describe('section header generator', () => {
     const firstCall = (client.generateImage as ReturnType<typeof vi.fn>).mock
       .calls[0]![0];
     expect(firstCall.prompt).toEqual(HEADER_STYLE + SECTION_HEADERS[0]!.prompt);
-    expect(firstCall.width).toEqual(800);
-    expect(firstCall.height).toEqual(200);
+    expect(firstCall.width).toEqual(1024);
+    expect(firstCall.height).toEqual(320);
   });
 
   it('skips already-existing headers (idempotent)', async () => {

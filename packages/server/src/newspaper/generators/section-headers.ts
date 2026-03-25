@@ -129,8 +129,8 @@ export async function generateSectionHeaders(
         modelId,
         prompt: fullPrompt,
         negativePrompt: HEADER_NEGATIVE,
-        width: 800,
-        height: 200,
+        width: 1024,
+        height: 320,
         seed:
           options?.baseSeed != null ? options.baseSeed + i : (i + 1000) * 42,
       });
