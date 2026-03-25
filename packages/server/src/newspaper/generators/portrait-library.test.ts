@@ -110,8 +110,8 @@ describe('portrait library generator', () => {
       .calls[0]![0];
     expect(call.prompt).toEqual(PORTRAIT_STYLE + PORTRAIT_PROMPTS[0]!.prompt);
     expect(call.negativePrompt).toContain('photograph');
-    expect(call.width).toEqual(256);
-    expect(call.height).toEqual(320);
+    expect(call.width).toEqual(320);
+    expect(call.height).toEqual(400);
     expect(call.seed).toEqual(0); // i=0 * 42
   });
 
@@ -175,13 +175,13 @@ describe('portrait library generator', () => {
     const config: ConfigService = createMockConfig();
     const logs: string[] = [];
 
-    // limit=2: index 0 succeeds (gen=1), index 1 fails (fail=1), index 2 succeeds (gen=2, done)
+    // limit=3: index 0 succeeds (gen=1), index 1 fails (fail=1), index 2 succeeds (gen=2, done at gen+fail=3)
     const result = await generatePortraitLibrary(
       conn,
       client,
       config,
       (msg: string) => logs.push(msg),
-      { limit: 2, dataDir: tmpDir },
+      { limit: 3, dataDir: tmpDir },
     );
 
     expect(result).toEqual({ generated: 2, skipped: 0, failed: 1 });
