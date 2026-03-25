@@ -639,9 +639,7 @@ export const newspaperCommand = defineCommand({
               new BC(bedrockRegion),
             );
 
-            const adCount: number = args.limit
-              ? parseInt(args.limit, 10)
-              : 30;
+            const adCount: number = args.limit ? parseInt(args.limit, 10) : 30;
             log.info(
               `Generating house ad copy (${String(adCount)} tagline/image pairs)...`,
             );
@@ -694,6 +692,76 @@ export const newspaperCommand = defineCommand({
               `Unknown type: ${genType}. Use portraits, headers, house-ads, or all.`,
             );
           }
+        } finally {
+          conn.closeSync();
+        }
+      },
+    }),
+
+    'sync-images': defineCommand({
+      meta: {
+        name: 'sync-images',
+        description:
+          'Upload all local newspaper images to the configured S3 bucket',
+      },
+      args: {
+        database: databaseArg,
+        keyFile: keyFileArg,
+      },
+      async run({ args }) {
+        const log = getLogger();
+        const dbInstance = await createDb(args.database);
+        const conn: DuckDBConnection =
+          await DuckDBConnection.create(dbInstance);
+
+        try {
+          const { ConfigService } = await import('../../lib/config-service.ts');
+          const { setConfigService } = await import('../../lib/config.ts');
+          const { readKeyFile: readKey } =
+            await import('../../lib/encryption.ts');
+          const { uploadNewspaperImage } =
+            await import('../../newspaper/image-upload.ts');
+          const { resolve } = await import('node:path');
+          const { glob } = await import('node:fs/promises');
+
+          const key: Buffer = readKey(resolveFromRoot(args.keyFile));
+          const config = new ConfigService(dbInstance, key);
+          await config.load();
+          setConfigService(config);
+
+          const bucket: string = String(
+            config.get('newspaperImagesBucket') ?? '',
+          );
+          const region: string = String(
+            config.get('bedrockRegion') ?? 'us-east-2',
+          );
+
+          if (!bucket) {
+            log.error(
+              'newspaperImagesBucket is not configured — set it via: ./daily-orbit config set newspaperImagesBucket <bucket-name>',
+            );
+            process.exit(1);
+          }
+
+          const imagesRoot: string = resolve('data', 'newspaper', 'images');
+          let uploaded: number = 0;
+          let failed: number = 0;
+
+          for await (const filePath of glob(
+            resolve(imagesRoot, '**/*.{webp,png,jpg,jpeg}'),
+          )) {
+            try {
+              await uploadNewspaperImage(filePath, bucket, region);
+              uploaded++;
+            } catch (err: unknown) {
+              const msg: string =
+                err instanceof Error ? err.message : String(err);
+              log.warn({ error: msg, filePath }, 'Failed to upload');
+              failed++;
+            }
+          }
+
+          log.info({ uploaded, failed, bucket }, 'Image sync complete');
         } finally {
           conn.closeSync();
         }
