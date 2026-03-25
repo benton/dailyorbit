@@ -134,6 +134,7 @@ All deployment commands are available as `make` targets:
 | `make deploy-up` | Deploy the stack |
 | `make deploy-destroy` | Tear down the stack |
 | `make deploy-frontend` | Build frontend, sync to S3, invalidate CloudFront |
+| `make deploy-newspaper-images` | Sync local newspaper images to S3, invalidate CloudFront |
 | `make deploy-refresh` | Trigger ASG instance refresh (rolling replace) |
 
 ### Frontend Deployment
@@ -181,6 +182,55 @@ DuckDB is an in-process database — there is no external database server. Data 
 - **Boot restore** — User-data downloads the latest snapshot from S3 on every instance launch
 
 The ZFS pool provides NVMe-speed I/O with lz4 compression. On instance types without NVMe (e.g. `t4g.micro` for testing), the 30GB EBS root volume is used instead.
+
+---
+
+## Newspaper Images (Static Assets)
+
+Newspaper images (portraits, section headers, hero images, editorial cartoons, house ads) are
+served from CloudFront via the frontend S3 bucket under `newspaper/images/`.
+
+### How images reach S3
+
+1. **At generation time (automatic):** When the `newspaperImagesBucket` config key is set,
+   the image generators (`./daily-orbit newspaper generate` and `./daily-orbit newspaper generate-library`)
+   auto-upload each image to S3 immediately after writing it to local disk. This happens
+   during scheduled pipeline runs and manual CLI invocations on the production EC2 instance.
+
+2. **Bulk sync (manual/migration):** To upload all existing local images:
+   - From the production container: `./daily-orbit newspaper sync-images`
+   - From a dev machine: `make deploy-newspaper-images`
+
+### Configuration
+
+Set the target S3 bucket in the application config (persists in DuckDB, survives deploys):
+
+```bash
+./daily-orbit config set newspaperImagesBucket daily-orbit-prod-frontend
+```
+
+### URL Routing
+
+| Environment | Image URL pattern | Served by |
+|---|---|---|
+| Production | `dailyorbit.org/newspaper/images/...` | CloudFront -> S3 |
+| Development | `localhost:9000/api/newspaper/images/...` | API server -> local filesystem |
+
+The frontend build uses `VITE_NEWSPAPER_IMAGES_URL=/newspaper` in production (set as a Docker
+build arg in `.gitlab-ci.yml`). When unset (dev), it falls back to the API server.
+
+### Cache Behavior
+
+CloudFront has a dedicated cache behavior for `newspaper/images/*`:
+- Library images (portraits, headers, masthead, house ads): `immutable`, 1 year TTL
+- Edition images (hero, cartoon): 24-hour TTL
+- Missing images return real 404 (not SPA fallback)
+
+### Recovery
+
+On instance replacement, local images are lost but all images are in S3. The generators
+check the DB for existing records and skip re-generation, so there's no redundant Bedrock
+spend. To force re-generation: `./daily-orbit newspaper regenerate --date YYYY-MM-DD`.
 
 ---
 
