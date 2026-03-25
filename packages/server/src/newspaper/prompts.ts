@@ -200,7 +200,12 @@ Known aliases: {{aliases}}
 Recent filings:
 {{{recentFilings}}}
 
-Write 2-3 paragraphs profiling this company's role in the industry and recent activity. Include a link to the company page.`;
+Write 2-3 paragraphs profiling this company's role in the industry and recent activity. Include a link to the company page.
+
+On the very last line of your response, output exactly:
+CEO: [Full Name]
+where [Full Name] is the name of the company's current CEO, president, or top executive. If you don't know, write:
+CEO: unknown`;
 
 // ── Orbital Forecast template variables ──────────────────────────
 

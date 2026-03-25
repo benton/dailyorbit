@@ -374,6 +374,42 @@
   }
 }
 
+/* ── Spotlight Headshot (inset within Company Spotlight) ───── */
+.spotlight-headshot {
+  float: right;
+  clear: right;
+  width: 33%;
+  margin: 0 0 0.5rem 0.75rem;
+  padding: 3px;
+  border: 2px solid var(--np-sepia-dark);
+  outline: 1px solid var(--np-sepia-medium);
+  outline-offset: 2px;
+  background: var(--np-aged-white);
+}
+
+.spotlight-headshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.spotlight-headshot figcaption {
+  font-family: var(--np-font-body);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--np-sepia-dark);
+  text-align: center;
+  margin-top: 0.25rem;
+  padding: 0 0.25rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 900px) {
+  .spotlight-headshot {
+    width: 40%;
+  }
+}
+
 /* ── Links ──────────────────────────────────────────────────── */
 .newspaper a {
   color: var(--np-accent-blue);

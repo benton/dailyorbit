@@ -192,11 +192,23 @@ export async function generateCompanySpotlight(
     params: { systemPrompt },
   });
 
-  // 5. Parse response
+  // 5. Parse response — extract CEO name from last line if present
   const lines: string[] = response.content.split('\n');
   const headline: string =
     lines[0]?.replace(/^#+\s*/, '') ?? `Spotlight: ${company.name}`;
-  const body: string = response.content;
+
+  let ceoName: string | null = null;
+  let body: string = response.content;
+  const lastLine: string = lines[lines.length - 1]?.trim() ?? '';
+  const ceoMatch: RegExpMatchArray | null = lastLine.match(/^CEO:\s*(.+)$/i);
+  if (ceoMatch) {
+    const parsed: string = ceoMatch[1]!.trim();
+    if (parsed.toLowerCase() !== 'unknown') {
+      ceoName = parsed;
+    }
+    // Strip the CEO line from the article body
+    body = lines.slice(0, -1).join('\n').trimEnd();
+  }
 
   return {
     headline,
@@ -204,6 +216,7 @@ export async function generateCompanySpotlight(
     sourceData: {
       companyId: company.id,
       companyName: company.name,
+      ceoName,
       filingCount: filings.length,
       modelId,
     },
