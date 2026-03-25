@@ -50,7 +50,7 @@ export default function Masthead({ editionDate }: MastheadProps) {
           src={libraryImageUrl('masthead.webp')}
         />
       )}
-      <p className="masthead-tagline">360-Degree SatCom Industry Coverage</p>
+      <p className="masthead-tagline">AI-Powered SatCom Industry Coverage</p>
       <p className="masthead-dateline">{formatDateLine(editionDate)}</p>
     </header>
   );
