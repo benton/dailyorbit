@@ -5,14 +5,17 @@ import { getLogger } from '../../lib/logger.ts';
 /**
  * Returns an upload function that sends images to S3 if configured,
  * or a no-op if newspaperImagesBucket is empty.
+ *
+ * The S3 region defaults to us-east-2 (where the infrastructure lives)
+ * and is independent of bedrockRegion, which may point to a different
+ * region for image generation models.
  */
 export function createImageUploader(): (localPath: string) => Promise<void> {
   let bucket: string = '';
-  let region: string = 'us-east-2';
+  const region: string = process.env.AWS_REGION ?? 'us-east-2';
   try {
     const config = getConfigService();
     bucket = String(config.get('newspaperImagesBucket') ?? '');
-    region = String(config.get('bedrockRegion') ?? 'us-east-2');
   } catch {
     // ConfigService not initialized (e.g. in tests) — no upload
     return async () => {};

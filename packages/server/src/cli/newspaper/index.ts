@@ -732,9 +732,7 @@ export const newspaperCommand = defineCommand({
           const bucket: string = String(
             config.get('newspaperImagesBucket') ?? '',
           );
-          const region: string = String(
-            config.get('bedrockRegion') ?? 'us-east-2',
-          );
+          const region: string = process.env.AWS_REGION ?? 'us-east-2';
 
           if (!bucket) {
             log.error(
