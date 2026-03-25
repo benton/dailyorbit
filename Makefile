@@ -54,7 +54,8 @@ deploy-frontend: ## Build and deploy frontend to CloudFront
 	aws s3 sync packages/web/dist/ s3://$(FRONTEND_BUCKET)/ \
 		--delete \
 		--cache-control "public,max-age=31536000,immutable" \
-		--exclude "index.html"
+		--exclude "index.html" \
+		--exclude "newspaper/*"
 	aws s3 cp packages/web/dist/index.html s3://$(FRONTEND_BUCKET)/index.html \
 		--cache-control "no-cache"
 	aws cloudfront create-invalidation \
