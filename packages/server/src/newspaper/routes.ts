@@ -282,14 +282,14 @@ newspaperRoutes.get('/house-ad/:date', async (c) => {
   if (ad == null) {
     return c.json({
       tagline: 'All the Frequencies Fit to Print',
-      imageUrl: null,
+      imageSubpath: null,
       features: HOUSE_AD_FEATURES,
     });
   }
 
   return c.json({
     tagline: ad.tagline,
-    imageUrl: `/api/newspaper/images/library/house-ads/${ad.imagePath.split('/').pop()}`,
+    imageSubpath: `house-ads/${ad.imagePath.split('/').pop()}`,
     features: HOUSE_AD_FEATURES,
   });
 });

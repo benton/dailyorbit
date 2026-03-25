@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api.ts';
+import { libraryImageUrl } from '../types.ts';
 
 type HouseAdProps = {
   editionDate: string;
@@ -7,7 +8,7 @@ type HouseAdProps = {
 
 type HouseAdData = {
   tagline: string;
-  imageUrl: string | null;
+  imageSubpath: string | null;
   features: string[];
 };
 
@@ -29,12 +30,14 @@ export default function HouseAd({ editionDate }: HouseAdProps) {
 
   if (!ad) return null;
 
+  const imageUrl: string | null = ad.imageSubpath ? libraryImageUrl(ad.imageSubpath) : null;
+
   return (
     <div className="grid-house-ad">
       <div className="house-ad">
-        {ad.imageUrl && (
+        {imageUrl && (
           <div className="house-ad-image">
-            <img src={ad.imageUrl} alt="" width={300} height={250} />
+            <img src={imageUrl} alt="" width={320} height={320} />
           </div>
         )}
         <p className="house-ad-tagline">&ldquo;{ad.tagline}&rdquo;</p>
