@@ -280,7 +280,7 @@ export async function getWeeklyFilingVolume(
   const dayLabels: string[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   const result = await conn.runAndReadAll(
     `SELECT
-       date_filed::DATE AS filing_date,
+       date_filed::DATE::VARCHAR AS filing_date,
        count(*)::INTEGER AS filing_count
      FROM filing
      WHERE date_filed::DATE >= $1::DATE AND date_filed::DATE <= $2::DATE

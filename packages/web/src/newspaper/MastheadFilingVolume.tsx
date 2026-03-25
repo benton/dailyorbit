@@ -34,7 +34,7 @@ export default function MastheadFilingVolume({
   if (days.length === 0) {
     return (
       <div className="masthead-widget masthead-filing-volume">
-        <span className="masthead-widget-label">Last Week&rsquo;s Filings</span>
+        <span className="masthead-widget-label">Last Week&rsquo;s Volume</span>
         <span className="masthead-widget-note">No filings recorded</span>
       </div>
     );
@@ -42,7 +42,7 @@ export default function MastheadFilingVolume({
 
   return (
     <div className="masthead-widget masthead-filing-volume">
-      <span className="masthead-widget-label">Last Week&rsquo;s Filings</span>
+      <span className="masthead-widget-label">Last Week&rsquo;s Volume</span>
       <div className="filing-bars">
         {days.map((d: DailyFilingCount) => (
           <div className="filing-bar-col" key={d.date}>
