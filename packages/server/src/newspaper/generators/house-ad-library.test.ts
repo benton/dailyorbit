@@ -119,7 +119,8 @@ describe('parseHouseAdResponse', () => {
   it('salvages complete entries from truncated JSON', () => {
     const full: string = JSON.stringify(SAMPLE_ENTRIES);
     // Chop off the last entry mid-string to simulate LLM truncation
-    const truncated: string = full.slice(0, full.lastIndexOf('},{') + 2) + '"tagline": "trun';
+    const truncated: string =
+      full.slice(0, full.lastIndexOf('},{') + 2) + '"tagline": "trun';
     const result: HouseAdEntry[] = parseHouseAdResponse(truncated);
 
     // Should recover the first 2 entries

@@ -16,8 +16,8 @@ type SpotlightSourceData = {
 
 type CompanySpotlightProps = {
   article: Article;
-  newsItems?: Array<NewsListItem>;
   children?: ReactNode;
+  newsItems?: Array<NewsListItem>;
 };
 
 function parseSourceData(raw: string | null): SpotlightSourceData {
@@ -31,7 +31,7 @@ function parseSourceData(raw: string | null): SpotlightSourceData {
   }
 }
 
-export default function CompanySpotlight({ article, newsItems, children }: CompanySpotlightProps) {
+export default function CompanySpotlight({ article, children, newsItems }: CompanySpotlightProps) {
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const sourceData: SpotlightSourceData = parseSourceData(article.sourceData);
   const companyName: string = sourceData.companyName ?? 'Unknown';
