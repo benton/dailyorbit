@@ -329,6 +329,8 @@
 
 .house-ad-image {
   margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: center;
 }
 
 .house-ad-image img {

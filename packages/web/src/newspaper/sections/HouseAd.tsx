@@ -12,6 +12,15 @@ type HouseAdData = {
   features: string[];
 };
 
+/** Render *text* as <em>text</em>, plain text otherwise */
+function renderFeature(text: string): React.ReactNode {
+  const parts: string[] = text.split(/\*([^*]+)\*/);
+  if (parts.length === 1) return text;
+  return parts.map((part: string, i: number) =>
+    i % 2 === 1 ? <em key={i}>{part}</em> : part,
+  );
+}
+
 export default function HouseAd({ editionDate }: HouseAdProps) {
   const [ad, setAd] = useState<HouseAdData | null>(null);
 
@@ -45,7 +54,7 @@ export default function HouseAd({ editionDate }: HouseAdProps) {
         </p>
         <ul className="house-ad-features">
           {ad.features.map((feature: string) => (
-            <li key={feature}>{feature}</li>
+            <li key={feature}>{renderFeature(feature)}</li>
           ))}
         </ul>
         <div className="house-ad-label">&#x2550;&#x2550; An Advertisement &#x2550;&#x2550;</div>
