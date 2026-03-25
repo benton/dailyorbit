@@ -154,6 +154,24 @@ To deploy a new server version:
 
 The refresh terminates the current instance and launches a new one, which auto-deploys via user-data (EIP re-association, S3 restore, Docker pull, etc.).
 
+### Hot Deploy (No CI, No Instance Recycle)
+
+For code-only changes on a running instance, `deploy/hot-deploy.sh` provides a fast (~2 min) deploy path:
+
+```bash
+./deploy/hot-deploy.sh
+```
+
+This builds the Docker image locally, pushes to ECR, SSHes to the instance, pulls the new image, and restarts the systemd service in-place.
+
+**Limitations:**
+- Does **not** invalidate CloudFront — run `make deploy-newspaper-images` or manually invalidate if static assets changed
+- Does **not** run `cdk deploy` — IAM/infra changes require a separate `make deploy-up`
+- Does **not** survive instance recycle — the systemd unit is patched via `sed`, but a new instance boots with the CI-deployed tag from the launch template
+- Tags images as `<version>-hotdeploy-<timestamp>`, not the release version
+
+**When to use:** Quick iteration on server-side code when infrastructure hasn't changed and you don't need CloudFront invalidation. For anything else, use the CI pipeline.
+
 ---
 
 ## Building and Pushing the Docker Image
