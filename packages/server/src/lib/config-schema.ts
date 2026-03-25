@@ -246,6 +246,13 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'User prompt for editorial generation (blank = built-in default)',
   },
+  newspaperImagesBucket: {
+    key: 'newspaperImagesBucket',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'S3 bucket for newspaper image CDN (empty = local-only, no upload)',
+  },
   schedulerAutoStart: {
     key: 'schedulerAutoStart',
     defaultValue: 'false',
