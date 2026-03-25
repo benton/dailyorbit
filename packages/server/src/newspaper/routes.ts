@@ -93,6 +93,47 @@ const IMAGE_CONTENT_TYPES: Record<string, string> = {
 /** Base directory for generated newspaper images. */
 const IMAGES_ROOT: string = resolve('data', 'newspaper', 'images');
 
+/** GET /api/newspaper/images/library/:subpath+ — serve library images (public, no auth) */
+newspaperRoutes.get('/images/library/:subpath{.+}', async (c) => {
+  const subpath: string = c.req.param('subpath');
+
+  // Reject path traversal
+  if (subpath.includes('..') || /[\\]/.test(subpath)) {
+    return c.json({ error: 'Invalid path' }, 400);
+  }
+
+  const filePath: string = join(IMAGES_ROOT, 'library', subpath);
+  const resolved: string = resolve(filePath);
+
+  if (!resolved.startsWith(IMAGES_ROOT)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  const ext: string = resolved.substring(resolved.lastIndexOf('.'));
+  const contentType: string | undefined = IMAGE_CONTENT_TYPES[ext];
+  if (contentType == null) {
+    return c.json({ error: 'Unsupported image type' }, 400);
+  }
+
+  try {
+    const info = await stat(resolved);
+    if (!info.isFile()) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const data: Buffer = await readFile(resolved);
+    return new Response(data, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(data.length),
+        'Cache-Control': 'public, max-age=604800',
+      },
+    });
+  } catch {
+    return c.json({ error: 'Not found' }, 404);
+  }
+});
+
 /**
  * GET /api/newspaper/images/:date/:filename — serve generated images.
  * Only allows date-directory/filename pattern; prevents directory traversal.
@@ -194,47 +235,6 @@ newspaperRoutes.get('/library/section-headers/:name', async (c) => {
     return c.json({ error: 'Section header not found' }, 404);
   }
   return c.json(header);
-});
-
-/** GET /api/newspaper/images/library/:subpath+ — serve library images */
-newspaperRoutes.get('/images/library/:subpath{.+}', async (c) => {
-  const subpath: string = c.req.param('subpath');
-
-  // Reject path traversal
-  if (subpath.includes('..') || /[\\]/.test(subpath)) {
-    return c.json({ error: 'Invalid path' }, 400);
-  }
-
-  const filePath: string = join(IMAGES_ROOT, 'library', subpath);
-  const resolved: string = resolve(filePath);
-
-  if (!resolved.startsWith(IMAGES_ROOT)) {
-    return c.json({ error: 'Forbidden' }, 403);
-  }
-
-  const ext: string = resolved.substring(resolved.lastIndexOf('.'));
-  const contentType: string | undefined = IMAGE_CONTENT_TYPES[ext];
-  if (contentType == null) {
-    return c.json({ error: 'Unsupported image type' }, 400);
-  }
-
-  try {
-    const info = await stat(resolved);
-    if (!info.isFile()) {
-      return c.json({ error: 'Not found' }, 404);
-    }
-    const data: Buffer = await readFile(resolved);
-    return new Response(data, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Content-Length': String(data.length),
-        'Cache-Control': 'public, max-age=604800',
-      },
-    });
-  } catch {
-    return c.json({ error: 'Not found' }, 404);
-  }
 });
 
 /** POST /api/newspaper/edition/:date/regenerate/:slug — reset article to pending for regeneration */

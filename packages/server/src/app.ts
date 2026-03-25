@@ -59,8 +59,13 @@ app.use('*', requestLogger(getLogger()));
 app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
 // Protected API routes — require authentication for ALL endpoints.
-// Only /api/health and /api/auth/* (handled above) are exempt.
-app.use('/api/*', requireAuth());
+// Newspaper images are public so <img> tags can load them without cookies.
+app.use('/api/*', async (c, next) => {
+  if (c.req.path.startsWith('/api/newspaper/images/')) {
+    return next();
+  }
+  return requireAuth()(c, next);
+});
 
 // Admin routes — require admin role
 app.use('/api/admin/*', requireAdmin());

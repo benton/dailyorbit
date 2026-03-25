@@ -74,10 +74,11 @@
 }
 
 .masthead-emblem {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 0.5rem;
-  opacity: 0.9;
+  width: auto;
+  height: 160px;
+  margin: 0 auto 0.75rem;
+  border: 2px solid var(--np-ink-black);
+  object-fit: contain;
 }
 
 .masthead-title {
