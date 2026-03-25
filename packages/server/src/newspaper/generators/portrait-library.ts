@@ -10,7 +10,8 @@ import { getImageByPath, insertImage } from '../repository.ts';
 export const PORTRAIT_STYLE: string =
   'Steel engraving portrait bust, black ink crosshatch on white background, ' +
   'formal attire circa 1900, oval vignette frame. ' +
-  'Style of Victorian newspaper portrait illustration. ';
+  'Style of Victorian newspaper portrait illustration. ' +
+  'No text, no words, no letters, no writing in the image. ';
 
 export const PORTRAIT_NEGATIVE: string =
   'photograph, realistic, color, modern, blurry, low quality, text, watermark';

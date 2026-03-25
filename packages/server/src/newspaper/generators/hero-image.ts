@@ -8,7 +8,7 @@ import type { GenerateOptions, GeneratorResult } from '../types.ts';
 const ENGRAVING_STYLE_PREFIX: string =
   'Steel engraving illustration, black ink crosshatch on white background, ' +
   'style of 19th century newspaper illustration, fine parallel lines for shading, ' +
-  'no color, high contrast. ';
+  'no color, high contrast. No text, no words, no letters, no writing in the image. ';
 
 /** Negative prompt to steer away from photorealism and color. */
 const ENGRAVING_NEGATIVE: string =

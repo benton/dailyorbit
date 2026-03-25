@@ -10,7 +10,8 @@ import type { ImageClient } from './portrait-library.ts';
 export const HEADER_STYLE: string =
   'Ornamental banner with decorative border, black ink engraving style, ' +
   'flanked by scrollwork and floral ornaments. ' +
-  'Style of 19th century newspaper column heading. Wide aspect ratio. ';
+  'Style of 19th century newspaper column heading. Wide aspect ratio. ' +
+  'No text, no words, no letters, no writing in the image. ';
 
 export const HEADER_NEGATIVE: string =
   'photograph, realistic, color, modern, blurry, low quality, text, watermark';

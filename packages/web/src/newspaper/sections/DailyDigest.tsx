@@ -13,6 +13,7 @@ export default function DailyDigest({ article, editionDate, heroImage }: DailyDi
   return (
     <div className="grid-lead">
       <SectionHeader name="three-miles-up" />
+      <h3 className="article-headline-small">3 Miles Up</h3>
       {heroImage?.imagePath && (
         <div className="hero-image">
           <img

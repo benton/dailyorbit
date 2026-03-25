@@ -17,7 +17,7 @@ function formatDateLine(dateStr: string): string {
     month: 'long',
     day: 'numeric',
   });
-  return `Vol. ${roman(volume)}  ·  No. ${String(dayOfYear)}  ·  Washington, D.C.  ·  ${formatted}  ·  Price: Free (to subscribers)`;
+  return `Vol. ${roman(volume)}  ·  No. ${String(dayOfYear)}  ·  Washington, D.C.  ·  ${formatted}  ·  Price: Free Edition`;
 }
 
 function roman(n: number): string {
@@ -41,6 +41,7 @@ export default function Masthead({ editionDate }: MastheadProps) {
 
   return (
     <header className="masthead">
+      <h1 className="masthead-title">The Daily Orbit</h1>
       {!emblemFailed && (
         <img
           alt=""
@@ -49,8 +50,7 @@ export default function Masthead({ editionDate }: MastheadProps) {
           src={libraryImageUrl('masthead.webp')}
         />
       )}
-      <h1 className="masthead-title">The Daily Orbit</h1>
-      <p className="masthead-tagline">Your Window on the Spectrum</p>
+      <p className="masthead-tagline">Global SatCom Industry Coverage</p>
       <p className="masthead-dateline">{formatDateLine(editionDate)}</p>
     </header>
   );

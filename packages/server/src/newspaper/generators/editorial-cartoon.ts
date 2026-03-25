@@ -8,12 +8,12 @@ import type { GenerateOptions, GeneratorResult } from '../types.ts';
 /** Style prefix for editorial cartoons — Punch magazine crosshatch style. */
 const CARTOON_STYLE: string =
   'Single-panel editorial cartoon, black ink crosshatch style, ' +
-  'style of Punch magazine illustration circa 1900, satirical, ' +
-  'with caption space below. ';
+  'style of Punch magazine illustration circa 1900, satirical. ' +
+  'No text, no words, no letters, no captions, no writing in the image. ';
 
 /** Negative prompt to steer away from photorealism. */
 const CARTOON_NEGATIVE: string =
-  'photograph, realistic, color, modern, blurry, low quality, watermark, multiple panels';
+  'photograph, realistic, color, modern, blurry, low quality, watermark, multiple panels, text, words, letters, writing, caption';
 
 /** Extended options for the editorial cartoon generator. */
 export type EditorialCartoonOptions = GenerateOptions & {
