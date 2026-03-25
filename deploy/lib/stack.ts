@@ -203,6 +203,9 @@ export class DailyOrbitStack extends Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
+    // EC2 needs write access for newspaper image uploads
+    frontendBucket.grantReadWrite(instanceRole);
+
     const cloudfrontCert: acm.ICertificate = acm.Certificate.fromCertificateArn(
       this, 'CloudFrontCert', config.cloudfrontCertificateArn,
     );
@@ -212,6 +215,14 @@ export class DailyOrbitStack extends Stack {
         origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      additionalBehaviors: {
+        'newspaper/images/*': {
+          origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
       },
       domainNames: [config.domainName],
       certificate: cloudfrontCert,
