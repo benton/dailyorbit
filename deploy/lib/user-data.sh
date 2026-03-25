@@ -75,9 +75,11 @@ mkdir -p /data/attachments
 aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
   || echo "No attachments found in S3"
 
+chown -R ubuntu:ubuntu /data
+
 # ── Install Docker, DuckDB CLI, and Launch Container ─────────────────────────
 apt-get install -y docker.io
-curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.2.2/duckdb_cli-linux-aarch64.zip" \
+curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.5.1/duckdb_cli-linux-arm64.zip" \
   -o /tmp/duckdb.zip
 unzip -qo /tmp/duckdb.zip -d /usr/local/bin
 rm /tmp/duckdb.zip

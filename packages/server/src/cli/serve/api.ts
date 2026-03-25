@@ -132,6 +132,15 @@ export const serveApiCommand = defineCommand({
     let encryptionKey: Buffer;
 
     if (!dbExists && !keyExists) {
+      const isProduction: boolean = process.env.NODE_ENV === 'production';
+      if (isProduction) {
+        log.error(
+          { dbPath, keyPath },
+          'Database and key file not found — refusing to auto-create in production mode',
+        );
+        process.exit(1);
+      }
+
       log.warn(
         'Neither database nor key file found — initializing clean system',
       );
