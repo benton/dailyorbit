@@ -220,11 +220,12 @@
 .newspaper-grid {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(180px, 1.2fr);
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto auto auto;
   grid-template-areas:
     'fakead  lead    lead    orbital'
     'filings filings filings filings'
-    'company company editorial editorial';
+    'company company editorial editorial'
+    'housead housead housead housead';
   column-gap: 0;
   row-gap: 0;
 }
@@ -314,6 +315,78 @@
   .newspaper-grid > *:last-child {
     border-bottom: none;
   }
+}
+
+/* ── House Ad ───────────────────────────────────────────────── */
+.grid-house-ad {
+  grid-area: housead;
+  border-top: 2px solid var(--np-sepia-dark);
+}
+
+.house-ad {
+  background: var(--np-aged-white);
+  border: 3px double var(--np-sepia-dark);
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  max-width: 480px;
+  margin: 1rem auto;
+}
+
+.house-ad-image {
+  margin-bottom: 0.75rem;
+}
+
+.house-ad-image img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--np-sepia-light);
+}
+
+.house-ad-tagline {
+  font-family: var(--np-font-body);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--np-sepia-dark);
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.house-ad-cta {
+  font-family: var(--np-font-ad);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.5rem;
+  color: var(--np-ink-black);
+}
+
+.house-ad-features {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  font-family: var(--np-font-ad);
+  font-size: 0.9rem;
+  color: var(--np-charcoal);
+  text-align: left;
+  display: inline-block;
+}
+
+.house-ad-features li::before {
+  content: '\203A ';
+  color: var(--np-sepia-medium);
+  font-weight: bold;
+}
+
+.house-ad-features li {
+  margin: 0.2rem 0;
+}
+
+.house-ad-label {
+  margin-top: 0.75rem;
+  font-family: var(--np-font-ad);
+  font-size: 0.7rem;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+  color: var(--np-sepia-medium);
 }
 
 /* ── Section Headers ────────────────────────────────────────── */

@@ -15,6 +15,7 @@ import CompanySpotlight from './sections/CompanySpotlight.tsx';
 import DailyDigest from './sections/DailyDigest.tsx';
 import Editorial from './sections/Editorial.tsx';
 import FakeAd from './sections/FakeAd.tsx';
+import HouseAd from './sections/HouseAd.tsx';
 import OrbitalForecast from './sections/OrbitalForecast.tsx';
 import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
 import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
@@ -129,6 +130,9 @@ export default function NewspaperView() {
               )}
             </>
           )}
+
+          {/* Row 4 — House Ad */}
+          <HouseAd editionDate={edition.editionDate} />
         </div>
       </article>
     </div>

@@ -8,6 +8,7 @@ import { ensureNewspaperTables } from './schema.ts';
 import {
   getArticlesByEdition,
   getEditionByDate,
+  getHouseAdForDate,
   getImageByPath,
   getLatestEdition,
   listEditions,
@@ -259,6 +260,38 @@ newspaperRoutes.post('/edition/:date/regenerate/:slug', async (c) => {
     return c.json({ error: 'Edition or article not found' }, 404);
   }
   return c.json({ success: true, article: result });
+});
+
+const HOUSE_AD_FEATURES: string[] = [
+  'receive a daily, personalized edition by email',
+  'search on concepts as well as keywords',
+  'save custom searches',
+  'receive email alerts based on saved searches',
+  'NEW! Chat with the Editors',
+];
+
+/** GET /api/newspaper/house-ad/:date — deterministic house ad for the given date */
+newspaperRoutes.get('/house-ad/:date', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const ad = await withConn((conn) => getHouseAdForDate(conn, date));
+
+  if (ad == null) {
+    return c.json({
+      tagline: 'All the Frequencies Fit to Print',
+      imageUrl: null,
+      features: HOUSE_AD_FEATURES,
+    });
+  }
+
+  return c.json({
+    tagline: ad.tagline,
+    imageUrl: `/api/newspaper/images/library/house-ads/${ad.imagePath.split('/').pop()}`,
+    features: HOUSE_AD_FEATURES,
+  });
 });
 
 export { newspaperRoutes };

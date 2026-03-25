@@ -3,6 +3,7 @@ import type {
   ArticleStatus,
   EditionStatus,
   EditionType,
+  HouseAd,
   NewspaperArticle,
   NewspaperContentType,
   NewspaperEdition,
@@ -306,4 +307,66 @@ export async function countImagesByType(
     [imageType] as DuckDBValue[],
   );
   return Number(reader.getRowObjectsJS()[0]!.cnt);
+}
+
+// ── House Ad repository ─────────────────────────────────────────────
+
+function rowToHouseAd(row: Record<string, unknown>): HouseAd {
+  return {
+    id: Number(row.id),
+    tagline: String(row.tagline),
+    imagePath: String(row.image_path),
+    imagePrompt: String(row.image_prompt),
+    generatedBy: row.generated_by != null ? String(row.generated_by) : null,
+    createdAt: String(row.created_at),
+  };
+}
+
+export async function insertHouseAd(
+  conn: DuckDBConnection,
+  ad: {
+    tagline: string;
+    imagePath: string;
+    imagePrompt: string;
+    generatedBy: string | null;
+  },
+): Promise<HouseAd> {
+  await conn.run(
+    `INSERT INTO house_ad (tagline, image_path, image_prompt, generated_by)
+     VALUES (?, ?, ?, ?)`,
+    [ad.tagline, ad.imagePath, ad.imagePrompt, ad.generatedBy] as DuckDBValue[],
+  );
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM house_ad WHERE tagline = ? ORDER BY id DESC LIMIT 1`,
+    [ad.tagline] as DuckDBValue[],
+  );
+  return rowToHouseAd(reader.getRowObjectsJS()[0]!);
+}
+
+export async function getHouseAdForDate(
+  conn: DuckDBConnection,
+  editionDate: string,
+): Promise<HouseAd | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM house_ad
+     ORDER BY id
+     LIMIT 1
+     OFFSET (extract(doy FROM ?::DATE)::INTEGER % (SELECT count(*)::INTEGER FROM house_ad))`,
+    [editionDate] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToHouseAd(rows[0]!);
+}
+
+export async function countHouseAds(conn: DuckDBConnection): Promise<number> {
+  const reader = await conn.runAndReadAll(
+    `SELECT count(*)::INTEGER AS cnt FROM house_ad`,
+  );
+  return Number(reader.getRowObjectsJS()[0]!.cnt);
+}
+
+export async function listHouseAds(conn: DuckDBConnection): Promise<HouseAd[]> {
+  const reader = await conn.runAndReadAll(`SELECT * FROM house_ad ORDER BY id`);
+  return reader.getRowObjectsJS().map(rowToHouseAd);
 }
