@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := build
 
 .PHONY: help dep setup dev test build format clean \
-       deploy-synth deploy-diff deploy-up deploy-destroy deploy-frontend deploy-refresh
+       deploy-synth deploy-diff deploy-up deploy-destroy deploy-frontend deploy-newspaper-images deploy-refresh
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -62,6 +62,17 @@ deploy-frontend: ## Build and deploy frontend to CloudFront
 			--query 'DistributionList.Items[?Aliases.Items[0]==`dailyorbit.org`].Id | [0]' \
 			--output text)" \
 		--paths "/index.html"
+
+deploy-newspaper-images: ## Sync local newspaper images to CloudFront S3 bucket
+	aws s3 sync data/newspaper/images/ s3://$(FRONTEND_BUCKET)/newspaper/images/ \
+		--size-only \
+		--cache-control "public,max-age=31536000,immutable" \
+		--exclude "*.psd" --exclude "*.png" --exclude ".DS_Store"
+	aws cloudfront create-invalidation \
+		--distribution-id "$$(aws cloudfront list-distributions \
+			--query 'DistributionList.Items[?Aliases.Items[0]==`dailyorbit.org`].Id | [0]' \
+			--output text)" \
+		--paths "/newspaper/images/*"
 
 deploy-refresh: ## Trigger ASG instance refresh (rolling replace)
 	aws autoscaling start-instance-refresh \
