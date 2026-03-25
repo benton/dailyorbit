@@ -165,9 +165,15 @@ export class BedrockClient implements BedrockClientLike {
 
     const response = await this.client.send(command);
     const latencyMs: number = Math.round(performance.now() - start);
-    const parsed: { images: string[] } = JSON.parse(
+    const parsed: { images?: string[]; error?: string } = JSON.parse(
       new TextDecoder().decode(response.body),
     );
+
+    if (!parsed.images || parsed.images.length === 0) {
+      throw new Error(
+        parsed.error ?? 'Image generation returned no images',
+      );
+    }
 
     return {
       images: parsed.images.map((b64: string) => Buffer.from(b64, 'base64')),

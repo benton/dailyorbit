@@ -116,7 +116,7 @@ export const PORTRAIT_PROMPTS: ReadonlyArray<PortraitEntry> = [
   },
   {
     tags: ['standard', 'male', 'elderly'],
-    prompt: 'elderly man of African descent, white beard, formal evening wear',
+    prompt: 'elderly man with white beard, formal evening wear, distinguished bearing',
   },
   {
     tags: ['standard', 'male', 'elderly'],
@@ -478,7 +478,7 @@ export async function generatePortraitLibrary(
   imageClient: ImageClient,
   config: ConfigService,
   log: (msg: string) => void,
-  options?: { startIndex?: number; limit?: number; dataDir?: string },
+  options?: { startIndex?: number; limit?: number; baseSeed?: number; dataDir?: string },
 ): Promise<{ generated: number; skipped: number; failed: number }> {
   const modelId: string = config.get('newspaperImageModel') as string;
   const dataDir: string = options?.dataDir ?? 'data';
@@ -518,7 +518,7 @@ export async function generatePortraitLibrary(
         negativePrompt: PORTRAIT_NEGATIVE,
         width: 320,
         height: 400,
-        seed: i * 42,
+        seed: options?.baseSeed != null ? options.baseSeed + i : i * 42,
       });
       await writeFile(imagePath, response.images[0]!);
       await insertImage(conn, {

@@ -351,6 +351,12 @@ export const newspaperCommand = defineCommand({
             'Max portraits to generate in this run (default: unlimited)',
           default: '',
         },
+        seed: {
+          type: 'string',
+          description:
+            'Base seed for image generation (default: index * 42)',
+          default: '',
+        },
       },
       async run({ args }) {
         const log = getLogger();
@@ -389,11 +395,16 @@ export const newspaperCommand = defineCommand({
             const { generatePortraitLibrary } =
               await import('../../newspaper/generators/portrait-library.ts');
             const startIndex: number = parseInt(args.start, 10);
-            const opts: { startIndex: number; limit?: number } = {
-              startIndex,
-            };
+            const opts: {
+              startIndex: number;
+              limit?: number;
+              baseSeed?: number;
+            } = { startIndex };
             if (args.limit) {
               opts.limit = parseInt(args.limit, 10);
+            }
+            if (args.seed) {
+              opts.baseSeed = parseInt(args.seed, 10);
             }
 
             log.info('Generating portrait library...');
@@ -414,11 +425,16 @@ export const newspaperCommand = defineCommand({
               await import('../../newspaper/generators/section-headers.ts');
 
             log.info('Generating section headers...');
+            const headerOpts: { baseSeed?: number } = {};
+            if (args.seed) {
+              headerOpts.baseSeed = parseInt(args.seed, 10);
+            }
             const result = await generateSectionHeaders(
               conn,
               imageClient,
               config,
               (msg: string) => log.info(msg),
+              headerOpts,
             );
             log.info(
               `Headers: ${String(result.generated)} generated, ${String(result.skipped)} skipped, ${String(result.failed)} failed`,
