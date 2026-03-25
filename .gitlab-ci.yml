@@ -19,6 +19,7 @@ variables:
   ECR_IMAGE: 665226324657.dkr.ecr.us-east-2.amazonaws.com/daily-orbit
   CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   VITE_SERVER_URL: "https://api.dailyorbit.org"
+  VITE_NEWSPAPER_IMAGES_URL: "/newspaper"
   FRONTEND_BUCKET: "daily-orbit-prod-frontend"
   AWS_DEFAULT_REGION: "us-east-2"
   SAST_DEFAULT_ANALYZERS: "semgrep"
@@ -49,6 +50,7 @@ build:
       docker buildx build \
         --platform linux/arm64 \
         --build-arg VITE_SERVER_URL="$VITE_SERVER_URL" \
+        --build-arg VITE_NEWSPAPER_IMAGES_URL="$VITE_NEWSPAPER_IMAGES_URL" \
         --cache-from type=registry,ref=$GL_IMAGE:buildcache \
         --cache-to type=registry,ref=$GL_IMAGE:buildcache,mode=max \
         $TAGS \

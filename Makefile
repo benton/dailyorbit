@@ -50,7 +50,7 @@ FRONTEND_BUCKET := daily-orbit-prod-frontend
 VITE_SERVER_URL := https://api.dailyorbit.org
 
 deploy-frontend: ## Build and deploy frontend to CloudFront
-	VITE_SERVER_URL=$(VITE_SERVER_URL) pnpm --filter @daily-orbit/web build
+	VITE_SERVER_URL=$(VITE_SERVER_URL) VITE_NEWSPAPER_IMAGES_URL=/newspaper pnpm --filter @daily-orbit/web build
 	aws s3 sync packages/web/dist/ s3://$(FRONTEND_BUCKET)/ \
 		--delete \
 		--cache-control "public,max-age=31536000,immutable" \

@@ -105,13 +105,26 @@ export type PaginatedNewsResponse = {
 
 import env from '../lib/env.tsx';
 
-/** Build API URL for an edition image from its filesystem path */
-export function editionImageUrl(editionDate: string, imagePath: string): string {
-  const filename: string = imagePath.split('/').pop() ?? imagePath;
-  return `${env('SERVER_URL')}/api/newspaper/images/${editionDate}/${filename}`;
+/**
+ * Base URL for newspaper images.
+ * Production: '/newspaper' (same-origin via CloudFront -> S3).
+ * Dev: falls back to SERVER_URL + /api/newspaper (local API server).
+ */
+function newspaperImagesBase(): string {
+  const cdnBase: string = import.meta.env.VITE_NEWSPAPER_IMAGES_URL ?? '';
+  if (cdnBase) {
+    return cdnBase;
+  }
+  return `${env('SERVER_URL')}/api/newspaper`;
 }
 
-/** Build API URL for a library image */
+/** Build URL for an edition image from its filesystem path */
+export function editionImageUrl(editionDate: string, imagePath: string): string {
+  const filename: string = imagePath.split('/').pop() ?? imagePath;
+  return `${newspaperImagesBase()}/images/${editionDate}/${filename}`;
+}
+
+/** Build URL for a library image */
 export function libraryImageUrl(subpath: string): string {
-  return `${env('SERVER_URL')}/api/newspaper/images/library/${subpath}`;
+  return `${newspaperImagesBase()}/images/library/${subpath}`;
 }
