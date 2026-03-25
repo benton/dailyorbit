@@ -81,6 +81,28 @@ export type RecentFilingsResponse = {
   filings: Array<RecentFiling>;
 };
 
+export type NewsListItem = {
+  author: string | null;
+  companyName: string | null;
+  extractStatus: string;
+  id: number;
+  newsSourceId: number;
+  publishedAt: string | null;
+  sourceName: string | null;
+  sourceUrl: string;
+  summary: string | null;
+  tags: Array<string>;
+  title: string;
+};
+
+export type PaginatedNewsResponse = {
+  data: Array<NewsListItem>;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalRows: number;
+};
+
 import env from '../lib/env.tsx';
 
 /** Build API URL for an edition image from its filesystem path */

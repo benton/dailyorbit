@@ -8,11 +8,14 @@ import DailyDigest from './sections/DailyDigest.tsx';
 import Editorial from './sections/Editorial.tsx';
 import FakeAd from './sections/FakeAd.tsx';
 import OrbitalForecast from './sections/OrbitalForecast.tsx';
+import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
 import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
 import type {
   Article,
   EditionWithArticles,
+  NewsListItem,
   NewspaperContentType,
+  PaginatedNewsResponse,
   RecentFilingsResponse,
 } from './types.ts';
 
@@ -27,18 +30,21 @@ export default function NewspaperView() {
   const { date } = useParams<{ date: string }>();
   const [edition, setEdition] = useState<EditionWithArticles | null>(null);
   const [recentFilings, setRecentFilings] = useState<RecentFilingsResponse | null>(null);
+  const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEdition = useCallback(async () => {
     if (!date) return;
     try {
-      const [data, filings] = await Promise.all([
+      const [data, filings, news] = await Promise.all([
         apiFetch<EditionWithArticles>(`/api/newspaper/edition/${date}`),
         apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
+        apiFetch<PaginatedNewsResponse>('/api/news?pageSize=5&sort=published_at&order=desc'),
       ]);
       setEdition(data);
       setRecentFilings(filings);
+      setNewsItems(news.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load edition');
     } finally {
@@ -115,13 +121,17 @@ export default function NewspaperView() {
             />
           )}
 
-          {/* Row 3 — only if any third-row content exists */}
+          {/* Row 3 — Company Spotlight + News (left) | Editorial (right) */}
           {hasSecondRow && (
             <>
               {spotlight ? (
-                <CompanySpotlight article={spotlight} />
+                <CompanySpotlight article={spotlight} newsItems={newsItems} />
               ) : (
-                <div className="grid-company" />
+                <div className="grid-company">
+                  {newsItems.length > 0 && (
+                    <WideBandTransmissions newsItems={newsItems} />
+                  )}
+                </div>
               )}
               {editorial ? (
                 <Editorial article={editorial} classifieds={classifieds} />

@@ -148,6 +148,13 @@
   border-top: 2px solid var(--np-sepia-dark);
 }
 
+/* ── News section divider (nested inside .grid-company) ───── */
+.news-section {
+  border-top: 1px solid var(--np-sepia-medium);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
 .grid-company,
 .grid-editorial {
   border-top: 1px solid var(--np-sepia-medium);
@@ -498,4 +505,60 @@
 
 .filings-table .file-number a:hover {
   text-decoration: underline;
+}
+
+/* ── Wide Band Transmissions (news briefs) ────────────────── */
+.news-brief {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--np-sepia-light);
+}
+
+.news-brief:last-child {
+  border-bottom: none;
+}
+
+.news-brief-title {
+  font-family: var(--np-font-headline);
+  font-size: 16px;
+  line-height: 1.25;
+  color: var(--np-accent-blue);
+  text-decoration: none;
+  display: block;
+}
+
+.news-brief-title:hover {
+  text-decoration: underline;
+}
+
+.news-brief-meta {
+  font-family: var(--np-font-body);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--np-sepia-medium);
+  margin-top: 0.15rem;
+}
+
+.news-brief-company {
+  display: inline-block;
+  font-family: var(--np-font-body);
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.5px;
+  color: var(--np-sepia-dark);
+  background: var(--np-aged-white);
+  border: 1px solid var(--np-sepia-light);
+  padding: 0.1rem 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.news-brief-summary {
+  font-family: var(--np-font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--np-charcoal);
+  margin: 0.25rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

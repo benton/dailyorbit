@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import SectionHeader from '../SectionHeader.tsx';
-import { libraryImageUrl, type Article } from '../types.ts';
+import { libraryImageUrl, type Article, type NewsListItem } from '../types.ts';
+import WideBandTransmissions from './WideBandTransmissions.tsx';
 
 type PortraitData = {
   imagePath: string;
@@ -15,6 +16,7 @@ type SpotlightSourceData = {
 
 type CompanySpotlightProps = {
   article: Article;
+  newsItems?: Array<NewsListItem>;
 };
 
 function parseSourceData(raw: string | null): SpotlightSourceData {
@@ -26,7 +28,7 @@ function parseSourceData(raw: string | null): SpotlightSourceData {
   }
 }
 
-export default function CompanySpotlight({ article }: CompanySpotlightProps) {
+export default function CompanySpotlight({ article, newsItems }: CompanySpotlightProps) {
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const sourceData: SpotlightSourceData = parseSourceData(article.sourceData);
   const companyName: string = sourceData.companyName ?? 'Unknown';
@@ -69,6 +71,9 @@ export default function CompanySpotlight({ article }: CompanySpotlightProps) {
         )}
         <ArticleBody body={article.body} />
       </div>
+      {newsItems && newsItems.length > 0 && (
+        <WideBandTransmissions newsItems={newsItems} />
+      )}
     </div>
   );
 }
