@@ -10,8 +10,8 @@ type PortraitData = {
 };
 
 type SpotlightSourceData = {
-  companyName?: string;
   ceoName?: string | null;
+  companyName?: string;
 };
 
 type CompanySpotlightProps = {
@@ -20,7 +20,9 @@ type CompanySpotlightProps = {
 };
 
 function parseSourceData(raw: string | null): SpotlightSourceData {
-  if (!raw) return {};
+  if (!raw) {
+    return {};
+  }
   try {
     return JSON.parse(raw) as SpotlightSourceData;
   } catch {
@@ -35,7 +37,9 @@ export default function CompanySpotlight({ article, newsItems }: CompanySpotligh
   const ceoName: string | null = sourceData.ceoName ?? null;
 
   useEffect(() => {
-    if (!companyName || companyName === 'Unknown') return;
+    if (!companyName || companyName === 'Unknown') {
+      return;
+    }
     const encodedName: string = encodeURIComponent(companyName);
     apiFetch<PortraitData>(`/api/newspaper/library/portraits/${encodedName}`)
       .then((data) => {
@@ -65,7 +69,7 @@ export default function CompanySpotlight({ article, newsItems }: CompanySpotligh
       <div className="spotlight-body">
         {portraitUrl && (
           <figure className="spotlight-headshot">
-            <img src={portraitUrl} alt={caption} />
+            <img alt={caption} src={portraitUrl} />
             <figcaption>{caption}</figcaption>
           </figure>
         )}

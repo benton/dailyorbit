@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 
 type DailyFilingCount = {
-  day: string;
-  date: string;
   count: number;
+  date: string;
+  day: string;
 };
 
 type MastheadFilingVolumeProps = {
@@ -12,12 +12,12 @@ type MastheadFilingVolumeProps = {
 };
 
 export default function MastheadFilingVolume({ editionDate }: MastheadFilingVolumeProps) {
-  const [days, setDays] = useState<DailyFilingCount[]>([]);
+  const [days, setDays] = useState<Array<DailyFilingCount>>([]);
   const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
-    apiFetch<DailyFilingCount[]>(`/api/stats/weekly-filing-volume?before=${editionDate}`)
-      .then((data: DailyFilingCount[]) => {
+    apiFetch<Array<DailyFilingCount>>(`/api/stats/weekly-filing-volume?before=${editionDate}`)
+      .then((data: Array<DailyFilingCount>) => {
         setDays(data);
         setTotal(data.reduce((sum: number, d: DailyFilingCount) => sum + d.count, 0));
       })
