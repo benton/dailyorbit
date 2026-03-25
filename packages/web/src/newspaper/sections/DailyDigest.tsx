@@ -20,6 +20,7 @@ export default function DailyDigest({
     <div className="grid-lead">
       <SectionHeader name="three-miles-up" />
       <h3 className="article-headline-small">300 Miles Up</h3>
+      <p className="byline">Industry Overview</p>
       {cartoon?.imagePath && (
         <div className="cartoon-inset">
           <img

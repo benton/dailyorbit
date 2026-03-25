@@ -60,10 +60,11 @@ export async function queryRecentNews(
      FROM news_item ni
      JOIN news_source ns ON ns.id = ni.news_source_id
      WHERE ni.published_at >= CAST(? AS TIMESTAMP) - INTERVAL 1 DAY
+       AND ni.published_at <= CAST(? AS TIMESTAMP) + INTERVAL 1 DAY
        AND ni.summary IS NOT NULL AND LENGTH(ni.summary) > 0
      ORDER BY ni.published_at DESC
      LIMIT 15`,
-    [editionDate] as DuckDBValue[],
+    [editionDate, editionDate] as DuckDBValue[],
   );
 
   return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({

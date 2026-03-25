@@ -11,6 +11,7 @@ export default function OrbitalForecast({ article }: OrbitalForecastProps) {
     <div className="grid-orbital">
       <SectionHeader name="orbital-forecast" />
       <h3 className="article-headline-small">Orbital Forecast</h3>
+      <p className="byline">FCC Filings</p>
       <ArticleBody body={article.body} />
     </div>
   );

@@ -47,6 +47,7 @@ export async function selectSpotlightCompany(
        JOIN company_alias ca ON ca.company_id = c.id
        JOIN filing f ON UPPER(f.address_attention) = UPPER(ca.alias_name)
        WHERE f.date_filed >= CAST(? AS DATE) - INTERVAL 90 DAY
+         AND f.date_filed <= CAST(? AS DATE)
        GROUP BY c.id, c.name, c.description, c.parent_company_id
      )
      SELECT ac.id, ac.name, ac.description, ac.parent_company_id,
@@ -58,7 +59,7 @@ export async function selectSpotlightCompany(
      )
      ORDER BY ac.recent_filings DESC
      LIMIT 1`,
-    [editionDate, editionDate] as DuckDBValue[],
+    [editionDate, editionDate, editionDate] as DuckDBValue[],
   );
 
   const rows = reader.getRowObjectsJS();
@@ -85,9 +86,10 @@ export async function queryCompanyFilings(
      LEFT JOIN attachment a ON a.filing_key = f.filing_key AND a.summary IS NOT NULL
      WHERE ca.company_id = ?
        AND f.date_filed >= CAST(? AS DATE) - INTERVAL 90 DAY
+       AND f.date_filed <= CAST(? AS DATE)
      ORDER BY f.date_filed DESC
      LIMIT 10`,
-    [companyId, editionDate] as DuckDBValue[],
+    [companyId, editionDate, editionDate] as DuckDBValue[],
   );
 
   return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({

@@ -21,6 +21,7 @@ export default function WideBandTransmissions({ newsItems }: WideBandTransmissio
     <div className="news-section">
       <SectionHeader name="wide-band-transmissions" />
       <h3 className="filings-heading">Wide Band Transmissions</h3>
+      <p className="byline">360-degree News</p>
       <div className="news-briefs">
         {capped.map((item: NewsListItem) => (
           <div className="news-brief" key={item.id}>

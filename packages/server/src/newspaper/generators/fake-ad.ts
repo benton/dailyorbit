@@ -29,11 +29,12 @@ export async function queryRecentFilingTypes(
     `SELECT DISTINCT subsystem_code || '-' || app_type_code AS filing_type
      FROM filing
      WHERE date_filed >= CAST(? AS DATE) - INTERVAL 7 DAY
+       AND date_filed <= CAST(? AS DATE)
        AND subsystem_code IS NOT NULL
        AND app_type_code IS NOT NULL
      ORDER BY random()
      LIMIT 5`,
-    [editionDate] as DuckDBValue[],
+    [editionDate, editionDate] as DuckDBValue[],
   );
   return reader
     .getRowObjectsJS()
