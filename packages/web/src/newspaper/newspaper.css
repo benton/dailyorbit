@@ -112,11 +112,11 @@
 /* ── Broadsheet Grid (>900px) ───────────────────────────────── */
 .newspaper-grid {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(160px, 1fr) minmax(180px, 1.2fr);
+  grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(180px, 1.2fr);
   grid-template-rows: auto auto;
   grid-template-areas:
-    "fakead  lead    lead    lead    orbital"
-    "company editorial editorial cartoon classifieds";
+    "fakead  lead    lead    orbital"
+    "company editorial editorial classifieds";
   column-gap: 0;
   row-gap: 0;
 }
@@ -133,22 +133,19 @@
 .grid-orbital      { grid-area: orbital; }
 .grid-company      { grid-area: company; }
 .grid-editorial    { grid-area: editorial; }
-.grid-cartoon      { grid-area: cartoon; }
 .grid-classifieds  { grid-area: classifieds; }
 
 /* Column rules: right border on all cells except rightmost in each row */
 .grid-fakead,
 .grid-lead,
 .grid-company,
-.grid-editorial,
-.grid-cartoon {
+.grid-editorial {
   border-right: 1px solid var(--np-sepia-medium);
 }
 
 /* Row divider between rows */
 .grid-company,
 .grid-editorial,
-.grid-cartoon,
 .grid-classifieds {
   border-top: 1px solid var(--np-sepia-medium);
 }
@@ -347,20 +344,29 @@
   }
 }
 
-/* ── Cartoon ────────────────────────────────────────────────── */
-.cartoon-image {
+/* ── Cartoon (inset within 3 Miles Up) ──────────────────────── */
+.cartoon-inset {
+  float: right;
+  clear: right;
+  width: 180px;
+  margin: 0 0 0.5rem 0.75rem;
+  padding: 3px;
+  border: 2px solid var(--np-sepia-dark);
+  outline: 1px solid var(--np-sepia-medium);
+  outline-offset: 2px;
+  background: var(--np-aged-white);
+}
+
+.cartoon-inset img {
   width: 100%;
-  max-width: 400px;
-  margin: 0 auto 0.75rem;
+  height: auto;
   display: block;
 }
 
-.cartoon-caption {
-  font-family: var(--np-font-body);
-  font-style: italic;
-  font-size: 13px;
-  color: var(--np-charcoal);
-  text-align: center;
+@media (max-width: 900px) {
+  .cartoon-inset {
+    width: 140px;
+  }
 }
 
 /* ── Links ──────────────────────────────────────────────────── */

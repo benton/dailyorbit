@@ -7,7 +7,6 @@ import Classifieds from './sections/Classifieds.tsx';
 import CompanySpotlight from './sections/CompanySpotlight.tsx';
 import DailyDigest from './sections/DailyDigest.tsx';
 import Editorial from './sections/Editorial.tsx';
-import EditorialCartoon from './sections/EditorialCartoon.tsx';
 import FakeAd from './sections/FakeAd.tsx';
 import OrbitalForecast from './sections/OrbitalForecast.tsx';
 import type { Article, EditionWithArticles, NewspaperContentType } from './types.ts';
@@ -66,7 +65,7 @@ export default function NewspaperView() {
   const forecast: Article | undefined = findArticle(edition.articles, 'orbital_forecast');
   const classifieds: Article | undefined = findArticle(edition.articles, 'classifieds');
 
-  const hasSecondRow: boolean = !!(spotlight || editorial || cartoon || classifieds);
+  const hasSecondRow: boolean = !!(spotlight || editorial || classifieds);
 
   return (
     <div className="newspaper-wrapper">
@@ -85,6 +84,7 @@ export default function NewspaperView() {
           {dailyDigest ? (
             <DailyDigest
               article={dailyDigest}
+              cartoon={cartoon}
               editionDate={edition.editionDate}
               heroImage={heroImage}
             />
@@ -109,11 +109,6 @@ export default function NewspaperView() {
                 <Editorial article={editorial} />
               ) : (
                 <div className="grid-editorial" />
-              )}
-              {cartoon ? (
-                <EditorialCartoon article={cartoon} editionDate={edition.editionDate} />
-              ) : (
-                <div className="grid-cartoon" />
               )}
               {classifieds ? (
                 <Classifieds article={classifieds} />

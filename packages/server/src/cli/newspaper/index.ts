@@ -1,7 +1,15 @@
 import { defineCommand } from 'citty';
+import type { DuckDBInstance } from '@duckdb/node-api';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { getLogger } from '../../lib/logger.ts';
 import { readKeyFile } from '../../lib/encryption.ts';
+import type { ConfigService as ConfigServiceType } from '../../lib/config-service.ts';
+import type { InferenceService as InferenceServiceType } from '../../inference/inference-service.ts';
+import type { InstrumentedBedrockClient as InstrumentedBedrockClientType } from '../../inference/instrumented-client.ts';
+import type {
+  GeneratorResult,
+  NewspaperContentType,
+} from '../../newspaper/types.ts';
 import { databaseArg } from '../shared/args.ts';
 import { createDb, resolveFromRoot } from '../shared/context.ts';
 
@@ -10,6 +18,229 @@ const keyFileArg = {
   description: 'Path to encryption key file',
   default: 'data/daily-orbit.key',
 } as const;
+
+// ── Shared setup for generators ─────────────────────────────────
+type GenerateContext = {
+  config: ConfigServiceType;
+  inferenceService: InferenceServiceType;
+  imageClient: InstrumentedBedrockClientType;
+  conn: DuckDBConnection;
+};
+
+async function setupGenerateContext(
+  dbInstance: DuckDBInstance,
+  conn: DuckDBConnection,
+  keyFilePath: string,
+  regionOverride: string,
+): Promise<GenerateContext> {
+  const { ConfigService } = await import('../../lib/config-service.ts');
+  const { setConfigService } = await import('../../lib/config.ts');
+  const { BedrockClient } = await import('../../inference/bedrock-client.ts');
+  const { InstrumentedBedrockClient } =
+    await import('../../inference/instrumented-client.ts');
+  const { InferenceService } =
+    await import('../../inference/inference-service.ts');
+
+  const key: Buffer = readKeyFile(resolveFromRoot(keyFilePath));
+  const config = new ConfigService(dbInstance, key);
+  await config.load();
+  setConfigService(config);
+
+  const region: string =
+    regionOverride || (config.get('bedrockRegion') as string);
+  const imageClient = new InstrumentedBedrockClient(
+    new BedrockClient(region),
+    conn,
+    'newspaper',
+  );
+  const inferenceService = new InferenceService(imageClient);
+
+  return { config, inferenceService, imageClient, conn };
+}
+
+// ── Content type definitions ────────────────────────────────────
+type ContentTypeDef = {
+  contentType: NewspaperContentType;
+  slug: string;
+  displayOrder: number;
+  generatedByKey: 'newspaperCopyModel' | 'newspaperImageModel';
+  generate: (
+    ctx: GenerateContext,
+    editionId: number,
+    editionDate: string,
+    log: (level: string, message: string) => void,
+  ) => Promise<GeneratorResult>;
+  extraSchemas?: () => Promise<void>;
+};
+
+async function ensureCompanySchema(conn: DuckDBConnection): Promise<void> {
+  const { ensureCompanyTables } = await import('../../companies/schema.ts');
+  await ensureCompanyTables(conn);
+}
+
+const CONTENT_TYPES: Record<string, ContentTypeDef> = {
+  daily_digest: {
+    contentType: 'daily_digest',
+    slug: 'three-miles-up',
+    displayOrder: 1,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateDailyDigest } =
+        await import('../../newspaper/generators/daily-digest.ts');
+      return generateDailyDigest({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+  hero_image: {
+    contentType: 'hero_image',
+    slug: 'hero-image',
+    displayOrder: 0,
+    generatedByKey: 'newspaperImageModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateHeroImage } =
+        await import('../../newspaper/generators/hero-image.ts');
+      return generateHeroImage({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: null as never,
+        config: ctx.config,
+        imageClient: ctx.imageClient,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+  fake_ad: {
+    contentType: 'fake_ad',
+    slug: 'fake-ad',
+    displayOrder: 90,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateFakeAd } =
+        await import('../../newspaper/generators/fake-ad.ts');
+      return generateFakeAd({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+  editorial: {
+    contentType: 'editorial',
+    slug: 'over-the-horizon',
+    displayOrder: 10,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateEditorial } =
+        await import('../../newspaper/generators/editorial.ts');
+      return generateEditorial({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+  editorial_cartoon: {
+    contentType: 'editorial_cartoon',
+    slug: 'editorial-cartoon',
+    displayOrder: 11,
+    generatedByKey: 'newspaperImageModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateEditorialCartoon } =
+        await import('../../newspaper/generators/editorial-cartoon.ts');
+      return generateEditorialCartoon({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        imageClient: ctx.imageClient,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+  company_spotlight: {
+    contentType: 'company_spotlight',
+    slug: 'company-spotlight',
+    displayOrder: 20,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateCompanySpotlight } =
+        await import('../../newspaper/generators/company-spotlight.ts');
+      return generateCompanySpotlight({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+    extraSchemas: async () => {},
+  },
+  orbital_forecast: {
+    contentType: 'orbital_forecast',
+    slug: 'orbital-forecast',
+    displayOrder: 30,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateOrbitalForecast } =
+        await import('../../newspaper/generators/orbital-forecast.ts');
+      return generateOrbitalForecast({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+    extraSchemas: async () => {},
+  },
+  classifieds: {
+    contentType: 'classifieds',
+    slug: 'classifieds',
+    displayOrder: 80,
+    generatedByKey: 'newspaperCopyModel',
+    generate: async (ctx, editionId, editionDate, log) => {
+      const { generateClassifieds } =
+        await import('../../newspaper/generators/classifieds.ts');
+      return generateClassifieds({
+        conn: ctx.conn,
+        editionId,
+        editionDate,
+        inferenceService: ctx.inferenceService,
+        config: ctx.config,
+        log: (level: string, msg: string) => log(level, msg),
+      });
+    },
+  },
+};
+
+// Daily types always generated; weekly types generated for --type all
+const DAILY_TYPES: string[] = ['daily_digest', 'hero_image', 'fake_ad'];
+const WEEKLY_TYPES: string[] = [
+  'editorial',
+  'editorial_cartoon',
+  'company_spotlight',
+  'orbital_forecast',
+  'classifieds',
+];
+const ALL_TYPES: string[] = [...DAILY_TYPES, ...WEEKLY_TYPES];
+
+const VALID_TYPES: string = [...Object.keys(CONTENT_TYPES), 'all'].join(', ');
 
 export const newspaperCommand = defineCommand({
   meta: {
@@ -32,8 +263,8 @@ export const newspaperCommand = defineCommand({
         },
         type: {
           type: 'string',
-          description: 'Content type to generate (default: daily_digest)',
-          default: 'daily_digest',
+          description: `Content type (${VALID_TYPES}). Default: all`,
+          default: 'all',
         },
         region: {
           type: 'string',
@@ -56,116 +287,69 @@ export const newspaperCommand = defineCommand({
           const { ensureNewsTables } = await import('../../news/schema.ts');
           await ensureNewspaperTables(conn);
           await ensureNewsTables(conn);
+          await ensureCompanySchema(conn);
 
-          const { ensureEdition, upsertArticle } =
+          const { ensureEdition, upsertArticle, getArticle } =
             await import('../../newspaper/repository.ts');
           const edition = await ensureEdition(conn, editionDate);
           log.info(
             `Edition: ${edition.editionDate} (id=${String(edition.id)})`,
           );
 
-          if (args.type === 'daily_digest') {
-            const { generateDailyDigest } =
-              await import('../../newspaper/generators/daily-digest.ts');
-            const { ConfigService } =
-              await import('../../lib/config-service.ts');
-            const { setConfigService } = await import('../../lib/config.ts');
-            const { BedrockClient } =
-              await import('../../inference/bedrock-client.ts');
-            const { InstrumentedBedrockClient } =
-              await import('../../inference/instrumented-client.ts');
-            const { InferenceService } =
-              await import('../../inference/inference-service.ts');
+          const ctx: GenerateContext = await setupGenerateContext(
+            dbInstance,
+            conn,
+            args.keyFile,
+            args.region,
+          );
 
-            const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
-            const config = new ConfigService(dbInstance, key);
-            await config.load();
-            setConfigService(config);
+          const typesToRun: string[] =
+            args.type === 'all' ? ALL_TYPES : [args.type];
 
-            const region: string =
-              args.region || (config.get('bedrockRegion') as string);
-            const client = new InstrumentedBedrockClient(
-              new BedrockClient(region),
-              conn,
-              'newspaper',
-            );
-            const inferenceService = new InferenceService(client);
+          for (const typeName of typesToRun) {
+            const def: ContentTypeDef | undefined = CONTENT_TYPES[typeName];
+            if (!def) {
+              log.error(`Unknown content type: ${typeName}`);
+              continue;
+            }
 
-            const result = await generateDailyDigest({
-              conn,
-              editionId: edition.id,
-              editionDate,
-              inferenceService,
-              config,
-              log: (level: string, message: string) =>
-                log[level === 'error' ? 'error' : 'info'](message),
-            });
+            // Skip if already generated
+            const existing = await getArticle(conn, edition.id, def.slug);
+            if (existing?.status === 'generated') {
+              log.info(`[${def.slug}] already generated — skipping`);
+              continue;
+            }
 
-            await upsertArticle(conn, edition.id, {
-              contentType: 'daily_digest',
-              slug: 'three-miles-up',
-              headline: result.headline,
-              body: result.body,
-              sourceData: JSON.stringify(result.sourceData),
-              generatedBy: config.get('newspaperCopyModel') as string,
-              displayOrder: 1,
-              status: 'generated',
-            });
+            try {
+              log.info(`[${def.slug}] generating...`);
+              const result: GeneratorResult = await def.generate(
+                ctx,
+                edition.id,
+                editionDate,
+                (level: string, msg: string) =>
+                  log[level === 'error' ? 'error' : 'info'](msg),
+              );
 
-            log.info(`Generated: "${result.headline}"`);
-            log.info(`Body length: ${String(result.body.length)} characters`);
-          } else if (args.type === 'fake_ad') {
-            const { generateFakeAd } =
-              await import('../../newspaper/generators/fake-ad.ts');
-            const { ConfigService } =
-              await import('../../lib/config-service.ts');
-            const { setConfigService } = await import('../../lib/config.ts');
-            const { BedrockClient } =
-              await import('../../inference/bedrock-client.ts');
-            const { InstrumentedBedrockClient } =
-              await import('../../inference/instrumented-client.ts');
-            const { InferenceService } =
-              await import('../../inference/inference-service.ts');
+              await upsertArticle(conn, edition.id, {
+                contentType: def.contentType,
+                slug: def.slug,
+                headline: result.headline,
+                body: result.body,
+                imagePath: result.imagePath ?? null,
+                imagePrompt: result.imagePrompt ?? null,
+                sourceData: JSON.stringify(result.sourceData),
+                generatedBy: ctx.config.get(def.generatedByKey) as string,
+                displayOrder: def.displayOrder,
+                status: 'generated',
+              });
 
-            const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
-            const config = new ConfigService(dbInstance, key);
-            await config.load();
-            setConfigService(config);
-
-            const region: string =
-              args.region || (config.get('bedrockRegion') as string);
-            const client = new InstrumentedBedrockClient(
-              new BedrockClient(region),
-              conn,
-              'newspaper',
-            );
-            const inferenceService = new InferenceService(client);
-
-            const result = await generateFakeAd({
-              conn,
-              editionId: edition.id,
-              editionDate,
-              inferenceService,
-              config,
-              log: (level: string, message: string) =>
-                log[level === 'error' ? 'error' : 'info'](message),
-            });
-
-            await upsertArticle(conn, edition.id, {
-              contentType: 'fake_ad',
-              slug: 'fake-ad',
-              headline: result.headline,
-              body: result.body,
-              sourceData: JSON.stringify(result.sourceData),
-              generatedBy: config.get('newspaperCopyModel') as string,
-              displayOrder: 90,
-              status: 'generated',
-            });
-
-            log.info(`Generated: "${result.headline}"`);
-            log.info(`Body length: ${String(result.body.length)} characters`);
-          } else {
-            log.error(`Unknown content type: ${args.type}`);
+              const label: string = result.headline || def.slug;
+              log.info(`[${def.slug}] done: "${label}"`);
+            } catch (err) {
+              log.error(
+                `[${def.slug}] failed: ${(err as Error).message}`,
+              );
+            }
           }
         } finally {
           conn.closeSync();
