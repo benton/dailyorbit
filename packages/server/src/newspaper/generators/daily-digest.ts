@@ -153,7 +153,7 @@ export async function generateDailyDigest(
 
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
-  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? '3 Miles Up';
+  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? '300 Miles Up';
   const body: string = response.content;
 
   return {

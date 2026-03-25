@@ -75,7 +75,7 @@
 
 .masthead-emblem {
   width: auto;
-  height: 160px;
+  height: 208px;
   margin: 0 auto 0.75rem;
   border: 2px solid var(--np-ink-black);
   object-fit: contain;
@@ -113,10 +113,11 @@
 .newspaper-grid {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(180px, 1.2fr);
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   grid-template-areas:
     "fakead  lead    lead    orbital"
-    "company editorial editorial classifieds";
+    "filings filings filings filings"
+    "company company editorial editorial";
   column-gap: 0;
   row-gap: 0;
 }
@@ -133,20 +134,22 @@
 .grid-orbital      { grid-area: orbital; }
 .grid-company      { grid-area: company; }
 .grid-editorial    { grid-area: editorial; }
-.grid-classifieds  { grid-area: classifieds; }
+.grid-filings      { grid-area: filings; }
 
 /* Column rules: right border on all cells except rightmost in each row */
 .grid-fakead,
 .grid-lead,
-.grid-company,
-.grid-editorial {
+.grid-company {
   border-right: 1px solid var(--np-sepia-medium);
 }
 
-/* Row divider between rows */
+/* Row dividers between rows */
+.grid-filings {
+  border-top: 2px solid var(--np-sepia-dark);
+}
+
 .grid-company,
-.grid-editorial,
-.grid-classifieds {
+.grid-editorial {
   border-top: 1px solid var(--np-sepia-medium);
 }
 
@@ -206,10 +209,12 @@
 
 .article-headline-small {
   font-family: var(--np-font-headline);
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1.2;
   color: var(--np-ink-black);
   margin: 0 0 0.5rem;
+  border-bottom: 1px solid var(--np-sepia-dark);
+  padding-bottom: 0.35rem;
 }
 
 /* ── Body Text ──────────────────────────────────────────────── */
@@ -344,7 +349,7 @@
   }
 }
 
-/* ── Cartoon (inset within 3 Miles Up) ──────────────────────── */
+/* ── Cartoon (inset within 300 Miles Up) ─────────────────────── */
 .cartoon-inset {
   float: right;
   clear: right;
@@ -390,4 +395,71 @@
 
 .newspaper-error {
   color: var(--np-accent-red);
+}
+
+/* ── Yesterday's Filings (ledger table) ────────────────────── */
+.filings-heading {
+  font-family: var(--np-font-headline);
+  font-size: 22px;
+  color: var(--np-ink-black);
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.filings-empty {
+  font-family: var(--np-font-body);
+  font-style: italic;
+  color: var(--np-sepia-medium);
+}
+
+.filings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.filings-table th {
+  font-family: var(--np-font-body);
+  font-variant: small-caps;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--np-sepia-dark);
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 2px solid var(--np-sepia-dark);
+}
+
+.filings-table td {
+  padding: 0.25rem 0.5rem;
+  border-right: 1px solid var(--np-sepia-medium);
+  color: var(--np-charcoal);
+}
+
+.filings-table td:last-child {
+  border-right: none;
+}
+
+.filings-table tr:nth-child(even) {
+  background: var(--np-aged-white);
+}
+
+.filings-table tr:nth-child(odd) {
+  background: var(--np-parchment-light);
+}
+
+.filings-table .file-number {
+  font-family: var(--np-font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.filings-table .file-number a {
+  color: var(--np-accent-blue);
+  text-decoration: none;
+}
+
+.filings-table .file-number a:hover {
+  text-decoration: underline;
 }

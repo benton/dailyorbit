@@ -3,13 +3,18 @@ import { Link, useParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import Masthead from './Masthead.tsx';
 import './newspaper.css';
-import Classifieds from './sections/Classifieds.tsx';
 import CompanySpotlight from './sections/CompanySpotlight.tsx';
 import DailyDigest from './sections/DailyDigest.tsx';
 import Editorial from './sections/Editorial.tsx';
 import FakeAd from './sections/FakeAd.tsx';
 import OrbitalForecast from './sections/OrbitalForecast.tsx';
-import type { Article, EditionWithArticles, NewspaperContentType } from './types.ts';
+import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
+import type {
+  Article,
+  EditionWithArticles,
+  NewspaperContentType,
+  RecentFilingsResponse,
+} from './types.ts';
 
 function findArticle(
   articles: Array<Article>,
@@ -21,14 +26,19 @@ function findArticle(
 export default function NewspaperView() {
   const { date } = useParams<{ date: string }>();
   const [edition, setEdition] = useState<EditionWithArticles | null>(null);
+  const [recentFilings, setRecentFilings] = useState<RecentFilingsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEdition = useCallback(async () => {
     if (!date) return;
     try {
-      const data: EditionWithArticles = await apiFetch(`/api/newspaper/edition/${date}`);
+      const [data, filings] = await Promise.all([
+        apiFetch<EditionWithArticles>(`/api/newspaper/edition/${date}`),
+        apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
+      ]);
       setEdition(data);
+      setRecentFilings(filings);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load edition');
     } finally {
@@ -65,7 +75,7 @@ export default function NewspaperView() {
   const forecast: Article | undefined = findArticle(edition.articles, 'orbital_forecast');
   const classifieds: Article | undefined = findArticle(edition.articles, 'classifieds');
 
-  const hasSecondRow: boolean = !!(spotlight || editorial || classifieds);
+  const hasSecondRow: boolean = !!(spotlight || editorial);
 
   return (
     <div className="newspaper-wrapper">
@@ -97,7 +107,15 @@ export default function NewspaperView() {
             <div className="grid-orbital" />
           )}
 
-          {/* Row 2 — only if any second-row content exists */}
+          {/* Row 2 — Yesterday's Filings */}
+          {recentFilings && recentFilings.filings.length > 0 && (
+            <YesterdaysFilings
+              dayLabel={recentFilings.dayLabel}
+              filings={recentFilings.filings}
+            />
+          )}
+
+          {/* Row 3 — only if any third-row content exists */}
           {hasSecondRow && (
             <>
               {spotlight ? (
@@ -106,14 +124,9 @@ export default function NewspaperView() {
                 <div className="grid-company" />
               )}
               {editorial ? (
-                <Editorial article={editorial} />
+                <Editorial article={editorial} classifieds={classifieds} />
               ) : (
                 <div className="grid-editorial" />
-              )}
-              {classifieds ? (
-                <Classifieds article={classifieds} />
-              ) : (
-                <div className="grid-classifieds" />
               )}
             </>
           )}

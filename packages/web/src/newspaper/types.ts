@@ -53,7 +53,7 @@ export const SECTION_HEADER_MAP: Partial<Record<NewspaperContentType, string>> =
 
 /** Maps content type to human-readable section title */
 export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
-  daily_digest: 'Three Miles Up',
+  daily_digest: '300 Miles Up',
   hero_image: 'Hero Image',
   fake_ad: 'Advertisement',
   editorial: 'Over the Horizon',
@@ -61,6 +61,24 @@ export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
   company_spotlight: 'Company Spotlight',
   orbital_forecast: 'Orbital Forecast',
   classifieds: 'The Classifieds',
+};
+
+export type RecentFiling = {
+  file_number: string;
+  callsign: string | null;
+  address_attention: string | null;
+  subsystem_code: string;
+  app_type_code: string;
+  status_code: string | null;
+  date_filed: string | null;
+  company_name: string | null;
+  summary: string | null;
+};
+
+export type RecentFilingsResponse = {
+  date: string;
+  dayLabel: string;
+  filings: Array<RecentFiling>;
 };
 
 import env from '../lib/env.tsx';

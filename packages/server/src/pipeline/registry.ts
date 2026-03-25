@@ -862,7 +862,7 @@ const STAGES: PipelineStage[] = [
     group: 'newspaper',
     name: 'Daily Digest',
     description:
-      'Generate "3 Miles Up" lead article from today\'s filings and news',
+      'Generate "300 Miles Up" lead article from today\'s filings and news',
     defaultConcurrency: 1,
     parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {

@@ -14,7 +14,7 @@ export default function DailyDigest({ article, cartoon, editionDate, heroImage }
   return (
     <div className="grid-lead">
       <SectionHeader name="three-miles-up" />
-      <h3 className="article-headline-small">3 Miles Up</h3>
+      <h3 className="article-headline-small">300 Miles Up</h3>
       {cartoon?.imagePath && (
         <div className="cartoon-inset">
           <img
