@@ -1,7 +1,6 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api.ts';
 import ArticleBody from '../ArticleBody.tsx';
-import SectionHeader from '../SectionHeader.tsx';
 import { libraryImageUrl, type Article, type NewsListItem } from '../types.ts';
 import WideBandTransmissions from './WideBandTransmissions.tsx';
 
@@ -65,7 +64,6 @@ export default function CompanySpotlight({ article, children, newsItems }: Compa
 
   return (
     <div className="grid-company">
-      <SectionHeader name="company-spotlight" />
       <h3 className="article-headline-small">Company Spotlight</h3>
       <div className="spotlight-body">
         {portraitUrl && (

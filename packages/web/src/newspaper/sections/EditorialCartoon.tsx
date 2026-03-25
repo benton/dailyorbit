@@ -1,5 +1,4 @@
 import type { Article } from '../types.ts';
-import SectionHeader from '../SectionHeader.tsx';
 import { editionImageUrl } from '../types.ts';
 
 type EditorialCartoonProps = {
@@ -12,7 +11,6 @@ export default function EditorialCartoon({ article, editionDate }: EditorialCart
 
   return (
     <div className="grid-cartoon">
-      <SectionHeader name="editorial-cartoon" />
       {article.imagePath && (
         <img
           alt={caption || 'Editorial cartoon'}

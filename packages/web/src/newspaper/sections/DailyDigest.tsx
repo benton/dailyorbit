@@ -1,6 +1,5 @@
 import type { Article } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
-import SectionHeader from '../SectionHeader.tsx';
 import { editionImageUrl } from '../types.ts';
 
 type DailyDigestProps = {
@@ -18,7 +17,6 @@ export default function DailyDigest({
 }: DailyDigestProps) {
   return (
     <div className="grid-lead">
-      <SectionHeader name="three-miles-up" />
       <h3 className="article-headline-small">300 Miles Up</h3>
       <p className="byline">Industry Overview</p>
       {cartoon?.imagePath && (

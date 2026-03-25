@@ -1,5 +1,4 @@
 import type { NewsListItem } from '../types.ts';
-import SectionHeader from '../SectionHeader.tsx';
 
 type WideBandTransmissionsProps = {
   newsItems: Array<NewsListItem>;
@@ -23,7 +22,6 @@ export default function WideBandTransmissions({ newsItems }: WideBandTransmissio
 
   return (
     <div className="news-section">
-      <SectionHeader name="wide-band-transmissions" />
       <h3 className="filings-heading">Wide Band Transmissions</h3>
       <p className="byline">360-degree News</p>
       <div className="news-briefs">
