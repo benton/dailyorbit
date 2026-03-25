@@ -220,12 +220,11 @@
 .newspaper-grid {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) 1.5fr 1.5fr minmax(180px, 1.2fr);
-  grid-template-rows: auto auto auto auto;
+  grid-template-rows: auto auto auto;
   grid-template-areas:
     'fakead  lead    lead    orbital'
     'filings filings filings filings'
-    'company company editorial editorial'
-    'housead housead housead housead';
+    'company company editorial editorial';
   column-gap: 0;
   row-gap: 0;
 }
@@ -317,11 +316,7 @@
   }
 }
 
-/* ── House Ad ───────────────────────────────────────────────── */
-.grid-house-ad {
-  grid-area: housead;
-  border-top: 2px solid var(--np-sepia-dark);
-}
+/* ── House Ad (nested inside company cell) ──────────────────── */
 
 .house-ad {
   background: var(--np-aged-white);

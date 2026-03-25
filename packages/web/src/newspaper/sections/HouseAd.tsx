@@ -33,8 +33,7 @@ export default function HouseAd({ editionDate }: HouseAdProps) {
   const imageUrl: string | null = ad.imageSubpath ? libraryImageUrl(ad.imageSubpath) : null;
 
   return (
-    <div className="grid-house-ad">
-      <div className="house-ad">
+    <div className="house-ad">
         {imageUrl && (
           <div className="house-ad-image">
             <img src={imageUrl} alt="" width={320} height={320} />
@@ -50,7 +49,6 @@ export default function HouseAd({ editionDate }: HouseAdProps) {
           ))}
         </ul>
         <div className="house-ad-label">&#x2550;&#x2550; An Advertisement &#x2550;&#x2550;</div>
-      </div>
     </div>
   );
 }

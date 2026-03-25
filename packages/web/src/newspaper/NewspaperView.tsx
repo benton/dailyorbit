@@ -113,14 +113,17 @@ export default function NewspaperView() {
             <YesterdaysFilings dayLabel={recentFilings.dayLabel} filings={recentFilings.filings} />
           )}
 
-          {/* Row 3 — Company Spotlight + News (left) | Editorial (right) */}
+          {/* Row 3 — Company Spotlight + News + House Ad (left) | Editorial (right) */}
           {hasSecondRow && (
             <>
               {spotlight ? (
-                <CompanySpotlight article={spotlight} newsItems={newsItems} />
+                <CompanySpotlight article={spotlight} newsItems={newsItems}>
+                  <HouseAd editionDate={edition.editionDate} />
+                </CompanySpotlight>
               ) : (
                 <div className="grid-company">
                   {newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
+                  <HouseAd editionDate={edition.editionDate} />
                 </div>
               )}
               {editorial ? (
@@ -130,9 +133,6 @@ export default function NewspaperView() {
               )}
             </>
           )}
-
-          {/* Row 4 — House Ad */}
-          <HouseAd editionDate={edition.editionDate} />
         </div>
       </article>
     </div>

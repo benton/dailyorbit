@@ -267,7 +267,7 @@ const HOUSE_AD_FEATURES: string[] = [
   'search on concepts as well as keywords',
   'save custom searches',
   'receive email alerts based on saved searches',
-  'NEW! Chat with the Editors',
+  "NEW! Chat with The Orbit's Editors",
 ];
 
 /** GET /api/newspaper/house-ad/:date — deterministic house ad for the given date */
