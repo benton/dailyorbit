@@ -4,6 +4,7 @@ import type { DuckDBConnection } from '@duckdb/node-api';
 import type { ConfigService } from '../../lib/config-service.ts';
 import type { ImageGenerationRequest } from '../../inference/types.ts';
 import { getImageByPath, insertImage } from '../repository.ts';
+import { createImageUploader } from './upload-after-write.ts';
 
 // ── Style constants ────────────────────────────────────────────────
 
@@ -498,6 +499,7 @@ export async function generatePortraitLibrary(
   );
   await mkdir(baseDir, { recursive: true });
 
+  const upload = createImageUploader();
   let generated: number = 0;
   let skipped: number = 0;
   let failed: number = 0;
@@ -528,6 +530,7 @@ export async function generatePortraitLibrary(
         seed: options?.baseSeed != null ? options.baseSeed + i : i * 42,
       });
       await writeFile(imagePath, response.images[0]!);
+      await upload(imagePath);
       await insertImage(conn, {
         imageType: 'portrait',
         imagePath,

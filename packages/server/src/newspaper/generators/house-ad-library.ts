@@ -14,6 +14,7 @@ import {
   insertHouseAd,
   countHouseAds,
 } from '../repository.ts';
+import { createImageUploader } from './upload-after-write.ts';
 
 export type HouseAdEntry = {
   tagline: string;
@@ -133,6 +134,7 @@ export async function generateHouseAdImages(
   );
   await mkdir(baseDir, { recursive: true });
 
+  const upload = createImageUploader();
   let generated: number = 0;
   let skipped: number = 0;
   let failed: number = 0;
@@ -159,6 +161,7 @@ export async function generateHouseAdImages(
         seed: options?.baseSeed != null ? options.baseSeed + i : i * 42,
       });
       await writeFile(imagePath, response.images[0]!);
+      await upload(imagePath);
       await insertImage(conn, {
         imageType: 'house_ad',
         imagePath,

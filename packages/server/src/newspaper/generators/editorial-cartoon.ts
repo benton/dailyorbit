@@ -4,6 +4,7 @@ import type { BedrockClientLike } from '../../inference/bedrock-client.ts';
 import { renderPrompt } from '../../inference/prompts.ts';
 import { getArticle } from '../repository.ts';
 import type { GenerateOptions, GeneratorResult } from '../types.ts';
+import { createImageUploader } from './upload-after-write.ts';
 
 /** Style prefix for editorial cartoons — Punch magazine crosshatch style. */
 const CARTOON_STYLE: string =
@@ -91,6 +92,8 @@ export async function generateEditorialCartoon(
   await mkdir(imageDir, { recursive: true });
   const imagePath: string = join(imageDir, 'editorial-cartoon.webp');
   await writeFile(imagePath, imageResponse.images[0]!);
+  const upload = createImageUploader();
+  await upload(imagePath);
   log('info', `Editorial cartoon saved to ${imagePath}`);
 
   return {

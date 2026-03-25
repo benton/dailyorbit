@@ -4,6 +4,7 @@ import type { DuckDBConnection } from '@duckdb/node-api';
 import type { ConfigService } from '../../lib/config-service.ts';
 import { getImageByPath, insertImage } from '../repository.ts';
 import type { ImageClient } from './portrait-library.ts';
+import { createImageUploader } from './upload-after-write.ts';
 
 // ── Style constants ────────────────────────────────────────────────
 
@@ -108,6 +109,7 @@ export async function generateSectionHeaders(
   );
   await mkdir(baseDir, { recursive: true });
 
+  const upload = createImageUploader();
   let generated: number = 0;
   let skipped: number = 0;
   let failed: number = 0;
@@ -133,6 +135,7 @@ export async function generateSectionHeaders(
           options?.baseSeed != null ? options.baseSeed + i : (i + 1000) * 42,
       });
       await writeFile(imagePath, response.images[0]!);
+      await upload(imagePath);
       await insertImage(conn, {
         imageType: 'section_header',
         imagePath,

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { BedrockClientLike } from '../../inference/bedrock-client.ts';
 import { getArticle } from '../repository.ts';
 import type { GenerateOptions, GeneratorResult } from '../types.ts';
+import { createImageUploader } from './upload-after-write.ts';
 
 /** Style prefix for all hero image prompts — 19th century steel engraving. */
 const ENGRAVING_STYLE_PREFIX: string =
@@ -61,6 +62,8 @@ export async function generateHeroImage(
   await mkdir(imageDir, { recursive: true });
   const imagePath: string = join(imageDir, 'hero.webp');
   await writeFile(imagePath, response.images[0]!);
+  const upload = createImageUploader();
+  await upload(imagePath);
   log('info', `Hero image saved to ${imagePath}`);
 
   return {
