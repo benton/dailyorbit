@@ -4,6 +4,7 @@ import type {
   ApplicantNode,
   AttachmentStats,
   CompanyFilingVolume,
+  DailyFilingCount,
   DatasetStats,
   RecentFiling,
   TopLineStats,
@@ -269,4 +270,40 @@ export async function getTopLineStats(
   }));
 
   return { filing_count, recent_ownership_events, most_active_filings };
+}
+
+export async function getWeeklyFilingVolume(
+  conn: DuckDBConnection,
+  mondayDate: string,
+  fridayDate: string,
+): Promise<DailyFilingCount[]> {
+  const dayLabels: string[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const result = await conn.runAndReadAll(
+    `SELECT
+       date_filed::DATE AS filing_date,
+       count(*)::INTEGER AS filing_count
+     FROM filing
+     WHERE date_filed::DATE >= $1::DATE AND date_filed::DATE <= $2::DATE
+     GROUP BY 1
+     ORDER BY 1`,
+    [mondayDate, fridayDate] as DuckDBValue[],
+  );
+  const countsByDate: Map<string, number> = new Map(
+    result
+      .getRowObjectsJS()
+      .map((r) => [String(r.filing_date), Number(r.filing_count)]),
+  );
+
+  const days: DailyFilingCount[] = [];
+  const start: Date = new Date(mondayDate + 'T12:00:00Z');
+  for (let i: number = 0; i < 5; i++) {
+    const d: Date = new Date(start.getTime() + i * 86_400_000);
+    const dateStr: string = d.toISOString().slice(0, 10);
+    days.push({
+      day: dayLabels[i]!,
+      date: dateStr,
+      count: countsByDate.get(dateStr) ?? 0,
+    });
+  }
+  return days;
 }

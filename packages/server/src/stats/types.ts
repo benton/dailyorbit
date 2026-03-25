@@ -67,3 +67,9 @@ export type TopLineStats = {
     activity_count: number;
   }>;
 };
+
+export type DailyFilingCount = {
+  day: string; // 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri'
+  date: string; // 'YYYY-MM-DD'
+  count: number;
+};

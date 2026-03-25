@@ -67,10 +67,85 @@
 
 /* ── Masthead ───────────────────────────────────────────────── */
 .masthead {
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   border-bottom: 3px double var(--np-sepia-dark);
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.masthead-center {
+  text-align: center;
+}
+
+.masthead-wing {
+  align-self: center;
+}
+
+.masthead-wing-left {
+  justify-self: start;
+}
+
+.masthead-wing-right {
+  justify-self: end;
+}
+
+/* ── Masthead Widgets ──────────────────────────────────────── */
+.masthead-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 15%;
+  border: 1px solid var(--np-sepia-light);
+  opacity: 0.75;
+}
+
+.masthead-widget-label {
+  font-family: var(--np-font-body);
+  font-size: 11px;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  color: var(--np-sepia-dark);
+}
+
+.masthead-widget-note {
+  font-family: var(--np-font-body);
+  font-size: 10px;
+  color: var(--np-sepia-medium);
+  font-style: italic;
+}
+
+/* ── Filing Volume Histogram ──────────────────────────────── */
+.filing-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 80px;
+  width: 100%;
+}
+
+.filing-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.filing-bar {
+  width: 100%;
+  min-height: 2px;
+  background: var(--np-sepia-medium);
+}
+
+.filing-bar-label {
+  font-family: var(--np-font-body);
+  font-size: 10px;
+  color: var(--np-sepia-medium);
+  margin-top: 2px;
 }
 
 .masthead-emblem {
@@ -164,6 +239,15 @@
 @media (max-width: 900px) {
   .newspaper {
     padding: 1.5rem 1.25rem;
+  }
+
+  .masthead {
+    display: block;
+    text-align: center;
+  }
+
+  .masthead-wing {
+    display: none;
   }
 
   .masthead-title {

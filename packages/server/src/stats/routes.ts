@@ -12,6 +12,7 @@ import {
   getRecentFilingVolumeByCompany,
   getRecentFilings,
   getTopLineStats,
+  getWeeklyFilingVolume,
   getYearlyFilingVolume,
   getTopApplicants,
 } from './repository.ts';
@@ -162,6 +163,29 @@ publicStatsRoutes.get('/recent-volume-by-company', async (c) => {
   trackConnection(conn);
   try {
     const volume = await getRecentFilingVolumeByCompany(conn);
+    return c.json(volume);
+  } finally {
+    conn.closeSync();
+  }
+});
+
+publicStatsRoutes.get('/weekly-filing-volume', async (c) => {
+  const before: string = c.req.query('before') ?? todayEastern();
+  const ref: Date = new Date(before + 'T12:00:00Z');
+  const dow: number = ref.getUTCDay();
+  const daysToMonday: number = dow === 0 ? 6 : dow - 1;
+  const prevMonday: Date = new Date(
+    ref.getTime() - (daysToMonday + 7) * 86_400_000,
+  );
+  const prevFriday: Date = new Date(prevMonday.getTime() + 4 * 86_400_000);
+  const mondayStr: string = prevMonday.toISOString().slice(0, 10);
+  const fridayStr: string = prevFriday.toISOString().slice(0, 10);
+
+  const db = await getDb();
+  const conn: DuckDBConnection = await DuckDBConnection.create(db);
+  trackConnection(conn);
+  try {
+    const volume = await getWeeklyFilingVolume(conn, mondayStr, fridayStr);
     return c.json(volume);
   } finally {
     conn.closeSync();

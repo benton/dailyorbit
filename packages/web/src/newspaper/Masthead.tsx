@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MastheadFilingVolume from './MastheadFilingVolume.tsx';
 import { libraryImageUrl } from './types.ts';
 
 type MastheadProps = {
@@ -41,17 +42,23 @@ export default function Masthead({ editionDate }: MastheadProps) {
 
   return (
     <header className="masthead">
-      <h1 className="masthead-title">The Daily Orbit</h1>
-      {!emblemFailed && (
-        <img
-          alt=""
-          className="masthead-emblem"
-          onError={() => setEmblemFailed(true)}
-          src={libraryImageUrl('masthead.webp')}
-        />
-      )}
-      <p className="masthead-tagline">AI-Powered SatCom Industry Coverage</p>
-      <p className="masthead-dateline">{formatDateLine(editionDate)}</p>
+      <div className="masthead-wing masthead-wing-left" />
+      <div className="masthead-center">
+        <h1 className="masthead-title">The Daily Orbit</h1>
+        {!emblemFailed && (
+          <img
+            alt=""
+            className="masthead-emblem"
+            onError={() => setEmblemFailed(true)}
+            src={libraryImageUrl('masthead.webp')}
+          />
+        )}
+        <p className="masthead-tagline">AI-Powered SatCom Industry Coverage</p>
+        <p className="masthead-dateline">{formatDateLine(editionDate)}</p>
+      </div>
+      <div className="masthead-wing masthead-wing-right">
+        <MastheadFilingVolume editionDate={editionDate} />
+      </div>
     </header>
   );
 }
