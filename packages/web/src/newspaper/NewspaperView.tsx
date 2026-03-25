@@ -35,7 +35,9 @@ export default function NewspaperView() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEdition = useCallback(async () => {
-    if (!date) return;
+    if (!date) {
+      return;
+    }
     try {
       const [data, filings, news] = await Promise.all([
         apiFetch<EditionWithArticles>(`/api/newspaper/edition/${date}`),
@@ -45,8 +47,8 @@ export default function NewspaperView() {
       setEdition(data);
       setRecentFilings(filings);
       setNewsItems(news.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load edition');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to load edition');
     } finally {
       setLoading(false);
     }

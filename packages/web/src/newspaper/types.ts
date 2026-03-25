@@ -43,35 +43,35 @@ export type EditionWithArticles = {
 
 /** Maps content type to the section header image name in the library */
 export const SECTION_HEADER_MAP: Partial<Record<NewspaperContentType, string>> = {
+  classifieds: 'the-classifieds',
+  company_spotlight: 'company-spotlight',
   daily_digest: 'three-miles-up',
   editorial: 'over-the-horizon',
   editorial_cartoon: 'editorial-cartoon',
-  company_spotlight: 'company-spotlight',
   orbital_forecast: 'orbital-forecast',
-  classifieds: 'the-classifieds',
 };
 
 /** Maps content type to human-readable section title */
 export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
+  classifieds: 'The Classifieds',
+  company_spotlight: 'Company Spotlight',
   daily_digest: '300 Miles Up',
-  hero_image: 'Hero Image',
-  fake_ad: 'Advertisement',
   editorial: 'Over the Horizon',
   editorial_cartoon: 'Editorial Cartoon',
-  company_spotlight: 'Company Spotlight',
+  fake_ad: 'Advertisement',
+  hero_image: 'Hero Image',
   orbital_forecast: 'Orbital Forecast',
-  classifieds: 'The Classifieds',
 };
 
 export type RecentFiling = {
-  file_number: string;
-  callsign: string | null;
   address_attention: string | null;
-  subsystem_code: string;
   app_type_code: string;
-  status_code: string | null;
-  date_filed: string | null;
+  callsign: string | null;
   company_name: string | null;
+  date_filed: string | null;
+  file_number: string;
+  status_code: string | null;
+  subsystem_code: string;
   summary: string | null;
 };
 

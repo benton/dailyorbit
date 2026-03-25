@@ -6,13 +6,17 @@ type WideBandTransmissionsProps = {
 };
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '';
+  if (!iso) {
+    return '';
+  }
   const d: Date = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function WideBandTransmissions({ newsItems }: WideBandTransmissionsProps) {
-  if (newsItems.length === 0) return null;
+  if (newsItems.length === 0) {
+    return null;
+  }
 
   const MAX_ITEMS: number = 5;
   const capped: Array<NewsListItem> = newsItems.slice(0, MAX_ITEMS);

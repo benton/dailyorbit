@@ -13,16 +13,18 @@ function formatDateLine(dateStr: string): string {
   const startOfYear: Date = new Date(date.getFullYear(), 0, 1);
   const dayOfYear: number = Math.floor((date.getTime() - startOfYear.getTime()) / 86_400_000) + 1;
   const formatted: string = date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
     weekday: 'long',
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
   });
   return `Vol. ${roman(volume)}  ·  No. ${String(dayOfYear)}  ·  Washington, D.C.  ·  ${formatted}  ·  Price: Free Edition`;
 }
 
 function roman(n: number): string {
-  if (n <= 0) return 'I';
+  if (n <= 0) {
+    return 'I';
+  }
   const vals: Array<[number, string]> = [
     [10, 'X'],
     [9, 'IX'],
