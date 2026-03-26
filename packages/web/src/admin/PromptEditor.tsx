@@ -68,7 +68,7 @@ export function PromptEditor({
   const isUserDefault: boolean = userPrompt === defaultUserPrompt || userPrompt === '';
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-theme border border-border-theme bg-surface-card">
       {/* Collapsible header */}
       <button
         className="flex w-full items-center gap-2 px-6 py-4 text-left"
@@ -76,13 +76,13 @@ export function PromptEditor({
         type="button"
       >
         {open ? (
-          <ChevronDown className="h-4 w-4 text-neutral-400" />
+          <ChevronDown className="h-4 w-4 text-on-surface-muted" />
         ) : (
-          <ChevronRight className="h-4 w-4 text-neutral-400" />
+          <ChevronRight className="h-4 w-4 text-on-surface-muted" />
         )}
         <div>
           <h2 className="text-lg font-medium">{title}</h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">{description}</p>
+          <p className="text-sm text-on-surface-muted">{description}</p>
         </div>
         {!isSystemDefault || !isUserDefault ? (
           <Badge className="ml-auto" variant="secondary">
@@ -92,14 +92,14 @@ export function PromptEditor({
       </button>
 
       {open && (
-        <div className="space-y-6 border-t border-neutral-200 px-6 pt-4 pb-6 dark:border-neutral-800">
+        <div className="space-y-6 border-t border-border-theme px-6 pt-4 pb-6 dark:border-border-theme">
           {/* System Prompt */}
           <div>
             <div className="mb-1 flex items-center justify-between">
               <Label htmlFor={`${title}-system`}>System Prompt</Label>
               {!isSystemDefault && (
                 <button
-                  className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  className="flex items-center gap-1 text-xs text-on-surface-muted hover:text-on-surface dark:hover:text-on-surface-muted"
                   onClick={handleResetSystem}
                   title="Reset to default"
                   type="button"
@@ -110,7 +110,7 @@ export function PromptEditor({
               )}
             </div>
             <textarea
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 font-mono text-sm leading-relaxed dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              className="w-full rounded-theme border border-border-theme bg-white px-3 py-2 font-mono text-sm leading-relaxed dark:border-border-theme dark:bg-surface dark:text-on-surface"
               id={`${title}-system`}
               onChange={(e) => onSystemPromptChange(e.target.value)}
               placeholder={defaultSystemPrompt}
@@ -118,7 +118,7 @@ export function PromptEditor({
               value={systemPrompt}
             />
             {systemPrompt === '' && (
-              <p className="mt-1 text-xs text-neutral-400">Blank = built-in default is used</p>
+              <p className="mt-1 text-xs text-on-surface-muted">Blank = built-in default is used</p>
             )}
           </div>
 
@@ -128,7 +128,7 @@ export function PromptEditor({
               <Label htmlFor={`${title}-user`}>User Prompt Template</Label>
               {!isUserDefault && (
                 <button
-                  className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  className="flex items-center gap-1 text-xs text-on-surface-muted hover:text-on-surface dark:hover:text-on-surface-muted"
                   onClick={handleResetUser}
                   title="Reset to default"
                   type="button"
@@ -139,7 +139,7 @@ export function PromptEditor({
               )}
             </div>
             <textarea
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 font-mono text-sm leading-relaxed dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              className="w-full rounded-theme border border-border-theme bg-white px-3 py-2 font-mono text-sm leading-relaxed dark:border-border-theme dark:bg-surface dark:text-on-surface"
               id={`${title}-user`}
               onChange={(e) => onUserPromptChange(e.target.value)}
               placeholder={defaultUserPrompt}
@@ -147,14 +147,14 @@ export function PromptEditor({
               value={userPrompt}
             />
             {userPrompt === '' && (
-              <p className="mt-1 text-xs text-neutral-400">Blank = built-in default is used</p>
+              <p className="mt-1 text-xs text-on-surface-muted">Blank = built-in default is used</p>
             )}
           </div>
 
           {/* Variable Reference (nested collapsible) */}
           <div>
             <button
-              className="flex items-center gap-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="flex items-center gap-2 text-sm font-medium text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
               onClick={() => setVarsOpen(!varsOpen)}
               type="button"
             >
@@ -171,7 +171,7 @@ export function PromptEditor({
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 text-left text-xs font-medium tracking-wider text-neutral-500 uppercase dark:border-neutral-700">
+                    <tr className="border-b border-border-theme text-left text-xs font-medium tracking-wider text-on-surface-muted uppercase dark:border-border-theme">
                       <th className="pr-4 pb-2">Variable</th>
                       <th className="pr-4 pb-2">Source</th>
                       <th className="pr-4 pb-2">Description</th>
@@ -180,18 +180,17 @@ export function PromptEditor({
                   </thead>
                   <tbody>
                     {variables.map((v) => (
-                      <tr
-                        className="border-b border-neutral-100 dark:border-neutral-800"
-                        key={v.name}
-                      >
+                      <tr className="border-b border-border-theme" key={v.name}>
                         <td className="py-2 pr-4">
-                          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs dark:bg-neutral-800">
+                          <code className="rounded bg-on-surface/10 px-1.5 py-0.5 font-mono text-xs dark:bg-on-surface/10">
                             {'{{' + v.name + '}}'}
                           </code>
                         </td>
-                        <td className="py-2 pr-4 text-neutral-500">{v.source}</td>
+                        <td className="py-2 pr-4 text-on-surface-muted">{v.source}</td>
                         <td className="py-2 pr-4">{v.description}</td>
-                        <td className="py-2 font-mono text-xs text-neutral-500">{v.example}</td>
+                        <td className="py-2 font-mono text-xs text-on-surface-muted">
+                          {v.example}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -163,7 +163,7 @@ export default function ConsultantAdmin() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading...</p>;
   }
 
   const active: Array<Consultant> = consultants.filter((c) => c.archivedAt == null);
@@ -172,9 +172,9 @@ export default function ConsultantAdmin() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">Consultants</h2>
+        <h2 className="text-xl font-bold text-on-surface">Consultants</h2>
         <button
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+          className="rounded-theme bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
           onClick={() => (showForm ? setShowForm(false) : startAdd())}
           type="button"
         >
@@ -186,50 +186,50 @@ export default function ConsultantAdmin() {
 
       {/* Add / Edit form */}
       {showForm && (
-        <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-          <h3 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+        <div className="rounded-theme border border-border-theme p-4 dark:border-border-theme">
+          <h3 className="mb-3 text-sm font-semibold text-on-surface">
             {editId != null ? 'Edit Consultant' : 'New Consultant'}
           </h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('name', e.target.value)}
               placeholder="Name"
               value={form.name}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('slug', e.target.value)}
               placeholder="Slug"
               value={form.slug}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('description', e.target.value)}
               placeholder="Description"
               value={form.description}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('modelId', e.target.value)}
               placeholder="Model ID (blank = default)"
               value={form.modelId}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('icon', e.target.value)}
               placeholder="Icon (emoji)"
               value={form.icon}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('color', e.target.value)}
               placeholder="Color (hex)"
               type="color"
               value={form.color || '#6366f1'}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('temperature', e.target.value)}
               placeholder="Temperature (blank = default)"
               step="0.1"
@@ -237,20 +237,20 @@ export default function ConsultantAdmin() {
               value={form.temperature}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('maxResponseTokens', e.target.value)}
               placeholder="Max response tokens (blank = no limit)"
               type="number"
               value={form.maxResponseTokens}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('sortOrder', Number(e.target.value))}
               placeholder="Sort order"
               type="number"
               value={form.sortOrder}
             />
-            <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <label className="flex items-center gap-2 text-sm text-on-surface">
               <input
                 checked={form.enabled}
                 onChange={(e) => updateField('enabled', e.target.checked)}
@@ -260,9 +260,11 @@ export default function ConsultantAdmin() {
             </label>
           </div>
           <div className="mt-3">
-            <label className="mb-1 block text-xs font-medium text-neutral-500">System Prompt</label>
+            <label className="mb-1 block text-xs font-medium text-on-surface-muted">
+              System Prompt
+            </label>
             <textarea
-              className="w-full rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="w-full rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => updateField('systemPrompt', e.target.value)}
               placeholder="System prompt..."
               rows={6}
@@ -270,7 +272,7 @@ export default function ConsultantAdmin() {
             />
           </div>
           <button
-            className="mt-3 rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+            className="mt-3 rounded-theme bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
             disabled={
               saving ||
               form.name.trim() === '' ||
@@ -286,9 +288,9 @@ export default function ConsultantAdmin() {
       )}
 
       {/* Active consultants table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="overflow-x-auto rounded-theme border border-border-theme">
         <table className="min-w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          <thead className="bg-surface text-left text-xs text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted">
             <tr>
               <th className="px-3 py-2">Icon</th>
               <th className="px-3 py-2">Name</th>
@@ -299,24 +301,26 @@ export default function ConsultantAdmin() {
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          <tbody className="divide-y divide-border-theme">
             {active.map((c: Consultant) => (
               <tr key={c.id}>
                 <td className="px-3 py-2 text-lg">{c.icon ?? '—'}</td>
-                <td className="px-3 py-2 font-medium text-neutral-900 dark:text-neutral-100">
+                <td className="px-3 py-2 font-medium text-on-surface">
                   {c.name}
                   {c.description != null && (
-                    <div className="truncate text-xs text-neutral-400">{c.description}</div>
+                    <div className="truncate text-xs text-on-surface-muted">{c.description}</div>
                   )}
                 </td>
-                <td className="px-3 py-2 font-mono text-xs text-neutral-500">{c.slug}</td>
-                <td className="px-3 py-2 text-xs text-neutral-500">{c.modelId ?? 'default'}</td>
+                <td className="px-3 py-2 font-mono text-xs text-on-surface-muted">{c.slug}</td>
+                <td className="px-3 py-2 text-xs text-on-surface-muted">
+                  {c.modelId ?? 'default'}
+                </td>
                 <td className="px-3 py-2">
                   <button
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       c.enabled
                         ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400'
+                        : 'bg-on-surface/10 text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted'
                     }`}
                     onClick={() => void handleToggleEnabled(c)}
                     type="button"
@@ -324,10 +328,10 @@ export default function ConsultantAdmin() {
                     {c.enabled ? 'On' : 'Off'}
                   </button>
                 </td>
-                <td className="px-3 py-2 text-xs text-neutral-500">{c.sortOrder}</td>
+                <td className="px-3 py-2 text-xs text-on-surface-muted">{c.sortOrder}</td>
                 <td className="px-3 py-2">
                   <button
-                    className="mr-2 text-xs text-neutral-600 hover:underline dark:text-neutral-400"
+                    className="mr-2 text-xs text-on-surface-muted hover:underline dark:text-on-surface-muted"
                     onClick={() => startEdit(c)}
                     type="button"
                   >
@@ -345,7 +349,7 @@ export default function ConsultantAdmin() {
             ))}
             {active.length === 0 && (
               <tr>
-                <td className="px-3 py-4 text-center text-neutral-400" colSpan={7}>
+                <td className="px-3 py-4 text-center text-on-surface-muted" colSpan={7}>
                   No consultants configured
                 </td>
               </tr>
@@ -357,18 +361,18 @@ export default function ConsultantAdmin() {
       {/* Archived section */}
       {archived.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-neutral-500">
+          <h3 className="mb-2 text-sm font-semibold text-on-surface-muted">
             Archived ({String(archived.length)})
           </h3>
-          <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="overflow-x-auto rounded-theme border border-border-theme">
             <table className="min-w-full text-sm">
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+              <tbody className="divide-y divide-border-theme">
                 {archived.map((c: Consultant) => (
                   <tr className="opacity-60" key={c.id}>
                     <td className="px-3 py-2 text-lg">{c.icon ?? '—'}</td>
-                    <td className="px-3 py-2 text-neutral-500">{c.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-neutral-400">{c.slug}</td>
-                    <td className="px-3 py-2 text-xs text-neutral-400">
+                    <td className="px-3 py-2 text-on-surface-muted">{c.name}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-on-surface-muted">{c.slug}</td>
+                    <td className="px-3 py-2 text-xs text-on-surface-muted">
                       Archived{' '}
                       {c.archivedAt != null ? new Date(c.archivedAt).toLocaleDateString() : ''}
                     </td>

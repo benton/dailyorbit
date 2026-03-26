@@ -31,10 +31,10 @@ export default function ConsultantSelector({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {consultants.map((c: Consultant) => (
           <button
-            className={`rounded-lg border-2 p-4 text-left transition-colors ${
+            className={`rounded-theme border-2 p-4 text-left transition-colors ${
               selected?.id === c.id
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                : 'border-neutral-200 hover:border-neutral-300 dark:border-neutral-700 dark:hover:border-neutral-600'
+                : 'border-border-theme hover:border-border-theme '
             }`}
             key={c.id}
             onClick={() => handleSelect(c)}
@@ -42,9 +42,11 @@ export default function ConsultantSelector({
           >
             <div className="mb-1 flex items-center gap-2">
               {c.icon != null && <span className="text-lg">{c.icon}</span>}
-              <span className="font-medium text-neutral-800 dark:text-neutral-200">{c.name}</span>
+              <span className="font-medium text-on-surface">{c.name}</span>
             </div>
-            {c.description != null && <p className="text-sm text-neutral-500">{c.description}</p>}
+            {c.description != null && (
+              <p className="text-sm text-on-surface-muted">{c.description}</p>
+            )}
           </button>
         ))}
       </div>
@@ -55,23 +57,21 @@ export default function ConsultantSelector({
   return (
     <div className="relative">
       <button
-        className="flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        className="flex items-center gap-1.5 rounded-full border border-border-theme px-3 py-1 text-sm hover:bg-surface dark:border-border-theme dark:hover:bg-on-surface/10"
         onClick={() => setDropdownOpen(!dropdownOpen)}
         type="button"
       >
         {selected?.icon != null && <span>{selected.icon}</span>}
-        <span className="text-neutral-700 dark:text-neutral-300">
-          {selected?.name ?? 'Select consultant'}
-        </span>
-        <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+        <span className="text-on-surface">{selected?.name ?? 'Select consultant'}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-on-surface-muted" />
       </button>
 
       {dropdownOpen && (
-        <div className="absolute bottom-full left-0 z-10 mb-1 w-64 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+        <div className="absolute bottom-full left-0 z-10 mb-1 w-64 rounded-theme border border-border-theme bg-white p-1 shadow-lg dark:border-border-theme dark:bg-on-surface/10">
           {consultants.map((c: Consultant) => (
             <button
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 ${
-                selected?.id === c.id ? 'bg-neutral-100 dark:bg-neutral-700' : ''
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-on-surface/10 ${
+                selected?.id === c.id ? 'bg-on-surface/10 ' : ''
               }`}
               key={c.id}
               onClick={() => handleSelect(c)}
@@ -79,9 +79,9 @@ export default function ConsultantSelector({
             >
               {c.icon != null && <span>{c.icon}</span>}
               <div>
-                <div className="font-medium text-neutral-800 dark:text-neutral-200">{c.name}</div>
+                <div className="font-medium text-on-surface">{c.name}</div>
                 {c.description != null && (
-                  <div className="text-xs text-neutral-500">{c.description}</div>
+                  <div className="text-xs text-on-surface-muted">{c.description}</div>
                 )}
               </div>
             </button>

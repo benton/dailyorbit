@@ -44,15 +44,14 @@ const AlertsPage = lazy(() => import('./alerts/AlertsPage.tsx'));
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
     className={
-      'text-pink-700 underline hover:no-underline dark:text-pink-400' +
-      (className ? ` ${className}` : '')
+      'text-accent-theme underline hover:no-underline' + (className ? ` ${className}` : '')
     }
     {...props}
   />
 );
 
 const About = () => (
-  <div className="m-6 mx-auto w-8/12 rounded-sm border border-gray-200 p-4 shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:shadow-none">
+  <div className="m-6 mx-auto w-8/12 rounded-theme border border-border-theme bg-surface-card p-4 shadow-md">
     <h1 className="text-4xl">
       <fbt desc="About">About</fbt>
     </h1>
@@ -69,229 +68,237 @@ export default function App() {
     <AuthProvider>
       <SettingsProvider>
         <ThemeProvider>
-        <Routes>
-          <Route element={<LoginPage />} path="/login" />
-          {/* All routes require authentication */}
-          <Route
-            element={
-              <RequireAuth>
-                <PublicLayout />
-              </RequireAuth>
-            }
-          >
+          <Routes>
+            <Route element={<LoginPage />} path="/login" />
+            {/* All routes require authentication */}
             <Route
               element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <HomePage />
-                </Suspense>
+                <RequireAuth>
+                  <PublicLayout />
+                </RequireAuth>
               }
-              path="/"
-            />
-            <Route element={<About />} path="/about" />
-            <Route element={<SearchPage />} path="/search" />
-            <Route element={<FilingDetail />} path="/filings/*" />
-            <Route element={<SatelliteDetail />} path="/satellites/:id" />
-            <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <CompaniesPage />
-                </Suspense>
-              }
-              path="/companies"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <CompanyDetail />
-                </Suspense>
-              }
-              path="/companies/:id"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <OwnershipEventsPage />
-                </Suspense>
-              }
-              path="/ownership-events"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <NewsPage />
-                </Suspense>
-              }
-              path="/news"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <NewsDetail />
-                </Suspense>
-              }
-              path="/news/:id"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <ChatPage />
-                </Suspense>
-              }
-              path="/chat"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <AlertsPage />
-                </Suspense>
-              }
-              path="/alerts"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <UserHomePage />
-                </Suspense>
-              }
-              path="/filings/unread"
-            />
-            <Route element={<ProfilePage />} path="/profile" />
-          </Route>
-          {/* Full-page newspaper view (no AdminLayout) */}
-          <Route
-            element={
-              <RequireAuth>
-                <RequireAdmin>
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <NewspaperView />
-                  </Suspense>
-                </RequireAdmin>
-              </RequireAuth>
-            }
-            path="/admin/newspaper/:date/view"
-          />
-          {/* Admin routes */}
-          <Route
-            element={
-              <RequireAuth>
-                <RequireAdmin>
-                  <AdminLayout />
-                </RequireAdmin>
-              </RequireAuth>
-            }
-            path="/admin"
-          >
-            <Route element={<Dashboard />} index />
-            <Route element={<SettingsLayout />} path="settings">
-              <Route element={<ConfigEditor />} index />
+            >
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <AiSettings />
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <HomePage />
                   </Suspense>
                 }
-                path="ai"
+                path="/"
+              />
+              <Route element={<About />} path="/about" />
+              <Route element={<SearchPage />} path="/search" />
+              <Route element={<FilingDetail />} path="/filings/*" />
+              <Route element={<SatelliteDetail />} path="/satellites/:id" />
+              <Route element={<EarthStationDetail />} path="/earth-stations/:callsign" />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <CompaniesPage />
+                  </Suspense>
+                }
+                path="/companies"
               />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <NewsSourcesAdmin />
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <CompanyDetail />
                   </Suspense>
                 }
-                path="news"
+                path="/companies/:id"
               />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                    <ConsultantAdmin />
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <OwnershipEventsPage />
                   </Suspense>
                 }
-                path="consultants"
+                path="/ownership-events"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <NewsPage />
+                  </Suspense>
+                }
+                path="/news"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <NewsDetail />
+                  </Suspense>
+                }
+                path="/news/:id"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <ChatPage />
+                  </Suspense>
+                }
+                path="/chat"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <AlertsPage />
+                  </Suspense>
+                }
+                path="/alerts"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <UserHomePage />
+                  </Suspense>
+                }
+                path="/filings/unread"
+              />
+              <Route element={<ProfilePage />} path="/profile" />
+            </Route>
+            {/* Full-page newspaper view (no AdminLayout) */}
+            <Route
+              element={
+                <RequireAuth>
+                  <RequireAdmin>
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <NewspaperView />
+                    </Suspense>
+                  </RequireAdmin>
+                </RequireAuth>
+              }
+              path="/admin/newspaper/:date/view"
+            />
+            {/* Admin routes */}
+            <Route
+              element={
+                <RequireAuth>
+                  <RequireAdmin>
+                    <AdminLayout />
+                  </RequireAdmin>
+                </RequireAuth>
+              }
+              path="/admin"
+            >
+              <Route element={<Dashboard />} index />
+              <Route element={<SettingsLayout />} path="settings">
+                <Route element={<ConfigEditor />} index />
+                <Route
+                  element={
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <AiSettings />
+                    </Suspense>
+                  }
+                  path="ai"
+                />
+                <Route
+                  element={
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <NewsSourcesAdmin />
+                    </Suspense>
+                  }
+                  path="news"
+                />
+                <Route
+                  element={
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <ConsultantAdmin />
+                    </Suspense>
+                  }
+                  path="consultants"
+                />
+              </Route>
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <Companies />
+                  </Suspense>
+                }
+                path="companies"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <Users />
+                  </Suspense>
+                }
+                path="users"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <InferenceCosts />
+                  </Suspense>
+                }
+                path="costs"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <PipelineHistoryPage />
+                  </Suspense>
+                }
+                path="pipeline/history"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <PipelinePage />
+                  </Suspense>
+                }
+                path="pipeline"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <HiddenItemsAdmin />
+                  </Suspense>
+                }
+                path="hidden-items"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <BackupsPage />
+                  </Suspense>
+                }
+                path="backups"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <EditionDetail />
+                  </Suspense>
+                }
+                path="newspaper/:date"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <PortraitLibrary />
+                  </Suspense>
+                }
+                path="newspaper/portraits"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <EditionBrowser />
+                  </Suspense>
+                }
+                path="newspaper"
               />
             </Route>
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <Companies />
-                </Suspense>
-              }
-              path="companies"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <Users />
-                </Suspense>
-              }
-              path="users"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <InferenceCosts />
-                </Suspense>
-              }
-              path="costs"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <PipelineHistoryPage />
-                </Suspense>
-              }
-              path="pipeline/history"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <PipelinePage />
-                </Suspense>
-              }
-              path="pipeline"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <HiddenItemsAdmin />
-                </Suspense>
-              }
-              path="hidden-items"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <BackupsPage />
-                </Suspense>
-              }
-              path="backups"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <EditionDetail />
-                </Suspense>
-              }
-              path="newspaper/:date"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <PortraitLibrary />
-                </Suspense>
-              }
-              path="newspaper/portraits"
-            />
-            <Route
-              element={
-                <Suspense fallback={<p className="text-sm text-neutral-500">Loading...</p>}>
-                  <EditionBrowser />
-                </Suspense>
-              }
-              path="newspaper"
-            />
-          </Route>
-        </Routes>
+          </Routes>
         </ThemeProvider>
       </SettingsProvider>
     </AuthProvider>

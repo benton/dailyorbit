@@ -34,8 +34,7 @@ function formatBytes(bytes: number): string {
   return `${gb.toFixed(2)} GB`;
 }
 
-const cardClass: string =
-  'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+const cardClass: string = 'rounded-theme border border-border-theme bg-surface-card p-4';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DatasetStats | null>(null);
@@ -58,7 +57,7 @@ export default function Dashboard() {
   }, [fetchStats]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading dataset statistics...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading dataset statistics...</p>;
   }
 
   if (error != null || stats == null) {
@@ -74,13 +73,11 @@ export default function Dashboard() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Dashboard</h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">Dashboard</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           Dataset overview and storage statistics.
           {stats.version != null && (
-            <span className="ml-2 text-neutral-400 dark:text-neutral-500">
-              Server v{stats.version}
-            </span>
+            <span className="ml-2 text-on-surface-muted">Server v{stats.version}</span>
           )}
         </p>
       </div>
@@ -88,52 +85,52 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Filings */}
         <div className={cardClass}>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Filings</p>
-          <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <p className="text-sm text-on-surface-muted">Total Filings</p>
+          <p className="mt-1 text-3xl font-semibold text-on-surface">
             {stats.filing_count.toLocaleString()}
           </p>
         </div>
 
         {/* Database Size */}
         <div className={cardClass}>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Database File Size</p>
-          <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <p className="text-sm text-on-surface-muted">Database File Size</p>
+          <p className="mt-1 text-3xl font-semibold text-on-surface">
             {formatBytes(stats.db_size_bytes)}
           </p>
         </div>
 
         {/* Total Attachment Size */}
         <div className={cardClass}>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Attachment Size</p>
-          <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <p className="text-sm text-on-surface-muted">Total Attachment Size</p>
+          <p className="mt-1 text-3xl font-semibold text-on-surface">
             {formatBytes(attachments.total_bytes)}
           </p>
         </div>
 
         {/* Attachments */}
         <div className={cardClass}>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Attachments</p>
+          <p className="text-sm font-medium text-on-surface-muted">Attachments</p>
           <div className="mt-2 space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600 dark:text-neutral-300">Total</span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
+              <span className="text-on-surface-muted">Total</span>
+              <span className="font-mono text-on-surface">
                 {attachments.total.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600 dark:text-neutral-300">Downloaded</span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
+              <span className="text-on-surface-muted">Downloaded</span>
+              <span className="font-mono text-on-surface">
                 {attachments.downloaded.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600 dark:text-neutral-300">Pending</span>
-              <span className="font-mono text-neutral-900 dark:text-neutral-100">
+              <span className="text-on-surface-muted">Pending</span>
+              <span className="font-mono text-on-surface">
                 {attachments.pending.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-600 dark:text-neutral-300">Failed</span>
+              <span className="text-on-surface-muted">Failed</span>
               <span className="font-mono text-red-600 dark:text-red-400">
                 {attachments.failed.toLocaleString()}
               </span>
@@ -143,28 +140,26 @@ export default function Dashboard() {
 
         {/* Filings by Subsystem */}
         <div className={`${cardClass} sm:col-span-2 lg:col-span-3`}>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Filings by Subsystem
-          </p>
+          <p className="text-sm font-medium text-on-surface-muted">Filings by Subsystem</p>
           <div className="mt-3 space-y-1.5">
             {stats.filings_by_subsystem.map((sub: SubsystemCount) => {
               const info = getSubsystem(sub.subsystem_code);
               const pct: number = (sub.count / maxSubsystemCount) * 100;
               return (
                 <div className="flex items-center gap-2" key={sub.subsystem_code}>
-                  <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-on-surface">
                     {sub.subsystem_code}
                   </span>
-                  <span className="w-36 shrink-0 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                  <span className="w-36 shrink-0 truncate text-xs text-on-surface-muted">
                     {info.label}
                   </span>
-                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-on-surface/10">
                     <div
                       className="h-full rounded transition-all"
                       style={{ backgroundColor: info.hex, width: `${String(Math.max(pct, 0.5))}%` }}
                     />
                   </div>
-                  <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                  <span className="w-16 shrink-0 text-right font-mono text-xs text-on-surface">
                     {sub.count.toLocaleString()}
                   </span>
                 </div>

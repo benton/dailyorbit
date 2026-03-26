@@ -16,8 +16,8 @@ type LogPanelProps = {
 
 const LEVEL_CLASSES: Record<string, string> = {
   error: 'text-red-400',
-  info: 'text-neutral-200',
-  progress: 'text-neutral-500',
+  info: 'text-on-surface',
+  progress: 'text-on-surface-muted',
 };
 
 function formatTime(iso: string): string {
@@ -52,15 +52,15 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
   }, []);
 
   return (
-    <div className="flex flex-col rounded-lg border border-neutral-800 bg-neutral-950">
+    <div className="flex flex-col rounded-theme border border-border-theme bg-surface">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-1.5">
-        <span className="text-xs font-medium text-neutral-400">
+      <div className="flex items-center justify-between border-b border-border-theme px-3 py-1.5">
+        <span className="text-xs font-medium text-on-surface-muted">
           Log Output ({String(lines.length)} lines)
         </span>
         <div className="flex items-center gap-1">
           <Button
-            className={pinToBottom ? 'text-blue-400' : 'text-neutral-500'}
+            className={pinToBottom ? 'text-blue-400' : 'text-on-surface-muted'}
             onClick={() => {
               setPinToBottom(true);
               if (preRef.current != null) {
@@ -75,7 +75,7 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
             <ArrowDownToLine className="h-3.5 w-3.5" />
           </Button>
           <Button onClick={onClear} size="sm" title="Clear log" type="button" variant="ghost">
-            <Trash2 className="h-3.5 w-3.5 text-neutral-500" />
+            <Trash2 className="h-3.5 w-3.5 text-on-surface-muted" />
           </Button>
         </div>
       </div>
@@ -87,12 +87,14 @@ export default function LogPanel({ lines, onClear }: LogPanelProps) {
         ref={preRef}
       >
         {lines.length === 0 && (
-          <span className="text-neutral-600">No log output yet. Run a stage to see logs here.</span>
+          <span className="text-on-surface-muted">
+            No log output yet. Run a stage to see logs here.
+          </span>
         )}
         {lines.map((line: LogLine, i: number) => (
-          <div className={LEVEL_CLASSES[line.level] ?? 'text-neutral-200'} key={i}>
-            <span className="text-neutral-600">{formatTime(line.timestamp)}</span>{' '}
-            <span className="text-neutral-400">[{line.stage}]</span> {line.message}
+          <div className={LEVEL_CLASSES[line.level] ?? 'text-on-surface'} key={i}>
+            <span className="text-on-surface-muted">{formatTime(line.timestamp)}</span>{' '}
+            <span className="text-on-surface-muted">[{line.stage}]</span> {line.message}
           </div>
         ))}
       </pre>

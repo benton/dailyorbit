@@ -106,7 +106,7 @@ const ownershipEventColumns: Array<ColumnDef<OwnershipEvent, unknown>> = [
           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
           : status === 'pending'
             ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-            : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400';
+            : 'bg-surface text-on-surface-muted';
       return (
         <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${classes}`}>
           {status}
@@ -154,7 +154,7 @@ function SimpleTable<TData>({
   });
 
   return (
-    <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
+    <div className="overflow-x-auto rounded-md border border-border-theme">
       <Table className="min-w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -171,8 +171,7 @@ function SimpleTable<TData>({
                     <div
                       className={cn(
                         'flex items-center gap-1',
-                        canSort &&
-                          'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
+                        canSort && 'cursor-pointer hover:text-on-surface',
                       )}
                       onClick={header.column.getToggleSortingHandler()}
                     >
@@ -193,7 +192,7 @@ function SimpleTable<TData>({
           {table.getRowModel().rows.length === 0 ? (
             <TableRow>
               <TableCell
-                className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                className="h-24 text-center text-on-surface-muted"
                 colSpan={columns.length}
               >
                 No results.
@@ -262,7 +261,7 @@ export default function CompanyDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center text-neutral-500 dark:text-neutral-400">
+      <div className="flex min-h-[400px] items-center justify-center text-on-surface-muted">
         Loading company data...
       </div>
     );
@@ -271,9 +270,7 @@ export default function CompanyDetailPage() {
   if (notFound) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-2">
-        <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Company not found
-        </span>
+        <span className="text-lg font-semibold text-on-surface">Company not found</span>
       </div>
     );
   }
@@ -292,10 +289,8 @@ export default function CompanyDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          {company.name}
-        </h1>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-bold text-on-surface">{company.name}</h1>
+        <div className="flex flex-wrap items-center gap-4 text-sm text-on-surface-muted">
           {company.stockTicker != null && (
             <span>
               {company.stockExchange ?? ''}: {company.stockTicker}
@@ -305,7 +300,7 @@ export default function CompanyDetailPage() {
           <span>{filingCount.toLocaleString()} filings</span>
         </div>
         {company.description != null && (
-          <p className="text-sm text-neutral-700 dark:text-neutral-300">{company.description}</p>
+          <p className="text-sm text-on-surface">{company.description}</p>
         )}
       </div>
 
@@ -315,27 +310,22 @@ export default function CompanyDetailPage() {
           {/* Subsidiaries */}
           {subsidiaries.length > 0 && (
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                Subsidiaries
-              </h2>
-              <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+              <h2 className="mb-3 text-lg font-semibold text-on-surface">Subsidiaries</h2>
+              <div className="rounded-theme border border-border-theme bg-surface-card">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                    <tr className="border-b border-border-theme">
+                      <th className="px-4 py-2 text-left font-medium text-on-surface-muted">
                         Name
                       </th>
-                      <th className="px-4 py-2 text-right font-medium text-neutral-500 dark:text-neutral-400">
+                      <th className="px-4 py-2 text-right font-medium text-on-surface-muted">
                         Filings
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {subsidiaries.map((sub: CompanyListItem) => (
-                      <tr
-                        className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
-                        key={sub.id}
-                      >
+                      <tr className="border-b border-border-theme/50 last:border-0" key={sub.id}>
                         <td className="px-4 py-2 font-medium">
                           <Link
                             className="text-blue-600 hover:underline dark:text-blue-400"
@@ -344,7 +334,7 @@ export default function CompanyDetailPage() {
                             {sub.name}
                           </Link>
                         </td>
-                        <td className="px-4 py-2 text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-4 py-2 text-right text-on-surface-muted">
                           {sub.filingCount.toLocaleString()}
                         </td>
                       </tr>
@@ -358,9 +348,7 @@ export default function CompanyDetailPage() {
           {/* Ownership Events */}
           {ownershipEvents.length > 0 && (
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                Ownership Events
-              </h2>
+              <h2 className="mb-3 text-lg font-semibold text-on-surface">Ownership Events</h2>
               <SimpleTable<OwnershipEvent>
                 columns={ownershipEventColumns}
                 data={ownershipEvents}
@@ -374,14 +362,14 @@ export default function CompanyDetailPage() {
         {/* Right sidebar */}
         <div className="space-y-6">
           {/* Company info card */}
-          <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
               Company Details
             </h3>
             <dl className="space-y-3 text-sm">
               {parent != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Parent Company</dt>
+                  <dt className="text-on-surface-muted">Parent Company</dt>
                   <dd>
                     <Link
                       className="text-blue-600 hover:underline dark:text-blue-400"
@@ -394,7 +382,7 @@ export default function CompanyDetailPage() {
               )}
               {company.website != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Website</dt>
+                  <dt className="text-on-surface-muted">Website</dt>
                   <dd>
                     <a
                       className="text-blue-600 hover:underline dark:text-blue-400"
@@ -409,15 +397,13 @@ export default function CompanyDetailPage() {
               )}
               {company.gleifLei != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">GLEIF LEI</dt>
-                  <dd className="font-mono text-xs text-neutral-900 dark:text-neutral-100">
-                    {company.gleifLei}
-                  </dd>
+                  <dt className="text-on-surface-muted">GLEIF LEI</dt>
+                  <dd className="font-mono text-xs text-on-surface">{company.gleifLei}</dd>
                 </div>
               )}
               {company.wikidataId != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Wikidata</dt>
+                  <dt className="text-on-surface-muted">Wikidata</dt>
                   <dd>
                     <a
                       className="text-blue-600 hover:underline dark:text-blue-400"
@@ -435,15 +421,15 @@ export default function CompanyDetailPage() {
 
           {/* Aliases card */}
           {aliases.length > 0 && (
-            <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
                 Known Aliases ({aliases.length})
               </h3>
               <ul className="space-y-1 text-sm">
                 {aliases.map((alias: CompanyAlias) => (
-                  <li className="text-neutral-700 dark:text-neutral-300" key={alias.aliasName}>
+                  <li className="text-on-surface" key={alias.aliasName}>
                     {alias.aliasName}
-                    <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">
+                    <span className="ml-1 text-xs text-on-surface-muted/70">
                       ({alias.aliasType})
                     </span>
                   </li>

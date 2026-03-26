@@ -25,7 +25,7 @@ export default function ReadUnreadToggle({ fileNumber, initialRead }: ReadUnread
     <button
       className={`rounded p-1 ${
         isRead
-          ? 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300'
+          ? 'text-on-surface-muted hover:text-on-surface-muted dark:text-on-surface-muted dark:hover:text-on-surface-muted'
           : 'text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200'
       }`}
       onClick={(e) => {

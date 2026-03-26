@@ -105,39 +105,37 @@ export default function Companies() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Companies</h1>
+        <h1 className="text-2xl font-semibold text-on-surface">Companies</h1>
       </div>
 
       {/* Attribution coverage banner */}
       {stats != null && (
-        <div className="mb-6 rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-          <h2 className="mb-2 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+        <div className="mb-6 rounded-theme border border-border-theme bg-white p-4 dark:border-border-theme dark:bg-on-surface">
+          <h2 className="mb-2 text-sm font-semibold tracking-wider text-on-surface-muted uppercase dark:text-on-surface-muted">
             Attribution Coverage
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-                {stats.coveragePercent}%
-              </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">Coverage</div>
+              <div className="text-2xl font-bold text-on-surface">{stats.coveragePercent}%</div>
+              <div className="text-xs text-on-surface-muted">Coverage</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+              <div className="text-2xl font-bold text-on-surface">
                 {stats.attributedFilings.toLocaleString()}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">Attributed</div>
+              <div className="text-xs text-on-surface-muted">Attributed</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+              <div className="text-2xl font-bold text-on-surface">
                 {stats.unattributedFilings.toLocaleString()}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">Unattributed</div>
+              <div className="text-xs text-on-surface-muted">Unattributed</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+              <div className="text-2xl font-bold text-on-surface">
                 {stats.totalFilings.toLocaleString()}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">Total Filings</div>
+              <div className="text-xs text-on-surface-muted">Total Filings</div>
             </div>
           </div>
         </div>
@@ -146,21 +144,21 @@ export default function Companies() {
       {/* Action buttons */}
       <div className="mb-6 flex flex-wrap gap-2">
         <button
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface hover:bg-on-surface/5 disabled:opacity-50"
           disabled={actionLoading}
           onClick={() => void runAction('/api/admin/companies/seed', 'Seed')}
         >
           Seed Companies
         </button>
         <button
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface hover:bg-on-surface/5 disabled:opacity-50"
           disabled={actionLoading}
           onClick={() => void runAction('/api/admin/companies/attribute', 'Attribution')}
         >
           Run Attribution
         </button>
         <button
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface hover:bg-on-surface/5 disabled:opacity-50"
           disabled={actionLoading}
           onClick={() =>
             void runAction('/api/admin/companies/extract-ownership', 'Ownership Extraction')
@@ -169,7 +167,7 @@ export default function Companies() {
           Extract Ownership
         </button>
         <button
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface hover:bg-on-surface/5 disabled:opacity-50"
           disabled={actionLoading}
           onClick={() => void runAction('/api/admin/companies/enrich', 'Enrichment')}
         >
@@ -179,7 +177,7 @@ export default function Companies() {
 
       {/* Action feedback */}
       {actionMessage != null && (
-        <div className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+        <div className="mb-6 rounded-theme border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
           {actionMessage}
         </div>
       )}
@@ -198,7 +196,9 @@ export default function Companies() {
 
       {/* Company hierarchy graph */}
       <div className="mt-8">
-        <Suspense fallback={<p className="text-sm text-neutral-500">Loading company graph...</p>}>
+        <Suspense
+          fallback={<p className="text-sm text-on-surface-muted">Loading company graph...</p>}
+        >
           <CompanyGraph />
         </Suspense>
       </div>

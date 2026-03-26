@@ -53,7 +53,7 @@ export default function PortraitLibrary() {
   }, [fetchLibrary]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading asset library...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading asset library...</p>;
   }
 
   if (error) {
@@ -63,20 +63,15 @@ export default function PortraitLibrary() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Link
-          className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-          to="/admin/newspaper"
-        >
+        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/newspaper">
           &larr; Editions
         </Link>
       </div>
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Asset Library
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <h1 className="text-2xl font-semibold text-on-surface">Asset Library</h1>
+          <p className="mt-1 text-sm text-on-surface-muted">
             Portraits, section headers, and other generated assets.
           </p>
         </div>
@@ -87,11 +82,9 @@ export default function PortraitLibrary() {
 
       {/* Portraits */}
       <section>
-        <h2 className="mb-4 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-          Portraits ({portraits.length})
-        </h2>
+        <h2 className="mb-4 text-lg font-medium text-on-surface">Portraits ({portraits.length})</h2>
         {portraits.length === 0 ? (
-          <p className="text-sm text-neutral-500">No portraits generated yet.</p>
+          <p className="text-sm text-on-surface-muted">No portraits generated yet.</p>
         ) : (
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {portraits.map((img) => (
@@ -103,11 +96,11 @@ export default function PortraitLibrary() {
 
       {/* Section Headers */}
       <section>
-        <h2 className="mb-4 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+        <h2 className="mb-4 text-lg font-medium text-on-surface">
           Section Headers ({sectionHeaders.length})
         </h2>
         {sectionHeaders.length === 0 ? (
-          <p className="text-sm text-neutral-500">No section headers generated yet.</p>
+          <p className="text-sm text-on-surface-muted">No section headers generated yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {sectionHeaders.map((img) => (
@@ -127,7 +120,7 @@ function ImageCard({ image }: { image: NewspaperImage }) {
     : `/api/newspaper/images/library/${image.imagePath}`;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden rounded-theme border border-border-theme bg-surface-card">
       <img
         alt={image.tags.join(', ') || image.imageType}
         className="aspect-square w-full object-cover"

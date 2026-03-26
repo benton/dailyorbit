@@ -42,8 +42,8 @@ export function FlagToggle({ contentKey, contentType, initialFlagged, onToggle }
   return (
     <button
       className={cn(
-        'rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700',
-        flagged ? 'text-amber-500 dark:text-amber-400' : 'text-neutral-300 dark:text-neutral-600',
+        'rounded p-1 hover:bg-on-surface/10',
+        flagged ? 'text-amber-500 dark:text-amber-400' : 'text-on-surface-muted/50',
       )}
       disabled={loading}
       onClick={(e) => {

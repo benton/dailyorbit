@@ -237,10 +237,8 @@ function ChatPageInner() {
         {isNewConversation && messages.length === 0 ? (
           /* New conversation — show full consultant selector */
           <div className="flex flex-1 flex-col items-center justify-center p-8">
-            <h1 className="mb-2 text-2xl font-semibold text-neutral-800 dark:text-neutral-200">
-              Chat with your Team
-            </h1>
-            <p className="mb-6 text-neutral-500">Choose a consultant to start</p>
+            <h1 className="mb-2 text-2xl font-semibold text-on-surface">Chat with your Team</h1>
+            <p className="mb-6 text-on-surface-muted">Choose a consultant to start</p>
             <div className="w-full max-w-2xl">
               <ConsultantSelector
                 consultants={consultants}
@@ -252,7 +250,7 @@ function ChatPageInner() {
         ) : (
           <>
             {/* Cost badge header */}
-            <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-1 dark:border-neutral-800">
+            <div className="flex items-center justify-end border-b border-border-theme/50 px-4 py-1">
               <ChatCostBadge costCents={displayCostCents} />
             </div>
             {/* Message thread */}
@@ -268,7 +266,7 @@ function ChatPageInner() {
 
         {/* Status bar */}
         {isStreaming && streamState.statusMessage !== '' && (
-          <div className="border-t border-neutral-100 px-4 py-1 text-center text-xs text-neutral-400 dark:border-neutral-800">
+          <div className="border-t border-border-theme/50 px-4 py-1 text-center text-xs text-on-surface-muted">
             {streamState.statusMessage}
           </div>
         )}

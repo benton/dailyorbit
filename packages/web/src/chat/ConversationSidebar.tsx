@@ -56,7 +56,7 @@ export default function ConversationSidebar({
   }, [renamingId, renameValue, onRename]);
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900">
+    <div className="flex h-full w-64 flex-col border-r border-border-theme bg-surface dark:border-border-theme dark:bg-on-surface">
       <div className="p-3">
         <Button className="w-full" onClick={onNew} size="sm" variant="outline">
           <MessageSquarePlus className="mr-2 h-4 w-4" />
@@ -67,7 +67,7 @@ export default function ConversationSidebar({
       <div className="flex-1 overflow-y-auto">
         {conversations.map((conv: Conversation) => (
           <div
-            className={`group relative cursor-pointer border-b border-neutral-100 px-3 py-2 hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-800 ${
+            className={`group relative cursor-pointer border-b border-border-theme px-3 py-2 hover:bg-on-surface/10 ${
               conv.id === activeId ? 'bg-blue-50 dark:bg-blue-950' : ''
             }`}
             key={conv.id}
@@ -95,18 +95,18 @@ export default function ConversationSidebar({
                   {conv.consultantIcon != null && (
                     <span className="text-sm">{conv.consultantIcon}</span>
                   )}
-                  <span className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  <span className="truncate text-sm font-medium text-on-surface">
                     {conv.title ?? 'Untitled'}
                   </span>
                 </div>
-                <div className="mt-0.5 text-xs text-neutral-500">
+                <div className="mt-0.5 text-xs text-on-surface-muted">
                   {relativeTime(conv.updatedAt)}
                 </div>
 
                 {/* Hover actions */}
                 <div className="absolute top-2 right-2 hidden gap-1 group-hover:flex">
                   <button
-                    className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:hover:text-neutral-300"
+                    className="rounded p-1 text-on-surface-muted hover:bg-on-surface/15 hover:text-on-surface-muted"
                     onClick={(e) => {
                       e.stopPropagation();
                       startRename(conv);
@@ -117,7 +117,7 @@ export default function ConversationSidebar({
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                   <button
-                    className="rounded p-1 text-neutral-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                    className="rounded p-1 text-on-surface-muted hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(conv.id);
@@ -134,7 +134,7 @@ export default function ConversationSidebar({
         ))}
 
         {conversations.length === 0 && (
-          <p className="p-4 text-center text-sm text-neutral-400">No conversations yet</p>
+          <p className="p-4 text-center text-sm text-on-surface-muted">No conversations yet</p>
         )}
       </div>
     </div>

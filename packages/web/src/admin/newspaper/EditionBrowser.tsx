@@ -63,7 +63,7 @@ export default function EditionBrowser() {
   }, [fetchEditions]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading editions...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading editions...</p>;
   }
 
   if (error) {
@@ -73,22 +73,20 @@ export default function EditionBrowser() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Newspaper Editions
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">Newspaper Editions</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           Browse generated newspaper editions and their articles.
         </p>
       </div>
 
       {editions.length === 0 ? (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-on-surface-muted">
           No editions yet. Run the newspaper pipeline to generate content.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+        <div className="overflow-hidden rounded-theme border border-border-theme">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-left text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+            <thead className="bg-surface text-left text-on-surface-muted dark:bg-on-surface dark:text-on-surface-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Type</th>
@@ -97,10 +95,10 @@ export default function EditionBrowser() {
                 <th className="px-4 py-3 font-medium">View</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+            <tbody className="divide-y divide-border-theme">
               {editions.map((edition) => (
                 <tr
-                  className="bg-white transition-colors hover:bg-neutral-50 dark:bg-neutral-950 dark:hover:bg-neutral-900"
+                  className="bg-white transition-colors hover:bg-surface dark:hover:bg-on-surface"
                   key={edition.id}
                 >
                   <td className="px-4 py-3">
@@ -115,7 +113,7 @@ export default function EditionBrowser() {
                   <td className="px-4 py-3">
                     <Badge variant={STATUS_COLORS[edition.status]}>{edition.status}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">
+                  <td className="px-4 py-3 text-on-surface-muted">
                     {formatRelativeTime(edition.createdAt)}
                   </td>
                   <td className="px-4 py-3">

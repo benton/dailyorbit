@@ -154,7 +154,7 @@ function AutocompleteInput({
 
   return (
     <div className="relative" ref={containerRef}>
-      <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
+      <Label className="mb-1 block text-on-surface">{label}</Label>
       <Input
         onChange={(e) => handleInput(e.target.value)}
         onFocus={() => {
@@ -166,10 +166,10 @@ function AutocompleteInput({
         value={value}
       />
       {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+        <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-border-theme bg-surface-card shadow-lg">
           {suggestions.map((s: string) => (
             <li
-              className="cursor-pointer px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              className="cursor-pointer px-3 py-1.5 text-sm hover:bg-on-surface/10"
               key={s}
               onMouseDown={() => handleSelect(s)}
             >
@@ -227,19 +227,19 @@ function MultiSelect({ label, onChange, options, selected }: MultiSelectProps) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
+      <Label className="mb-1 block text-on-surface">{label}</Label>
       <button
-        className="flex h-9 w-full items-center justify-between rounded-md border border-neutral-200 bg-transparent px-3 text-left text-sm shadow-sm dark:border-neutral-700"
+        className="flex h-9 w-full items-center justify-between rounded-md border border-border-theme bg-transparent px-3 text-left text-sm shadow-sm"
         onClick={() => setOpen(!open)}
         type="button"
       >
-        <span className="truncate text-neutral-700 dark:text-neutral-300">{displayText}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-neutral-500" />
+        <span className="truncate text-on-surface">{displayText}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-muted" />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border-theme bg-surface-card shadow-lg">
           {selected.length > 0 && (
-            <div className="border-b border-neutral-200 p-2 dark:border-neutral-700">
+            <div className="border-b border-border-theme p-2">
               <button
                 className="text-xs text-blue-600 hover:underline dark:text-blue-400"
                 onClick={clearAll}
@@ -251,7 +251,7 @@ function MultiSelect({ label, onChange, options, selected }: MultiSelectProps) {
           )}
           {options.map((opt) => (
             <label
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-on-surface/10"
               key={opt.code}
             >
               <input
@@ -260,8 +260,8 @@ function MultiSelect({ label, onChange, options, selected }: MultiSelectProps) {
                 onChange={() => toggle(opt.code)}
                 type="checkbox"
               />
-              <span className="font-mono text-xs text-neutral-500">{opt.code}</span>
-              <span className="text-neutral-700 dark:text-neutral-300">{opt.label}</span>
+              <span className="font-mono text-xs text-on-surface-muted">{opt.code}</span>
+              <span className="text-on-surface">{opt.label}</span>
             </label>
           ))}
         </div>
@@ -346,18 +346,18 @@ function AutocompleteMultiSelect({
 
   return (
     <div className="relative" ref={containerRef}>
-      <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">{label}</Label>
+      <Label className="mb-1 block text-on-surface">{label}</Label>
       <button
-        className="flex h-9 w-full items-center justify-between rounded-md border border-neutral-200 bg-transparent px-3 text-left text-sm shadow-sm dark:border-neutral-700"
+        className="flex h-9 w-full items-center justify-between rounded-md border border-border-theme bg-transparent px-3 text-left text-sm shadow-sm"
         onClick={() => setOpen(!open)}
         type="button"
       >
-        <span className="truncate text-neutral-700 dark:text-neutral-300">{displayText}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-neutral-500" />
+        <span className="truncate text-on-surface">{displayText}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-muted" />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
-          <div className="border-b border-neutral-200 p-2 dark:border-neutral-700">
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border-theme bg-surface-card shadow-lg">
+          <div className="border-b border-border-theme p-2">
             <Input
               className="h-7 text-xs"
               onChange={(e) => setQuery(e.target.value)}
@@ -366,16 +366,16 @@ function AutocompleteMultiSelect({
             />
           </div>
           {selected.length > 0 && (
-            <div className="border-b border-neutral-200 p-2 dark:border-neutral-700">
+            <div className="border-b border-border-theme p-2">
               <div className="flex flex-wrap gap-1">
                 {selected.map((s: string) => (
                   <span
-                    className="inline-flex items-center gap-1 rounded bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-700"
+                    className="inline-flex items-center gap-1 rounded bg-surface px-2 py-0.5 text-xs"
                     key={s}
                   >
                     {s}
                     <button
-                      className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                      className="text-on-surface-muted hover:text-on-surface"
                       onClick={() => toggle(s)}
                       type="button"
                     >
@@ -391,7 +391,7 @@ function AutocompleteMultiSelect({
               .filter((s: string) => !selected.includes(s))
               .map((s: string) => (
                 <li
-                  className="cursor-pointer px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                  className="cursor-pointer px-3 py-1.5 text-sm hover:bg-on-surface/10"
                   key={s}
                   onMouseDown={() => toggle(s)}
                 >
@@ -399,7 +399,7 @@ function AutocompleteMultiSelect({
                 </li>
               ))}
             {suggestions.length === 0 && query.length > 0 && (
-              <li className="px-3 py-2 text-xs text-neutral-500">No results</li>
+              <li className="px-3 py-2 text-xs text-on-surface-muted">No results</li>
             )}
           </ul>
         </div>
@@ -555,11 +555,7 @@ const contentColumns: Array<ColumnDef<ContentSearchResult, unknown>> = [
       const source: string = getValue() as string;
       const label: string =
         source === 'filing' ? 'Filing' : source === 'attachment' ? 'Attachment' : 'Comment';
-      return (
-        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-700">
-          {label}
-        </span>
-      );
+      return <span className="rounded bg-surface px-1.5 py-0.5 text-xs">{label}</span>;
     },
     header: 'Source',
     size: 90,
@@ -670,7 +666,7 @@ function FilingFilterForm({
   return (
     <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
       <div>
-        <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">File Number</Label>
+        <Label className="mb-1 block text-on-surface">File Number</Label>
         <Input
           onChange={(e) => update('file_number', e.target.value)}
           placeholder="e.g. SAT-LOA-2024..."
@@ -718,7 +714,7 @@ function FilingFilterForm({
         selected={filters.status_code}
       />
       <div>
-        <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Date Filed From</Label>
+        <Label className="mb-1 block text-on-surface">Date Filed From</Label>
         <Input
           onChange={(e) => update('date_filed_from', e.target.value)}
           type="date"
@@ -726,7 +722,7 @@ function FilingFilterForm({
         />
       </div>
       <div>
-        <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Date Filed To</Label>
+        <Label className="mb-1 block text-on-surface">Date Filed To</Label>
         <Input
           onChange={(e) => update('date_filed_to', e.target.value)}
           type="date"
@@ -784,7 +780,7 @@ function SatelliteFilterForm({
         value={filters.company}
       />
       <div>
-        <Label className="mb-1 block text-neutral-700 dark:text-neutral-300">Status</Label>
+        <Label className="mb-1 block text-on-surface">Status</Label>
         <div className="flex h-9 items-center gap-4">
           {(['any', 'true', 'false'] as const).map((val) => (
             <label className="flex items-center gap-1.5 text-sm" key={val}>
@@ -794,7 +790,7 @@ function SatelliteFilterForm({
                 onChange={() => update('active', val)}
                 type="radio"
               />
-              <span className="text-neutral-700 dark:text-neutral-300">
+              <span className="text-on-surface">
                 {val === 'any' ? 'Any' : val === 'true' ? 'Active' : 'Inactive'}
               </span>
             </label>
@@ -1340,7 +1336,7 @@ export default function SearchPage() {
           }}
         />
       ),
-      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      header: () => <Flag className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'flag',
       size: 40,
     };
@@ -1366,14 +1362,14 @@ export default function SearchPage() {
               }}
             />
             {showHidden && isHidden && (
-              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+              <span className="rounded bg-surface px-1 py-0.5 text-[10px] text-on-surface-muted">
                 Hidden
               </span>
             )}
           </div>
         );
       },
-      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      header: () => <EyeOff className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'hide',
       size: 80,
     };
@@ -1438,7 +1434,7 @@ export default function SearchPage() {
           }}
         />
       ),
-      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      header: () => <Flag className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'flag',
       size: 40,
     };
@@ -1464,14 +1460,14 @@ export default function SearchPage() {
               }}
             />
             {showHidden && isHidden && (
-              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+              <span className="rounded bg-surface px-1 py-0.5 text-[10px] text-on-surface-muted">
                 Hidden
               </span>
             )}
           </div>
         );
       },
-      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      header: () => <EyeOff className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'hide',
       size: 80,
     };
@@ -1495,14 +1491,14 @@ export default function SearchPage() {
     <div className="space-y-4">
       {/* Page heading */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Search</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Search</h1>
         {isAuthenticated && <SavedSearchPicker onLoad={handleLoadSavedSearch} />}
       </div>
 
       {/* Content search bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-on-surface-muted/70" />
           <Input
             className="pl-10"
             onChange={(e) => setContentQuery(e.target.value)}
@@ -1516,7 +1512,7 @@ export default function SearchPage() {
           />
         </div>
         <select
-          className="h-9 rounded-md border border-neutral-200 bg-transparent px-2 text-sm dark:border-neutral-700"
+          className="h-9 rounded-md border border-border-theme bg-transparent px-2 text-sm"
           onChange={(e) => setSearchMode(e.target.value as 'keyword' | 'semantic' | 'hybrid')}
           value={searchMode}
         >
@@ -1527,14 +1523,14 @@ export default function SearchPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex border-b border-border-theme">
         {TABS.map((tab) => (
           <button
             className={cn(
               'px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.key
                 ? 'border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',
+                : 'text-on-surface-muted hover:text-on-surface',
             )}
             key={tab.key}
             onClick={() => switchTab(tab.key)}
@@ -1546,9 +1542,9 @@ export default function SearchPage() {
       </div>
 
       {/* Collapsible filter panel */}
-      <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-surface-card">
         <button
-          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-on-surface"
           onClick={() => setFiltersOpen(!filtersOpen)}
           type="button"
         >
@@ -1559,7 +1555,7 @@ export default function SearchPage() {
           {filtersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
         {filtersOpen && (
-          <div className="space-y-4 border-t border-neutral-200 px-4 pt-3 pb-4 dark:border-neutral-700">
+          <div className="space-y-4 border-t border-border-theme px-4 pt-3 pb-4">
             {activeTab === 'filings' && (
               <FilingFilterForm filters={filingFilters} onChange={setFilingFilters} />
             )}
@@ -1586,7 +1582,7 @@ export default function SearchPage() {
                 </Button>
               )}
               {isAuthenticated && (
-                <label className="ml-4 flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+                <label className="ml-4 flex items-center gap-1.5 text-sm text-on-surface-muted">
                   <input
                     checked={showHidden}
                     onChange={(e) => setShowHidden(e.target.checked)}

@@ -25,10 +25,10 @@ type StatusStyle = Omit<FilingStatusInfo, 'label'>;
 const EXACT_STATUS_MAP: Record<string, StatusStyle> = {
   // ICFS free-text statuses
   Closed: {
-    bg: 'bg-neutral-200 dark:bg-neutral-700',
+    bg: 'bg-on-surface/15',
     category: 'closed',
     terminal: true,
-    text: 'text-neutral-700 dark:text-neutral-300',
+    text: 'text-on-surface',
   },
   Current: {
     bg: 'bg-green-100 dark:bg-green-900',
@@ -104,16 +104,16 @@ const EXACT_STATUS_MAP: Record<string, StatusStyle> = {
     text: 'text-amber-800 dark:text-amber-200',
   },
   COR: {
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    bg: 'bg-on-surface/10',
     category: 'other',
     terminal: false,
-    text: 'text-neutral-600 dark:text-neutral-400',
+    text: 'text-on-surface-muted',
   },
   DFT: {
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    bg: 'bg-on-surface/10',
     category: 'other',
     terminal: false,
-    text: 'text-neutral-600 dark:text-neutral-400',
+    text: 'text-on-surface-muted',
   },
   DREC: {
     bg: 'bg-red-100 dark:bg-red-900',
@@ -152,10 +152,10 @@ const EXACT_STATUS_MAP: Record<string, StatusStyle> = {
     text: 'text-amber-800 dark:text-amber-200',
   },
   INP: {
-    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    bg: 'bg-on-surface/10',
     category: 'other',
     terminal: false,
-    text: 'text-neutral-600 dark:text-neutral-400',
+    text: 'text-on-surface-muted',
   },
   LRC: {
     bg: 'bg-blue-100 dark:bg-blue-900',
@@ -233,10 +233,10 @@ const TRANSFERRED_STYLE: StatusStyle = {
 };
 
 const FALLBACK_STYLE: StatusStyle = {
-  bg: 'bg-neutral-100 dark:bg-neutral-800',
+  bg: 'bg-on-surface/10',
   category: 'other',
   terminal: false,
-  text: 'text-neutral-600 dark:text-neutral-400',
+  text: 'text-on-surface-muted',
 };
 
 /**

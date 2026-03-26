@@ -18,8 +18,7 @@ type ViewRecord = {
   lastViewedAt: string;
 };
 
-const cardClass: string =
-  'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+const cardClass: string = 'rounded-theme border border-border-theme bg-surface-card p-4';
 
 export default function UserHomePage() {
   const navigate = useNavigate();
@@ -61,20 +60,14 @@ export default function UserHomePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          The Daily Orbit
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Your personalized filing dashboard.
-        </p>
+        <h1 className="text-2xl font-semibold text-on-surface">The Daily Orbit</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">Your personalized filing dashboard.</p>
       </div>
 
       {/* Unread Filings */}
       <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Unread Filings (Last 7 Days)
-          </p>
+          <p className="text-sm font-medium text-on-surface-muted">Unread Filings (Last 7 Days)</p>
           {unread.length > 0 && (
             <button
               className="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
@@ -89,14 +82,14 @@ export default function UserHomePage() {
         </div>
         <div className="mt-3">
           {unreadLoading ? (
-            <p className="text-sm text-neutral-500">Loading...</p>
+            <p className="text-sm text-on-surface-muted">Loading...</p>
           ) : unread.length === 0 ? (
-            <p className="text-sm text-neutral-500">All caught up!</p>
+            <p className="text-sm text-on-surface-muted">All caught up!</p>
           ) : (
             <div className="space-y-1">
               {unread.map((f: UnreadFiling) => (
                 <div
-                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-on-surface/5"
                   key={f.fileNumber}
                   onClick={() => goToFiling(f.fileNumber)}
                 >
@@ -104,10 +97,10 @@ export default function UserHomePage() {
                   <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
                     {f.fileNumber}
                   </span>
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <span className="text-xs text-on-surface-muted">
                     {f.subsystemCode} {f.appTypeCode}
                   </span>
-                  <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
+                  <span className="ml-auto text-xs text-on-surface-muted/70">
                     {f.dateFiled != null ? new Date(f.dateFiled).toLocaleDateString() : ''}
                   </span>
                 </div>
@@ -119,19 +112,17 @@ export default function UserHomePage() {
 
       {/* Recently Viewed */}
       <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Recently Viewed
-        </p>
+        <p className="text-sm font-medium text-on-surface-muted">Recently Viewed</p>
         <div className="mt-3">
           {recentLoading ? (
-            <p className="text-sm text-neutral-500">Loading...</p>
+            <p className="text-sm text-on-surface-muted">Loading...</p>
           ) : recent.length === 0 ? (
-            <p className="text-sm text-neutral-500">No filings viewed yet.</p>
+            <p className="text-sm text-on-surface-muted">No filings viewed yet.</p>
           ) : (
             <div className="space-y-1">
               {recent.map((r: ViewRecord) => (
                 <div
-                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-on-surface/5"
                   key={r.fileNumber}
                   onClick={() => goToFiling(r.fileNumber)}
                 >
@@ -139,7 +130,7 @@ export default function UserHomePage() {
                   <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
                     {r.fileNumber}
                   </span>
-                  <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
+                  <span className="ml-auto text-xs text-on-surface-muted/70">
                     {new Date(r.lastViewedAt).toLocaleDateString()}
                   </span>
                 </div>

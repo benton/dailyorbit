@@ -6,7 +6,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   const location = useLocation();
 
   if (isLoading) {
-    return <p className="p-6 text-sm text-neutral-500">Loading...</p>;
+    return <p className="p-6 text-sm text-on-surface-muted">Loading...</p>;
   }
 
   if (!isAuthenticated) {

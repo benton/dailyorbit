@@ -5,7 +5,7 @@ export default function RequireAdmin({ children }: { children: React.ReactNode }
   const { isAdmin, isLoading } = useAuth();
 
   if (isLoading) {
-    return <p className="p-6 text-sm text-neutral-500">Loading...</p>;
+    return <p className="p-6 text-sm text-on-surface-muted">Loading...</p>;
   }
 
   if (!isAdmin) {

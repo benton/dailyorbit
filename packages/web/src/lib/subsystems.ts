@@ -37,10 +37,10 @@ const SUBSYSTEM_MAP: Record<string, SubsystemInfo> = {
 };
 
 const FALLBACK: SubsystemInfo = {
-  bg: 'bg-neutral-200',
+  bg: 'bg-on-surface/15',
   hex: '#d4d4d4', // neutral-300
   label: 'Unknown',
-  text: 'text-neutral-600',
+  text: 'text-on-surface-muted',
 };
 
 /** Subsystem codes in canonical order — use as vgplot colorDomain. */

@@ -45,7 +45,7 @@ function AlertBadge() {
 
   return (
     <Link
-      className={`relative text-sm hover:text-neutral-900 dark:hover:text-neutral-100 ${isActive ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}
+      className={`relative text-sm hover:text-on-surface ${isActive ? 'font-semibold text-on-surface' : 'text-on-surface-muted'}`}
       to="/alerts"
     >
       Alerts
@@ -100,7 +100,7 @@ export default function PublicLayout() {
           {isAuthenticated && <AlertBadge />}
           <div className="ml-auto flex items-center gap-3">
             <button
-              className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              className="rounded-theme p-1.5 text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
               onClick={toggleWide}
               title={isWide ? 'Narrow view' : 'Wide view'}
               type="button"

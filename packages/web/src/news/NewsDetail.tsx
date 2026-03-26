@@ -82,7 +82,7 @@ export default function NewsDetail() {
   }, [item]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading...</p>;
   }
   if (error != null || item == null) {
     return (
@@ -102,16 +102,16 @@ export default function NewsDetail() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <nav className="text-xs text-neutral-400 dark:text-neutral-500">
-        <Link className="hover:text-neutral-600 dark:hover:text-neutral-300" to="/">
+      <nav className="text-xs text-on-surface-muted/70">
+        <Link className="hover:text-on-surface-muted" to="/">
           Home
         </Link>
         {' / '}
-        <Link className="hover:text-neutral-600 dark:hover:text-neutral-300" to="/news">
+        <Link className="hover:text-on-surface-muted" to="/news">
           News
         </Link>
         {' / '}
-        <span className="text-neutral-600 dark:text-neutral-300">
+        <span className="text-on-surface">
           {item.title.slice(0, 60)}
           {item.title.length > 60 ? '…' : ''}
         </span>
@@ -120,9 +120,7 @@ export default function NewsDetail() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            {item.title}
-          </h1>
+          <h1 className="text-2xl font-bold text-on-surface">{item.title}</h1>
           <FlagToggle
             contentKey={String(item.id)}
             contentType="news"
@@ -130,21 +128,21 @@ export default function NewsDetail() {
             onToggle={setIsFlagged}
           />
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-on-surface-muted">
           {publishedDate != null && <span>{publishedDate}</span>}
           {item.author != null && (
             <>
-              <span className="text-neutral-300 dark:text-neutral-600">·</span>
+              <span className="text-on-surface-muted/40">·</span>
               <span>{item.author}</span>
             </>
           )}
           {item.sourceName != null && (
             <>
-              <span className="text-neutral-300 dark:text-neutral-600">·</span>
+              <span className="text-on-surface-muted/40">·</span>
               <span>{item.sourceName}</span>
             </>
           )}
-          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+          <span className="text-on-surface-muted/40">·</span>
           <a
             className="text-blue-600 hover:underline dark:text-blue-400"
             href={item.sourceUrl}
@@ -158,7 +156,7 @@ export default function NewsDetail() {
           <div className="mt-2 flex flex-wrap gap-1">
             {item.tags.map((tag: string) => (
               <span
-                className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                className="rounded-full bg-surface px-2 py-0.5 text-xs text-on-surface-muted"
                 key={tag}
               >
                 {tag}
@@ -170,30 +168,26 @@ export default function NewsDetail() {
 
       {/* Summary */}
       {item.summary != null && (
-        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
+        <div className="rounded-theme border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
           <p className="mb-1 text-xs font-semibold tracking-wide text-blue-600 uppercase dark:text-blue-400">
             Summary
           </p>
-          <p className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
-            {item.summary}
-          </p>
+          <p className="text-sm leading-relaxed text-on-surface">{item.summary}</p>
         </div>
       )}
 
       {/* Full Text */}
       {item.fullText != null && (
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
-            Full Text
-          </h2>
-          <div className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap text-neutral-700 dark:text-neutral-300 dark:prose-invert">
+          <h2 className="mb-2 text-sm font-semibold text-on-surface-muted">Full Text</h2>
+          <div className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap text-on-surface dark:prose-invert">
             {item.fullText}
           </div>
         </div>
       )}
 
       {item.fullText == null && item.summary == null && (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="text-sm text-on-surface-muted">
           No content extracted yet (status: {item.extractStatus}).
         </p>
       )}

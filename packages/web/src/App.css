@@ -4,49 +4,64 @@
 /* ── Google Fonts (browsers only download when used in rendered text) ── */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@400;700;900&family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Slab:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+/* ── Tailwind theme integration (maps --do-* tokens to utility classes) ── */
+@theme {
+  --color-surface: var(--do-bg);
+  --color-surface-card: var(--do-bg-card);
+  --color-on-surface: var(--do-text);
+  --color-on-surface-muted: var(--do-text-muted);
+  --color-on-surface-heading: var(--do-text-heading);
+  --color-border-theme: var(--do-border);
+  --color-accent-theme: var(--do-accent);
+  --font-family-body: var(--do-font-body);
+  --font-family-heading: var(--do-font-heading);
+  --font-family-mono: var(--do-font-mono);
+  --radius-theme: var(--do-radius);
+}
+
 /* ── Semantic design tokens (modern defaults) ── */
 :root {
-  --do-bg:            #fafafa;
-  --do-bg-card:       #ffffff;
-  --do-text:          #111111;
-  --do-text-muted:    #737373;
-  --do-text-heading:  #111111;
-  --do-border:        #e5e5e5;
-  --do-border-style:  1px solid var(--do-border);
-  --do-accent:        #be185d;
-  --do-font-body:     system-ui, -apple-system, sans-serif;
-  --do-font-heading:  system-ui, -apple-system, sans-serif;
-  --do-font-mono:     ui-monospace, 'SF Mono', monospace;
-  --do-radius:        0.5rem;
+  --do-bg: #fafafa;
+  --do-bg-card: #ffffff;
+  --do-text: #111111;
+  --do-text-muted: #737373;
+  --do-text-heading: #111111;
+  --do-border: #e5e5e5;
+  --do-border-style: 1px solid var(--do-border);
+  --do-accent: #be185d;
+  --do-font-body: system-ui, -apple-system, sans-serif;
+  --do-font-heading: system-ui, -apple-system, sans-serif;
+  --do-font-mono: ui-monospace, 'SF Mono', monospace;
+  --do-radius: 0.5rem;
 }
 
 /* Keep existing dark-mode overrides for modern theme */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="broadsheet"]) {
-    --do-bg:          rgb(20, 20, 20);
-    --do-bg-card:     rgb(23, 23, 23);
-    --do-text:        rgb(230, 230, 230);
-    --do-text-muted:  rgb(163, 163, 163);
+  :root:not([data-theme='broadsheet']) {
+    --do-bg: rgb(20, 20, 20);
+    --do-bg-card: rgb(23, 23, 23);
+    --do-text: rgb(230, 230, 230);
+    --do-text-muted: rgb(163, 163, 163);
     --do-text-heading: rgb(245, 245, 245);
-    --do-border:      rgb(64, 64, 64);
-    --do-accent:      #f472b6;
+    --do-border: rgb(64, 64, 64);
+    --do-accent: #f472b6;
   }
 }
 
 /* ── Broadsheet theme ── */
-[data-theme="broadsheet"] {
-  --do-bg:            #f9f4e8;
-  --do-bg-card:       #f4edd3;
-  --do-text:          #1a1a1a;
-  --do-text-muted:    #8b7355;
-  --do-text-heading:  #1a1a1a;
-  --do-border:        #5c4a32;
-  --do-border-style:  2px double var(--do-border);
-  --do-accent:        #8b2500;
-  --do-font-body:     'Libre Baskerville', Georgia, 'Times New Roman', serif;
-  --do-font-heading:  'Abril Fatface', Georgia, serif;
-  --do-font-mono:     'IBM Plex Mono', 'Courier New', monospace;
-  --do-radius:        0;
+[data-theme='broadsheet'] {
+  --do-bg: #f9f4e8;
+  --do-bg-card: #f4edd3;
+  --do-text: #1a1a1a;
+  --do-text-muted: #8b7355;
+  --do-text-heading: #1a1a1a;
+  --do-border: #5c4a32;
+  --do-border-style: 2px double var(--do-border);
+  --do-accent: #8b2500;
+  --do-font-body: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --do-font-heading: 'Abril Fatface', Georgia, serif;
+  --do-font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --do-radius: 0;
 }
 
 body {
@@ -55,7 +70,74 @@ body {
   font-family: var(--do-font-body);
 }
 
+/* ── Theme transition (smooth switch between themes) ── */
+html[data-theme-transition] * {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
 /* ── Broadsheet paper texture ── */
-[data-theme="broadsheet"] body {
+[data-theme='broadsheet'] body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ── Broadsheet typographic enhancements ── */
+
+/* 4a. Drop caps on lead paragraphs */
+[data-theme='broadsheet'] .prose > p:first-of-type::first-letter {
+  font-family: 'Abril Fatface', Georgia, serif;
+  font-size: 3.5em;
+  line-height: 0.8;
+  float: left;
+  margin-right: 0.08em;
+  margin-top: 0.05em;
+  color: var(--do-accent);
+}
+
+/* 4b. Ornamental section dividers */
+[data-theme='broadsheet'] hr {
+  border: none;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--do-border) 0px,
+    var(--do-border) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  margin: 1.5rem 0;
+}
+
+/* 4c. Heading treatments */
+[data-theme='broadsheet'] h1 {
+  font-family: var(--do-font-heading);
+  letter-spacing: 0.04em;
+  border-bottom: 2px double var(--do-border);
+  padding-bottom: 0.25em;
+}
+
+[data-theme='broadsheet'] h2 {
+  font-family: var(--do-font-heading);
+  font-style: italic;
+}
+
+/* 4d. Scrollbar styling */
+[data-theme='broadsheet'] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[data-theme='broadsheet'] ::-webkit-scrollbar-track {
+  background: #ebe5d4;
+}
+
+[data-theme='broadsheet'] ::-webkit-scrollbar-thumb {
+  background: #c4b896;
+  border: 1px solid #a89870;
+}
+
+[data-theme='broadsheet'] ::-webkit-scrollbar-thumb:hover {
+  background: #a89870;
 }

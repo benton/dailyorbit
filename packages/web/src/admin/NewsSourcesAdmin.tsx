@@ -138,15 +138,15 @@ export default function NewsSourcesAdmin() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading...</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">News Sources</h2>
+        <h2 className="text-xl font-bold text-on-surface">News Sources</h2>
         <button
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+          className="rounded-theme bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
           onClick={() => setShowAdd(!showAdd)}
           type="button"
         >
@@ -158,22 +158,22 @@ export default function NewsSourcesAdmin() {
 
       {/* Add form */}
       {showAdd && (
-        <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
+        <div className="rounded-theme border border-border-theme p-4 dark:border-border-theme">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
               placeholder="Source name"
               value={addForm.name}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, feedUrl: e.target.value })}
               placeholder="Feed URL"
               value={addForm.feedUrl}
             />
             <select
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
               value={addForm.category}
             >
@@ -183,7 +183,7 @@ export default function NewsSourcesAdmin() {
               <option value="general">General</option>
             </select>
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               min="5"
               onChange={(e) =>
                 setAddForm({ ...addForm, fetchIntervalMinutes: Number(e.target.value) })
@@ -194,7 +194,7 @@ export default function NewsSourcesAdmin() {
             />
           </div>
           <button
-            className="mt-3 rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+            className="mt-3 rounded-theme bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
             disabled={saving || addForm.name.trim() === '' || addForm.feedUrl.trim() === ''}
             onClick={() => void handleAdd()}
             type="button"
@@ -205,9 +205,9 @@ export default function NewsSourcesAdmin() {
       )}
 
       {/* Sources table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="overflow-x-auto rounded-theme border border-border-theme">
         <table className="min-w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          <thead className="bg-surface text-left text-xs text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Category</th>
@@ -217,21 +217,21 @@ export default function NewsSourcesAdmin() {
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          <tbody className="divide-y divide-border-theme">
             {sources.map((source: NewsSource) => (
               <tr key={source.id}>
                 {editId === source.id ? (
                   <>
                     <td className="px-3 py-2">
                       <input
-                        className="w-full rounded border border-neutral-300 px-1 py-0.5 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+                        className="w-full rounded-theme border border-border-theme bg-surface-card px-1 py-0.5 text-sm"
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                         value={editForm.name}
                       />
                     </td>
                     <td className="px-3 py-2">
                       <select
-                        className="rounded border border-neutral-300 px-1 py-0.5 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+                        className="rounded-theme border border-border-theme bg-surface-card px-1 py-0.5 text-sm"
                         onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                         value={editForm.category}
                       >
@@ -248,8 +248,8 @@ export default function NewsSourcesAdmin() {
                         type="checkbox"
                       />
                     </td>
-                    <td className="px-3 py-2 text-xs text-neutral-400">—</td>
-                    <td className="px-3 py-2 text-xs text-neutral-400">—</td>
+                    <td className="px-3 py-2 text-xs text-on-surface-muted">—</td>
+                    <td className="px-3 py-2 text-xs text-on-surface-muted">—</td>
                     <td className="px-3 py-2">
                       <button
                         className="mr-2 text-xs text-green-600 hover:underline"
@@ -260,7 +260,7 @@ export default function NewsSourcesAdmin() {
                         Save
                       </button>
                       <button
-                        className="text-xs text-neutral-500 hover:underline"
+                        className="text-xs text-on-surface-muted hover:underline"
                         onClick={() => setEditId(null)}
                         type="button"
                       >
@@ -270,17 +270,17 @@ export default function NewsSourcesAdmin() {
                   </>
                 ) : (
                   <>
-                    <td className="px-3 py-2 font-medium text-neutral-900 dark:text-neutral-100">
+                    <td className="px-3 py-2 font-medium text-on-surface">
                       {source.name}
-                      <div className="truncate text-xs text-neutral-400">{source.feedUrl}</div>
+                      <div className="truncate text-xs text-on-surface-muted">{source.feedUrl}</div>
                     </td>
-                    <td className="px-3 py-2 text-neutral-500">{source.category}</td>
+                    <td className="px-3 py-2 text-on-surface-muted">{source.category}</td>
                     <td className="px-3 py-2">
                       <button
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           source.enabled
                             ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400'
+                            : 'bg-on-surface/10 text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted'
                         }`}
                         onClick={() => void handleToggleEnabled(source)}
                         type="button"
@@ -288,7 +288,7 @@ export default function NewsSourcesAdmin() {
                         {source.enabled ? 'On' : 'Off'}
                       </button>
                     </td>
-                    <td className="px-3 py-2 text-xs text-neutral-500">
+                    <td className="px-3 py-2 text-xs text-on-surface-muted">
                       {source.lastFetchedAt != null
                         ? new Date(source.lastFetchedAt).toLocaleString()
                         : 'Never'}
@@ -318,7 +318,7 @@ export default function NewsSourcesAdmin() {
                     </td>
                     <td className="px-3 py-2">
                       <button
-                        className="mr-2 text-xs text-blue-600 hover:underline disabled:text-neutral-400"
+                        className="mr-2 text-xs text-blue-600 hover:underline disabled:text-on-surface-muted"
                         disabled={fetchingId === source.id}
                         onClick={() => void handleFetchNow(source.id)}
                         type="button"
@@ -326,7 +326,7 @@ export default function NewsSourcesAdmin() {
                         {fetchingId === source.id ? 'Fetching...' : 'Fetch now'}
                       </button>
                       <button
-                        className="mr-2 text-xs text-neutral-600 hover:underline dark:text-neutral-400"
+                        className="mr-2 text-xs text-on-surface-muted hover:underline dark:text-on-surface-muted"
                         onClick={() => startEdit(source)}
                         type="button"
                       >

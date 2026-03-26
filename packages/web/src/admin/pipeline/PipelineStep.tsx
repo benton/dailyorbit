@@ -32,7 +32,7 @@ const STATUS_CONFIG: Record<
     variant: 'destructive',
   },
   idle: {
-    icon: <Circle className="h-3.5 w-3.5 text-neutral-400" />,
+    icon: <Circle className="h-3.5 w-3.5 text-on-surface-muted" />,
     label: 'Idle',
     variant: 'outline',
   },
@@ -64,14 +64,14 @@ export default function PipelineStep({
   const cfg = STATUS_CONFIG[status];
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="flex items-center gap-3 rounded-theme border border-border-theme bg-white px-3 py-2 dark:border-border-theme dark:bg-on-surface">
       {/* Status icon */}
       <div className="shrink-0">{cfg.icon}</div>
 
       {/* Name + description */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{name}</p>
-        <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">{description}</p>
+        <p className="text-sm font-medium text-on-surface">{name}</p>
+        <p className="truncate text-xs text-on-surface-muted">{description}</p>
       </div>
 
       {/* Status badge */}
@@ -98,7 +98,7 @@ export default function PipelineStep({
       {parallelizable && (
         <input
           aria-label={`Concurrency for ${name}`}
-          className="w-14 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center text-xs dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          className="w-14 rounded-theme border border-border-theme bg-surface-card px-1.5 py-1 text-center text-xs"
           disabled={disabled}
           max={100}
           min={1}

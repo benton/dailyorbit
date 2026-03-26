@@ -166,17 +166,17 @@ function StageDetail({ runId }: { runId: number }) {
   }, [runId]);
 
   if (loading) {
-    return <p className="px-4 py-2 text-sm text-neutral-500">Loading stages...</p>;
+    return <p className="px-4 py-2 text-sm text-on-surface-muted">Loading stages...</p>;
   }
   if (stages.length === 0) {
-    return <p className="px-4 py-2 text-sm text-neutral-500">No stage data.</p>;
+    return <p className="px-4 py-2 text-sm text-on-surface-muted">No stage data.</p>;
   }
 
   return (
-    <div className="overflow-x-auto border-t border-neutral-200 dark:border-neutral-700">
+    <div className="overflow-x-auto border-t border-border-theme">
       <table className="min-w-full text-sm">
         <thead>
-          <tr className="bg-neutral-50 dark:bg-neutral-800/50">
+          <tr className="dark:bg-on-surface/10/50 bg-surface">
             <th className="px-3 py-1.5 text-left font-medium">Stage</th>
             <th className="px-3 py-1.5 text-left font-medium">Status</th>
             <th className="px-3 py-1.5 text-left font-medium">Duration</th>
@@ -189,7 +189,7 @@ function StageDetail({ runId }: { runId: number }) {
         </thead>
         <tbody>
           {stages.map((s: StageRun) => (
-            <tr className="border-t border-neutral-100 dark:border-neutral-800" key={s.id}>
+            <tr className="border-t border-border-theme" key={s.id}>
               <td className="px-3 py-1.5 font-mono text-xs">{s.stage_id}</td>
               <td className="px-3 py-1.5">
                 <Badge variant={statusVariant(s.status)}>{s.status}</Badge>
@@ -199,7 +199,7 @@ function StageDetail({ runId }: { runId: number }) {
               <td className="px-3 py-1.5 text-right">{s.items_processed}</td>
               <td className="px-3 py-1.5 text-right">{s.items_skipped}</td>
               <td className="px-3 py-1.5 text-right">{s.items_failed}</td>
-              <td className="px-3 py-1.5 text-neutral-500">{s.summary ?? ''}</td>
+              <td className="px-3 py-1.5 text-on-surface-muted">{s.summary ?? ''}</td>
             </tr>
           ))}
         </tbody>
@@ -302,24 +302,18 @@ export default function PipelineHistoryPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        Pipeline History
-      </h1>
+      <h1 className="text-2xl font-bold text-on-surface">Pipeline History</h1>
 
       {/* Histogram */}
       <section>
-        <h2 className="mb-2 text-lg font-semibold text-neutral-700 dark:text-neutral-300">
-          New Filings Detected per Run
-        </h2>
-        {chartLoading && <p className="text-sm text-neutral-500">Loading chart...</p>}
+        <h2 className="mb-2 text-lg font-semibold text-on-surface">New Filings Detected per Run</h2>
+        {chartLoading && <p className="text-sm text-on-surface-muted">Loading chart...</p>}
         <div className="overflow-x-auto" ref={chartRef} />
       </section>
 
       {/* Data table */}
       <section>
-        <h2 className="mb-2 text-lg font-semibold text-neutral-700 dark:text-neutral-300">
-          Run History
-        </h2>
+        <h2 className="mb-2 text-lg font-semibold text-on-surface">Run History</h2>
         <DataTable<PipelineRunStats>
           columns={columns}
           defaultOrder="desc"
@@ -330,11 +324,11 @@ export default function PipelineHistoryPage() {
           rowTooltip={(row: PipelineRunStats) => row.summary ?? row.stage_summary}
         />
         {expandedRunId != null && (
-          <div className="mt-2 rounded-md border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center justify-between bg-neutral-50 px-3 py-2 dark:bg-neutral-800/50">
+          <div className="mt-2 rounded-theme border border-border-theme">
+            <div className="dark:bg-on-surface/10/50 flex items-center justify-between bg-surface px-3 py-2">
               <span className="text-sm font-medium">Stage breakdown for run #{expandedRunId}</span>
               <button
-                className="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+                className="text-xs text-on-surface-muted hover:text-on-surface dark:hover:text-on-surface"
                 onClick={() => setExpandedRunId(null)}
                 type="button"
               >

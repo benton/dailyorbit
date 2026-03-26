@@ -57,7 +57,7 @@ export default function ChatInput({
   }, []);
 
   return (
-    <div className="border-t border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-900">
+    <div className="border-t border-border-theme bg-white p-3 dark:border-border-theme dark:bg-on-surface">
       <div className="mx-auto max-w-3xl">
         <div className="mb-2">
           <ConsultantSelector
@@ -69,7 +69,7 @@ export default function ChatInput({
         </div>
         <div className="flex items-end gap-2">
           <textarea
-            className="flex-1 resize-none rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+            className="flex-1 resize-none rounded-theme border border-border-theme bg-surface px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
             disabled={disabled}
             onChange={handleChange}
             onKeyDown={handleKeyDown}

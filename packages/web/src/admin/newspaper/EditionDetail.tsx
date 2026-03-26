@@ -94,7 +94,7 @@ export default function EditionDetail() {
   );
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading edition...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading edition...</p>;
   }
 
   if (error) {
@@ -102,21 +102,18 @@ export default function EditionDetail() {
   }
 
   if (!edition) {
-    return <p className="text-sm text-neutral-500">Edition not found.</p>;
+    return <p className="text-sm text-on-surface-muted">Edition not found.</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <Link
-          className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-          to="/admin/newspaper"
-        >
+        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/newspaper">
           &larr; All Editions
         </Link>
         {edition.articles.some((a) => a.status === 'generated') && (
           <Link
-            className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+            className="inline-flex items-center rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface shadow-sm hover:bg-on-surface/5"
             to={`/admin/newspaper/${edition.editionDate}/view`}
           >
             View as Newspaper
@@ -125,10 +122,8 @@ export default function EditionDetail() {
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          {edition.editionDate}
-        </h1>
-        <div className="mt-2 flex items-center gap-3 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-on-surface">{edition.editionDate}</h1>
+        <div className="mt-2 flex items-center gap-3 text-sm text-on-surface-muted">
           <Badge variant={EDITION_STATUS_COLORS[edition.status]}>{edition.status}</Badge>
           <span className="capitalize">{edition.editionType}</span>
           <span>{edition.articles.length} articles</span>
@@ -136,7 +131,7 @@ export default function EditionDetail() {
       </div>
 
       {edition.heroImagePath && (
-        <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+        <div className="overflow-hidden rounded-theme border border-border-theme">
           <img
             alt="Edition hero"
             className="w-full object-cover"
@@ -176,13 +171,11 @@ function ArticleCard({ article, editionDate, onRegenerate, regenerating }: Artic
     article.body.length > 200 ? article.body.slice(0, 200) + '...' : article.body;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-theme border border-border-theme bg-white p-5 dark:border-border-theme dark:bg-on-surface">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
-            {article.headline ?? article.contentType}
-          </h3>
-          <div className="mt-1 flex items-center gap-2 text-xs text-neutral-500">
+          <h3 className="font-medium text-on-surface">{article.headline ?? article.contentType}</h3>
+          <div className="mt-1 flex items-center gap-2 text-xs text-on-surface-muted">
             <Badge variant={ARTICLE_STATUS_COLORS[article.status]}>{article.status}</Badge>
             <span className="font-mono">{article.slug}</span>
             {article.generatedBy && <span>by {article.generatedBy}</span>}
@@ -199,7 +192,7 @@ function ArticleCard({ article, editionDate, onRegenerate, regenerating }: Artic
       </div>
 
       {article.imagePath && (
-        <div className="mb-3 overflow-hidden rounded border border-neutral-200 dark:border-neutral-700">
+        <div className="mb-3 overflow-hidden rounded border border-border-theme">
           <img
             alt={article.headline ?? article.slug}
             className="max-h-48 w-auto"
@@ -208,17 +201,17 @@ function ArticleCard({ article, editionDate, onRegenerate, regenerating }: Artic
         </div>
       )}
 
-      <div className="mb-3 text-sm text-neutral-700 dark:text-neutral-300">{bodyPreview}</div>
+      <div className="mb-3 text-sm text-on-surface">{bodyPreview}</div>
 
       {article.sourceData && (
         <details
           onToggle={(e) => setSourceOpen((e.target as HTMLDetailsElement).open)}
           open={sourceOpen}
         >
-          <summary className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
+          <summary className="cursor-pointer text-xs text-on-surface-muted hover:text-on-surface dark:hover:text-on-surface-muted">
             Source Data
           </summary>
-          <pre className="mt-2 max-h-64 overflow-auto rounded bg-neutral-50 p-3 text-xs dark:bg-neutral-800">
+          <pre className="mt-2 max-h-64 overflow-auto rounded bg-surface p-3 text-xs dark:bg-on-surface/10">
             {JSON.stringify(JSON.parse(article.sourceData), null, 2)}
           </pre>
         </details>

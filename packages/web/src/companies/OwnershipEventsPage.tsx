@@ -108,19 +108,17 @@ export default function OwnershipEventsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          M&amp;A Activity
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-bold text-on-surface">M&amp;A Activity</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           Recent ownership events from FCC Transfer of Control and Assignment filings
         </p>
       </div>
       {loading ? (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading...</p>
+        <p className="text-sm text-on-surface-muted">Loading...</p>
       ) : events.length === 0 ? (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">No ownership events found.</p>
+        <p className="text-sm text-on-surface-muted">No ownership events found.</p>
       ) : (
-        <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="rounded-md border border-border-theme bg-white dark:border-border-theme dark:bg-on-surface">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

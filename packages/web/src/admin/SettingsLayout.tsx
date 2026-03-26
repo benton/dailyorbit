@@ -12,7 +12,7 @@ export default function SettingsLayout() {
 
   return (
     <div>
-      <nav className="mb-6 flex gap-1 border-b border-neutral-200 dark:border-neutral-700">
+      <nav className="mb-6 flex gap-1 border-b border-border-theme">
         {tabs.map((tab) => {
           const isActive: boolean =
             tab.path === '/admin/settings'
@@ -22,8 +22,8 @@ export default function SettingsLayout() {
             <Link
               className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
                 isActive
-                  ? 'border-neutral-900 font-medium text-neutral-900 dark:border-neutral-100 dark:text-neutral-100'
-                  : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500 dark:hover:text-neutral-200'
+                  ? 'border-on-surface font-medium text-on-surface'
+                  : 'border-transparent text-on-surface-muted hover:border-border-theme hover:text-on-surface '
               }`}
               key={tab.path}
               to={tab.path}

@@ -134,14 +134,14 @@ export default function NewsPage() {
               }}
             />
             {showHidden && isHidden && (
-              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[10px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+              <span className="rounded bg-surface px-1 py-0.5 text-[10px] text-on-surface-muted">
                 Hidden
               </span>
             )}
           </div>
         );
       },
-      header: () => <EyeOff className="h-4 w-4 text-neutral-400" />,
+      header: () => <EyeOff className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'hide',
       size: 80,
     };
@@ -150,12 +150,12 @@ export default function NewsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">News</h1>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+      <h1 className="text-2xl font-bold text-on-surface">News</h1>
+      <p className="text-sm text-on-surface-muted">
         Satellite industry news aggregated from RSS feeds.
       </p>
       {isAuthenticated && (
-        <label className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+        <label className="flex items-center gap-1.5 text-sm text-on-surface-muted">
           <input
             checked={showHidden}
             onChange={(e) => setShowHidden(e.target.checked)}

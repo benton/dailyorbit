@@ -7,88 +7,85 @@ export default function AdminLayout() {
   const isWide: boolean = settings?.wideView ?? false;
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <header className="border-b border-neutral-200 bg-white px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-h-screen bg-surface">
+      <header className="border-b border-border-theme bg-surface-card px-6 py-3">
         <nav className="flex items-center gap-4">
-          <Link
-            className="text-sm font-semibold text-neutral-900 dark:text-neutral-100"
-            to="/admin"
-          >
+          <Link className="text-sm font-semibold text-on-surface" to="/admin">
             Admin
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin"
           >
             Dashboard
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/settings"
           >
             Settings
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/companies"
           >
             Companies
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/users"
           >
             Users
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/costs"
           >
             Costs
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/pipeline"
           >
             Pipeline
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/pipeline/history"
           >
             History
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/hidden-items"
           >
             Hidden Items
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/backups"
           >
             Backups
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">/</span>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
           <Link
-            className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
             to="/admin/newspaper"
           >
             Newspaper
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <button
-              className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              className="rounded-theme p-1.5 text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
               onClick={() => updateSetting('wideView', !isWide)}
               title={isWide ? 'Narrow view' : 'Wide view'}
               type="button"
@@ -96,7 +93,7 @@ export default function AdminLayout() {
               {isWide ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
             <Link
-              className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+              className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
               to="/"
             >
               Back to app

@@ -221,7 +221,7 @@ export default function EarthStationDetail() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading earth station...</p>
+        <p className="text-sm text-on-surface-muted">Loading earth station...</p>
       </div>
     );
   }
@@ -242,14 +242,14 @@ export default function EarthStationDetail() {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-semibold text-on-surface">
               Earth Station {info.callsign}
             </h1>
             <Badge variant={active ? 'default' : 'secondary'}>
               {active ? 'Active' : 'Inactive'}
             </Badge>
           </div>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-on-surface-muted">
             {info.applicantName ?? 'Unknown applicant'}
           </p>
         </div>
@@ -261,9 +261,7 @@ export default function EarthStationDetail() {
         <div className="space-y-6 lg:col-span-2">
           {/* Filings table */}
           <section>
-            <h2 className="mb-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-              Associated Filings
-            </h2>
+            <h2 className="mb-3 text-lg font-medium text-on-surface">Associated Filings</h2>
             <DataTable<EarthStationFiling>
               columns={columns}
               defaultOrder="desc"
@@ -277,13 +275,9 @@ export default function EarthStationDetail() {
 
           {/* Antennas & Frequencies */}
           <section>
-            <h2 className="mb-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-              Antennas &amp; Frequencies
-            </h2>
+            <h2 className="mb-3 text-lg font-medium text-on-surface">Antennas &amp; Frequencies</h2>
             {antennas.length === 0 ? (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                No antenna data available.
-              </p>
+              <p className="text-sm text-on-surface-muted">No antenna data available.</p>
             ) : (
               <div className="space-y-4">
                 {antennas.map((antenna: EarthStationAntenna) => (
@@ -297,59 +291,51 @@ export default function EarthStationDetail() {
         {/* Right sidebar */}
         <div className="space-y-6">
           {/* Station Info Card */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
               Station Info
             </h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">Callsign</dt>
-                <dd className="font-mono text-neutral-900 dark:text-neutral-100">
-                  {info.callsign}
-                </dd>
+                <dt className="text-on-surface-muted">Callsign</dt>
+                <dd className="font-mono text-on-surface">{info.callsign}</dd>
               </div>
               {(info.applicantCity != null || info.applicantState != null) && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Location</dt>
-                  <dd className="text-neutral-900 dark:text-neutral-100">
+                  <dt className="text-on-surface-muted">Location</dt>
+                  <dd className="text-on-surface">
                     {[info.applicantCity, info.applicantState].filter(Boolean).join(', ')}
                     {info.applicantCountry != null && info.applicantCountry !== 'US' && (
-                      <span className="ml-1 text-neutral-500">({info.applicantCountry})</span>
+                      <span className="ml-1 text-on-surface-muted">({info.applicantCountry})</span>
                     )}
                   </dd>
                 </div>
               )}
               <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
-                <dd className="text-neutral-900 dark:text-neutral-100">
-                  {info.mostRecentStatus ?? 'Unknown'}
-                </dd>
+                <dt className="text-on-surface-muted">Status</dt>
+                <dd className="text-on-surface">{info.mostRecentStatus ?? 'Unknown'}</dd>
               </div>
             </dl>
           </div>
 
           {/* Quick Stats Card */}
           {stats != null && (
-            <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
                 Quick Stats
               </h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <dt className="text-neutral-500 dark:text-neutral-400">Total Filings</dt>
-                  <dd className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    {stats.totalFilingCount}
-                  </dd>
+                  <dt className="text-on-surface-muted">Total Filings</dt>
+                  <dd className="font-semibold text-on-surface">{stats.totalFilingCount}</dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <dt className="text-neutral-500 dark:text-neutral-400">Antennas</dt>
-                  <dd className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    {stats.antennaCount}
-                  </dd>
+                  <dt className="text-on-surface-muted">Antennas</dt>
+                  <dd className="font-semibold text-on-surface">{stats.antennaCount}</dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <dt className="text-neutral-500 dark:text-neutral-400">Most Recent Filing</dt>
-                  <dd className="text-neutral-900 dark:text-neutral-100">
+                  <dt className="text-on-surface-muted">Most Recent Filing</dt>
+                  <dd className="text-on-surface">
                     {stats.mostRecentFilingDate != null
                       ? new Date(stats.mostRecentFilingDate).toLocaleDateString('en-US', {
                           day: 'numeric',
@@ -372,18 +358,16 @@ export default function EarthStationDetail() {
 
 function AntennaCard({ antenna }: { antenna: EarthStationAntenna }) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-theme border border-border-theme bg-surface-card">
       {/* Antenna header */}
-      <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
+      <div className="border-b border-border-theme px-4 py-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <h4 className="text-sm font-medium text-on-surface">
             {[antenna.manufacturer, antenna.model].filter(Boolean).join(' ') || 'Unknown Antenna'}
           </h4>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
-            ID: {antenna.antennaId}
-          </span>
+          <span className="text-xs text-on-surface-muted">ID: {antenna.antennaId}</span>
         </div>
-        <div className="mt-1 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="mt-1 flex gap-4 text-xs text-on-surface-muted">
           {antenna.diameter != null && antenna.diameter > 0 && (
             <span>Diameter: {antenna.diameter}m</span>
           )}
@@ -439,9 +423,7 @@ function AntennaCard({ antenna }: { antenna: EarthStationAntenna }) {
       )}
 
       {antenna.frequencies.length === 0 && (
-        <p className="px-4 py-3 text-xs text-neutral-500 dark:text-neutral-400">
-          No frequency data available.
-        </p>
+        <p className="px-4 py-3 text-xs text-on-surface-muted">No frequency data available.</p>
       )}
     </div>
   );

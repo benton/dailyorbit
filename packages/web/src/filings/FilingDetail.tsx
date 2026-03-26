@@ -117,14 +117,14 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
   }
   return (
     <div>
-      <dt className="text-neutral-500 dark:text-neutral-400">{label}</dt>
-      <dd className="font-medium text-neutral-900 dark:text-neutral-100">{value}</dd>
+      <dt className="text-on-surface-muted">{label}</dt>
+      <dd className="font-medium text-on-surface">{value}</dd>
     </div>
   );
 }
 
 const PLEADING_TYPE_STYLES: Record<string, string> = {
-  COMMENT: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
+  COMMENT: 'bg-surface text-on-surface',
   DECISION: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
   LETTER: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   PETITION: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
@@ -135,9 +135,7 @@ function PleadingTypeBadge({ type }: { type: string | null }) {
   if (type == null || type === '') {
     return null;
   }
-  const style: string =
-    PLEADING_TYPE_STYLES[type] ??
-    'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300';
+  const style: string = PLEADING_TYPE_STYLES[type] ?? 'bg-surface text-on-surface';
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>
       {type}
@@ -263,7 +261,7 @@ export default function FilingDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center text-neutral-500 dark:text-neutral-400">
+      <div className="flex min-h-[400px] items-center justify-center text-on-surface-muted">
         Loading filing data...
       </div>
     );
@@ -274,10 +272,8 @@ export default function FilingDetailPage() {
   if (notFound) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-2">
-        <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Filing not found
-        </span>
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-lg font-semibold text-on-surface">Filing not found</span>
+        <span className="text-sm text-on-surface-muted">
           No filing exists with file number {fileNumber}
         </span>
       </div>
@@ -302,9 +298,7 @@ export default function FilingDetailPage() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            {filing.fileNumber}
-          </h1>
+          <h1 className="text-2xl font-bold text-on-surface">{filing.fileNumber}</h1>
           <FlagToggle
             contentKey={filing.fileNumber}
             contentType="filing"
@@ -315,7 +309,7 @@ export default function FilingDetailPage() {
             {subsystem.label}
           </Badge>
           {filing.appTypeLabel != null && (
-            <span className="text-sm text-neutral-600 dark:text-neutral-300">
+            <span className="text-sm text-on-surface">
               {filing.appTypeLabel} ({filing.appTypeCode})
             </span>
           )}
@@ -333,7 +327,7 @@ export default function FilingDetailPage() {
             return null;
           })()}
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-on-surface-muted">
           {filing.applicantName != null && (
             <span>
               Applicant:{' '}
@@ -393,10 +387,8 @@ export default function FilingDetailPage() {
           {/* Brief description */}
           {(filing.briefDescription != null || filing.description != null) && (
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                Description
-              </h2>
-              <div className="rounded-md border border-neutral-200 bg-white p-4 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+              <h2 className="mb-3 text-lg font-semibold text-on-surface">Description</h2>
+              <div className="rounded-theme border border-border-theme bg-surface-card p-4 text-sm text-on-surface">
                 {filing.briefDescription ?? filing.description}
               </div>
             </section>
@@ -404,16 +396,12 @@ export default function FilingDetailPage() {
 
           {/* Filing Summary */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Summary
-            </h2>
-            <div className="rounded-md border border-neutral-200 bg-white p-4 text-sm leading-relaxed text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+            <h2 className="mb-3 text-lg font-semibold text-on-surface">Summary</h2>
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4 text-sm leading-relaxed text-on-surface">
               {filing.summary != null ? (
                 filing.summary
               ) : (
-                <span className="text-neutral-400 italic dark:text-neutral-500">
-                  [content unavailable]
-                </span>
+                <span className="text-on-surface-muted/70 italic">[content unavailable]</span>
               )}
             </div>
           </section>
@@ -423,9 +411,9 @@ export default function FilingDetailPage() {
 
           {/* Attachments */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <h2 className="mb-3 text-lg font-semibold text-on-surface">
               Attachments
-              <span className="ml-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+              <span className="ml-2 text-sm font-normal text-on-surface-muted">
                 ({filing.attachments.length})
               </span>
             </h2>
@@ -467,28 +455,26 @@ export default function FilingDetailPage() {
               return null;
             })()}
             {filing.attachments.length === 0 ? (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                No attachments on file.
-              </p>
+              <p className="text-sm text-on-surface-muted">No attachments on file.</p>
             ) : (
-              <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+              <div className="rounded-theme border border-border-theme bg-surface-card">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                    <tr className="border-b border-border-theme">
                       <th
-                        className="cursor-pointer px-4 py-2 text-left font-medium text-neutral-500 select-none hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        className="cursor-pointer px-4 py-2 text-left font-medium text-on-surface-muted select-none hover:text-on-surface"
                         onClick={() => toggleAttSort('attachmentName')}
                       >
                         Name{sortIndicator('attachmentName')}
                       </th>
                       <th
-                        className="cursor-pointer px-4 py-2 text-left font-medium text-neutral-500 select-none hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        className="cursor-pointer px-4 py-2 text-left font-medium text-on-surface-muted select-none hover:text-on-surface"
                         onClick={() => toggleAttSort('description')}
                       >
                         Description{sortIndicator('description')}
                       </th>
                       <th
-                        className="cursor-pointer px-4 py-2 text-right font-medium text-neutral-500 select-none hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        className="cursor-pointer px-4 py-2 text-right font-medium text-on-surface-muted select-none hover:text-on-surface"
                         onClick={() => toggleAttSort('fileSizeBytes')}
                       >
                         Size{sortIndicator('fileSizeBytes')}
@@ -498,10 +484,10 @@ export default function FilingDetailPage() {
                   <tbody>
                     {sortedAttachments.map((att: FilingAttachment) => (
                       <tr
-                        className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                        className="border-b border-border-theme/50 last:border-0"
                         key={att.attachmentKey}
                       >
-                        <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-4 py-2 font-medium text-on-surface">
                           <SummaryTooltip summary={att.summary}>
                             {att.downloadUrl ? (
                               <a
@@ -517,10 +503,8 @@ export default function FilingDetailPage() {
                             )}
                           </SummaryTooltip>
                         </td>
-                        <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
-                          {att.description}
-                        </td>
-                        <td className="px-4 py-2 text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-4 py-2 text-on-surface-muted">{att.description}</td>
+                        <td className="px-4 py-2 text-right text-on-surface-muted">
                           {formatBytes(att.fileSizeBytes)}
                         </td>
                       </tr>
@@ -533,31 +517,29 @@ export default function FilingDetailPage() {
 
           {/* Petitions / Comments */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <h2 className="mb-3 text-lg font-semibold text-on-surface">
               Comments &amp; Petitions
-              <span className="ml-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+              <span className="ml-2 text-sm font-normal text-on-surface-muted">
                 ({filing.petitions.length})
               </span>
             </h2>
             {filing.petitions.length === 0 ? (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                No comments or petitions on file.
-              </p>
+              <p className="text-sm text-on-surface-muted">No comments or petitions on file.</p>
             ) : (
-              <div className="rounded-md border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+              <div className="rounded-theme border border-border-theme bg-surface-card">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                    <tr className="border-b border-border-theme">
+                      <th className="px-4 py-2 text-left font-medium text-on-surface-muted">
                         Type
                       </th>
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                      <th className="px-4 py-2 text-left font-medium text-on-surface-muted">
                         Number
                       </th>
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                      <th className="px-4 py-2 text-left font-medium text-on-surface-muted">
                         Party
                       </th>
-                      <th className="px-4 py-2 text-left font-medium text-neutral-500 dark:text-neutral-400">
+                      <th className="px-4 py-2 text-left font-medium text-on-surface-muted">
                         Date Filed
                       </th>
                     </tr>
@@ -565,19 +547,19 @@ export default function FilingDetailPage() {
                   <tbody>
                     {filing.petitions.map((pet: FilingPetition, idx: number) => (
                       <tr
-                        className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                        className="border-b border-border-theme/50 last:border-0"
                         key={`${pet.filingKey}-${idx}`}
                       >
                         <td className="px-4 py-2">
                           <PleadingTypeBadge type={pet.pleadingType} />
                         </td>
-                        <td className="px-4 py-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                        <td className="px-4 py-2 font-mono text-xs text-on-surface-muted">
                           {pet.pleadingNumber ?? ''}
                         </td>
-                        <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-4 py-2 font-medium text-on-surface">
                           {pet.partyName ?? 'Unknown'}
                         </td>
-                        <td className="px-4 py-2 text-neutral-500 dark:text-neutral-400">
+                        <td className="px-4 py-2 text-on-surface-muted">
                           {formatDate(pet.dateFiled)}
                         </td>
                       </tr>
@@ -592,8 +574,8 @@ export default function FilingDetailPage() {
         {/* Right sidebar (1/3 width) */}
         <div className="space-y-6">
           {/* Filing details card */}
-          <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
               Filing Details
             </h3>
             <dl className="space-y-3 text-sm">
@@ -606,10 +588,8 @@ export default function FilingDetailPage() {
               <DetailRow label="Status Code" value={filing.statusCode} />
               {filing.applicantFrn != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Applicant FRN</dt>
-                  <dd className="font-mono text-neutral-900 dark:text-neutral-100">
-                    {filing.applicantFrn}
-                  </dd>
+                  <dt className="text-on-surface-muted">Applicant FRN</dt>
+                  <dd className="font-mono text-on-surface">{filing.applicantFrn}</dd>
                 </div>
               )}
             </dl>
@@ -617,14 +597,14 @@ export default function FilingDetailPage() {
 
           {/* Related entities card */}
           {(filing.relatedSpaceStation != null || filing.relatedEarthStationCallsign != null) && (
-            <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
                 Related Entities
               </h3>
               <dl className="space-y-3 text-sm">
                 {filing.relatedSpaceStation != null && (
                   <div>
-                    <dt className="text-neutral-500 dark:text-neutral-400">Space Station</dt>
+                    <dt className="text-on-surface-muted">Space Station</dt>
                     <dd>
                       <Link
                         className="text-blue-600 hover:underline dark:text-blue-400"
@@ -633,7 +613,7 @@ export default function FilingDetailPage() {
                         {filing.relatedSpaceStation.usName}
                       </Link>
                       {filing.relatedSpaceStation.orbitLocation != null && (
-                        <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                        <span className="ml-2 text-xs text-on-surface-muted">
                           ({filing.relatedSpaceStation.orbitLocation})
                         </span>
                       )}
@@ -642,7 +622,7 @@ export default function FilingDetailPage() {
                 )}
                 {filing.relatedEarthStationCallsign != null && (
                   <div>
-                    <dt className="text-neutral-500 dark:text-neutral-400">Earth Station</dt>
+                    <dt className="text-on-surface-muted">Earth Station</dt>
                     <dd>
                       <Link
                         className="text-blue-600 hover:underline dark:text-blue-400"
@@ -658,8 +638,8 @@ export default function FilingDetailPage() {
           )}
 
           {/* Dates card */}
-          <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
               Key Dates
             </h3>
             <dl className="space-y-3 text-sm">
@@ -670,11 +650,11 @@ export default function FilingDetailPage() {
               <DetailRow label="Expiration Date" value={formatDate(filing.dateExpire)} />
               {filing.lastAction != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Last Action</dt>
-                  <dd className="font-medium text-neutral-900 dark:text-neutral-100">
+                  <dt className="text-on-surface-muted">Last Action</dt>
+                  <dd className="font-medium text-on-surface">
                     {filing.lastAction}
                     {filing.lastActionDate != null && (
-                      <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <span className="ml-2 text-xs text-on-surface-muted">
                         ({formatDate(filing.lastActionDate)})
                       </span>
                     )}
@@ -686,25 +666,21 @@ export default function FilingDetailPage() {
 
           {/* Transfer info card (conditional) */}
           {hasTransferInfo && (
-            <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
                 Transfer Information
               </h3>
               <dl className="space-y-3 text-sm">
                 {filing.transferorName != null && (
                   <div>
-                    <dt className="text-neutral-500 dark:text-neutral-400">Transferor</dt>
-                    <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                      {filing.transferorName}
-                    </dd>
+                    <dt className="text-on-surface-muted">Transferor</dt>
+                    <dd className="font-medium text-on-surface">{filing.transferorName}</dd>
                   </div>
                 )}
                 {filing.transfereeName != null && (
                   <div>
-                    <dt className="text-neutral-500 dark:text-neutral-400">Transferee</dt>
-                    <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                      {filing.transfereeName}
-                    </dd>
+                    <dt className="text-on-surface-muted">Transferee</dt>
+                    <dd className="font-medium text-on-surface">{filing.transfereeName}</dd>
                   </div>
                 )}
               </dl>

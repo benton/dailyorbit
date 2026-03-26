@@ -2,6 +2,7 @@ import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ensureUserSettingsTables } from './schema.ts';
 import {
+  VALID_THEMES,
   getOrCreateSettings,
   getSettingsByUserId,
   updateSettings,
@@ -80,6 +81,18 @@ describe('user-settings repository', () => {
 
       const readBack = await getSettingsByUserId(conn, TEST_USER_ID);
       expect(readBack?.theme).toEqual('broadsheet');
+    });
+  });
+
+  describe('VALID_THEMES', () => {
+    it('contains modern and broadsheet', () => {
+      expect(VALID_THEMES.has('modern')).toEqual(true);
+      expect(VALID_THEMES.has('broadsheet')).toEqual(true);
+    });
+
+    it('rejects unknown theme ids', () => {
+      expect(VALID_THEMES.has('terminal')).toEqual(false);
+      expect(VALID_THEMES.has('')).toEqual(false);
     });
   });
 });

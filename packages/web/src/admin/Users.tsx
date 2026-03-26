@@ -79,17 +79,17 @@ export default function Users() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading users...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading users...</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Users</h1>
+        <h1 className="text-xl font-semibold text-on-surface">Users</h1>
         <CreateUserDialog onCreated={fetchUsers} />
       </div>
 
-      <div className="rounded-md border border-neutral-200 dark:border-neutral-700">
+      <div className="rounded-theme border border-border-theme">
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,7 +104,7 @@ export default function Users() {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell className="h-24 text-center text-neutral-500" colSpan={6}>
+                <TableCell className="h-24 text-center text-on-surface-muted" colSpan={6}>
                   No users.
                 </TableCell>
               </TableRow>
@@ -118,7 +118,7 @@ export default function Users() {
                       className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                         user.role === 'admin'
                           ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                          : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300'
+                          : 'bg-on-surface/10 text-on-surface '
                       }`}
                     >
                       {user.role}
@@ -133,7 +133,7 @@ export default function Users() {
                       <span className="text-xs text-green-600 dark:text-green-400">Active</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs text-neutral-500">
+                  <TableCell className="text-xs text-on-surface-muted">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
@@ -241,7 +241,7 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
             value={password}
           />
           <select
-            className="flex h-9 w-full rounded-md border border-neutral-200 bg-transparent px-3 py-1 text-sm dark:border-neutral-700"
+            className="flex h-9 w-full rounded-theme border border-border-theme bg-transparent px-3 py-1 text-sm dark:border-border-theme"
             onChange={(e) => setRole(e.target.value)}
             value={role}
           >

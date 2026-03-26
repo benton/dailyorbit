@@ -18,8 +18,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 let nextId: number = 0;
 
 const VARIANT_CLASSES: Record<ToastVariant, string> = {
-  default:
-    'border-neutral-200 bg-white text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50',
+  default: 'border-border-theme bg-surface-card text-on-surface',
   error:
     'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-50',
   success:
@@ -46,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             className={cn(
-              'animate-in slide-in-from-bottom-2 fade-in rounded-md border px-4 py-3 text-sm shadow-lg',
+              'animate-in slide-in-from-bottom-2 fade-in rounded-theme border px-4 py-3 text-sm shadow-lg',
               VARIANT_CLASSES[t.variant],
             )}
             key={t.id}

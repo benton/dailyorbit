@@ -1,5 +1,11 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 
+/** Allowlist of valid theme identifiers */
+export const VALID_THEMES: ReadonlySet<string> = new Set([
+  'modern',
+  'broadsheet',
+]);
+
 export type UserSettings = {
   userId: string;
   emailDailyOrbit: boolean;

@@ -199,7 +199,7 @@ function SimpleDataTable<TData>({
   });
 
   return (
-    <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
+    <div className="overflow-x-auto rounded-md border border-border-theme">
       <Table className="min-w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -216,8 +216,7 @@ function SimpleDataTable<TData>({
                     <div
                       className={cn(
                         'flex items-center gap-1',
-                        canSort &&
-                          'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
+                        canSort && 'cursor-pointer hover:text-on-surface',
                       )}
                       onClick={header.column.getToggleSortingHandler()}
                     >
@@ -238,7 +237,7 @@ function SimpleDataTable<TData>({
           {table.getRowModel().rows.length === 0 ? (
             <TableRow>
               <TableCell
-                className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                className="h-24 text-center text-on-surface-muted"
                 colSpan={columns.length}
               >
                 No results.
@@ -267,8 +266,7 @@ function SimpleDataTable<TData>({
   );
 }
 
-const cardClass: string =
-  'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+const cardClass: string = 'rounded-theme border border-border-theme bg-surface-card p-4';
 
 function CollapsibleCard({
   children,
@@ -290,15 +288,13 @@ function CollapsibleCard({
         type="button"
       >
         {open ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400" />
+          <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-muted/70" />
         ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-on-surface-muted/70" />
         )}
         <div>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{title}</p>
-          {subtitle != null && (
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{subtitle}</p>
-          )}
+          <p className="text-sm font-medium text-on-surface-muted">{title}</p>
+          {subtitle != null && <p className="mt-1 text-xs text-on-surface-muted/70">{subtitle}</p>}
         </div>
       </button>
       {open && <div className="mt-3">{children}</div>}
@@ -612,7 +608,7 @@ export default function HomePage() {
           }}
         />
       ),
-      header: () => <Flag className="h-4 w-4 text-neutral-400" />,
+      header: () => <Flag className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'flag',
       size: 40,
     };
@@ -620,7 +616,7 @@ export default function HomePage() {
   }, [isAuthenticated, flaggedKeys]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading...</p>;
   }
 
   if (error != null || stats == null) {
@@ -635,10 +631,8 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          The Daily Orbit
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">The Daily Orbit</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           Satellite Communications Industry Assistant
         </p>
       </div>
@@ -646,20 +640,20 @@ export default function HomePage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Filings */}
         <div className={cardClass}>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Filings</p>
+          <p className="text-sm text-on-surface-muted">Total Filings</p>
           <div className="mt-1 flex items-center justify-between">
-            <p className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <p className="text-3xl font-semibold text-on-surface">
               {stats.filing_count.toLocaleString()}
             </p>
             <Link
-              className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              className="inline-flex items-center gap-1.5 rounded-theme border border-border-theme bg-surface px-3 py-1.5 text-sm font-medium text-on-surface transition-colors hover:bg-on-surface/10"
               to="/search"
             >
               <Search className="h-3.5 w-3.5" />
               Search
             </Link>
           </div>
-          <div className="mt-2 flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mt-2 flex gap-4 text-xs text-on-surface-muted">
             <span>{stats.comment_count.toLocaleString()} comments</span>
             <span>{stats.attachment_count.toLocaleString()} attachments</span>
           </div>
@@ -671,15 +665,11 @@ export default function HomePage() {
             <div
               className={`${cardClass} transition-colors hover:border-blue-300 dark:hover:border-blue-700`}
             >
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                M&amp;A Activity (Last Quarter)
-              </p>
-              <p className="mt-1 text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <p className="text-sm text-on-surface-muted">M&amp;A Activity (Last Quarter)</p>
+              <p className="mt-1 text-3xl font-semibold text-on-surface">
                 {topLine.recent_ownership_events.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-                ownership events
-              </p>
+              <p className="mt-1 text-xs text-on-surface-muted/70">ownership events</p>
             </div>
           </Link>
         )}
@@ -687,7 +677,7 @@ export default function HomePage() {
         {/* Most Active Filings This Week */}
         {topLine != null && topLine.most_active_filings.length > 0 && (
           <div className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">Most Active This Week</p>
+            <p className="text-sm text-on-surface-muted">Most Active This Week</p>
             <ul className="mt-2 space-y-1">
               {topLine.most_active_filings.slice(0, 3).map((f: ActiveFiling) => (
                 <li className="flex items-center justify-between text-xs" key={f.file_number}>
@@ -698,7 +688,7 @@ export default function HomePage() {
                   >
                     {f.file_number}
                   </button>
-                  <span className="ml-2 shrink-0 text-neutral-500 dark:text-neutral-400">
+                  <span className="ml-2 shrink-0 text-on-surface-muted">
                     {f.activity_count} pleadings
                   </span>
                 </li>
@@ -711,15 +701,13 @@ export default function HomePage() {
       {/* Today's Filings */}
       {todayVisible && !todayLoading && (
         <div className={cardClass}>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Today&apos;s Filings
-          </p>
-          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          <p className="text-sm font-medium text-on-surface-muted">Today&apos;s Filings</p>
+          <p className="mt-1 text-xs text-on-surface-muted/70">
             Filings recorded today (Eastern time).
           </p>
           <div className="mt-3">
             {todayFilings.length === 0 ? (
-              <p className="text-sm text-neutral-500">No filings recorded today.</p>
+              <p className="text-sm text-on-surface-muted">No filings recorded today.</p>
             ) : (
               <SimpleDataTable<RecentFiling>
                 columns={todayFilingCols}
@@ -736,17 +724,15 @@ export default function HomePage() {
 
       {/* Recent Business Day Filings */}
       <div className={cardClass}>
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          {recentDayLabel}
-        </p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+        <p className="text-sm font-medium text-on-surface-muted">{recentDayLabel}</p>
+        <p className="mt-1 text-xs text-on-surface-muted/70">
           Filings recorded on the most recent business day.
         </p>
         <div className="mt-3">
           {recentLoading ? (
-            <p className="text-sm text-neutral-500">Loading recent filings...</p>
+            <p className="text-sm text-on-surface-muted">Loading recent filings...</p>
           ) : recentFilings.length === 0 ? (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-on-surface-muted">
               No filings recorded on the last business day.
             </p>
           ) : (
@@ -766,10 +752,8 @@ export default function HomePage() {
       <div className={cardClass}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Recent News
-            </p>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-sm font-medium text-on-surface-muted">Recent News</p>
+            <p className="mt-1 text-xs text-on-surface-muted/70">
               Latest satellite industry news from RSS feeds.
             </p>
           </div>
@@ -779,9 +763,9 @@ export default function HomePage() {
         </div>
         <div className="mt-3">
           {newsLoading ? (
-            <p className="text-sm text-neutral-500">Loading news...</p>
+            <p className="text-sm text-on-surface-muted">Loading news...</p>
           ) : newsItems.length === 0 ? (
-            <p className="text-sm text-neutral-500">No news articles available.</p>
+            <p className="text-sm text-on-surface-muted">No news articles available.</p>
           ) : (
             <SimpleDataTable<NewsListItem>
               columns={newsColumns}
@@ -801,18 +785,18 @@ export default function HomePage() {
         title="Last 6 Months Filing Volume by Company"
       >
         {companyVolumeLoading && (
-          <p className="text-sm text-neutral-500">Loading company volume chart...</p>
+          <p className="text-sm text-on-surface-muted">Loading company volume chart...</p>
         )}
         <div ref={companyVolumeRef} />
         {companyNames.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-border-theme/50 pt-3">
             {companyNames.map((name: string, i: number) => (
               <div className="flex items-center gap-1.5" key={name}>
                 <span
                   className="inline-block h-3 w-3 rounded-sm"
                   style={{ backgroundColor: COMPANY_COLORS[i % COMPANY_COLORS.length] }}
                 />
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">{name}</span>
+                <span className="text-xs text-on-surface-muted">{name}</span>
               </div>
             ))}
           </div>
@@ -827,13 +811,13 @@ export default function HomePage() {
             const pct: number = (sub.count / maxSubsystemCount) * 100;
             return (
               <div className="flex items-center gap-2" key={sub.subsystem_code}>
-                <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                <span className="w-8 shrink-0 text-right font-mono text-xs font-semibold text-on-surface">
                   {sub.subsystem_code}
                 </span>
-                <span className="w-36 shrink-0 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                <span className="w-36 shrink-0 truncate text-xs text-on-surface-muted">
                   {info.label}
                 </span>
-                <div className="relative h-5 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                <div className="relative h-5 flex-1 overflow-hidden rounded bg-surface">
                   <div
                     className="h-full rounded transition-all"
                     style={{
@@ -842,7 +826,7 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-                <span className="w-16 shrink-0 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                <span className="w-16 shrink-0 text-right font-mono text-xs text-on-surface">
                   {sub.count.toLocaleString()}
                 </span>
               </div>
@@ -857,11 +841,11 @@ export default function HomePage() {
         title="Historical Filing Volume by Year"
       >
         {volumeLoading && (
-          <p className="text-sm text-neutral-500">Loading filing volume chart...</p>
+          <p className="text-sm text-on-surface-muted">Loading filing volume chart...</p>
         )}
         <div ref={volumeRef} />
         {volumeCodes.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-3 dark:border-neutral-800">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-border-theme/50 pt-3">
             {volumeCodes.map((code: string) => {
               const info = getSubsystem(code);
               return (
@@ -870,7 +854,7 @@ export default function HomePage() {
                     className="inline-block h-3 w-3 rounded-sm"
                     style={{ backgroundColor: info.hex }}
                   />
-                  <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                  <span className="text-xs text-on-surface-muted">
                     <span className="font-semibold">{code}</span> {info.label}
                   </span>
                 </div>

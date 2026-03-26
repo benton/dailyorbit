@@ -152,7 +152,7 @@ export default function SatelliteDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center text-neutral-500 dark:text-neutral-400">
+      <div className="flex min-h-[400px] items-center justify-center text-on-surface-muted">
         Loading satellite data...
       </div>
     );
@@ -171,20 +171,16 @@ export default function SatelliteDetail() {
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            {satellite.usName}
-          </h1>
+          <h1 className="text-2xl font-bold text-on-surface">{satellite.usName}</h1>
           <Badge variant={isActive ? 'default' : 'destructive'}>
             {isActive ? 'Active' : 'Inactive'}
           </Badge>
         </div>
         {hasItuName && (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            ITU Name: {satellite.ituName}
-          </p>
+          <p className="text-sm text-on-surface-muted">ITU Name: {satellite.ituName}</p>
         )}
         {satellite.orbitLocation != null && (
-          <p className="text-lg font-medium text-neutral-700 dark:text-neutral-300">
+          <p className="text-lg font-medium text-on-surface">
             Orbital Position: {satellite.orbitLocation}
           </p>
         )}
@@ -195,9 +191,7 @@ export default function SatelliteDetail() {
         {/* Left: filings table (2/3 width) */}
         <div className="space-y-6 lg:col-span-2">
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Associated Filings
-            </h2>
+            <h2 className="mb-3 text-lg font-semibold text-on-surface">Associated Filings</h2>
             <DataTable<SatelliteFiling>
               columns={filingColumns}
               defaultOrder="desc"
@@ -210,10 +204,8 @@ export default function SatelliteDetail() {
           {/* Frequency bands summary */}
           {satellite.verbose != null && (
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                Details
-              </h2>
-              <div className="rounded-md border border-neutral-200 bg-white p-4 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+              <h2 className="mb-3 text-lg font-semibold text-on-surface">Details</h2>
+              <div className="rounded-theme border border-border-theme bg-surface-card p-4 text-sm text-on-surface">
                 {satellite.verbose}
               </div>
             </section>
@@ -223,77 +215,67 @@ export default function SatelliteDetail() {
         {/* Right sidebar (1/3 width) */}
         <div className="space-y-6">
           {/* Satellite info card */}
-          <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-            <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+          <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+            <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
               Satellite Info
             </h3>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">US Name</dt>
-                <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                  {satellite.usName}
-                </dd>
+                <dt className="text-on-surface-muted">US Name</dt>
+                <dd className="font-medium text-on-surface">{satellite.usName}</dd>
               </div>
               {satellite.ituName != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">ITU Name</dt>
-                  <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {satellite.ituName}
-                  </dd>
+                  <dt className="text-on-surface-muted">ITU Name</dt>
+                  <dd className="font-medium text-on-surface">{satellite.ituName}</dd>
                 </div>
               )}
               {satellite.orbitLocation != null && (
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Orbital Position</dt>
-                  <dd className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {satellite.orbitLocation}
-                  </dd>
+                  <dt className="text-on-surface-muted">Orbital Position</dt>
+                  <dd className="font-medium text-on-surface">{satellite.orbitLocation}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
+                <dt className="text-on-surface-muted">Status</dt>
                 <dd>
                   <Badge className="mt-1" variant={isActive ? 'default' : 'destructive'}>
                     {isActive ? 'Active' : 'Inactive'}
                   </Badge>
                   {satellite.inactiveDate != null && (
-                    <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="ml-2 text-xs text-on-surface-muted">
                       since {new Date(satellite.inactiveDate).toLocaleDateString()}
                     </span>
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-neutral-400">ID</dt>
-                <dd className="font-mono text-neutral-900 dark:text-neutral-100">
-                  {satellite.spaceStationKey}
-                </dd>
+                <dt className="text-on-surface-muted">ID</dt>
+                <dd className="font-mono text-on-surface">{satellite.spaceStationKey}</dd>
               </div>
             </dl>
           </div>
 
           {/* Quick stats card */}
           {stats != null && (
-            <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-              <h3 className="mb-3 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+            <div className="rounded-theme border border-border-theme bg-surface-card p-4">
+              <h3 className="mb-3 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
                 Quick Stats
               </h3>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Total Filings</dt>
-                  <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-                    {stats.totalFilings}
-                  </dd>
+                  <dt className="text-on-surface-muted">Total Filings</dt>
+                  <dd className="text-2xl font-bold text-on-surface">{stats.totalFilings}</dd>
                 </div>
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Distinct Applicants</dt>
-                  <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                  <dt className="text-on-surface-muted">Distinct Applicants</dt>
+                  <dd className="text-2xl font-bold text-on-surface">
                     {stats.distinctApplicantCount}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-neutral-500 dark:text-neutral-400">Most Recent Filing</dt>
-                  <dd className="font-medium text-neutral-900 dark:text-neutral-100">
+                  <dt className="text-on-surface-muted">Most Recent Filing</dt>
+                  <dd className="font-medium text-on-surface">
                     {stats.mostRecentFilingDate != null
                       ? new Date(stats.mostRecentFilingDate).toLocaleDateString()
                       : 'N/A'}

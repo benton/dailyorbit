@@ -34,7 +34,7 @@ export default function UserMenu() {
   if (user == null) {
     return (
       <button
-        className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+        className="flex items-center gap-1.5 rounded-theme px-2 py-1 text-sm text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
         onClick={() => void navigate('/login')}
         type="button"
       >
@@ -84,7 +84,7 @@ export default function UserMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <button
-        className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+        className="flex items-center gap-2 rounded-theme px-2 py-1 text-sm text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
         onClick={() => setOpen(!open)}
         type="button"
       >
@@ -100,16 +100,14 @@ export default function UserMenu() {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-48 rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
-          <div className="border-b border-neutral-100 px-4 py-2 dark:border-neutral-700">
-            <p className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              {user.name}
-            </p>
-            <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">{user.email}</p>
+        <div className="absolute right-0 z-50 mt-1 w-48 rounded-theme border border-border-theme bg-surface-card py-1 shadow-lg">
+          <div className="border-b border-border-theme px-4 py-2">
+            <p className="truncate text-sm font-medium text-on-surface">{user.name}</p>
+            <p className="truncate text-xs text-on-surface-muted">{user.email}</p>
           </div>
           {items.map((item) => (
             <button
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-on-surface hover:bg-on-surface/10 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={item.disabled}
               key={item.label}
               onClick={() => {

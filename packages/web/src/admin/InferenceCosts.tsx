@@ -133,10 +133,8 @@ export default function InferenceCosts() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Inference Costs
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">Inference Costs</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           All LLM inference calls with token usage and computed costs.
         </p>
       </div>

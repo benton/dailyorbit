@@ -3,6 +3,17 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import CosmographWrapper from '../ui/CosmographWrapper.tsx';
 
+/** Theme-aware color palettes for graph nodes */
+const GRAPH_PALETTES: Record<string, { child: string; parent: string }> = {
+  broadsheet: { child: '#8b6914', parent: '#8b2500' },
+  modern: { child: '#3b82f6', parent: '#f59e0b' },
+};
+
+function getGraphPalette(): { child: string; parent: string } {
+  const theme: string = document.documentElement.dataset.theme ?? 'modern';
+  return GRAPH_PALETTES[theme] ?? GRAPH_PALETTES.modern!;
+}
+
 type CompanyListItem = {
   filingCount: number;
   id: number;
@@ -33,7 +44,10 @@ type GraphLink = {
   targetIdx: number;
 };
 
-function transformData(companies: Array<CompanyListItem>): {
+function transformData(
+  companies: Array<CompanyListItem>,
+  palette: { child: string; parent: string },
+): {
   links: Array<GraphLink>;
   points: Array<GraphPoint>;
 } {
@@ -58,7 +72,7 @@ function transformData(companies: Array<CompanyListItem>): {
     (company: CompanyListItem, i: number): GraphPoint => {
       idToIdx.set(company.id, i);
       return {
-        color: company.parentName != null ? '#3b82f6' : '#f59e0b',
+        color: company.parentName != null ? palette.child : palette.parent,
         id: `company-${company.id}`,
         idx: i,
         label: company.name,
@@ -100,7 +114,7 @@ export default function CompanyGraph(): React.ReactElement {
   useEffect((): void => {
     apiFetch<PaginatedCompanies>('/api/companies?pageSize=100&sort=name&order=asc')
       .then((data: PaginatedCompanies): void => {
-        const result = transformData(data.data);
+        const result = transformData(data.data, getGraphPalette());
         setPoints(result.points);
         setLinks(result.links);
         setLoading(false);
@@ -116,7 +130,7 @@ export default function CompanyGraph(): React.ReactElement {
   if (loading) {
     return (
       <div className="flex h-32 items-center justify-center">
-        <p className="text-neutral-500 dark:text-neutral-400">Loading company graph...</p>
+        <p className="text-on-surface-muted">Loading company graph...</p>
       </div>
     );
   }
@@ -131,18 +145,16 @@ export default function CompanyGraph(): React.ReactElement {
 
   if (points.length === 0) {
     return (
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-        No parent-subsidiary relationships found.
-      </p>
+      <p className="text-sm text-on-surface-muted">No parent-subsidiary relationships found.</p>
     );
   }
 
+  const palette: { child: string; parent: string } = getGraphPalette();
+
   return (
     <div>
-      <h2 className="mb-1 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-        Company Hierarchy
-      </h2>
-      <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+      <h2 className="mb-1 text-lg font-semibold text-on-surface">Company Hierarchy</h2>
+      <p className="mb-4 text-sm text-on-surface-muted">
         Parent-subsidiary relationships. Node size reflects filing count.
       </p>
       <CosmographWrapper>
@@ -163,13 +175,19 @@ export default function CompanyGraph(): React.ReactElement {
           />
         </div>
       </CosmographWrapper>
-      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-on-surface-muted">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#f59e0b]" />
+          <span
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ backgroundColor: palette.parent }}
+          />
           <dt className="inline">Parent company</dt>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#3b82f6]" />
+          <span
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ backgroundColor: palette.child }}
+          />
           <dt className="inline">Subsidiary</dt>
         </div>
         <div className="flex items-center gap-2">

@@ -36,7 +36,7 @@ export default function SignIn() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">Sign In</h2>
+      <h2 className="text-lg font-bold text-on-surface">Sign In</h2>
       {error != null && (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
           {error}
@@ -45,7 +45,7 @@ export default function SignIn() {
       <form className="flex flex-col gap-3" onSubmit={signIn}>
         <input
           autoComplete="email"
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-blue-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-2 text-sm text-on-surface placeholder-on-surface-muted focus:border-blue-500 focus:outline-none"
           disabled={loading}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
@@ -55,7 +55,7 @@ export default function SignIn() {
         />
         <input
           autoComplete="current-password"
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-blue-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
+          className="rounded-theme border border-border-theme bg-surface-card px-3 py-2 text-sm text-on-surface placeholder-on-surface-muted focus:border-blue-500 focus:outline-none"
           disabled={loading}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
@@ -64,7 +64,7 @@ export default function SignIn() {
           value={password}
         />
         <button
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+          className="rounded-md bg-on-surface px-4 py-2 text-sm font-medium text-white hover:bg-on-surface/10 disabled:opacity-50 dark:bg-on-surface/10 dark:text-on-surface dark:hover:bg-on-surface/15"
           disabled={loading}
           type="submit"
         >

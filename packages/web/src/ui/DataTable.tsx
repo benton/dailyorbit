@@ -222,7 +222,7 @@ export function DataTable<TData>({
   return (
     <div className={cn('space-y-4', className)}>
       {/* Table */}
-      <div className="overflow-x-auto rounded-md border border-neutral-200 dark:border-neutral-700">
+      <div className="overflow-x-auto rounded-theme border border-border-theme">
         <Table className="min-w-full" style={{ width: table.getCenterTotalSize() }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -246,8 +246,7 @@ export function DataTable<TData>({
                         <div
                           className={cn(
                             'flex items-center gap-1',
-                            canSort &&
-                              'cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100',
+                            canSort && 'cursor-pointer hover:text-on-surface',
                           )}
                           onClick={canSort ? () => handleSort(header.column.id) : undefined}
                         >
@@ -260,8 +259,8 @@ export function DataTable<TData>({
                         <div
                           className={cn(
                             'absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none',
-                            'bg-transparent hover:bg-neutral-300 dark:hover:bg-neutral-600',
-                            header.column.getIsResizing() && 'bg-blue-500 dark:bg-blue-400',
+                            'bg-transparent hover:bg-border-theme',
+                            header.column.getIsResizing() && 'bg-accent-theme',
                           )}
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
@@ -277,7 +276,7 @@ export function DataTable<TData>({
             {loading ? (
               <TableRow>
                 <TableCell
-                  className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                  className="h-24 text-center text-on-surface-muted"
                   colSpan={columns.length}
                 >
                   Loading...
@@ -295,7 +294,7 @@ export function DataTable<TData>({
             ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  className="h-24 text-center text-neutral-500 dark:text-neutral-400"
+                  className="h-24 text-center text-on-surface-muted"
                   colSpan={columns.length}
                 >
                   No results found.
@@ -323,11 +322,11 @@ export function DataTable<TData>({
       {tooltipPortal}
 
       {/* Pagination controls */}
-      <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex items-center justify-between text-sm text-on-surface-muted">
         <div className="flex items-center gap-2">
           <span>Rows per page:</span>
           <select
-            className="rounded-md border border-neutral-200 bg-transparent px-2 py-1 text-sm dark:border-neutral-700"
+            className="rounded-theme border border-border-theme bg-transparent px-2 py-1 text-sm"
             onChange={(e) => changePageSize(Number(e.target.value))}
             value={pageSizeParam}
           >
@@ -401,5 +400,5 @@ function SortIndicator({ direction }: { direction: false | 'asc' | 'desc' }) {
       </span>
     );
   }
-  return <span className="text-xs text-neutral-300 dark:text-neutral-600">{'\u25B2'}</span>;
+  return <span className="text-xs text-on-surface-muted/40">{'\u25B2'}</span>;
 }

@@ -42,10 +42,8 @@ export function HideToggle({ contentKey, contentType, initialHidden, onToggle }:
   return (
     <button
       className={cn(
-        'rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700',
-        hidden
-          ? 'text-neutral-400 dark:text-neutral-500'
-          : 'text-neutral-300 dark:text-neutral-600',
+        'rounded p-1 hover:bg-on-surface/10',
+        hidden ? 'text-on-surface-muted' : 'text-on-surface-muted/50',
       )}
       disabled={loading}
       onClick={(e) => {

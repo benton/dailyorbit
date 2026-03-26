@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
 import { unhideAll } from '../lib/hidden-items.ts';
 import { useSettings } from '../lib/settings-context.tsx';
+import { THEMES } from '../lib/themes.ts';
 import { Button } from '../ui/button.tsx';
 import { Input } from '../ui/input.tsx';
 
@@ -56,7 +57,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading profile...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading profile...</p>;
   }
 
   if (profile == null) {
@@ -65,22 +66,20 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Profile</h1>
+      <h1 className="text-xl font-semibold text-on-surface">Profile</h1>
 
-      <div className="flex items-start gap-6 rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="flex items-start gap-6 rounded-theme border border-border-theme bg-surface-card p-6">
         <img alt="Avatar" className="h-32 w-32 rounded-full" src={profile.gravatarUrl} />
         <div className="flex-1 space-y-4">
           <div>
-            <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-              {profile.name}
-            </p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">{profile.email}</p>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-lg font-medium text-on-surface">{profile.name}</p>
+            <p className="text-sm text-on-surface-muted">{profile.email}</p>
+            <p className="mt-1 text-xs text-on-surface-muted/70">
               <span
                 className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                   profile.role === 'admin'
                     ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                    : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300'
+                    : 'bg-surface text-on-surface'
                 }`}
               >
                 {profile.role}
@@ -92,9 +91,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              Display Name
-            </label>
+            <label className="text-sm font-medium text-on-surface">Display Name</label>
             <div className="flex gap-2">
               <Input onChange={(e) => setEditName(e.target.value)} value={editName} />
               <Button
@@ -109,8 +106,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-        <h2 className="mb-4 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+      <div className="rounded-theme border border-border-theme bg-surface-card p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
           Preferences
         </h2>
         <div className="space-y-4">
@@ -128,41 +125,33 @@ export default function ProfilePage() {
           />
         </div>
 
-        <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-          <p className="mb-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">Theme</p>
+        <div className="mt-4 border-t border-border-theme pt-4">
+          <p className="mb-3 text-sm font-medium text-on-surface">Theme</p>
           <div className="flex gap-3">
-            <ThemeCard
-              active={settings?.theme !== 'broadsheet'}
-              description="Clean & minimal"
-              label="Modern"
-              onClick={() => updateSetting('theme', 'modern')}
-              sampleBg="#ffffff"
-              sampleBorder="#e5e5e5"
-              sampleFont="system-ui, -apple-system, sans-serif"
-            />
-            <ThemeCard
-              active={settings?.theme === 'broadsheet'}
-              description="1900s newsprint with serif fonts"
-              label="Broadsheet"
-              onClick={() => updateSetting('theme', 'broadsheet')}
-              sampleBg="#f4edd3"
-              sampleBorder="#5c4a32"
-              sampleFont="'Abril Fatface', Georgia, serif"
-            />
+            {THEMES.map((theme) => (
+              <ThemeCard
+                active={(settings?.theme ?? 'modern') === theme.id}
+                description={theme.description}
+                key={theme.id}
+                label={theme.name}
+                onClick={() => updateSetting('theme', theme.id)}
+                sampleBg={theme.swatchBg}
+                sampleBorder={theme.swatchBorder}
+                sampleFont={theme.fontSample}
+              />
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-        <h2 className="mb-4 text-sm font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+      <div className="rounded-theme border border-border-theme bg-surface-card p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-wider text-on-surface-muted uppercase">
           Hidden Items
         </h2>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              Unhide All Items
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm font-medium text-on-surface">Unhide All Items</p>
+            <p className="text-xs text-on-surface-muted">
               Make all your personally hidden filings and news items visible again
             </p>
           </div>
@@ -204,19 +193,19 @@ function ToggleRow({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{label}</p>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">{description}</p>
+        <p className="text-sm font-medium text-on-surface">{label}</p>
+        <p className="text-xs text-on-surface-muted">{description}</p>
       </div>
       <button
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-          checked ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-neutral-200 dark:bg-neutral-700'
+          checked ? 'bg-on-surface' : 'bg-on-surface/20'
         }`}
         onClick={() => onChange(!checked)}
         role="switch"
         type="button"
       >
         <span
-          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform dark:bg-neutral-900 ${
+          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-surface-card shadow ring-0 transition-transform ${
             checked ? 'translate-x-5' : 'translate-x-0'
           }`}
         />
@@ -244,10 +233,10 @@ function ThemeCard({
 }) {
   return (
     <button
-      className={`flex flex-1 flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+      className={`flex flex-1 flex-col items-center gap-2 rounded-theme border-2 p-4 transition-colors ${
         active
-          ? 'border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-800'
-          : 'border-neutral-200 bg-white hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-500'
+          ? 'border-on-surface bg-surface'
+          : 'border-border-theme bg-surface-card hover:border-on-surface-muted'
       }`}
       onClick={onClick}
       type="button"
@@ -256,12 +245,12 @@ function ThemeCard({
         className="flex h-10 w-full items-center justify-center rounded"
         style={{ backgroundColor: sampleBg, border: `1px solid ${sampleBorder}` }}
       >
-        <span className="text-lg text-neutral-900" style={{ fontFamily: sampleFont }}>
+        <span className="text-lg text-on-surface" style={{ fontFamily: sampleFont }}>
           Aa
         </span>
       </div>
-      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{label}</p>
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">{description}</p>
+      <p className="text-sm font-medium text-on-surface">{label}</p>
+      <p className="text-xs text-on-surface-muted">{description}</p>
     </button>
   );
 }

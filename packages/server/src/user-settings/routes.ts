@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { getDb } from '../lib/db.ts';
 import type { SessionUser } from '../user/SessionUser.ts';
 import {
+  VALID_THEMES,
   getOrCreateSettings,
   updateSettings,
   type SettingsPatch,
@@ -25,6 +26,16 @@ userSettingsRoutes.get('/', async (c) => {
 userSettingsRoutes.patch('/', async (c) => {
   const user: SessionUser = c.get('user');
   const body = await c.req.json<SettingsPatch>();
+
+  // Validate theme value if provided
+  if (body.theme !== undefined && !VALID_THEMES.has(body.theme)) {
+    return c.json(
+      {
+        error: `Invalid theme "${body.theme}". Valid themes: ${[...VALID_THEMES].join(', ')}`,
+      },
+      400,
+    );
+  }
 
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);

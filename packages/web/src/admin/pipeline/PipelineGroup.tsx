@@ -44,17 +44,17 @@ export default function PipelineGroup({
       {/* Group header */}
       <div className="flex items-center gap-2">
         <button
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold text-neutral-900 hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-800"
+          className="flex items-center gap-1.5 rounded-theme px-2 py-1 text-sm font-semibold text-on-surface hover:bg-on-surface/10 dark:text-on-surface dark:hover:bg-on-surface/10"
           onClick={() => setExpanded(!expanded)}
           type="button"
         >
           {expanded ? (
-            <ChevronDown className="h-4 w-4 text-neutral-400" />
+            <ChevronDown className="h-4 w-4 text-on-surface-muted" />
           ) : (
-            <ChevronRight className="h-4 w-4 text-neutral-400" />
+            <ChevronRight className="h-4 w-4 text-on-surface-muted" />
           )}
           {name}
-          <span className="ml-1 text-xs font-normal text-neutral-400">
+          <span className="ml-1 text-xs font-normal text-on-surface-muted">
             ({String(stages.length)} steps)
           </span>
         </button>
@@ -74,7 +74,7 @@ export default function PipelineGroup({
 
       {/* Stages */}
       {expanded && (
-        <div className="mt-1 ml-3 space-y-1 border-l-2 border-neutral-200 pl-4 dark:border-neutral-700">
+        <div className="mt-1 ml-3 space-y-1 border-l-2 border-border-theme pl-4 dark:border-border-theme">
           {stages.map((stage: StageInfo) => (
             <PipelineStep
               concurrency={stage.concurrency}
@@ -97,7 +97,7 @@ export default function PipelineGroup({
       {/* Flow connector to next group */}
       {!isLast && (
         <div className="ml-5 flex h-4 justify-center">
-          <div className="w-0.5 bg-neutral-300 dark:bg-neutral-600" />
+          <div className="w-0.5 bg-border-theme" />
         </div>
       )}
     </div>

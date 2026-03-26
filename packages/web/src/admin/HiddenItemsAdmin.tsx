@@ -103,15 +103,15 @@ export default function HiddenItemsAdmin() {
   const allItems: Array<HiddenItemRow> = [...filingItems, ...newsItems];
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading...</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">Hidden Items</h2>
+        <h2 className="text-xl font-bold text-on-surface">Hidden Items</h2>
         <button
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+          className="rounded-theme bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
           onClick={() => setShowAdd(!showAdd)}
           type="button"
         >
@@ -123,10 +123,10 @@ export default function HiddenItemsAdmin() {
 
       {/* Add form */}
       {showAdd && (
-        <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
+        <div className="rounded-theme border border-border-theme p-4 dark:border-border-theme">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <select
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, content_type: e.target.value })}
               value={addForm.content_type}
             >
@@ -134,20 +134,20 @@ export default function HiddenItemsAdmin() {
               <option value="news">News</option>
             </select>
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, content_key: e.target.value })}
               placeholder="Content key (e.g. file number or news ID)"
               value={addForm.content_key}
             />
             <input
-              className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="rounded-theme border border-border-theme bg-surface-card px-2 py-1 text-sm"
               onChange={(e) => setAddForm({ ...addForm, reason: e.target.value })}
               placeholder="Reason (optional)"
               value={addForm.reason}
             />
           </div>
           <button
-            className="mt-3 rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+            className="mt-3 rounded-theme bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
             disabled={saving || addForm.content_key.trim() === ''}
             onClick={() => void handleAdd()}
             type="button"
@@ -158,9 +158,9 @@ export default function HiddenItemsAdmin() {
       )}
 
       {/* Hidden items table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="overflow-x-auto rounded-theme border border-border-theme">
         <table className="min-w-full text-sm">
-          <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          <thead className="bg-surface text-left text-xs text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted">
             <tr>
               <th className="px-3 py-2">Content Type</th>
               <th className="px-3 py-2">Content Key</th>
@@ -170,22 +170,22 @@ export default function HiddenItemsAdmin() {
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          <tbody className="divide-y divide-border-theme">
             {allItems.length === 0 && (
               <tr>
-                <td className="px-3 py-4 text-center text-neutral-400" colSpan={6}>
+                <td className="px-3 py-4 text-center text-on-surface-muted" colSpan={6}>
                   No hidden items
                 </td>
               </tr>
             )}
             {allItems.map((item: HiddenItemRow) => (
               <tr key={item.id}>
-                <td className="px-3 py-2 text-neutral-500">
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium dark:bg-neutral-800">
+                <td className="px-3 py-2 text-on-surface-muted">
+                  <span className="rounded-full bg-on-surface/10 px-2 py-0.5 text-xs font-medium dark:bg-on-surface/10">
                     {item.content_type}
                   </span>
                 </td>
-                <td className="px-3 py-2 font-medium text-neutral-900 dark:text-neutral-100">
+                <td className="px-3 py-2 font-medium text-on-surface">
                   <a
                     className="text-blue-600 hover:underline dark:text-blue-400"
                     href={contentLink(item.content_type, item.content_key)}
@@ -193,16 +193,16 @@ export default function HiddenItemsAdmin() {
                     {item.content_key}
                   </a>
                 </td>
-                <td className="px-3 py-2 text-neutral-500">{item.reason ?? '—'}</td>
-                <td className="px-3 py-2 text-xs text-neutral-500">
+                <td className="px-3 py-2 text-on-surface-muted">{item.reason ?? '—'}</td>
+                <td className="px-3 py-2 text-xs text-on-surface-muted">
                   {item.scope === 'system' ? 'System' : item.user_id}
                 </td>
-                <td className="px-3 py-2 text-xs text-neutral-500">
+                <td className="px-3 py-2 text-xs text-on-surface-muted">
                   {formatDate(item.created_at)}
                 </td>
                 <td className="px-3 py-2">
                   <button
-                    className="text-xs text-red-600 hover:underline disabled:text-neutral-400"
+                    className="text-xs text-red-600 hover:underline disabled:text-on-surface-muted"
                     disabled={unhidingId === item.id}
                     onClick={() => void handleUnhide(item.id)}
                     type="button"

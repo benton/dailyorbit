@@ -23,7 +23,7 @@ type TooltipState = {
 };
 
 const TOOLTIP_CLASSES: string =
-  'pointer-events-none fixed z-[9999] max-w-md rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
+  'pointer-events-none fixed z-[9999] max-w-md rounded-theme border border-border-theme bg-surface-card px-4 py-3 text-sm leading-relaxed text-on-surface-muted shadow-lg';
 
 function computePosition(rect: DOMRect): {
   left: number;

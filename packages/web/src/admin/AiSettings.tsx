@@ -331,16 +331,14 @@ function AiSettingsInner() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          AI Settings
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">AI Settings</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           Configure language model inference via AWS Bedrock.
         </p>
       </div>
 
       {/* Config Section */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">Bedrock Configuration</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -350,7 +348,7 @@ function AiSettingsInner() {
           <div>
             <Label htmlFor="bedrock-model">Default Model ID</Label>
             <select
-              className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              className="flex h-10 w-full rounded-theme border border-border-theme bg-white px-3 py-2 text-sm dark:border-border-theme dark:bg-on-surface dark:text-on-surface"
               id="bedrock-model"
               onChange={(e) => setDefaultModel(e.target.value)}
               value={defaultModel}
@@ -372,15 +370,15 @@ function AiSettingsInner() {
       </div>
 
       {/* Summarization Model */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">Summarization Model</h2>
-        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-on-surface-muted">
           Model used for batch attachment summarization in the ingestion pipeline.
         </p>
         <div className="space-y-3">
           {SUMMARIZATION_MODELS.map((m) => (
             <label
-              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              className="flex cursor-pointer items-center gap-3 rounded-theme border border-border-theme px-4 py-3 transition-colors hover:bg-on-surface/5 dark:border-border-theme dark:hover:bg-on-surface/10"
               key={m.id}
               style={
                 summarizationModel === m.id
@@ -401,7 +399,7 @@ function AiSettingsInner() {
               />
               <div>
                 <div className="text-sm font-medium">{m.label}</div>
-                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+                <div className="font-mono text-xs text-on-surface-muted">{m.id}</div>
               </div>
             </label>
           ))}
@@ -424,15 +422,15 @@ function AiSettingsInner() {
       )}
 
       {/* News Summarization Model */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">News Summarization Model</h2>
-        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-on-surface-muted">
           Model used for summarizing news articles in the ingestion pipeline.
         </p>
         <div className="space-y-3">
           {SUMMARIZATION_MODELS.map((m) => (
             <label
-              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              className="flex cursor-pointer items-center gap-3 rounded-theme border border-border-theme px-4 py-3 transition-colors hover:bg-on-surface/5 dark:border-border-theme dark:hover:bg-on-surface/10"
               key={m.id}
               style={
                 newsSummModel === m.id
@@ -453,7 +451,7 @@ function AiSettingsInner() {
               />
               <div>
                 <div className="text-sm font-medium">{m.label}</div>
-                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+                <div className="font-mono text-xs text-on-surface-muted">{m.id}</div>
               </div>
             </label>
           ))}
@@ -506,9 +504,9 @@ function AiSettingsInner() {
       )}
 
       {/* Newspaper Copy Model */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">Newspaper</h2>
-        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-on-surface-muted">
           Models and prompts for the newspaper edition generator.
         </p>
 
@@ -516,7 +514,7 @@ function AiSettingsInner() {
         <div className="mb-6 space-y-3">
           {SUMMARIZATION_MODELS.map((m) => (
             <label
-              className="flex cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              className="flex cursor-pointer items-center gap-3 rounded-theme border border-border-theme px-4 py-3 transition-colors hover:bg-on-surface/5 dark:border-border-theme dark:hover:bg-on-surface/10"
               key={m.id}
               style={
                 newspaperCopyModel === m.id
@@ -537,7 +535,7 @@ function AiSettingsInner() {
               />
               <div>
                 <div className="text-sm font-medium">{m.label}</div>
-                <div className="font-mono text-xs text-neutral-500">{m.id}</div>
+                <div className="font-mono text-xs text-on-surface-muted">{m.id}</div>
               </div>
             </label>
           ))}
@@ -584,9 +582,9 @@ function AiSettingsInner() {
       )}
 
       {/* Embedding Configuration */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">Embedding Configuration</h2>
-        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-on-surface-muted">
           Settings for vector embeddings used in semantic search.
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -602,7 +600,7 @@ function AiSettingsInner() {
           <div>
             <Label htmlFor="embedding-dimensions">Dimensions</Label>
             <select
-              className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              className="flex h-10 w-full rounded-theme border border-border-theme bg-white px-3 py-2 text-sm dark:border-border-theme dark:bg-on-surface dark:text-on-surface"
               id="embedding-dimensions"
               onChange={(e) => setEmbeddingDimensions(e.target.value)}
               value={embeddingDimensions}
@@ -626,7 +624,7 @@ function AiSettingsInner() {
       </div>
 
       {/* Test Section */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
         <h2 className="mb-4 text-lg font-medium">Test Inference</h2>
         <div className="flex gap-2">
           <Input
@@ -646,10 +644,10 @@ function AiSettingsInner() {
         </div>
         {testResult && (
           <div className="mt-4 space-y-2">
-            <div className="rounded bg-neutral-50 p-4 text-sm dark:bg-neutral-800">
+            <div className="rounded bg-surface p-4 text-sm dark:bg-on-surface/10">
               {testResult.content}
             </div>
-            <div className="flex gap-3 text-xs text-neutral-500">
+            <div className="flex gap-3 text-xs text-on-surface-muted">
               <Badge variant="secondary">{testResult.modelId}</Badge>
               <span>{testResult.usage.totalTokens} tokens</span>
               <span>{testResult.latencyMs}ms</span>
@@ -662,7 +660,7 @@ function AiSettingsInner() {
       {/* Available Models */}
       <div>
         <h2 className="mb-2 text-lg font-medium">Available Models</h2>
-        <p className="mb-4 text-sm text-neutral-500">
+        <p className="mb-4 text-sm text-on-surface-muted">
           On-demand text models in {region || 'configured region'}.
         </p>
         <DataTable<ModelInfo>

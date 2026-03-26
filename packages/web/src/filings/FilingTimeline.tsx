@@ -118,10 +118,8 @@ export function FilingTimeline({ events }: { events: Array<TimelineEvent> }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-        Timeline
-      </h2>
-      <div className="rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+      <h2 className="mb-3 text-lg font-semibold text-on-surface">Timeline</h2>
+      <div className="rounded-md border border-border-theme bg-white p-4 dark:border-border-theme dark:bg-on-surface">
         <div ref={chartRef} />
         {rendered && <TimelineLegend events={events} />}
       </div>
@@ -142,7 +140,7 @@ function TimelineLegend({ events }: { events: Array<TimelineEvent> }) {
   }
 
   return (
-    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-2 dark:border-neutral-800">
+    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-border-theme pt-2">
       {categories.map((cat: string) => (
         <LegendItem
           color={CATEGORY_COLORS[cat] ?? '#737373'}
@@ -158,7 +156,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-      <span className="text-xs text-neutral-600 dark:text-neutral-400">{label}</span>
+      <span className="text-xs text-on-surface-muted">{label}</span>
     </div>
   );
 }

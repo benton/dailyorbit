@@ -156,19 +156,17 @@ export default function SchedulerPanel() {
   const isRunning: boolean = status.running;
 
   return (
-    <div className="mb-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+    <div className="mb-6 rounded-theme border border-border-theme bg-surface p-4 dark:border-border-theme dark:bg-on-surface">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-neutral-500" />
-          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            Pipeline Scheduler
-          </h2>
+          <Clock className="h-4 w-4 text-on-surface-muted" />
+          <h2 className="text-sm font-semibold text-on-surface">Pipeline Scheduler</h2>
           {isRunning ? (
             <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
               Active
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+            <span className="inline-flex items-center rounded-full bg-on-surface/10 px-2 py-0.5 text-xs font-medium text-on-surface-muted dark:bg-on-surface/10 dark:text-on-surface-muted">
               Stopped
             </span>
           )}
@@ -208,11 +206,11 @@ export default function SchedulerPanel() {
       </div>
 
       {/* Interval config */}
-      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-on-surface-muted">
         <label className="flex items-center gap-1.5">
           <input
             checked={autoStart}
-            className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600"
+            className="h-3.5 w-3.5 rounded border-border-theme"
             onChange={(e) => void handleAutoStartToggle(e.target.checked)}
             type="checkbox"
           />
@@ -222,7 +220,7 @@ export default function SchedulerPanel() {
           <Zap className="h-3 w-3" />
           Probe every
           <input
-            className="w-14 rounded border border-neutral-300 bg-white px-1.5 py-0.5 text-xs dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200"
+            className="w-14 rounded-theme border border-border-theme bg-surface-card px-1.5 py-0.5 text-xs"
             disabled={isRunning}
             min={5}
             onChange={(e) => setProbeInterval(Number(e.target.value))}
@@ -235,7 +233,7 @@ export default function SchedulerPanel() {
           <RefreshCw className="h-3 w-3" />
           Full refresh every
           <input
-            className="w-14 rounded border border-neutral-300 bg-white px-1.5 py-0.5 text-xs dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200"
+            className="w-14 rounded-theme border border-border-theme bg-surface-card px-1.5 py-0.5 text-xs"
             disabled={isRunning}
             min={1}
             onChange={(e) => setRefreshInterval(Number(e.target.value))}
@@ -248,48 +246,52 @@ export default function SchedulerPanel() {
 
       {/* Status summary */}
       <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-        <div className="rounded border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-neutral-800">
-          <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+        <div className="rounded border border-border-theme bg-white p-2 dark:border-border-theme dark:bg-on-surface/10">
+          <div className="flex items-center gap-1 text-on-surface-muted">
             <Zap className="h-3 w-3" />
             Last Probe
           </div>
-          <div className="mt-1 text-neutral-900 dark:text-neutral-100">
+          <div className="mt-1 text-on-surface">
             {formatTime(status.lastProbeAt)}
             {status.lastProbeResult != null && (
-              <span className="ml-1 text-neutral-400">
+              <span className="ml-1 text-on-surface-muted">
                 ({formatMs(status.lastProbeResult.totalDurationMs)},{' '}
                 {String(status.lastProbeResult.stagesCompleted)} stages)
               </span>
             )}
           </div>
           {status.nextProbeAt != null && (
-            <div className="mt-0.5 text-neutral-400">Next: {formatTime(status.nextProbeAt)}</div>
+            <div className="mt-0.5 text-on-surface-muted">
+              Next: {formatTime(status.nextProbeAt)}
+            </div>
           )}
         </div>
 
-        <div className="rounded border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-neutral-800">
-          <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+        <div className="rounded border border-border-theme bg-white p-2 dark:border-border-theme dark:bg-on-surface/10">
+          <div className="flex items-center gap-1 text-on-surface-muted">
             <RefreshCw className="h-3 w-3" />
             Last Refresh
           </div>
-          <div className="mt-1 text-neutral-900 dark:text-neutral-100">
+          <div className="mt-1 text-on-surface">
             {formatTime(status.lastRefreshAt)}
             {status.lastRefreshResult != null && (
-              <span className="ml-1 text-neutral-400">
+              <span className="ml-1 text-on-surface-muted">
                 ({formatMs(status.lastRefreshResult.totalDurationMs)},{' '}
                 {String(status.lastRefreshResult.stagesCompleted)} stages)
               </span>
             )}
           </div>
           {status.nextRefreshAt != null && (
-            <div className="mt-0.5 text-neutral-400">Next: {formatTime(status.nextRefreshAt)}</div>
+            <div className="mt-0.5 text-on-surface-muted">
+              Next: {formatTime(status.nextRefreshAt)}
+            </div>
           )}
         </div>
       </div>
 
       {/* Intervals display when running */}
       {isRunning && (
-        <div className="mt-2 text-xs text-neutral-400">
+        <div className="mt-2 text-xs text-on-surface-muted">
           Probe: {formatInterval(status.probeIntervalMs)} · Refresh:{' '}
           {formatInterval(status.refreshIntervalMs)}
         </div>

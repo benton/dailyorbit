@@ -92,21 +92,19 @@ function ConfigEditorInner() {
   }, [editEntry, editValue, fetchConfig, toast]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading configuration...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading configuration...</p>;
   }
 
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Configuration
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <h1 className="text-2xl font-semibold text-on-surface">Configuration</h1>
+        <p className="mt-1 text-sm text-on-surface-muted">
           View and edit application configuration values.
         </p>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-theme border border-border-theme bg-surface-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -122,9 +120,7 @@ function ConfigEditorInner() {
               .map((entry) => (
                 <TableRow key={entry.key}>
                   <TableCell className="font-mono text-sm">{entry.key}</TableCell>
-                  <TableCell className="text-neutral-500 dark:text-neutral-400">
-                    {entry.description}
-                  </TableCell>
+                  <TableCell className="text-on-surface-muted">{entry.description}</TableCell>
                   <TableCell>
                     {entry.encrypted ? (
                       <Badge variant="secondary">encrypted</Badge>

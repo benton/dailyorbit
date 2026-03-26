@@ -21,7 +21,7 @@ function SourcesList({ sources }: { sources: Array<RetrievedSource> }) {
   return (
     <div className="mt-2">
       <button
-        className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+        className="flex items-center gap-1 text-xs text-on-surface-muted hover:text-on-surface dark:hover:text-on-surface-muted"
         onClick={() => setExpanded(!expanded)}
         type="button"
       >
@@ -31,7 +31,7 @@ function SourcesList({ sources }: { sources: Array<RetrievedSource> }) {
       {expanded && (
         <ul className="mt-1 space-y-1">
           {sources.map((s: RetrievedSource, i: number) => (
-            <li className="text-xs text-neutral-500" key={`${s.id}-${String(i)}`}>
+            <li className="text-xs text-on-surface-muted" key={`${s.id}-${String(i)}`}>
               <span className="font-medium">[{String(i + 1)}]</span>{' '}
               {s.url != null ? (
                 <a
@@ -93,13 +93,13 @@ export default function MessageThread({
           const switchedConsultant: Consultant | undefined = switchIndices.get(idx);
           if (switchedConsultant !== undefined) {
             divider = (
-              <div className="flex items-center gap-2 py-2 text-xs text-neutral-400">
-                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
+              <div className="flex items-center gap-2 py-2 text-xs text-on-surface-muted">
+                <div className="flex-1 border-t border-border-theme" />
                 <span>
                   Switched to {switchedConsultant.icon ?? ''}{' '}
                   {switchedConsultant.name ?? 'another consultant'}
                 </span>
-                <div className="flex-1 border-t border-neutral-200 dark:border-neutral-700" />
+                <div className="flex-1 border-t border-border-theme" />
               </div>
             );
           }
@@ -121,7 +121,7 @@ export default function MessageThread({
                       : '\u{1F916}'}
                   </div>
                   <div className="max-w-[85%] min-w-0">
-                    <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 text-sm dark:bg-neutral-800">
+                    <div className="rounded-2xl rounded-tl-sm bg-on-surface/10 px-4 py-2 text-sm dark:bg-on-surface/10">
                       <Markdown>{msg.content}</Markdown>
                     </div>
                     {msg.sources != null && <SourcesList sources={msg.sources} />}
@@ -137,9 +137,9 @@ export default function MessageThread({
           <div className="flex gap-3">
             <div className="mt-1 flex-shrink-0 text-lg">{'\u{1F916}'}</div>
             <div className="max-w-[85%] min-w-0">
-              <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 text-sm dark:bg-neutral-800">
+              <div className="rounded-2xl rounded-tl-sm bg-on-surface/10 px-4 py-2 text-sm dark:bg-on-surface/10">
                 <Markdown>{streamingAnswer}</Markdown>
-                <span className="inline-block animate-pulse text-neutral-400">{'\u2588'}</span>
+                <span className="inline-block animate-pulse text-on-surface-muted">{'\u2588'}</span>
               </div>
               {streamingSources.length > 0 && <SourcesList sources={streamingSources} />}
             </div>
@@ -150,8 +150,8 @@ export default function MessageThread({
         {isStreaming && streamingAnswer === '' && (
           <div className="flex gap-3">
             <div className="mt-1 flex-shrink-0 text-lg">{'\u{1F916}'}</div>
-            <div className="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2 dark:bg-neutral-800">
-              <span className="animate-pulse text-sm text-neutral-400">Thinking...</span>
+            <div className="rounded-2xl rounded-tl-sm bg-on-surface/10 px-4 py-2 dark:bg-on-surface/10">
+              <span className="animate-pulse text-sm text-on-surface-muted">Thinking...</span>
             </div>
           </div>
         )}

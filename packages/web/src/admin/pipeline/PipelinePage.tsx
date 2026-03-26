@@ -243,7 +243,7 @@ export default function PipelinePage() {
   // ── Render ──────────────────────────────────────────────────────
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading pipeline status...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading pipeline status...</p>;
   }
 
   if (error != null && groups.length === 0) {
@@ -254,10 +254,8 @@ export default function PipelinePage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Pipeline
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <h1 className="text-2xl font-semibold text-on-surface">Pipeline</h1>
+          <p className="mt-1 text-sm text-on-surface-muted">
             Data ingestion pipeline stages. Run steps individually or by group.
           </p>
           {error != null && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}

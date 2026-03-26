@@ -59,7 +59,7 @@ export default function CompaniesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Companies</h1>
+      <h1 className="text-2xl font-bold text-on-surface">Companies</h1>
       <DataTable<CompanyListItem>
         columns={cols}
         defaultOrder="asc"

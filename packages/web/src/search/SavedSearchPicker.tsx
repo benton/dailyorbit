@@ -80,13 +80,11 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
       </Button>
 
       {open && (
-        <div className="absolute top-full right-0 z-50 mt-1 w-96 rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
-          <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2 dark:border-neutral-700">
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              Saved Searches
-            </span>
+        <div className="absolute top-full right-0 z-50 mt-1 w-96 rounded-md border border-border-theme bg-white shadow-lg dark:border-border-theme dark:bg-on-surface">
+          <div className="flex items-center justify-between border-b border-border-theme px-3 py-2 dark:border-border-theme">
+            <span className="text-sm font-medium text-on-surface">Saved Searches</span>
             <button
-              className="rounded p-0.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+              className="rounded p-0.5 text-on-surface-muted hover:text-on-surface"
               onClick={() => setOpen(false)}
               type="button"
             >
@@ -95,17 +93,17 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
           </div>
           <div className="max-h-64 overflow-y-auto">
             {loading && (
-              <div className="px-3 py-4 text-center text-sm text-neutral-500">Loading...</div>
+              <div className="px-3 py-4 text-center text-sm text-on-surface-muted">Loading...</div>
             )}
             {!loading && searches.length === 0 && (
-              <div className="px-3 py-4 text-center text-sm text-neutral-500">
+              <div className="px-3 py-4 text-center text-sm text-on-surface-muted">
                 No saved searches yet.
               </div>
             )}
             {!loading &&
               searches.map((search: SavedSearch) => (
                 <div
-                  className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm hover:bg-on-surface/5"
                   key={search.id}
                   onClick={() => handleSelect(search)}
                   onKeyDown={(e) => {
@@ -117,10 +115,8 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                   tabIndex={0}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-neutral-900 dark:text-neutral-100">
-                      {search.name}
-                    </div>
-                    <div className="text-xs text-neutral-500">
+                    <div className="truncate font-medium text-on-surface">{search.name}</div>
+                    <div className="text-xs text-on-surface-muted">
                       {search.content_type} &middot;{' '}
                       {new Date(search.created_at).toLocaleDateString()}
                     </div>
@@ -130,7 +126,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                       className={`rounded p-1 ${
                         search.alert_enabled
                           ? 'text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:text-amber-400 dark:hover:bg-amber-900/20'
-                          : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200'
+                          : 'text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface'
                       }`}
                       onClick={(e) => void handleToggleAlert(e, search)}
                       title={search.alert_enabled ? 'Disable alert' : 'Enable alert'}
@@ -143,7 +139,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
                       )}
                     </button>
                     <button
-                      className="rounded p-1 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                      className="rounded p-1 text-on-surface-muted hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       onClick={(e) => void handleDelete(e, search.id)}
                       type="button"
                     >

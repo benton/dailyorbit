@@ -17,8 +17,7 @@ type BackupStatus = {
   running: boolean;
 };
 
-const cardClass: string =
-  'rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4';
+const cardClass: string = 'rounded-theme border border-border-theme bg-surface-card p-4';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {
@@ -84,7 +83,7 @@ export default function BackupsPage() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading backup data...</p>;
+    return <p className="text-sm text-on-surface-muted">Loading backup data...</p>;
   }
 
   const latest: BackupSnapshot | undefined = snapshots[0];
@@ -93,13 +92,13 @@ export default function BackupsPage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Backups</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <h1 className="text-2xl font-semibold text-on-surface">Backups</h1>
+          <p className="mt-1 text-sm text-on-surface-muted">
             Database snapshot history and manual trigger.
           </p>
         </div>
         <button
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-theme bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           disabled={status.running || triggering || status.configured === false}
           onClick={() => void triggerBackup()}
           type="button"
@@ -127,12 +126,10 @@ export default function BackupsPage() {
       {/* Latest Backup Card */}
       {latest != null && (
         <div className={`${cardClass} mb-6`}>
-          <h2 className="mb-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Latest Backup
-          </h2>
+          <h2 className="mb-2 text-sm font-medium text-on-surface-muted">Latest Backup</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <p className="text-xs text-neutral-400">Status</p>
+              <p className="text-xs text-on-surface-muted">Status</p>
               <p
                 className={`text-sm font-medium ${
                   latest.status === 'completed'
@@ -146,17 +143,17 @@ export default function BackupsPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Started</p>
+              <p className="text-xs text-on-surface-muted">Started</p>
               <p className="text-sm">{formatDate(latest.started_at)}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Size</p>
+              <p className="text-xs text-on-surface-muted">Size</p>
               <p className="text-sm">
                 {latest.size_bytes != null ? formatBytes(Number(latest.size_bytes)) : '\u2014'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Triggered by</p>
+              <p className="text-xs text-on-surface-muted">Triggered by</p>
               <p className="text-sm">{latest.triggered_by}</p>
             </div>
           </div>
@@ -166,22 +163,20 @@ export default function BackupsPage() {
 
       {/* History Table */}
       <div className={cardClass}>
-        <h2 className="mb-3 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Backup History
-        </h2>
+        <h2 className="mb-3 text-sm font-medium text-on-surface-muted">Backup History</h2>
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-700">
-              <th className="pb-2 font-medium text-neutral-500">Started</th>
-              <th className="pb-2 font-medium text-neutral-500">Status</th>
-              <th className="pb-2 font-medium text-neutral-500">Size</th>
-              <th className="pb-2 font-medium text-neutral-500">S3 Key</th>
-              <th className="pb-2 font-medium text-neutral-500">Trigger</th>
+            <tr className="border-b border-border-theme">
+              <th className="pb-2 font-medium text-on-surface-muted">Started</th>
+              <th className="pb-2 font-medium text-on-surface-muted">Status</th>
+              <th className="pb-2 font-medium text-on-surface-muted">Size</th>
+              <th className="pb-2 font-medium text-on-surface-muted">S3 Key</th>
+              <th className="pb-2 font-medium text-on-surface-muted">Trigger</th>
             </tr>
           </thead>
           <tbody>
             {snapshots.map((s: BackupSnapshot) => (
-              <tr className="border-b border-neutral-100 dark:border-neutral-800" key={s.id}>
+              <tr className="border-b border-border-theme" key={s.id}>
                 <td className="py-2">{formatDate(s.started_at)}</td>
                 <td
                   className={`py-2 ${
@@ -197,13 +192,15 @@ export default function BackupsPage() {
                 <td className="py-2">
                   {s.size_bytes != null ? formatBytes(Number(s.size_bytes)) : '\u2014'}
                 </td>
-                <td className="py-2 font-mono text-xs text-neutral-500">{s.s3_key ?? '\u2014'}</td>
+                <td className="py-2 font-mono text-xs text-on-surface-muted">
+                  {s.s3_key ?? '\u2014'}
+                </td>
                 <td className="py-2">{s.triggered_by}</td>
               </tr>
             ))}
             {snapshots.length === 0 && (
               <tr>
-                <td className="py-4 text-center text-neutral-400" colSpan={5}>
+                <td className="py-4 text-center text-on-surface-muted" colSpan={5}>
                   No backups recorded yet.
                 </td>
               </tr>
