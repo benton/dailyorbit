@@ -1,8 +1,8 @@
-@import 'tailwindcss';
-@plugin '@tailwindcss/typography';
-
 /* ── Google Fonts (browsers only download when used in rendered text) ── */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@400;700;900&family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Slab:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 /* ── Tailwind theme integration (maps --do-* tokens to utility classes) ── */
 @theme {
