@@ -12,7 +12,8 @@ function NavLink({ label, to }: { label: string; to: string }) {
 
   return (
     <Link
-      className={`text-sm hover:text-neutral-900 dark:hover:text-neutral-100 ${isActive ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}
+      className={`text-sm ${isActive ? 'font-semibold' : ''}`}
+      style={{ color: isActive ? 'var(--do-text-heading)' : 'var(--do-text-muted)' }}
       to={to}
     >
       {label}
@@ -72,13 +73,26 @@ export default function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <header className="border-b border-neutral-200 bg-white px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--do-bg)' }}>
+      <header
+        className="px-6 py-3"
+        style={{
+          backgroundColor: 'var(--do-bg-card)',
+          borderBottom: 'var(--do-border-style)',
+        }}
+      >
         <nav className="flex items-center gap-4">
-          <Link className="text-base font-bold text-neutral-900 dark:text-neutral-100" to="/">
+          <Link
+            className="text-base font-bold"
+            style={{
+              color: 'var(--do-text-heading)',
+              fontFamily: 'var(--do-font-heading)',
+            }}
+            to="/"
+          >
             The Daily Orbit
           </Link>
-          <span className="text-neutral-300 dark:text-neutral-600">|</span>
+          <span style={{ color: 'var(--do-border)' }}>|</span>
           <NavLink label="Home" to="/" />
           <NavLink label="Search" to="/search" />
           <NavLink label="News" to="/news" />

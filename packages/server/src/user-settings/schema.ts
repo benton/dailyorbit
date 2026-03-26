@@ -11,7 +11,11 @@ export async function ensureUserSettingsTables(
     CREATE TABLE IF NOT EXISTS user_settings (
       user_id            VARCHAR PRIMARY KEY,
       email_daily_orbit  BOOLEAN NOT NULL DEFAULT FALSE,
-      wide_view          BOOLEAN NOT NULL DEFAULT FALSE
+      wide_view          BOOLEAN NOT NULL DEFAULT FALSE,
+      theme              VARCHAR NOT NULL DEFAULT 'modern'
     )
+  `);
+  await conn.run(`
+    ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS theme VARCHAR DEFAULT 'modern'
   `);
 }

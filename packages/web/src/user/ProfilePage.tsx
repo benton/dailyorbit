@@ -127,6 +127,30 @@ export default function ProfilePage() {
             onChange={(v: boolean) => updateSetting('wideView', v)}
           />
         </div>
+
+        <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+          <p className="mb-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">Theme</p>
+          <div className="flex gap-3">
+            <ThemeCard
+              active={settings?.theme !== 'broadsheet'}
+              description="Clean & minimal"
+              label="Modern"
+              onClick={() => updateSetting('theme', 'modern')}
+              sampleBg="#ffffff"
+              sampleBorder="#e5e5e5"
+              sampleFont="system-ui, -apple-system, sans-serif"
+            />
+            <ThemeCard
+              active={settings?.theme === 'broadsheet'}
+              description="1900s newsprint with serif fonts"
+              label="Broadsheet"
+              onClick={() => updateSetting('theme', 'broadsheet')}
+              sampleBg="#f4edd3"
+              sampleBorder="#5c4a32"
+              sampleFont="'Abril Fatface', Georgia, serif"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
@@ -198,5 +222,46 @@ function ToggleRow({
         />
       </button>
     </div>
+  );
+}
+
+function ThemeCard({
+  active,
+  description,
+  label,
+  onClick,
+  sampleBg,
+  sampleBorder,
+  sampleFont,
+}: {
+  active: boolean;
+  description: string;
+  label: string;
+  onClick: () => void;
+  sampleBg: string;
+  sampleBorder: string;
+  sampleFont: string;
+}) {
+  return (
+    <button
+      className={`flex flex-1 flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+        active
+          ? 'border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-800'
+          : 'border-neutral-200 bg-white hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-500'
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      <div
+        className="flex h-10 w-full items-center justify-center rounded"
+        style={{ backgroundColor: sampleBg, border: `1px solid ${sampleBorder}` }}
+      >
+        <span className="text-lg text-neutral-900" style={{ fontFamily: sampleFont }}>
+          Aa
+        </span>
+      </div>
+      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{label}</p>
+      <p className="text-xs text-neutral-500 dark:text-neutral-400">{description}</p>
+    </button>
   );
 }

@@ -7,6 +7,7 @@ import SettingsLayout from './admin/SettingsLayout.tsx';
 import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
 import FilingDetail from './filings/FilingDetail.tsx';
 import { SettingsProvider } from './lib/settings-context.tsx';
+import { ThemeProvider } from './lib/theme-provider.tsx';
 import SatelliteDetail from './satellites/SatelliteDetail.tsx';
 import SearchPage from './search/SearchPage.tsx';
 import PublicLayout from './ui/PublicLayout.tsx';
@@ -67,6 +68,7 @@ export default function App() {
   return (
     <AuthProvider>
       <SettingsProvider>
+        <ThemeProvider>
         <Routes>
           <Route element={<LoginPage />} path="/login" />
           {/* All routes require authentication */}
@@ -290,6 +292,7 @@ export default function App() {
             />
           </Route>
         </Routes>
+        </ThemeProvider>
       </SettingsProvider>
     </AuthProvider>
   );

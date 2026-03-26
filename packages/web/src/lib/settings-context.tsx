@@ -4,6 +4,7 @@ import { apiFetch } from './api.ts';
 
 export type UserSettings = {
   emailDailyOrbit: boolean;
+  theme: string;
   userId: string;
   wideView: boolean;
 };

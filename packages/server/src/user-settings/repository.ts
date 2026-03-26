@@ -4,12 +4,14 @@ export type UserSettings = {
   userId: string;
   emailDailyOrbit: boolean;
   wideView: boolean;
+  theme: string;
 };
 
 type RawSettingsRow = {
   user_id: string;
   email_daily_orbit: boolean;
   wide_view: boolean;
+  theme: string;
 };
 
 function rowToSettings(row: RawSettingsRow): UserSettings {
@@ -17,6 +19,7 @@ function rowToSettings(row: RawSettingsRow): UserSettings {
     userId: row.user_id,
     emailDailyOrbit: row.email_daily_orbit,
     wideView: row.wide_view,
+    theme: row.theme,
   };
 }
 
@@ -50,11 +53,13 @@ export async function getOrCreateSettings(
 export type SettingsPatch = {
   emailDailyOrbit?: boolean;
   wideView?: boolean;
+  theme?: string;
 };
 
 const FIELD_MAP: Record<keyof SettingsPatch, string> = {
   emailDailyOrbit: 'email_daily_orbit',
   wideView: 'wide_view',
+  theme: 'theme',
 };
 
 export async function updateSettings(

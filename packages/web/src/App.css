@@ -1,19 +1,61 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
+/* ── Google Fonts (browsers only download when used in rendered text) ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@400;700;900&family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Slab:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ── Semantic design tokens (modern defaults) ── */
 :root {
-  --background-color: #fff;
-  --text-color: #111;
+  --do-bg:            #fafafa;
+  --do-bg-card:       #ffffff;
+  --do-text:          #111111;
+  --do-text-muted:    #737373;
+  --do-text-heading:  #111111;
+  --do-border:        #e5e5e5;
+  --do-border-style:  1px solid var(--do-border);
+  --do-accent:        #be185d;
+  --do-font-body:     system-ui, -apple-system, sans-serif;
+  --do-font-heading:  system-ui, -apple-system, sans-serif;
+  --do-font-mono:     ui-monospace, 'SF Mono', monospace;
+  --do-radius:        0.5rem;
 }
 
+/* Keep existing dark-mode overrides for modern theme */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: rgb(20, 20, 20);
-    --text-color: rgb(230, 230, 230);
+  :root:not([data-theme="broadsheet"]) {
+    --do-bg:          rgb(20, 20, 20);
+    --do-bg-card:     rgb(23, 23, 23);
+    --do-text:        rgb(230, 230, 230);
+    --do-text-muted:  rgb(163, 163, 163);
+    --do-text-heading: rgb(245, 245, 245);
+    --do-border:      rgb(64, 64, 64);
+    --do-accent:      #f472b6;
   }
 }
 
+/* ── Broadsheet theme ── */
+[data-theme="broadsheet"] {
+  --do-bg:            #f9f4e8;
+  --do-bg-card:       #f4edd3;
+  --do-text:          #1a1a1a;
+  --do-text-muted:    #8b7355;
+  --do-text-heading:  #1a1a1a;
+  --do-border:        #5c4a32;
+  --do-border-style:  2px double var(--do-border);
+  --do-accent:        #8b2500;
+  --do-font-body:     'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --do-font-heading:  'Abril Fatface', Georgia, serif;
+  --do-font-mono:     'IBM Plex Mono', 'Courier New', monospace;
+  --do-radius:        0;
+}
+
 body {
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background-color: var(--do-bg);
+  color: var(--do-text);
+  font-family: var(--do-font-body);
+}
+
+/* ── Broadsheet paper texture ── */
+[data-theme="broadsheet"] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }

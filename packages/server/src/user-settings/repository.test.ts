@@ -37,6 +37,7 @@ describe('user-settings repository', () => {
         userId: TEST_USER_ID,
         emailDailyOrbit: false,
         wideView: false,
+        theme: 'modern',
       });
     });
 
@@ -67,6 +68,18 @@ describe('user-settings repository', () => {
       });
       expect(updated.wideView).toEqual(true);
       expect(updated.emailDailyOrbit).toEqual(true);
+    });
+
+    it('patches theme from default to broadsheet and reads it back', async () => {
+      await getOrCreateSettings(conn, TEST_USER_ID);
+
+      const updated = await updateSettings(conn, TEST_USER_ID, {
+        theme: 'broadsheet',
+      });
+      expect(updated.theme).toEqual('broadsheet');
+
+      const readBack = await getSettingsByUserId(conn, TEST_USER_ID);
+      expect(readBack?.theme).toEqual('broadsheet');
     });
   });
 });
