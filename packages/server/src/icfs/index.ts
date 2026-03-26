@@ -1,7 +1,12 @@
 export { searchFilings, getFilingDetail } from './client.ts';
 export type { SearchOptions } from './client.ts';
 
-export { buildDiscoveryQueries, discoverNewFilings } from './discovery.ts';
+export {
+  buildDiscoveryQueries,
+  buildDiscoveryQueriesFromMap,
+  discoverNewFilings,
+} from './discovery.ts';
+export type { SubsystemAppTypes } from './discovery.ts';
 
 export { parseSearchResponse, parseFilingDetail } from './parse.ts';
 

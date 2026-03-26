@@ -43,6 +43,27 @@ export function buildDiscoveryQueries(
   return queries;
 }
 
+/** Subsystem → app types mapping for discovery queries */
+export type SubsystemAppTypes = Record<string, string[]>;
+
+/** Build queries from a subsystem-to-app-types map over a date range */
+export function buildDiscoveryQueriesFromMap(
+  subsystemAppTypes: SubsystemAppTypes,
+  dateFrom: string,
+  dateTo: string,
+): string[] {
+  const months: string[] = generateMonthRange(dateFrom, dateTo);
+  const queries: string[] = [];
+  for (const [sub, appTypes] of Object.entries(subsystemAppTypes)) {
+    for (const app of appTypes) {
+      for (const month of months) {
+        queries.push(`${sub}-${app}-${month.replace('-', '')}`);
+      }
+    }
+  }
+  return queries;
+}
+
 /** Run all discovery queries and return deduplicated file numbers */
 export async function discoverNewFilings(
   queries: string[],

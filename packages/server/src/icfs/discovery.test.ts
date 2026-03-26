@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildDiscoveryQueries,
+  buildDiscoveryQueriesFromMap,
   discoverNewFilings,
   generateMonthRange,
 } from './discovery.ts';
@@ -57,6 +58,42 @@ describe('buildDiscoveryQueries', () => {
     );
 
     expect(queries).toEqual(['SAT-LOA-202601', 'SES-LOA-202601']);
+  });
+});
+
+describe('buildDiscoveryQueriesFromMap', () => {
+  it('generates queries for each subsystem with its own app types', () => {
+    const queries: string[] = buildDiscoveryQueriesFromMap(
+      { SAT: ['LOA'], ITC: ['214', 'RPT'] },
+      '2026-03',
+      '2026-03',
+    );
+
+    expect(queries).toEqual([
+      'SAT-LOA-202603',
+      'ITC-214-202603',
+      'ITC-RPT-202603',
+    ]);
+  });
+
+  it('generates queries across multiple months', () => {
+    const queries: string[] = buildDiscoveryQueriesFromMap(
+      { ITC: ['T/C'] },
+      '2026-02',
+      '2026-03',
+    );
+
+    expect(queries).toEqual(['ITC-T/C-202602', 'ITC-T/C-202603']);
+  });
+
+  it('returns empty array for empty map', () => {
+    expect(buildDiscoveryQueriesFromMap({}, '2026-01', '2026-03')).toEqual([]);
+  });
+
+  it('returns empty array when subsystem has no app types', () => {
+    expect(
+      buildDiscoveryQueriesFromMap({ ITC: [] }, '2026-03', '2026-03'),
+    ).toEqual([]);
   });
 });
 

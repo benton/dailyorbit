@@ -6,7 +6,11 @@ import {
 } from '../attachments/repository.ts';
 import type { FileNumber } from '../lib/file-number.ts';
 import { getFilingDetail } from './client.ts';
-import { buildDiscoveryQueries, discoverNewFilings } from './discovery.ts';
+import {
+  buildDiscoveryQueriesFromMap,
+  discoverNewFilings,
+  type SubsystemAppTypes,
+} from './discovery.ts';
 import {
   createPleadingTable,
   icfsAttachmentsToMetadata,
@@ -26,10 +30,8 @@ import type { IcfsFilingDetail, IcfsSearchResult } from './types.ts';
 
 export type IcfsIngestOptions = {
   dbInstance: DuckDBInstance;
-  /** Subsystems to discover (default: ["SAT", "SES"]) */
-  subsystems?: string[];
-  /** Application types to discover */
-  appTypes?: string[];
+  /** Per-subsystem app type overrides; merged with defaults */
+  subsystemAppTypes?: SubsystemAppTypes;
   /** Start month "YYYY-MM" */
   dateFrom: string;
   /** End month "YYYY-MM" */
@@ -56,18 +58,24 @@ export type IcfsIngestResult = {
   durationMs: number;
 };
 
-const DEFAULT_SUBSYSTEMS: string[] = ['SAT', 'SES'];
-const DEFAULT_APP_TYPES: string[] = [
-  'LOA',
-  'MOD',
-  'STA',
-  'AMD',
-  'T/C',
-  'ASG',
-  'LIC',
-  'RWL',
-  'REG',
-];
+/** Default per-subsystem app types for discovery queries */
+export const DEFAULT_SUBSYSTEM_APP_TYPES: SubsystemAppTypes = {
+  SAT: ['LOA', 'MOD', 'STA', 'AMD', 'T/C', 'ASG', 'LIC', 'RWL', 'REG'],
+  SES: ['LOA', 'MOD', 'STA', 'AMD', 'T/C', 'ASG', 'LIC', 'RWL', 'REG'],
+  ITC: [
+    '214',
+    'T/C',
+    'ASG',
+    'STA',
+    'MOD',
+    'TAO',
+    'AMD',
+    'NTC',
+    'MSC',
+    'WAV',
+    'RPT',
+  ],
+};
 
 export async function runIcfsIngest(
   options: IcfsIngestOptions,
@@ -94,16 +102,20 @@ export async function runIcfsIngest(
       fileNumbers = options.fileNumbers;
       log(`Using ${String(fileNumbers.length)} provided file number(s)`);
     } else {
-      const subsystems: string[] = options.subsystems ?? DEFAULT_SUBSYSTEMS;
-      const appTypes: string[] = options.appTypes ?? DEFAULT_APP_TYPES;
-      const queries: string[] = buildDiscoveryQueries(
-        subsystems,
-        appTypes,
+      const subsystemAppTypes: SubsystemAppTypes =
+        options.subsystemAppTypes ?? DEFAULT_SUBSYSTEM_APP_TYPES;
+
+      const queries: string[] = buildDiscoveryQueriesFromMap(
+        subsystemAppTypes,
         options.dateFrom,
         options.dateTo,
       );
+
+      const subsystemList: string = Object.entries(subsystemAppTypes)
+        .map(([sub, types]) => `${sub}(${String(types.length)})`)
+        .join(', ');
       log(
-        `Discovering filings: ${String(queries.length)} queries for ${subsystems.join(',')} × ${appTypes.join(',')}`,
+        `Discovering filings: ${String(queries.length)} queries across ${subsystemList}`,
       );
 
       const results: IcfsSearchResult[] = await discoverNewFilings(queries, {

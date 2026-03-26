@@ -34,17 +34,19 @@ There is no RSS feed, Atom feed, public notice listing, or "recently filed" endp
 
 The ServiceNow Table API (`/api/now/table/x_fmc_ibfs_base_table`) returns 401 for all unauthenticated requests, including aggregate queries (`/api/now/stats/...`). There is no way to ask "what changed since timestamp X" or "how many total filings exist."
 
-### 3.3. No Broad Search Queries
+### 3.3. Queries Require Subsystem + App Type
 
-The search engine matches query strings against file number text. Queries **must** include the subsystem and application type prefix to produce results:
+The search engine matches query strings against file number text. Queries **must** include both the subsystem and application type prefix to produce results:
 
 | Query | Results | Notes |
 |-------|---------|-------|
 | `SAT-LOA-202603` | 5 | Works — matches file number prefix |
 | `SAT-202603` | 0 | Fails — no file numbers contain this substring |
-| `202603` | 387 | Works — matches the date portion across all subsystems, but hits the 200 result cap |
+| `ITC-202603` | 0 | Fails — same reason (file numbers have app type between subsystem and date) |
+| `ITC-214-202603` | 15 | Works — matches file number prefix |
+| `202603` | 561 | Matches date portion across all subsystems, but hits the 200 result cap |
 
-The query `SUB-APPTYPE-YYYYMM` is the only reliable, partition-safe pattern.
+The query `SUB-APPTYPE-YYYYMM` is the only reliable, partition-safe pattern. This applies to all subsystems, including low-volume ones like ITC.
 
 ### 3.4. Result Cap at 200
 
@@ -72,11 +74,17 @@ Given these constraints, filing discovery uses a **month-partitioned query matri
 
 For each combination of (subsystem, application type, month), issue a search query:
 
-- **Subsystems:** SAT, SES (the two high-volume subsystems; others can be added)
-- **Application types:** LOA, MOD, STA, AMD, T/C, ASG, LIC, RWL, REG (9 types)
+Each subsystem has its own app-type list, all queried as `SUB-APPTYPE-YYYYMM`:
+
+- **SAT, SES:** LOA, MOD, STA, AMD, T/C, ASG, LIC, RWL, REG (9 types each)
+- **ITC:** 214, T/C, ASG, STA, MOD, TAO, AMD, NTC, MSC, WAV, RPT (11 types)
 - **Month window:** Current month and previous month
 
-This produces **2 × 9 × 2 = 36 queries** per discovery run. At concurrency 20 (two batches), discovery completes in approximately **4 seconds**.
+This produces **(2 × 9 × 2) + (1 × 11 × 2) = 58 queries** per discovery run. At concurrency 20, discovery completes in approximately **6 seconds**.
+
+### 4.1.1. ITC App Types
+
+ITC app types were derived from legacy IBFS data (10 types) plus `RPT`, an ICFS-era code not present in legacy data. If new ITC app types appear, they must be added to the configuration. This is a tradeoff: the ICFS search API requires the app-type prefix (see §3.3), so there is no way to discover unknown app types via broad queries.
 
 ### 4.2. Why This Partitioning
 
@@ -98,7 +106,7 @@ The pipeline operates in two modes with different cadences:
 
 **Goal:** Detect new filings as quickly as possible.
 
-1. Run the 36 discovery queries (4 seconds)
+1. Run the 58 discovery queries (~4 seconds)
 2. Compare discovered file numbers against the database
 3. If no new file numbers: **stop immediately** (~5 seconds total)
 4. If new file numbers found: fetch details for **only the new filings**, then run the downstream pipeline
@@ -109,7 +117,7 @@ This mode never re-fetches details for existing filings. Its purpose is pure cha
 
 **Goal:** Catch status updates, new attachments, and metadata changes on existing filings.
 
-1. Run the 36 discovery queries
+1. Run the 58 discovery queries
 2. Fetch details for **all discovered filings** (the full 2-month window)
 3. Upsert all records, updating any changed fields
 4. Run the complete downstream pipeline
@@ -138,7 +146,7 @@ The alert evaluator's existing deduplication logic (`getEmailedContentKeys`) ens
 
 ### 7.1. Additional Subsystems
 
-The current strategy only monitors SAT and SES. Adding subsystems (ITC, SCL, etc.) is a simple configuration change that increases the query matrix linearly.
+The current strategy monitors SAT, SES, and ITC, each with their own app-type list. Adding a new subsystem requires adding an entry to `DEFAULT_SUBSYSTEM_APP_TYPES` in `pipeline.ts` with the subsystem's known app types.
 
 ### 7.2. ICFS API Changes
 
