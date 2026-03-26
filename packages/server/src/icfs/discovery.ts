@@ -92,6 +92,7 @@ export async function discoverNewFilings(
     if (batch == null) continue;
     for (const r of batch) {
       if (r.fileNumber.startsWith('DRAFT-')) continue;
+      if (r.fileNumber.endsWith('_VERSION')) continue;
       if (!seen.has(r.fileNumber)) {
         seen.add(r.fileNumber);
         results.push(r);
