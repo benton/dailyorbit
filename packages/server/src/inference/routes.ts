@@ -10,30 +10,8 @@ import {
 } from './inference-service.ts';
 import { listInferenceLog } from './log-repository.ts';
 import { listAvailableModels } from './models.ts';
-import {
-  DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
-  DEFAULT_SUMMARIZATION_USER_PROMPT,
-  SUMMARIZATION_VARIABLES,
-} from './prompts.ts';
-import { NEWS_ARTICLE_SUMMARIZER } from './summarizers/news-article.ts';
-import { DEFAULT_REWRITE_SYSTEM_PROMPT } from '../query/rewrite.ts';
-import {
-  DEFAULT_GENERATE_SYSTEM_PROMPT,
-  DEFAULT_GENERATE_USER_PROMPT,
-} from '../query/generate.ts';
-import {
-  QUERY_REWRITE_VARIABLES,
-  QUERY_GENERATE_VARIABLES,
-} from '../query/prompts.ts';
+import { PROMPT_REGISTRY } from './prompt-registry.ts';
 import type { InferenceRequest } from './types.ts';
-import {
-  DEFAULT_DIGEST_SYSTEM_PROMPT,
-  DEFAULT_DIGEST_USER_PROMPT,
-  DEFAULT_EDITORIAL_SYSTEM_PROMPT,
-  DEFAULT_EDITORIAL_USER_PROMPT,
-  EDITORIAL_VARIABLES,
-  NEWSPAPER_COPY_VARIABLES,
-} from '../newspaper/prompts.ts';
 
 /** Build inference admin routes. Accepts optional backend override for testing. */
 export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
@@ -80,40 +58,9 @@ export function buildInferenceRoutes(mockBackend?: ConverseFunction): Hono {
     }
   });
 
-  /** GET /prompt-templates — Return prompt template metadata for the admin UI. */
+  /** GET /prompt-templates — Return prompt registry for the admin UI. */
   routes.get('/prompt-templates', (c) => {
-    return c.json({
-      newspaperCopy: {
-        defaultSystemPrompt: DEFAULT_DIGEST_SYSTEM_PROMPT,
-        defaultUserPrompt: DEFAULT_DIGEST_USER_PROMPT,
-        variables: NEWSPAPER_COPY_VARIABLES,
-      },
-      newspaperEditorial: {
-        defaultSystemPrompt: DEFAULT_EDITORIAL_SYSTEM_PROMPT,
-        defaultUserPrompt: DEFAULT_EDITORIAL_USER_PROMPT,
-        variables: EDITORIAL_VARIABLES,
-      },
-      summarization: {
-        defaultSystemPrompt: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
-        defaultUserPrompt: DEFAULT_SUMMARIZATION_USER_PROMPT,
-        variables: SUMMARIZATION_VARIABLES,
-      },
-      newsSummarization: {
-        defaultSystemPrompt: NEWS_ARTICLE_SUMMARIZER.defaultSystemPrompt,
-        defaultUserPrompt: NEWS_ARTICLE_SUMMARIZER.defaultUserPrompt,
-        variables: NEWS_ARTICLE_SUMMARIZER.variables,
-      },
-      queryRewrite: {
-        defaultSystemPrompt: DEFAULT_REWRITE_SYSTEM_PROMPT,
-        defaultUserPrompt: '',
-        variables: QUERY_REWRITE_VARIABLES,
-      },
-      queryGenerate: {
-        defaultSystemPrompt: DEFAULT_GENERATE_SYSTEM_PROMPT,
-        defaultUserPrompt: DEFAULT_GENERATE_USER_PROMPT,
-        variables: QUERY_GENERATE_VARIABLES,
-      },
-    });
+    return c.json(PROMPT_REGISTRY);
   });
 
   /** GET /costs — Paginated inference log with computed costs. */

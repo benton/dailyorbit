@@ -246,6 +246,211 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'User prompt for editorial generation (blank = built-in default)',
   },
+  newspaperForecastSystemPrompt: {
+    key: 'newspaperForecastSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Orbital Forecast column (blank = built-in default)',
+  },
+  newspaperForecastUserPrompt: {
+    key: 'newspaperForecastUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Orbital Forecast column (blank = built-in default)',
+  },
+  newspaperSpotlightSystemPrompt: {
+    key: 'newspaperSpotlightSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Company Spotlight column (blank = built-in default)',
+  },
+  newspaperSpotlightUserPrompt: {
+    key: 'newspaperSpotlightUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Company Spotlight column (blank = built-in default)',
+  },
+  newspaperClassifiedsSystemPrompt: {
+    key: 'newspaperClassifiedsSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'System prompt for Classifieds (blank = built-in default)',
+  },
+  newspaperClassifiedsUserPrompt: {
+    key: 'newspaperClassifiedsUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'User prompt for Classifieds (blank = built-in default)',
+  },
+  newspaperAdSystemPrompt: {
+    key: 'newspaperAdSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'System prompt for Fake Ad (blank = built-in default)',
+  },
+  newspaperAdUserPrompt: {
+    key: 'newspaperAdUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'User prompt for Fake Ad (blank = built-in default)',
+  },
+  newspaperDocketSystemPrompt: {
+    key: 'newspaperDocketSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for The Docket column (blank = built-in default)',
+  },
+  newspaperDocketUserPrompt: {
+    key: 'newspaperDocketUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description: 'User prompt for The Docket column (blank = built-in default)',
+  },
+  newspaperSpectrumWatchSystemPrompt: {
+    key: 'newspaperSpectrumWatchSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Spectrum Watch column (blank = built-in default)',
+  },
+  newspaperSpectrumWatchUserPrompt: {
+    key: 'newspaperSpectrumWatchUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Spectrum Watch column (blank = built-in default)',
+  },
+  newspaperCompetitiveIntelSystemPrompt: {
+    key: 'newspaperCompetitiveIntelSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Competitive Intelligence column (blank = built-in default)',
+  },
+  newspaperCompetitiveIntelUserPrompt: {
+    key: 'newspaperCompetitiveIntelUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Competitive Intelligence column (blank = built-in default)',
+  },
+  newspaperFilingInFocusSystemPrompt: {
+    key: 'newspaperFilingInFocusSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Filing in Focus column (blank = built-in default)',
+  },
+  newspaperFilingInFocusUserPrompt: {
+    key: 'newspaperFilingInFocusUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Filing in Focus column (blank = built-in default)',
+  },
+  newspaperApplicantSystemPrompt: {
+    key: 'newspaperApplicantSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for The Applicant column (blank = built-in default)',
+  },
+  newspaperApplicantUserPrompt: {
+    key: 'newspaperApplicantUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for The Applicant column (blank = built-in default)',
+  },
+  newspaperTechSpotlightSystemPrompt: {
+    key: 'newspaperTechSpotlightSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Technology Spotlight column (blank = built-in default)',
+  },
+  newspaperTechSpotlightUserPrompt: {
+    key: 'newspaperTechSpotlightUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Technology Spotlight column (blank = built-in default)',
+  },
+  newspaperArchivesSystemPrompt: {
+    key: 'newspaperArchivesSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for From the Archives column (blank = built-in default)',
+  },
+  newspaperArchivesUserPrompt: {
+    key: 'newspaperArchivesUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for From the Archives column (blank = built-in default)',
+  },
+  newspaperCounselsBriefSystemPrompt: {
+    key: 'newspaperCounselsBriefSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      "System prompt for Counsel's Brief column (blank = built-in default)",
+  },
+  newspaperCounselsBriefUserPrompt: {
+    key: 'newspaperCounselsBriefUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      "User prompt for Counsel's Brief column (blank = built-in default)",
+  },
+  newspaperLettersSystemPrompt: {
+    key: 'newspaperLettersSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Letters to the Editor column (blank = built-in default)',
+  },
+  newspaperLettersUserPrompt: {
+    key: 'newspaperLettersUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Letters to the Editor column (blank = built-in default)',
+  },
+  newspaperMarketSignalsSystemPrompt: {
+    key: 'newspaperMarketSignalsSystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Market Signals column (blank = built-in default)',
+  },
+  newspaperMarketSignalsUserPrompt: {
+    key: 'newspaperMarketSignalsUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Market Signals column (blank = built-in default)',
+  },
+  newspaperPressGallerySystemPrompt: {
+    key: 'newspaperPressGallerySystemPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'System prompt for Press Gallery column (blank = built-in default)',
+  },
+  newspaperPressGalleryUserPrompt: {
+    key: 'newspaperPressGalleryUserPrompt',
+    defaultValue: '',
+    encrypted: false,
+    description:
+      'User prompt for Press Gallery column (blank = built-in default)',
+  },
   newspaperImagesBucket: {
     key: 'newspaperImagesBucket',
     defaultValue: '',

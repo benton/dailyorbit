@@ -85,8 +85,7 @@ export function formatFilingsBySubsystem(rows: SubsystemCount[]): string {
   if (rows.length === 0) return '_No filing data available._';
   return rows
     .map(
-      (r: SubsystemCount) =>
-        `- ${r.subsystemCode}: ${String(r.count)} filings`,
+      (r: SubsystemCount) => `- ${r.subsystemCode}: ${String(r.count)} filings`,
     )
     .join('\n');
 }
@@ -109,7 +108,7 @@ export async function generateTheDocket(
   const { conn, editionDate, inferenceService, config, log } = opts;
 
   // 1. Query data
-  log('info', 'Querying yesterday\'s filing activity for The Docket...');
+  log('info', "Querying yesterday's filing activity for The Docket...");
   const filingsBySubsystem: SubsystemCount[] =
     await queryYesterdayFilingsBySubsystem(conn, editionDate);
   const topApplicants: TopApplicant[] = await queryYesterdayTopApplicants(
@@ -147,8 +146,7 @@ export async function generateTheDocket(
 
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
-  const headline: string =
-    lines[0]?.replace(/^#+\s*/, '') ?? 'The Docket';
+  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? 'The Docket';
   const body: string = response.content;
 
   return {
@@ -158,9 +156,7 @@ export async function generateTheDocket(
       filingsBySubsystem: filingsBySubsystem.map(
         (r: SubsystemCount) => `${r.subsystemCode}: ${String(r.count)}`,
       ),
-      topApplicants: topApplicants.map(
-        (r: TopApplicant) => r.companyName,
-      ),
+      topApplicants: topApplicants.map((r: TopApplicant) => r.companyName),
       modelId,
     },
   };

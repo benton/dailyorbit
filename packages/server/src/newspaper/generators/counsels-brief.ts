@@ -20,7 +20,7 @@ export async function generateCounselsBrief(
   const { conn, editionDate, inferenceService, config, log } = opts;
 
   // 1. Query recent filings and news (reuse editorial queries)
-  log('info', 'Querying weekly filings and news for counsel\'s brief...');
+  log('info', "Querying weekly filings and news for counsel's brief...");
   const filings = await queryWeeklyFilings(conn, editionDate);
   const news = await queryWeeklyNews(conn, editionDate);
   log(
@@ -54,7 +54,7 @@ export async function generateCounselsBrief(
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
   const headline: string =
-    lines[0]?.replace(/^#+\s*/, '') ?? 'The Counsel\'s Brief';
+    lines[0]?.replace(/^#+\s*/, '') ?? "The Counsel's Brief";
   const body: string = response.content;
 
   return {

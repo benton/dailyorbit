@@ -310,13 +310,13 @@ export const DOCKET_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
   {
     name: 'filingsBySubsystem',
-    description: 'Yesterday\'s filings grouped by subsystem code',
+    description: "Yesterday's filings grouped by subsystem code",
     source: 'db query',
     example: 'SAT: 8 filings\nSES: 12 filings',
   },
   {
     name: 'topApplicants',
-    description: 'Top applicants from yesterday\'s filings',
+    description: "Top applicants from yesterday's filings",
     source: 'db query',
     example: '- SpaceX: 3 filings\n- Hughes: 2 filings',
   },
@@ -345,7 +345,7 @@ export const SPECTRUM_WATCH_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
   {
     name: 'subsystemBreakdown',
-    description: 'This week\'s filing subsystem breakdown with counts',
+    description: "This week's filing subsystem breakdown with counts",
     source: 'db query',
     example: 'SAT: 15 (avg 10.2, +47%)\nSES: 22 (avg 18.5, +19%)',
   },
@@ -373,7 +373,8 @@ export const COMPETITIVE_INTEL_VARIABLES: ReadonlyArray<TemplateVariable> = [
     name: 'companyOverlaps',
     description: 'Companies filing in overlapping areas this week',
     source: 'db query',
-    example: '- SpaceX and OneWeb both active in SAT-STA\n- Viasat and Hughes in SES-MOD',
+    example:
+      '- SpaceX and OneWeb both active in SAT-STA\n- Viasat and Hughes in SES-MOD',
   },
 ];
 
@@ -397,7 +398,7 @@ export const FILING_IN_FOCUS_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
   {
     name: 'fileNumber',
-    description: 'The filing\'s file number',
+    description: "The filing's file number",
     source: 'db query',
     example: 'SAT-LOA-20260324-00042',
   },
@@ -415,7 +416,7 @@ export const FILING_IN_FOCUS_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
   {
     name: 'filingSummary',
-    description: 'Summary of the filing\'s attachments',
+    description: "Summary of the filing's attachments",
     source: 'db query',
     example: 'Application to launch and operate a non-geostationary...',
   },
@@ -601,15 +602,15 @@ export const LETTERS_VARIABLES: ReadonlyArray<TemplateVariable> = [
   },
   {
     name: 'previousDigest',
-    description: 'Previous edition\'s daily digest content',
+    description: "Previous edition's daily digest content",
     source: 'db query',
-    example: 'Yesterday\'s 300 Miles Up column discussed...',
+    example: "Yesterday's 300 Miles Up column discussed...",
   },
   {
     name: 'previousEditorial',
-    description: 'Previous edition\'s editorial/slot C content',
+    description: "Previous edition's editorial/slot C content",
     source: 'db query',
-    example: 'The Counsel\'s Brief analyzed...',
+    example: "The Counsel's Brief analyzed...",
   },
 ];
 
@@ -686,7 +687,8 @@ export const PRESS_GALLERY_VARIABLES: ReadonlyArray<TemplateVariable> = [
     name: 'weeklyNews',
     description: 'All news items from the current week',
     source: 'db query',
-    example: '- SpaceNews: Viasat announces...\n- Via Satellite: OneWeb launches...',
+    example:
+      '- SpaceNews: Viasat announces...\n- Via Satellite: OneWeb launches...',
   },
 ];
 

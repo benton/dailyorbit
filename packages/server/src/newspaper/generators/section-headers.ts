@@ -89,8 +89,7 @@ export const SECTION_HEADERS: ReadonlyArray<SectionHeaderEntry> = [
   },
   {
     name: 'spectrum-watch',
-    prompt:
-      'central vignette of radio spectrum waves across frequency bands',
+    prompt: 'central vignette of radio spectrum waves across frequency bands',
   },
   {
     name: 'competitive-intel',
@@ -98,8 +97,7 @@ export const SECTION_HEADERS: ReadonlyArray<SectionHeaderEntry> = [
   },
   {
     name: 'filing-in-focus',
-    prompt:
-      'central vignette of a magnifying glass over a document',
+    prompt: 'central vignette of a magnifying glass over a document',
   },
   {
     name: 'the-applicant',
@@ -111,12 +109,11 @@ export const SECTION_HEADERS: ReadonlyArray<SectionHeaderEntry> = [
   },
   {
     name: 'counsels-brief',
-    prompt: 'central vignette of a judge\'s gavel with legal scales',
+    prompt: "central vignette of a judge's gavel with legal scales",
   },
   {
     name: 'press-gallery',
-    prompt:
-      'central vignette of a press gallery with notebooks and pencils',
+    prompt: 'central vignette of a press gallery with notebooks and pencils',
   },
 ];
 

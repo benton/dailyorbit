@@ -102,7 +102,7 @@ export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
 
 /** Maps content type to byline/tagline */
 export const TAGLINE_MAP: Partial<Record<NewspaperContentType, string>> = {
-  competitive_intel: 'Who\'s Filing Where',
+  competitive_intel: "Who's Filing Where",
   counsels_brief: 'Regulatory Analysis',
   editorial: 'By the Editors',
   filing_in_focus: 'A Closer Look',

@@ -57,8 +57,8 @@ function findForDay(
   schedule: ReadonlyArray<SlotSchedule>,
   day: DayOfWeek,
 ): NewspaperContentType | null {
-  const entry: SlotSchedule | undefined = schedule.find(
-    (s: SlotSchedule) => s.days.includes(day),
+  const entry: SlotSchedule | undefined = schedule.find((s: SlotSchedule) =>
+    s.days.includes(day),
   );
   return entry?.contentType ?? null;
 }

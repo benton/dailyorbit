@@ -15,11 +15,41 @@ describe('getContentTypesForDay', () => {
     slotB: string | null;
     slotC: string | null;
   }> = [
-    { day: 1, label: 'Monday', slotA: 'orbital_forecast', slotB: 'company_spotlight', slotC: 'editorial' },
-    { day: 2, label: 'Tuesday', slotA: 'the_docket', slotB: 'filing_in_focus', slotC: 'counsels_brief' },
-    { day: 3, label: 'Wednesday', slotA: 'spectrum_watch', slotB: 'the_applicant', slotC: 'letters_to_editor' },
-    { day: 4, label: 'Thursday', slotA: 'competitive_intel', slotB: 'tech_spotlight', slotC: 'market_signals' },
-    { day: 5, label: 'Friday', slotA: 'the_docket', slotB: 'from_the_archives', slotC: 'press_gallery' },
+    {
+      day: 1,
+      label: 'Monday',
+      slotA: 'orbital_forecast',
+      slotB: 'company_spotlight',
+      slotC: 'editorial',
+    },
+    {
+      day: 2,
+      label: 'Tuesday',
+      slotA: 'the_docket',
+      slotB: 'filing_in_focus',
+      slotC: 'counsels_brief',
+    },
+    {
+      day: 3,
+      label: 'Wednesday',
+      slotA: 'spectrum_watch',
+      slotB: 'the_applicant',
+      slotC: 'letters_to_editor',
+    },
+    {
+      day: 4,
+      label: 'Thursday',
+      slotA: 'competitive_intel',
+      slotB: 'tech_spotlight',
+      slotC: 'market_signals',
+    },
+    {
+      day: 5,
+      label: 'Friday',
+      slotA: 'the_docket',
+      slotB: 'from_the_archives',
+      slotC: 'press_gallery',
+    },
   ];
 
   test.each(EXPECTED_GRID)(

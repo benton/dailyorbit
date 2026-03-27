@@ -63,7 +63,10 @@ export default function PortraitLibrary() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/maintain/newspaper">
+        <Link
+          className="text-sm text-on-surface-muted hover:text-on-surface"
+          to="/admin/maintain/newspaper"
+        >
           &larr; Editions
         </Link>
       </div>

@@ -23,15 +23,26 @@ import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
 // ── Slot content type groups ────────────────────────────────────
 
 const SLOT_A_TYPES: ReadonlyArray<NewspaperContentType> = [
-  'orbital_forecast', 'the_docket', 'spectrum_watch', 'competitive_intel',
+  'orbital_forecast',
+  'the_docket',
+  'spectrum_watch',
+  'competitive_intel',
 ];
 
 const SLOT_B_TYPES: ReadonlyArray<NewspaperContentType> = [
-  'company_spotlight', 'filing_in_focus', 'the_applicant', 'tech_spotlight', 'from_the_archives',
+  'company_spotlight',
+  'filing_in_focus',
+  'the_applicant',
+  'tech_spotlight',
+  'from_the_archives',
 ];
 
 const SLOT_C_TYPES: ReadonlyArray<NewspaperContentType> = [
-  'editorial', 'counsels_brief', 'letters_to_editor', 'market_signals', 'press_gallery',
+  'editorial',
+  'counsels_brief',
+  'letters_to_editor',
+  'market_signals',
+  'press_gallery',
 ];
 
 function findArticle(
@@ -128,11 +139,7 @@ export default function NewspaperView() {
           ) : (
             <div className="grid-lead" />
           )}
-          {slotAArticle ? (
-            <SlotA article={slotAArticle} />
-          ) : (
-            <div className="grid-orbital" />
-          )}
+          {slotAArticle ? <SlotA article={slotAArticle} /> : <div className="grid-orbital" />}
 
           {/* Row 2 — Yesterday's Filings */}
           {recentFilings && recentFilings.filings.length > 0 && (

@@ -99,21 +99,21 @@ export async function generateFilingInFocus(
 
   // 1. Select a focus filing
   log('info', 'Selecting focus filing for Filing in Focus...');
-  const filing: FocusFiling | null = await selectFocusFiling(
-    conn,
-    editionDate,
-  );
+  const filing: FocusFiling | null = await selectFocusFiling(conn, editionDate);
 
   if (!filing) {
     log('info', 'No suitable filing found for Filing in Focus');
     return {
       headline: 'Filing in Focus',
-      body: '_No suitable filing for today\'s focus._',
+      body: "_No suitable filing for today's focus._",
       sourceData: { noData: true },
     };
   }
 
-  log('info', `Selected filing ${filing.fileNumber} from ${filing.companyName}`);
+  log(
+    'info',
+    `Selected filing ${filing.fileNumber} from ${filing.companyName}`,
+  );
 
   // 2. Build prompt
   const modelId: string = config.get('newspaperCopyModel') as string;
@@ -130,7 +130,8 @@ export async function generateFilingInFocus(
     applicantName: filing.applicantName,
     filingType: formatFilingType(filing),
     filingSummary: filing.summary,
-    companyDescription: filing.companyDescription || 'No description available.',
+    companyDescription:
+      filing.companyDescription || 'No description available.',
   });
 
   // 3. Call inference
@@ -143,8 +144,7 @@ export async function generateFilingInFocus(
 
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
-  const headline: string =
-    lines[0]?.replace(/^#+\s*/, '') ?? 'Filing in Focus';
+  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? 'Filing in Focus';
   const body: string = response.content;
 
   return {

@@ -77,7 +77,10 @@ export async function generateMarketSignals(
   const { conn, editionDate, inferenceService, config, log } = opts;
 
   // 1. Query ownership events, filings, and news
-  log('info', 'Querying ownership events, filings, and news for market signals...');
+  log(
+    'info',
+    'Querying ownership events, filings, and news for market signals...',
+  );
   const ownershipEvents: OwnershipEvent[] = await queryRecentOwnershipEvents(
     conn,
     editionDate,
@@ -114,8 +117,7 @@ export async function generateMarketSignals(
 
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
-  const headline: string =
-    lines[0]?.replace(/^#+\s*/, '') ?? 'Market Signals';
+  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? 'Market Signals';
   const body: string = response.content;
 
   return {

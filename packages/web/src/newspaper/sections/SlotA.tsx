@@ -1,6 +1,6 @@
 import type { Article, NewspaperContentType } from '../types.ts';
-import { DISPLAY_NAME_MAP, TAGLINE_MAP } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
+import { DISPLAY_NAME_MAP, TAGLINE_MAP } from '../types.ts';
 
 type SlotAProps = {
   article: Article;

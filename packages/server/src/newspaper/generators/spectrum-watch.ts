@@ -134,8 +134,7 @@ export async function generateSpectrumWatch(
 
   // 4. Parse response
   const lines: string[] = response.content.split('\n');
-  const headline: string =
-    lines[0]?.replace(/^#+\s*/, '') ?? 'Spectrum Watch';
+  const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? 'Spectrum Watch';
   const body: string = response.content;
 
   return {

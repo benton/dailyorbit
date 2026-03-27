@@ -1,8 +1,16 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 import type { ConfigService } from '../lib/config-service.ts';
 import type { InferenceService } from '../inference/inference-service.ts';
-import type { GenerateOptions, GeneratorResult, NewspaperContentType } from './types.ts';
-import { getContentTypesForDay, type DayOfWeek, type DaySlots } from './rotation.ts';
+import type {
+  GenerateOptions,
+  GeneratorResult,
+  NewspaperContentType,
+} from './types.ts';
+import {
+  getContentTypesForDay,
+  type DayOfWeek,
+  type DaySlots,
+} from './rotation.ts';
 
 // ── Slug + display order registry ───────────────────────────────
 
@@ -58,7 +66,9 @@ type GeneratorFn = (opts: GenerateOptions) => Promise<GeneratorResult>;
  * Lazily imports and returns the generator function for a content type.
  * Uses dynamic imports to avoid loading all generators upfront.
  */
-async function loadGenerator(contentType: NewspaperContentType): Promise<GeneratorFn> {
+async function loadGenerator(
+  contentType: NewspaperContentType,
+): Promise<GeneratorFn> {
   switch (contentType) {
     case 'orbital_forecast': {
       const m = await import('./generators/orbital-forecast.ts');
@@ -174,7 +184,9 @@ export async function dispatchSlot(
   config: ConfigService,
   log: (level: 'info' | 'error', message: string) => void,
 ): Promise<DispatchResult> {
-  const dayOfWeek: DayOfWeek = new Date(editionDate + 'T12:00:00Z').getUTCDay() as DayOfWeek;
+  const dayOfWeek: DayOfWeek = new Date(
+    editionDate + 'T12:00:00Z',
+  ).getUTCDay() as DayOfWeek;
   const slots: DaySlots = getContentTypesForDay(dayOfWeek);
   const contentType: NewspaperContentType | null = slots[slotName];
 

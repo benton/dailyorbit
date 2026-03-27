@@ -1,7 +1,7 @@
 import Markdown from 'react-markdown';
 import type { Article, NewspaperContentType } from '../types.ts';
-import { DISPLAY_NAME_MAP, TAGLINE_MAP } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
+import { DISPLAY_NAME_MAP, TAGLINE_MAP } from '../types.ts';
 
 type SlotCProps = {
   article: Article;
@@ -21,9 +21,7 @@ export default function SlotC({ article, classifieds }: SlotCProps) {
 
       {classifieds && (
         <>
-          <h3 className="article-headline-small">
-            {classifieds.headline ?? 'The Classifieds'}
-          </h3>
+          <h3 className="article-headline-small">{classifieds.headline ?? 'The Classifieds'}</h3>
           <div className="classifieds-body article-body">
             <Markdown>{classifieds.body}</Markdown>
           </div>

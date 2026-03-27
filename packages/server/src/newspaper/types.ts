@@ -112,7 +112,6 @@ export function getISOWeekNumber(date: Date): number {
   return weekNumber;
 }
 
-
 export type HouseAd = {
   id: number;
   tagline: string;

@@ -1,9 +1,9 @@
 import { AnchorHTMLAttributes, lazy, Suspense } from 'react';
 import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
+import { Navigate } from 'react-router';
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
 import Dashboard from './admin/Dashboard.tsx';
-import { Navigate } from 'react-router';
 import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
 import FilingDetail from './filings/FilingDetail.tsx';
 import { SettingsProvider } from './lib/settings-context.tsx';
@@ -189,9 +189,7 @@ export default function App() {
               <Route element={<ConfigEditor />} path="config" />
               <Route
                 element={
-                  <Suspense
-                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                  >
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
                     <AiSettings />
                   </Suspense>
                 }
@@ -199,9 +197,7 @@ export default function App() {
               />
               <Route
                 element={
-                  <Suspense
-                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                  >
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
                     <NewsSourcesAdmin />
                   </Suspense>
                 }
@@ -209,9 +205,7 @@ export default function App() {
               />
               <Route
                 element={
-                  <Suspense
-                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                  >
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
                     <ConsultantAdmin />
                   </Suspense>
                 }
@@ -304,15 +298,30 @@ export default function App() {
               <Route element={<Navigate replace to="/admin/config" />} path="settings" />
               <Route element={<Navigate replace to="/admin/config/ai" />} path="settings/ai" />
               <Route element={<Navigate replace to="/admin/config/news" />} path="settings/news" />
-              <Route element={<Navigate replace to="/admin/config/consultants" />} path="settings/consultants" />
-              <Route element={<Navigate replace to="/admin/maintain/companies" />} path="companies" />
+              <Route
+                element={<Navigate replace to="/admin/config/consultants" />}
+                path="settings/consultants"
+              />
+              <Route
+                element={<Navigate replace to="/admin/maintain/companies" />}
+                path="companies"
+              />
               <Route element={<Navigate replace to="/admin/maintain/users" />} path="users" />
               <Route element={<Navigate replace to="/admin/info/costs" />} path="costs" />
               <Route element={<Navigate replace to="/admin/maintain/pipeline" />} path="pipeline" />
-              <Route element={<Navigate replace to="/admin/maintain/pipeline" />} path="pipeline/history" />
-              <Route element={<Navigate replace to="/admin/maintain/hidden-items" />} path="hidden-items" />
+              <Route
+                element={<Navigate replace to="/admin/maintain/pipeline" />}
+                path="pipeline/history"
+              />
+              <Route
+                element={<Navigate replace to="/admin/maintain/hidden-items" />}
+                path="hidden-items"
+              />
               <Route element={<Navigate replace to="/admin/maintain/backups" />} path="backups" />
-              <Route element={<Navigate replace to="/admin/maintain/newspaper" />} path="newspaper" />
+              <Route
+                element={<Navigate replace to="/admin/maintain/newspaper" />}
+                path="newspaper"
+              />
               <Route element={<Navigate replace to="/admin/info/logs" />} path="logs" />
             </Route>
           </Routes>

@@ -269,11 +269,7 @@ export default function NewsSourcesAdmin() {
                         >
                           {saving ? 'Saving...' : 'Save'}
                         </Button>
-                        <Button
-                          onClick={() => setEditId(null)}
-                          size="sm"
-                          variant="ghost"
-                        >
+                        <Button onClick={() => setEditId(null)} size="sm" variant="ghost">
                           Cancel
                         </Button>
                       </div>
@@ -337,11 +333,7 @@ export default function NewsSourcesAdmin() {
                         >
                           {fetchingId === source.id ? 'Fetching...' : 'Fetch now'}
                         </Button>
-                        <Button
-                          onClick={() => startEdit(source)}
-                          size="sm"
-                          variant="ghost"
-                        >
+                        <Button onClick={() => startEdit(source)} size="sm" variant="ghost">
                           Edit
                         </Button>
                         <Button

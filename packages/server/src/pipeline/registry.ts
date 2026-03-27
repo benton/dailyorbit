@@ -1291,10 +1291,8 @@ const STAGES: PipelineStage[] = [
       async run(ctx: PipelineContext): Promise<StageResult> {
         const { ensureNewspaperTables } =
           await import('../newspaper/schema.ts');
-        const { ensureCompanyTables } =
-          await import('../companies/schema.ts');
-        const { getEditionByDate } =
-          await import('../newspaper/repository.ts');
+        const { ensureCompanyTables } = await import('../companies/schema.ts');
+        const { getEditionByDate } = await import('../newspaper/repository.ts');
         const { dispatchSlot } =
           await import('../newspaper/slot-dispatcher.ts');
         const { getConfigService } = await import('../lib/config.ts');

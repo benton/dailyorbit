@@ -126,7 +126,10 @@ export async function generateTechSpotlight(
     newsItems = await queryGeneralNews(conn, editionDate);
   }
 
-  log('info', `Found ${String(newsItems.length)} news items for tech spotlight`);
+  log(
+    'info',
+    `Found ${String(newsItems.length)} news items for tech spotlight`,
+  );
 
   // 3. Build prompt
   const modelId: string = config.get('newspaperCopyModel') as string;

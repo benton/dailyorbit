@@ -108,7 +108,10 @@ export default function EditionDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/maintain/newspaper">
+        <Link
+          className="text-sm text-on-surface-muted hover:text-on-surface"
+          to="/admin/maintain/newspaper"
+        >
           &larr; All Editions
         </Link>
         {edition.articles.some((a) => a.status === 'generated') && (

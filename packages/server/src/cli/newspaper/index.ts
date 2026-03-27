@@ -115,8 +115,13 @@ function makeTextDef(
 
 const CONTENT_TYPES: Record<string, ContentTypeDef> = {
   // ── Daily types ────────────────────────────────────────────
-  daily_digest: makeTextDef('daily_digest', 'three-miles-up', 1,
-    '../../newspaper/generators/daily-digest.ts', 'generateDailyDigest'),
+  daily_digest: makeTextDef(
+    'daily_digest',
+    'three-miles-up',
+    1,
+    '../../newspaper/generators/daily-digest.ts',
+    'generateDailyDigest',
+  ),
   hero_image: {
     contentType: 'hero_image',
     slug: 'hero-image',
@@ -136,8 +141,13 @@ const CONTENT_TYPES: Record<string, ContentTypeDef> = {
       });
     },
   },
-  fake_ad: makeTextDef('fake_ad', 'fake-ad', 90,
-    '../../newspaper/generators/fake-ad.ts', 'generateFakeAd'),
+  fake_ad: makeTextDef(
+    'fake_ad',
+    'fake-ad',
+    90,
+    '../../newspaper/generators/fake-ad.ts',
+    'generateFakeAd',
+  ),
   editorial_cartoon: {
     contentType: 'editorial_cartoon',
     slug: 'editorial-cartoon',
@@ -157,47 +167,126 @@ const CONTENT_TYPES: Record<string, ContentTypeDef> = {
       });
     },
   },
-  classifieds: makeTextDef('classifieds', 'classifieds', 80,
-    '../../newspaper/generators/classifieds.ts', 'generateClassifieds'),
+  classifieds: makeTextDef(
+    'classifieds',
+    'classifieds',
+    80,
+    '../../newspaper/generators/classifieds.ts',
+    'generateClassifieds',
+  ),
 
   // ── Slot A types ───────────────────────────────────────────
-  orbital_forecast: makeTextDef('orbital_forecast', 'orbital-forecast', 30,
-    '../../newspaper/generators/orbital-forecast.ts', 'generateOrbitalForecast'),
-  the_docket: makeTextDef('the_docket', 'the-docket', 30,
-    '../../newspaper/generators/the-docket.ts', 'generateTheDocket'),
-  spectrum_watch: makeTextDef('spectrum_watch', 'spectrum-watch', 30,
-    '../../newspaper/generators/spectrum-watch.ts', 'generateSpectrumWatch'),
-  competitive_intel: makeTextDef('competitive_intel', 'competitive-intel', 30,
-    '../../newspaper/generators/competitive-intel.ts', 'generateCompetitiveIntel'),
+  orbital_forecast: makeTextDef(
+    'orbital_forecast',
+    'orbital-forecast',
+    30,
+    '../../newspaper/generators/orbital-forecast.ts',
+    'generateOrbitalForecast',
+  ),
+  the_docket: makeTextDef(
+    'the_docket',
+    'the-docket',
+    30,
+    '../../newspaper/generators/the-docket.ts',
+    'generateTheDocket',
+  ),
+  spectrum_watch: makeTextDef(
+    'spectrum_watch',
+    'spectrum-watch',
+    30,
+    '../../newspaper/generators/spectrum-watch.ts',
+    'generateSpectrumWatch',
+  ),
+  competitive_intel: makeTextDef(
+    'competitive_intel',
+    'competitive-intel',
+    30,
+    '../../newspaper/generators/competitive-intel.ts',
+    'generateCompetitiveIntel',
+  ),
 
   // ── Slot B types ───────────────────────────────────────────
-  company_spotlight: makeTextDef('company_spotlight', 'company-spotlight', 20,
-    '../../newspaper/generators/company-spotlight.ts', 'generateCompanySpotlight'),
-  filing_in_focus: makeTextDef('filing_in_focus', 'filing-in-focus', 20,
-    '../../newspaper/generators/filing-in-focus.ts', 'generateFilingInFocus'),
-  the_applicant: makeTextDef('the_applicant', 'the-applicant', 20,
-    '../../newspaper/generators/the-applicant.ts', 'generateTheApplicant'),
-  tech_spotlight: makeTextDef('tech_spotlight', 'tech-spotlight', 20,
-    '../../newspaper/generators/tech-spotlight.ts', 'generateTechSpotlight'),
-  from_the_archives: makeTextDef('from_the_archives', 'from-the-archives', 20,
-    '../../newspaper/generators/from-the-archives.ts', 'generateFromTheArchives'),
+  company_spotlight: makeTextDef(
+    'company_spotlight',
+    'company-spotlight',
+    20,
+    '../../newspaper/generators/company-spotlight.ts',
+    'generateCompanySpotlight',
+  ),
+  filing_in_focus: makeTextDef(
+    'filing_in_focus',
+    'filing-in-focus',
+    20,
+    '../../newspaper/generators/filing-in-focus.ts',
+    'generateFilingInFocus',
+  ),
+  the_applicant: makeTextDef(
+    'the_applicant',
+    'the-applicant',
+    20,
+    '../../newspaper/generators/the-applicant.ts',
+    'generateTheApplicant',
+  ),
+  tech_spotlight: makeTextDef(
+    'tech_spotlight',
+    'tech-spotlight',
+    20,
+    '../../newspaper/generators/tech-spotlight.ts',
+    'generateTechSpotlight',
+  ),
+  from_the_archives: makeTextDef(
+    'from_the_archives',
+    'from-the-archives',
+    20,
+    '../../newspaper/generators/from-the-archives.ts',
+    'generateFromTheArchives',
+  ),
 
   // ── Slot C types ───────────────────────────────────────────
-  editorial: makeTextDef('editorial', 'over-the-horizon', 10,
-    '../../newspaper/generators/editorial.ts', 'generateEditorial'),
-  counsels_brief: makeTextDef('counsels_brief', 'counsels-brief', 10,
-    '../../newspaper/generators/counsels-brief.ts', 'generateCounselsBrief'),
-  letters_to_editor: makeTextDef('letters_to_editor', 'letters-to-the-editor', 10,
-    '../../newspaper/generators/letters-to-editor.ts', 'generateLettersToEditor'),
-  market_signals: makeTextDef('market_signals', 'market-signals', 10,
-    '../../newspaper/generators/market-signals.ts', 'generateMarketSignals'),
-  press_gallery: makeTextDef('press_gallery', 'press-gallery', 10,
-    '../../newspaper/generators/press-gallery.ts', 'generatePressGallery'),
+  editorial: makeTextDef(
+    'editorial',
+    'over-the-horizon',
+    10,
+    '../../newspaper/generators/editorial.ts',
+    'generateEditorial',
+  ),
+  counsels_brief: makeTextDef(
+    'counsels_brief',
+    'counsels-brief',
+    10,
+    '../../newspaper/generators/counsels-brief.ts',
+    'generateCounselsBrief',
+  ),
+  letters_to_editor: makeTextDef(
+    'letters_to_editor',
+    'letters-to-the-editor',
+    10,
+    '../../newspaper/generators/letters-to-editor.ts',
+    'generateLettersToEditor',
+  ),
+  market_signals: makeTextDef(
+    'market_signals',
+    'market-signals',
+    10,
+    '../../newspaper/generators/market-signals.ts',
+    'generateMarketSignals',
+  ),
+  press_gallery: makeTextDef(
+    'press_gallery',
+    'press-gallery',
+    10,
+    '../../newspaper/generators/press-gallery.ts',
+    'generatePressGallery',
+  ),
 };
 
 // Daily types always generated
 const DAILY_TYPES: string[] = [
-  'daily_digest', 'hero_image', 'fake_ad', 'editorial_cartoon', 'classifieds',
+  'daily_digest',
+  'hero_image',
+  'fake_ad',
+  'editorial_cartoon',
+  'classifieds',
 ];
 /**
  * Determine which rotation types to generate for a given date.
@@ -207,8 +296,7 @@ async function getRotationTypesForDate(editionDate: string): Promise<string[]> {
   const dayOfWeek: number = new Date(editionDate + 'T12:00:00Z').getUTCDay();
   if (dayOfWeek === 0 || dayOfWeek === 6) return [];
 
-  const { getContentTypesForDay } =
-    await import('../../newspaper/rotation.ts');
+  const { getContentTypesForDay } = await import('../../newspaper/rotation.ts');
   const slots = getContentTypesForDay(dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6);
   const result: string[] = [];
   if (slots.slotA) result.push(slots.slotA);

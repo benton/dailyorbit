@@ -79,7 +79,8 @@ export function formatEditionDate(isoDate: string): string {
 }
 
 export function formatHistoricalFilings(filings: HistoricalFiling[]): string {
-  if (filings.length === 0) return '_No historical filings found for this week._';
+  if (filings.length === 0)
+    return '_No historical filings found for this week._';
   return filings
     .map((f: HistoricalFiling) => {
       const company: string = f.companyName ?? f.applicantName;
@@ -102,7 +103,10 @@ export async function generateFromTheArchives(
   const weekNumber: number = getISOWeekNumber(
     new Date(editionDate + 'T12:00:00Z'),
   );
-  log('info', `Querying historical filings for ISO week ${String(weekNumber)}...`);
+  log(
+    'info',
+    `Querying historical filings for ISO week ${String(weekNumber)}...`,
+  );
   const filings: HistoricalFiling[] = await queryHistoricalFilings(
     conn,
     editionDate,

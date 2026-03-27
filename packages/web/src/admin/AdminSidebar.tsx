@@ -1,11 +1,4 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  Cog,
-  Wrench,
-  BarChart3,
-  ArrowLeft,
-} from 'lucide-react';
+import { ChevronDown, ChevronRight, Cog, Wrench, BarChart3, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
@@ -97,7 +90,7 @@ export default function AdminSidebar() {
         {navGroups.map((group: NavGroup) => (
           <div className="mb-2" key={group.prefix}>
             <button
-              className="flex w-full items-center gap-2 rounded-theme px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-muted hover:bg-on-surface/5 hover:text-on-surface"
+              className="flex w-full items-center gap-2 rounded-theme px-2 py-1.5 text-xs font-semibold tracking-wide text-on-surface-muted uppercase hover:bg-on-surface/5 hover:text-on-surface"
               onClick={() => toggle(group.prefix)}
               type="button"
             >
