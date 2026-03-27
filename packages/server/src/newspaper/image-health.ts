@@ -70,15 +70,43 @@ export async function checkImageUrl(
     const contentType: string = resp.headers.get('content-type') ?? '';
 
     if (resp.status === 404 || resp.status === 403) {
-      return { url, category, label, status: 'missing', httpStatus: resp.status, contentType };
+      return {
+        url,
+        category,
+        label,
+        status: 'missing',
+        httpStatus: resp.status,
+        contentType,
+      };
     }
     if (!resp.ok) {
-      return { url, category, label, status: 'error', httpStatus: resp.status, contentType };
+      return {
+        url,
+        category,
+        label,
+        status: 'error',
+        httpStatus: resp.status,
+        contentType,
+      };
     }
     if (!contentType.startsWith('image/')) {
-      return { url, category, label, status: 'wrong_content_type', httpStatus: resp.status, contentType };
+      return {
+        url,
+        category,
+        label,
+        status: 'wrong_content_type',
+        httpStatus: resp.status,
+        contentType,
+      };
     }
-    return { url, category, label, status: 'ok', httpStatus: resp.status, contentType };
+    return {
+      url,
+      category,
+      label,
+      status: 'ok',
+      httpStatus: resp.status,
+      contentType,
+    };
   } catch (err: unknown) {
     return {
       url,
@@ -108,9 +136,13 @@ export async function runImageHealthCheck(
 
   // 1. Collect edition image URLs
   const editions: NewspaperEdition[] = await listEditions(conn, daysBack, 0);
-  const editionChecks: { url: string; category: 'edition'; label: string }[] = [];
+  const editionChecks: { url: string; category: 'edition'; label: string }[] =
+    [];
   for (const edition of editions) {
-    const articles: NewspaperArticle[] = await getArticlesByEdition(conn, edition.id);
+    const articles: NewspaperArticle[] = await getArticlesByEdition(
+      conn,
+      edition.id,
+    );
     const urls = buildEditionImageUrls(baseUrl, edition.editionDate, articles);
     for (const u of urls) {
       editionChecks.push({ ...u, category: 'edition' as const });
