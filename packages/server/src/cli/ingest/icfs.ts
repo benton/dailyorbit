@@ -32,6 +32,12 @@ export const icfsCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated specific file numbers (skips discovery)',
     },
+    'backfill-missing': {
+      type: 'boolean',
+      description:
+        'Fetch ICFS detail for all filings in the DB that lack icfs_sys_id',
+      default: false,
+    },
     delay: {
       type: 'string',
       description: 'Delay between requests in ms',
@@ -44,7 +50,8 @@ export const icfsCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const fileNumbers: string[] | undefined = args['file-numbers']?.split(',');
+    let fileNumbers: string[] | undefined = args['file-numbers']?.split(',');
+    const backfillMissing: boolean = args['backfill-missing'] === true;
     const dateFrom: string = args['date-from'] ?? '';
     const dateTo: string = args['date-to'] ?? dateFrom;
     const subsystems: string[] | undefined = (
@@ -61,9 +68,9 @@ export const icfsCommand = defineCommand({
     const concurrency: number = Number(args.concurrency);
 
     const log = getLogger();
-    if (!fileNumbers && !dateFrom) {
+    if (!fileNumbers && !backfillMissing && !dateFrom) {
       log.error(
-        'Error: --date-from is required unless --file-numbers is provided',
+        'Error: --date-from is required unless --file-numbers or --backfill-missing is provided',
       );
       process.exit(1);
     }
@@ -85,6 +92,28 @@ export const icfsCommand = defineCommand({
 
     const dbInstance = await createDb(args.database);
     log.info(`Database: ${args.database}`);
+
+    if (backfillMissing) {
+      const conn = await dbInstance.connect();
+      try {
+        const reader = await conn.runAndReadAll(
+          `SELECT file_number FROM filing WHERE icfs_sys_id IS NULL ORDER BY file_number`,
+        );
+        fileNumbers = reader
+          .getRowObjectsJS()
+          .map((r) => String((r as Record<string, unknown>).file_number));
+        log.info(
+          `Backfill: found ${String(fileNumbers.length)} filings without ICFS detail`,
+        );
+        if (fileNumbers.length === 0) {
+          log.info('Nothing to backfill.');
+          return;
+        }
+      } finally {
+        conn.closeSync();
+      }
+    }
+
     const result = await runIcfsIngest({
       dbInstance,
       dateFrom,
