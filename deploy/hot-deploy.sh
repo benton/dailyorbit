@@ -28,12 +28,10 @@ docker build \
   --build-arg VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
   -t "${ECR_REPO}:${TAG}" .
 
-echo "==> Extracting frontend from Docker image"
-TMPDIR_HOST="${HOME}/.cache/hotdeploy-web-dist"
-rm -rf "${TMPDIR_HOST}"
-CONTAINER_ID=$(docker create "${ECR_REPO}:${TAG}")
-docker cp "${CONTAINER_ID}:/app/packages/web/dist" "${TMPDIR_HOST}"
-docker rm "${CONTAINER_ID}" > /dev/null
+echo "==> Building frontend with production env vars"
+VITE_SERVER_URL="${VITE_SERVER_URL}" \
+VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
+  pnpm --filter @daily-orbit/web build
 
 echo "==> Tagging for ECR"
 docker tag "${ECR_REPO}:${TAG}" "${ECR_URI}:${TAG}"
@@ -81,8 +79,7 @@ echo "--- API deploy complete: \${ECR_URI}:\${TAG}"
 REMOTE
 
 echo "==> Syncing frontend to S3 (${FRONTEND_BUCKET})"
-aws s3 sync ${TMPDIR_HOST}/ "s3://${FRONTEND_BUCKET}/" --delete
-rm -rf ${TMPDIR_HOST}
+aws s3 sync packages/web/dist/ "s3://${FRONTEND_BUCKET}/" --delete
 
 echo "==> Invalidating CloudFront (${CLOUDFRONT_DIST_ID})"
 aws cloudfront create-invalidation \
