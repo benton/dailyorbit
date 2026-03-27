@@ -1,7 +1,3 @@
-import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { stat } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
 import { fetchWithRetry } from './fetch-retry.ts';
 
 /** Thrown when an authenticated ServiceNow session has expired (HTTP 302 to login). */
@@ -18,22 +14,16 @@ export type DownloadFileOptions = {
 };
 
 /**
- * Build a deterministic local path for an attachment file.
- * Pattern: {basePath}/{subsystem}/{hyphenatedFileNumber}/{attachmentKey}.{ext}
+ * Build a deterministic relative storage key for an attachment file.
+ * Pattern: {subsystem}/{hyphenatedFileNumber}/{attachmentKey}.{ext}
  */
-export function attachmentStoragePath(
-  basePath: string,
+export function attachmentStorageKey(
   subsystem: string,
   hyphenatedFileNumber: string,
   attachmentKey: number,
   extension: string,
 ): string {
-  return join(
-    basePath,
-    subsystem,
-    hyphenatedFileNumber,
-    `${String(attachmentKey)}.${extension}`,
-  );
+  return `${subsystem}/${hyphenatedFileNumber}/${String(attachmentKey)}.${extension}`;
 }
 
 /**
@@ -45,8 +35,7 @@ export function normalizeDownloadUrl(url: string): string {
 }
 
 /**
- * Download a file from a URL and save it to destPath.
- * Creates parent directories as needed.
+ * Download a file from a URL and return its content as a Buffer.
  * Normalizes the URL to append `.pdf` for raw file retrieval from fcc.report
  * (skipped for authenticated ServiceNow downloads).
  * Throws SessionExpiredError if an authenticated request gets a 302 redirect.
@@ -54,11 +43,12 @@ export function normalizeDownloadUrl(url: string): string {
  */
 export async function downloadFile(
   url: string,
-  destPath: string,
   options?: DownloadFileOptions | undefined,
-): Promise<{ fileSizeBytes: number; contentType: string | null }> {
-  await mkdir(dirname(destPath), { recursive: true });
-
+): Promise<{
+  buffer: Buffer;
+  fileSizeBytes: number;
+  contentType: string | null;
+}> {
   const isAuthenticated: boolean = options?.cookies != null;
 
   // Skip .pdf normalization for authenticated ServiceNow URLs
@@ -82,7 +72,8 @@ export async function downloadFile(
 
   const contentType: string | null =
     response.headers.get('content-type') ?? null;
-  const buffer: ArrayBuffer = await response.arrayBuffer();
+  const arrayBuffer: ArrayBuffer = await response.arrayBuffer();
+  const buffer: Buffer = Buffer.from(arrayBuffer);
 
   // Detect FCC "Access Denied" error pages
   const baseContentType: string = (contentType ?? '')
@@ -90,58 +81,12 @@ export async function downloadFile(
     .trim()
     .toLowerCase();
   if (baseContentType === 'text/html') {
-    const text: string = new TextDecoder().decode(buffer);
+    const text: string = new TextDecoder().decode(arrayBuffer);
     if (text.includes('Access Denied')) {
       throw new Error(`Access Denied for ${fetchUrl}`);
     }
   }
 
-  await writeFile(destPath, Buffer.from(buffer));
-
   const fileSizeBytes: number = buffer.byteLength;
-  return { fileSizeBytes, contentType };
-}
-
-/** Check whether a file exists at the given path. */
-export function fileExists(path: string): boolean {
-  return existsSync(path);
-}
-
-/**
- * Find an existing file for a given attachment key in its expected directory.
- * Returns the path and size if found, or null if no file exists.
- * Scans for any extension since we may not know the content type upfront.
- */
-export async function findExistingAttachment(
-  basePath: string,
-  subsystem: string,
-  hyphenatedFileNumber: string,
-  attachmentKey: number,
-): Promise<{ path: string; fileSizeBytes: number } | null> {
-  const { readdir } = await import('node:fs/promises');
-  const dir: string = join(basePath, subsystem, hyphenatedFileNumber);
-  const prefix: string = `${String(attachmentKey)}.`;
-
-  try {
-    const entries: string[] = await readdir(dir);
-    const match: string | undefined = entries.find((e) => e.startsWith(prefix));
-    if (match == null) {
-      return null;
-    }
-    const fullPath: string = join(dir, match);
-    const stats = await stat(fullPath);
-    return { path: fullPath, fileSizeBytes: stats.size };
-  } catch {
-    return null;
-  }
-}
-
-/** Get file size in bytes, or null if the file doesn't exist. */
-export async function getFileSize(path: string): Promise<number | null> {
-  try {
-    const stats = await stat(path);
-    return stats.size;
-  } catch {
-    return null;
-  }
+  return { buffer, fileSizeBytes, contentType };
 }

@@ -66,9 +66,9 @@ describe.skipIf(!canRunIntegration)('PDF extraction integration', () => {
     await conn.run(
       `INSERT INTO attachment
         (attachment_key, filing_key, file_number, attachment_name, download_url,
-         download_status, content_type, local_path, extract_status)
+         download_status, content_type, storage_key, extract_status)
        VALUES (500, 1, 'ITC-214-INTR2017-00369', 'Doc', 'https://example.com/500.pdf',
-         'downloaded', 'application/pdf', '${TEXT_PDF}', 'pending')`,
+         'downloaded', 'application/pdf', 'ITC/ITC-214-INTR2017-00369/500.pdf', 'pending')`,
     );
 
     await markExtracted(conn, 500, result.text, result.textLength);

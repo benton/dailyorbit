@@ -39,7 +39,7 @@ export type DiscoveryProvider = {
 export type AttachmentPipelineOptions = {
   databaseUrl?: string;
   dbInstance?: DuckDBInstance;
-  storageBasePath: string;
+  storage: import('./storage-backend.ts').StorageBackend;
   provider?: 'fcc-report' | 'fcc-gov';
   scope: DiscoveryScope;
   discoverOnly?: boolean;
@@ -105,7 +105,7 @@ export type AttachmentRow = AttachmentMetadata & {
   downloadStatus: string;
   fileSizeBytes: number | null;
   contentType: string | null;
-  localPath: string | null;
+  storageKey: string | null;
   discoveredAt: string;
   downloadedAt: string | null;
   fullText: string | null;

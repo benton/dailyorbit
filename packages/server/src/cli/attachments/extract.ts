@@ -1,7 +1,8 @@
 import { defineCommand } from 'citty';
-import { databaseArg } from '../shared/args.ts';
+import { databaseArg, storagePathArg } from '../shared/args.ts';
 import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
+import { createFsBackend } from '../../attachments/storage-backend.ts';
 
 export const extractCommand = defineCommand({
   meta: {
@@ -10,6 +11,7 @@ export const extractCommand = defineCommand({
   },
   args: {
     database: databaseArg,
+    'storage-path': storagePathArg,
     'retry-failed': {
       type: 'boolean',
       description: 'Re-attempt previously failed extractions',
@@ -29,8 +31,11 @@ export const extractCommand = defineCommand({
     const { runExtractionPipeline } =
       await import('../../attachments/extract-pipeline.ts');
 
+    const storage = createFsBackend(resolveFromRoot(args['storage-path']));
+
     const result = await runExtractionPipeline({
       databaseUrl: resolveFromRoot(args.database),
+      storage,
       retryFailed: args['retry-failed'],
       limit: args.limit != null ? Number(args.limit) : undefined,
       verbose: args.verbose,

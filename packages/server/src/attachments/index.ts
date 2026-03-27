@@ -13,13 +13,18 @@ export {
   upsertAttachments,
 } from './repository.ts';
 export {
-  attachmentStoragePath,
+  attachmentStorageKey,
   downloadFile,
-  fileExists,
-  getFileSize,
   SessionExpiredError,
 } from './storage.ts';
 export type { DownloadFileOptions } from './storage.ts';
+export {
+  createFsBackend,
+  createS3Backend,
+  createMemoryBackend,
+} from './storage-backend.ts';
+export type { StorageBackend } from './storage-backend.ts';
+export { createStorageFromConfig } from './create-storage.ts';
 export { createProvider } from './provider.ts';
 export { createFccReportProvider } from './fcc-report.ts';
 export { fccGovProvider } from './fcc-gov.ts';

@@ -1,11 +1,9 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import type { DuckDBValue } from '@duckdb/node-api';
 import { runAttachmentPipeline } from './pipeline.ts';
+import { createMemoryBackend } from './storage-backend.ts';
+import type { StorageBackend } from './storage-backend.ts';
 import type { AttachmentPipelineResult } from './types.ts';
 
 /**
@@ -41,19 +39,21 @@ async function seedFilingTable(conn: DuckDBConnection): Promise<void> {
 describe('runAttachmentPipeline', () => {
   let db: DuckDBInstance;
   let conn: DuckDBConnection;
+  let storage: StorageBackend;
 
   beforeEach(async () => {
     db = await DuckDBInstance.create(':memory:');
     conn = await DuckDBConnection.create(db);
     await seedFilingTable(conn);
     conn.closeSync();
+    storage = createMemoryBackend();
   });
 
   it('discovers attachments for scoped filings using fcc-gov stub provider', async () => {
     const logs: string[] = [];
     const result: AttachmentPipelineResult = await runAttachmentPipeline({
       dbInstance: db,
-      storageBasePath: '/tmp/test-attachments',
+      storage,
       provider: 'fcc-gov',
       scope: { subsystems: ['SAT'], limit: 1 },
       discoverOnly: true,
@@ -74,7 +74,7 @@ describe('runAttachmentPipeline', () => {
     const logs: string[] = [];
     const result: AttachmentPipelineResult = await runAttachmentPipeline({
       dbInstance: db,
-      storageBasePath: '/tmp/test-attachments',
+      storage,
       provider: 'fcc-gov',
       scope: { subsystems: ['SAT', 'SES'] },
       discoverOnly: true,
@@ -94,7 +94,7 @@ describe('runAttachmentPipeline', () => {
   it('records discovery in attachment_discovery for processed filings', async () => {
     await runAttachmentPipeline({
       dbInstance: db,
-      storageBasePath: '/tmp/test-attachments',
+      storage,
       provider: 'fcc-gov',
       scope: { subsystems: ['SAT'], limit: 1 },
       discoverOnly: true,
@@ -116,7 +116,7 @@ describe('runAttachmentPipeline', () => {
   it('reports pipeline duration in milliseconds', async () => {
     const result: AttachmentPipelineResult = await runAttachmentPipeline({
       dbInstance: db,
-      storageBasePath: '/tmp/test-attachments',
+      storage,
       provider: 'fcc-gov',
       scope: { limit: 1 },
       discoverOnly: true,
@@ -126,8 +126,10 @@ describe('runAttachmentPipeline', () => {
     expect(result.durationMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('skip-existing reconciles files on disk without re-downloading', async () => {
-    const tmpDir: string = mkdtempSync(join(tmpdir(), 'att-test-'));
+  it('skip-existing reconciles files in storage without re-downloading', async () => {
+    // Write a file into storage at the expected key
+    const storageKey: string = 'SAT/SAT-STA-20230614-00142/99999.pdf';
+    await storage.write(storageKey, Buffer.from('fake pdf content'));
 
     // Seed a pending attachment in the DB
     const setupConn: DuckDBConnection = await DuckDBConnection.create(db);
@@ -143,7 +145,7 @@ describe('runAttachmentPipeline', () => {
         download_status VARCHAR NOT NULL DEFAULT 'pending',
         file_size_bytes BIGINT,
         content_type VARCHAR,
-        local_path VARCHAR,
+        storage_key VARCHAR,
         discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
         downloaded_at TIMESTAMP,
         full_text TEXT,
@@ -175,22 +177,10 @@ describe('runAttachmentPipeline', () => {
     );
     setupConn.closeSync();
 
-    // Place a file on disk at the expected path
-    const filePath: string = join(
-      tmpDir,
-      'SAT',
-      'SAT-STA-20230614-00142',
-      '99999.pdf',
-    );
-    await mkdir(join(tmpDir, 'SAT', 'SAT-STA-20230614-00142'), {
-      recursive: true,
-    });
-    await writeFile(filePath, 'fake pdf content');
-
     const logs: string[] = [];
     const result: AttachmentPipelineResult = await runAttachmentPipeline({
       dbInstance: db,
-      storageBasePath: tmpDir,
+      storage,
       provider: 'fcc-gov',
       scope: { subsystems: ['SAT'], limit: 1 },
       downloadOnly: true,
@@ -206,12 +196,12 @@ describe('runAttachmentPipeline', () => {
     // Verify the DB record was updated to 'downloaded'
     const checkConn: DuckDBConnection = await DuckDBConnection.create(db);
     const reader = await checkConn.runAndReadAll(
-      `SELECT download_status, local_path FROM attachment WHERE attachment_key = $1`,
+      `SELECT download_status, storage_key FROM attachment WHERE attachment_key = $1`,
       [99999] as DuckDBValue[],
     );
     const row = reader.getRowObjectsJS()[0]!;
     expect(String(row.download_status)).toEqual('downloaded');
-    expect(String(row.local_path)).toEqual(filePath);
+    expect(String(row.storage_key)).toEqual(storageKey);
     checkConn.closeSync();
   });
 });

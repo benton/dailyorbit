@@ -8,6 +8,7 @@ import {
 } from '../shared/args.ts';
 import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
+import { createFsBackend } from '../../attachments/storage-backend.ts';
 
 export const syncCommand = defineCommand({
   meta: {
@@ -54,9 +55,11 @@ export const syncCommand = defineCommand({
     const { runAttachmentPipeline } =
       await import('../../attachments/pipeline.ts');
 
+    const storage = createFsBackend(resolveFromRoot(args['storage-path']));
+
     const result = await runAttachmentPipeline({
       databaseUrl: resolveFromRoot(args.database),
-      storageBasePath: resolveFromRoot(args['storage-path']),
+      storage,
       provider: args.provider === 'fcc-gov' ? 'fcc-gov' : 'fcc-report',
       scope: {
         fileNumbers: parseFileNumbers(args.filing),
