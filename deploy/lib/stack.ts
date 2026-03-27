@@ -222,11 +222,33 @@ export class DailyOrbitStack extends Stack {
       this, 'CloudFrontCert', config.cloudfrontCertificateArn,
     );
 
+    // CloudFront Function: SPA routing on the default behavior.
+    // Rewrites non-file paths to /index.html so client-side routing works.
+    // This replaces distribution-level errorResponses, which cannot be
+    // scoped per-behavior and were silently masking missing images.
+    const spaRoutingFn = new cloudfront.Function(this, 'SpaRoutingFn', {
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var uri = event.request.uri;
+  if (uri.match(/\\.[a-zA-Z0-9]+$/)) {
+    return event.request;
+  }
+  event.request.uri = '/index.html';
+  return event.request;
+}
+      `.trim()),
+    });
+
     const distribution: cloudfront.Distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        functionAssociations: [{
+          function: spaRoutingFn,
+          eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+        }],
       },
       additionalBehaviors: {
         'newspaper/images/*': {
@@ -239,21 +261,6 @@ export class DailyOrbitStack extends Stack {
       domainNames: [config.domainName],
       certificate: cloudfrontCert,
       defaultRootObject: 'index.html',
-      // SPA: route all 403/404s to index.html for client-side routing
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: Duration.seconds(0),
-        },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: Duration.seconds(0),
-        },
-      ],
     });
 
     // dailyorbit.org → CloudFront
