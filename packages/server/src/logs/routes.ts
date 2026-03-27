@@ -38,7 +38,8 @@ function queryNeedsArg(name: string): boolean {
 let cwlClient: CloudWatchLogsClient | null = null;
 function getCwlClient(): CloudWatchLogsClient {
   if (cwlClient == null) {
-    cwlClient = new CloudWatchLogsClient({});
+    const region: string = process.env.AWS_REGION ?? 'us-east-2';
+    cwlClient = new CloudWatchLogsClient({ region });
   }
   return cwlClient;
 }
