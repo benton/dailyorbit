@@ -1,35 +1,19 @@
-const BAR_WIDTH: number = 40;
-
 /**
- * Render a progress bar to stderr. Uses \r to overwrite the current line.
- * Prints a newline when complete.
+ * Log periodic progress updates.
  *
- * When throttleInterval > 0, only renders every N items (plus the final one)
- * to avoid overwhelming the log output in large loops.
+ * Emits a log line every `interval` items (and on completion).
+ * No terminal escape codes — suitable for structured log output.
  */
-export function printProgress(
+export function logProgress(
   completed: number,
   total: number,
   label: string,
-  throttleInterval: number = 0,
+  log: (msg: string) => void,
+  interval: number = 500,
 ): void {
-  // Throttle: skip intermediate updates unless at the interval or finished
-  if (
-    throttleInterval > 0 &&
-    completed < total &&
-    completed % throttleInterval !== 0
-  ) {
+  if (completed < total && completed % interval !== 0) {
     return;
   }
-
-  const pct: number = total > 0 ? completed / total : 1;
-  const filled: number = Math.round(BAR_WIDTH * pct);
-  const empty: number = BAR_WIDTH - filled;
-  const bar: string = '#'.repeat(filled) + '-'.repeat(empty);
-  const elapsed: string = completed === total ? ' done' : '';
-  const line: string = `\r  ${label} [${bar}] ${String(completed)}/${String(total)}${elapsed}`;
-  process.stderr.write(line);
-  if (completed === total) {
-    process.stderr.write('\n');
-  }
+  const pct: number = total > 0 ? Math.round((completed / total) * 100) : 100;
+  log(`${label}: ${String(completed)}/${String(total)} (${String(pct)}%)`);
 }

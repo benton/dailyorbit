@@ -218,8 +218,7 @@ const STAGES: PipelineStage[] = [
 
       if (username && password) {
         try {
-          const { headlessLogin } =
-            await import('../icfs/headless-login.ts');
+          const { headlessLogin } = await import('../icfs/headless-login.ts');
           ctx.log('info', 'Performing headless ICFS login...');
           const loginResult = await headlessLogin({
             username,

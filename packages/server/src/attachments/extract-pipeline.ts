@@ -9,7 +9,7 @@ import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
 import { extractTextFromPdf } from './extract-text.ts';
 import { htmlToMarkdown } from '../lib/html-to-markdown.ts';
 import { processWithConcurrency } from '../lib/concurrency.ts';
-import { printProgress } from './progress.ts';
+import { logProgress } from './progress.ts';
 import {
   createAttachmentTable,
   getPendingExtractions,
@@ -253,7 +253,7 @@ export async function runExtractionPipeline(
       }
 
       processed++;
-      printProgress(processed, pending.length, 'Extracting');
+      logProgress(processed, pending.length, 'Extracting', log);
     },
   );
 

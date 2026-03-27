@@ -7,7 +7,7 @@ import {
 import { yieldToEventLoop } from '../lib/concurrency.ts';
 import { getLogger } from '../lib/logger.ts';
 import { extensionForContentType } from './content-type.ts';
-import { printProgress } from './progress.ts';
+import { logProgress } from './progress.ts';
 import { createProvider } from './provider.ts';
 import { processQueue } from './queue.ts';
 import { extractTextFromHtml, looksLikeAuthError } from './extract-html.ts';
@@ -138,7 +138,7 @@ export async function runAttachmentPipeline(
             log(`${filingsToDiscover[index]!.fileNumber}: ERROR — ${msg}`);
           },
           onItemComplete: (completed: number, total: number) => {
-            printProgress(completed, total, 'Discovering');
+            logProgress(completed, total, 'Discovering', log);
           },
         },
       );
@@ -345,7 +345,7 @@ export async function runAttachmentPipeline(
           log(`Failed to download ${att.downloadUrl}: ${msg}`);
         },
         onItemComplete: (completed: number, total: number) => {
-          printProgress(completed, total, 'Downloading');
+          logProgress(completed, total, 'Downloading', log);
         },
       },
     );
@@ -428,7 +428,7 @@ export async function runAttachmentPipeline(
           log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
         }
 
-        printProgress(i + 1, validationPending.length, 'Validating', 100);
+        logProgress(i + 1, validationPending.length, 'Validating', log);
 
         // Yield to event loop periodically so HTTP handlers aren't starved
         if ((i + 1) % 50 === 0) {
@@ -632,7 +632,7 @@ export async function runAttachmentPipeline(
           log(`  ${String(row.attachmentKey)}: extraction FAILED — ${msg}`);
         }
 
-        printProgress(i + 1, pendingExtractions.length, 'Extracting', 100);
+        logProgress(i + 1, pendingExtractions.length, 'Extracting', log);
 
         // Yield to event loop periodically so HTTP handlers aren't starved
         if ((i + 1) % 50 === 0) {
@@ -769,7 +769,7 @@ export async function runAttachmentPipeline(
               log(`Summarization error [${row.fileNumber}]: ${msg}`);
             },
             onItemComplete: (completed: number, total: number) => {
-              printProgress(completed, total, 'Summarizing');
+              logProgress(completed, total, 'Summarizing', log);
             },
           },
         );

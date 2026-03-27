@@ -9,7 +9,7 @@ import {
   trackInstance,
   untrackConnection,
 } from '../lib/graceful-shutdown.ts';
-import { printProgress } from './progress.ts';
+import { logProgress } from './progress.ts';
 import {
   createAttachmentTable,
   getPendingValidations,
@@ -98,7 +98,7 @@ export async function runValidationPipeline(
       }
 
       processed++;
-      printProgress(processed, pending.length, 'Validating', 100);
+      logProgress(processed, pending.length, 'Validating', log);
 
       // Yield to event loop periodically so HTTP handlers aren't starved
       if (processed % 50 === 0) {
