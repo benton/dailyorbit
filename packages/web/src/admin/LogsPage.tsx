@@ -70,9 +70,7 @@ function buildColumns(
         }
         const str: string = String(val);
         const display: string = isTimestamp ? formatTimestamp(str, useUtc) : str;
-        return (
-          <span className={isNumeric ? 'tabular-nums' : ''}>{display}</span>
-        );
+        return <span className={isNumeric ? 'tabular-nums' : ''}>{display}</span>;
       },
       header: name,
       size: isWide ? 220 : isNumeric ? 100 : 160,
@@ -321,10 +319,7 @@ export default function LogsPage() {
           </div>
 
           <div>
-            <label
-              className="mb-1 block text-sm font-medium text-on-surface"
-              htmlFor="logs-tz"
-            >
+            <label className="mb-1 block text-sm font-medium text-on-surface" htmlFor="logs-tz">
               Timestamps
             </label>
             <select
