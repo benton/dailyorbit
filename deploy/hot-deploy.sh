@@ -29,9 +29,10 @@ docker build \
   -t "${ECR_REPO}:${TAG}" .
 
 echo "==> Extracting frontend from Docker image"
+TMPDIR_HOST="${HOME}/.cache/hotdeploy-web-dist"
+rm -rf "${TMPDIR_HOST}"
 CONTAINER_ID=$(docker create "${ECR_REPO}:${TAG}")
-rm -rf /tmp/hotdeploy-web-dist
-docker cp "${CONTAINER_ID}:/app/packages/web/dist" /tmp/hotdeploy-web-dist
+docker cp "${CONTAINER_ID}:/app/packages/web/dist" "${TMPDIR_HOST}"
 docker rm "${CONTAINER_ID}" > /dev/null
 
 echo "==> Tagging for ECR"
@@ -80,8 +81,8 @@ echo "--- API deploy complete: \${ECR_URI}:\${TAG}"
 REMOTE
 
 echo "==> Syncing frontend to S3 (${FRONTEND_BUCKET})"
-aws s3 sync /tmp/hotdeploy-web-dist/ "s3://${FRONTEND_BUCKET}/" --delete
-rm -rf /tmp/hotdeploy-web-dist
+aws s3 sync ${TMPDIR_HOST}/ "s3://${FRONTEND_BUCKET}/" --delete
+rm -rf ${TMPDIR_HOST}
 
 echo "==> Invalidating CloudFront (${CLOUDFRONT_DIST_ID})"
 aws cloudfront create-invalidation \
