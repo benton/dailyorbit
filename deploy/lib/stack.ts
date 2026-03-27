@@ -184,7 +184,7 @@ export class DailyOrbitStack extends Stack {
       blockDevices: [
         {
           deviceName: '/dev/xvda',
-          volume: ec2.BlockDeviceVolume.ebs(30, {
+          volume: ec2.BlockDeviceVolume.ebs(60, {
             volumeType: ec2.EbsDeviceVolumeType.GP3,
           }),
         },
