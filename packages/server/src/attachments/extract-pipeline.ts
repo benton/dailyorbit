@@ -75,7 +75,10 @@ export async function runExtractionPipeline(
     let validationCorrected: number = 0;
     for (const row of unvalidated) {
       try {
-        const detected = detectContentType(row.localPath, row.contentType);
+        const detected = await detectContentType(
+          row.localPath,
+          row.contentType,
+        );
         await markContentTypeValidated(
           conn,
           row.attachmentKey,

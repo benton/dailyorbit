@@ -1,5 +1,8 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
-import { processWithConcurrency } from '../lib/concurrency.ts';
+import {
+  processWithConcurrency,
+  yieldToEventLoop,
+} from '../lib/concurrency.ts';
 import { getLogger } from '../lib/logger.ts';
 import {
   trackConnection,
@@ -67,7 +70,10 @@ export async function runValidationPipeline(
     concurrency,
     async (row: PendingValidationRow) => {
       try {
-        const detected = detectContentType(row.localPath, row.contentType);
+        const detected = await detectContentType(
+          row.localPath,
+          row.contentType,
+        );
         await markContentTypeValidated(
           conn,
           row.attachmentKey,
@@ -91,7 +97,12 @@ export async function runValidationPipeline(
       }
 
       processed++;
-      printProgress(processed, pending.length, 'Validating');
+      printProgress(processed, pending.length, 'Validating', 100);
+
+      // Yield to event loop periodically so HTTP handlers aren't starved
+      if (processed % 50 === 0) {
+        await yieldToEventLoop();
+      }
     },
   );
 

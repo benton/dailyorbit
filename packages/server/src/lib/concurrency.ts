@@ -1,4 +1,12 @@
 /**
+ * Yield control to the event loop so HTTP handlers (and other macrotasks)
+ * can run between iterations of a long-running loop.
+ */
+export function yieldToEventLoop(): Promise<void> {
+  return new Promise<void>((resolve) => setImmediate(resolve));
+}
+
+/**
  * Process items with a bounded concurrency pool.
  * Returns results in the same order as the input items.
  * If an AbortSignal is provided and aborted, no new items are started

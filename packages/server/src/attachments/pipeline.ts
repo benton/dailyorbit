@@ -4,6 +4,7 @@ import {
   trackInstance,
   untrackConnection,
 } from '../lib/graceful-shutdown.ts';
+import { yieldToEventLoop } from '../lib/concurrency.ts';
 import { getLogger } from '../lib/logger.ts';
 import { extensionForContentType } from './content-type.ts';
 import { printProgress } from './progress.ts';
@@ -390,7 +391,10 @@ export async function runAttachmentPipeline(
       for (let i: number = 0; i < validationPending.length; i++) {
         const row: PendingValidationRow = validationPending[i]!;
         try {
-          const detected = detectContentType(row.localPath, row.contentType);
+          const detected = await detectContentType(
+            row.localPath,
+            row.contentType,
+          );
           await markContentTypeValidated(
             conn,
             row.attachmentKey,
@@ -410,7 +414,12 @@ export async function runAttachmentPipeline(
           log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
         }
 
-        printProgress(i + 1, validationPending.length, 'Validating');
+        printProgress(i + 1, validationPending.length, 'Validating', 100);
+
+        // Yield to event loop periodically so HTTP handlers aren't starved
+        if ((i + 1) % 50 === 0) {
+          await yieldToEventLoop();
+        }
       }
 
       log(
@@ -591,7 +600,12 @@ export async function runAttachmentPipeline(
           log(`  ${String(row.attachmentKey)}: extraction FAILED — ${msg}`);
         }
 
-        printProgress(i + 1, pendingExtractions.length, 'Extracting');
+        printProgress(i + 1, pendingExtractions.length, 'Extracting', 100);
+
+        // Yield to event loop periodically so HTTP handlers aren't starved
+        if ((i + 1) % 50 === 0) {
+          await yieldToEventLoop();
+        }
       }
 
       log(
