@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Hot-deploy: build, push, and restart the production container in-place.
-# Usage: ./scripts/hot-deploy.sh
+# Hot-deploy: build, push, restart the API container, sync frontend to S3,
+# and invalidate CloudFront — all in one step.
+# Usage: ./deploy/hot-deploy.sh
 
 AWS_ACCOUNT=665226324657
 AWS_REGION=us-east-2
@@ -10,6 +11,8 @@ ECR_REPO=daily-orbit
 ECR_URI="${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
 SSH_HOST=api.dailyorbit.org
 SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+FRONTEND_BUCKET=daily-orbit-prod-frontend
+CLOUDFRONT_DIST_ID=E2YVC4MEMBIV20
 
 # Derive tag: <version>-hotdeploy-<timestamp>
 VERSION=$(node -p "require('./packages/server/package.json').version")
@@ -25,6 +28,12 @@ docker build \
   --build-arg VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
   -t "${ECR_REPO}:${TAG}" .
 
+echo "==> Extracting frontend from Docker image"
+CONTAINER_ID=$(docker create "${ECR_REPO}:${TAG}")
+rm -rf /tmp/hotdeploy-web-dist
+docker cp "${CONTAINER_ID}:/app/packages/web/dist" /tmp/hotdeploy-web-dist
+docker rm "${CONTAINER_ID}" > /dev/null
+
 echo "==> Tagging for ECR"
 docker tag "${ECR_REPO}:${TAG}" "${ECR_URI}:${TAG}"
 
@@ -35,7 +44,7 @@ aws ecr get-login-password --region "${AWS_REGION}" \
 echo "==> Pushing ${ECR_URI}:${TAG}"
 docker push "${ECR_URI}:${TAG}"
 
-echo "==> Deploying to ${SSH_HOST}"
+echo "==> Deploying API to ${SSH_HOST}"
 # shellcheck disable=SC2087
 ssh ${SSH_OPTS} "ubuntu@${SSH_HOST}" bash -s <<REMOTE
 set -euo pipefail
@@ -67,7 +76,18 @@ else
   exit 1
 fi
 
-echo "--- Hot deploy complete: \${ECR_URI}:\${TAG}"
+echo "--- API deploy complete: \${ECR_URI}:\${TAG}"
 REMOTE
 
-echo "==> Done! Deployed ${TAG} to ${SSH_HOST}"
+echo "==> Syncing frontend to S3 (${FRONTEND_BUCKET})"
+aws s3 sync /tmp/hotdeploy-web-dist/ "s3://${FRONTEND_BUCKET}/" --delete
+rm -rf /tmp/hotdeploy-web-dist
+
+echo "==> Invalidating CloudFront (${CLOUDFRONT_DIST_ID})"
+aws cloudfront create-invalidation \
+  --distribution-id "${CLOUDFRONT_DIST_ID}" \
+  --paths "/*" \
+  --query 'Invalidation.Id' \
+  --output text
+
+echo "==> Done! Deployed ${TAG} to ${SSH_HOST} + S3/CloudFront"
