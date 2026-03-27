@@ -1105,123 +1105,15 @@ const STAGES: PipelineStage[] = [
     },
   },
 
-  // ── Newspaper: Weekly Content (Monday only) ────────────────────
-  {
-    id: 'newspaper.weekly-editorial',
-    group: 'newspaper',
-    name: 'Weekly Editorial',
-    description: '"Over the Horizon" editorial column with rotating persona',
-    defaultConcurrency: 1,
-    parallelizable: false,
-    async run(ctx: PipelineContext): Promise<StageResult> {
-      const { isWeeklyGenerationDay } = await import('../newspaper/types.ts');
-      const start: number = Date.now();
-      if (!isWeeklyGenerationDay()) {
-        ctx.log('info', 'Weekly content — skipping (not Monday)');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: 0,
-        };
-      }
-
-      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
-      const { getEditionByDate, upsertArticle, getArticle } =
-        await import('../newspaper/repository.ts');
-      const { generateEditorial } =
-        await import('../newspaper/generators/editorial.ts');
-      const { getConfigService } = await import('../lib/config.ts');
-      const { InferenceService } =
-        await import('../inference/inference-service.ts');
-      const { InstrumentedBedrockClient } =
-        await import('../inference/instrumented-client.ts');
-      const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      await ensureNewspaperTables(ctx.conn);
-
-      const today: string = new Date().toISOString().split('T')[0]!;
-      const edition = await getEditionByDate(ctx.conn, today);
-      if (!edition) {
-        ctx.log('info', 'No edition for today — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const existing = await getArticle(
-        ctx.conn,
-        edition.id,
-        'over-the-horizon',
-      );
-      if (existing?.status === 'generated') {
-        ctx.log('info', 'Editorial already generated — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const config = getConfigService();
-      const region: string = config.get('bedrockRegion') as string;
-      const client = new InstrumentedBedrockClient(
-        new BedrockClient(region),
-        ctx.conn,
-        'newspaper',
-      );
-      const inferenceService = new InferenceService(client);
-
-      const result = await generateEditorial({
-        conn: ctx.conn,
-        editionId: edition.id,
-        editionDate: today,
-        inferenceService,
-        config,
-        log: ctx.log,
-      });
-
-      await upsertArticle(ctx.conn, edition.id, {
-        contentType: 'editorial',
-        slug: 'over-the-horizon',
-        headline: result.headline,
-        body: result.body,
-        sourceData: JSON.stringify(result.sourceData),
-        generatedBy: config.get('newspaperCopyModel') as string,
-        displayOrder: 10,
-        status: 'generated',
-      });
-
-      return {
-        itemsProcessed: 1,
-        itemsFailed: 0,
-        durationMs: Date.now() - start,
-      };
-    },
-  },
+  // ── Newspaper: Editorial Cartoon (daily) ────────────────────────
   {
     id: 'newspaper.editorial-cartoon',
     group: 'newspaper',
     name: 'Editorial Cartoon',
-    description: 'Weekly editorial cartoon in Punch magazine style',
+    description: 'Daily editorial cartoon in Punch magazine style',
     defaultConcurrency: 1,
     parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { isWeeklyGenerationDay } = await import('../newspaper/types.ts');
-      const start: number = Date.now();
-      if (!isWeeklyGenerationDay()) {
-        ctx.log('info', 'Weekly content — skipping (not Monday)');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: 0,
-        };
-      }
-
       const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
       const { getEditionByDate, upsertArticle, getArticle } =
         await import('../newspaper/repository.ts');
@@ -1233,6 +1125,7 @@ const STAGES: PipelineStage[] = [
       const { InstrumentedBedrockClient } =
         await import('../inference/instrumented-client.ts');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const start: number = Date.now();
       await ensureNewspaperTables(ctx.conn);
 
       const today: string = new Date().toISOString().split('T')[0]!;
@@ -1302,222 +1195,16 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
-  {
-    id: 'newspaper.company-spotlight',
-    group: 'newspaper',
-    name: 'Company Spotlight',
-    description: 'Weekly company profile with filing history',
-    defaultConcurrency: 1,
-    parallelizable: false,
-    async run(ctx: PipelineContext): Promise<StageResult> {
-      const { isWeeklyGenerationDay } = await import('../newspaper/types.ts');
-      const start: number = Date.now();
-      if (!isWeeklyGenerationDay()) {
-        ctx.log('info', 'Weekly content — skipping (not Monday)');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: 0,
-        };
-      }
 
-      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
-      const { ensureCompanyTables } = await import('../companies/schema.ts');
-      const { getEditionByDate, upsertArticle, getArticle } =
-        await import('../newspaper/repository.ts');
-      const { generateCompanySpotlight } =
-        await import('../newspaper/generators/company-spotlight.ts');
-      const { getConfigService } = await import('../lib/config.ts');
-      const { InferenceService } =
-        await import('../inference/inference-service.ts');
-      const { InstrumentedBedrockClient } =
-        await import('../inference/instrumented-client.ts');
-      const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      await ensureNewspaperTables(ctx.conn);
-      await ensureCompanyTables(ctx.conn);
-
-      const today: string = new Date().toISOString().split('T')[0]!;
-      const edition = await getEditionByDate(ctx.conn, today);
-      if (!edition) {
-        ctx.log('info', 'No edition for today — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const existing = await getArticle(
-        ctx.conn,
-        edition.id,
-        'company-spotlight',
-      );
-      if (existing?.status === 'generated') {
-        ctx.log('info', 'Company spotlight already generated — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const config = getConfigService();
-      const region: string = config.get('bedrockRegion') as string;
-      const client = new InstrumentedBedrockClient(
-        new BedrockClient(region),
-        ctx.conn,
-        'newspaper',
-      );
-      const inferenceService = new InferenceService(client);
-
-      const result = await generateCompanySpotlight({
-        conn: ctx.conn,
-        editionId: edition.id,
-        editionDate: today,
-        inferenceService,
-        config,
-        log: ctx.log,
-      });
-
-      await upsertArticle(ctx.conn, edition.id, {
-        contentType: 'company_spotlight',
-        slug: 'company-spotlight',
-        headline: result.headline,
-        body: result.body,
-        sourceData: JSON.stringify(result.sourceData),
-        generatedBy: config.get('newspaperCopyModel') as string,
-        displayOrder: 20,
-        status: 'generated',
-      });
-
-      return {
-        itemsProcessed: 1,
-        itemsFailed: 0,
-        durationMs: Date.now() - start,
-      };
-    },
-  },
-  {
-    id: 'newspaper.orbital-forecast',
-    group: 'newspaper',
-    name: 'Orbital Forecast',
-    description: 'Weekly filing trend analysis with statistics',
-    defaultConcurrency: 1,
-    parallelizable: false,
-    async run(ctx: PipelineContext): Promise<StageResult> {
-      const { isWeeklyGenerationDay } = await import('../newspaper/types.ts');
-      const start: number = Date.now();
-      if (!isWeeklyGenerationDay()) {
-        ctx.log('info', 'Weekly content — skipping (not Monday)');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: 0,
-        };
-      }
-
-      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
-      const { ensureCompanyTables } = await import('../companies/schema.ts');
-      const { getEditionByDate, upsertArticle, getArticle } =
-        await import('../newspaper/repository.ts');
-      const { generateOrbitalForecast } =
-        await import('../newspaper/generators/orbital-forecast.ts');
-      const { getConfigService } = await import('../lib/config.ts');
-      const { InferenceService } =
-        await import('../inference/inference-service.ts');
-      const { InstrumentedBedrockClient } =
-        await import('../inference/instrumented-client.ts');
-      const { BedrockClient } = await import('../inference/bedrock-client.ts');
-      await ensureNewspaperTables(ctx.conn);
-      await ensureCompanyTables(ctx.conn);
-
-      const today: string = new Date().toISOString().split('T')[0]!;
-      const edition = await getEditionByDate(ctx.conn, today);
-      if (!edition) {
-        ctx.log('info', 'No edition for today — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const existing = await getArticle(
-        ctx.conn,
-        edition.id,
-        'orbital-forecast',
-      );
-      if (existing?.status === 'generated') {
-        ctx.log('info', 'Orbital forecast already generated — skipping');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: Date.now() - start,
-        };
-      }
-
-      const config = getConfigService();
-      const region: string = config.get('bedrockRegion') as string;
-      const client = new InstrumentedBedrockClient(
-        new BedrockClient(region),
-        ctx.conn,
-        'newspaper',
-      );
-      const inferenceService = new InferenceService(client);
-
-      const result = await generateOrbitalForecast({
-        conn: ctx.conn,
-        editionId: edition.id,
-        editionDate: today,
-        inferenceService,
-        config,
-        log: ctx.log,
-      });
-
-      await upsertArticle(ctx.conn, edition.id, {
-        contentType: 'orbital_forecast',
-        slug: 'orbital-forecast',
-        headline: result.headline,
-        body: result.body,
-        sourceData: JSON.stringify(result.sourceData),
-        generatedBy: config.get('newspaperCopyModel') as string,
-        displayOrder: 30,
-        status: 'generated',
-      });
-
-      return {
-        itemsProcessed: 1,
-        itemsFailed: 0,
-        durationMs: Date.now() - start,
-      };
-    },
-  },
+  // ── Newspaper: Classifieds (daily) ────────────────────────────
   {
     id: 'newspaper.classifieds',
     group: 'newspaper',
     name: 'Classifieds',
-    description: 'Weekly batch of 7 fake classified ads',
+    description: 'Daily batch of fake classified ads',
     defaultConcurrency: 1,
     parallelizable: false,
     async run(ctx: PipelineContext): Promise<StageResult> {
-      const { isWeeklyGenerationDay } = await import('../newspaper/types.ts');
-      const start: number = Date.now();
-      if (!isWeeklyGenerationDay()) {
-        ctx.log('info', 'Weekly content — skipping (not Monday)');
-        return {
-          itemsProcessed: 0,
-          itemsSkipped: 1,
-          itemsFailed: 0,
-          durationMs: 0,
-        };
-      }
-
       const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
       const { getEditionByDate, upsertArticle, getArticle } =
         await import('../newspaper/repository.ts');
@@ -1529,6 +1216,7 @@ const STAGES: PipelineStage[] = [
       const { InstrumentedBedrockClient } =
         await import('../inference/instrumented-client.ts');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const start: number = Date.now();
       await ensureNewspaperTables(ctx.conn);
 
       const today: string = new Date().toISOString().split('T')[0]!;
@@ -1590,6 +1278,79 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+
+  // ── Newspaper: Slot Dispatchers (daily rotation) ──────────────
+  ...(['slotA', 'slotB', 'slotC'] as const).map(
+    (slotName): PipelineStage => ({
+      id: `newspaper.${slotName.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
+      group: 'newspaper',
+      name: `Slot ${slotName.slice(-1).toUpperCase()} Content`,
+      description: `Daily rotation content for layout slot ${slotName.slice(-1).toUpperCase()}`,
+      defaultConcurrency: 1,
+      parallelizable: false,
+      async run(ctx: PipelineContext): Promise<StageResult> {
+        const { ensureNewspaperTables } =
+          await import('../newspaper/schema.ts');
+        const { ensureCompanyTables } =
+          await import('../companies/schema.ts');
+        const { getEditionByDate } =
+          await import('../newspaper/repository.ts');
+        const { dispatchSlot } =
+          await import('../newspaper/slot-dispatcher.ts');
+        const { getConfigService } = await import('../lib/config.ts');
+        const { InferenceService } =
+          await import('../inference/inference-service.ts');
+        const { InstrumentedBedrockClient } =
+          await import('../inference/instrumented-client.ts');
+        const { BedrockClient } =
+          await import('../inference/bedrock-client.ts');
+        const start: number = Date.now();
+        await ensureNewspaperTables(ctx.conn);
+        await ensureCompanyTables(ctx.conn);
+
+        const today: string = new Date().toISOString().split('T')[0]!;
+        const edition = await getEditionByDate(ctx.conn, today);
+        if (!edition) {
+          ctx.log('info', 'No edition for today — skipping');
+          return {
+            itemsProcessed: 0,
+            itemsSkipped: 1,
+            itemsFailed: 0,
+            durationMs: Date.now() - start,
+          };
+        }
+
+        const config = getConfigService();
+        const region: string = config.get('bedrockRegion') as string;
+        const client = new InstrumentedBedrockClient(
+          new BedrockClient(region),
+          ctx.conn,
+          'newspaper',
+        );
+        const inferenceService = new InferenceService(client);
+
+        const result = await dispatchSlot(
+          slotName,
+          ctx.conn,
+          edition.id,
+          today,
+          inferenceService,
+          config,
+          ctx.log,
+        );
+
+        return {
+          itemsProcessed: result ? 1 : 0,
+          itemsSkipped: result ? 0 : 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+          summary: result
+            ? `${result.contentType}: ${result.result.headline}`
+            : 'skipped',
+        };
+      },
+    }),
+  ),
   {
     id: 'newspaper.check-images',
     group: 'newspaper',
@@ -1601,9 +1362,8 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const start: number = Date.now();
       const { getConfigService } = await import('../lib/config.ts');
-      const { runImageHealthCheck } = await import(
-        '../newspaper/image-health.ts'
-      );
+      const { runImageHealthCheck } =
+        await import('../newspaper/image-health.ts');
 
       const config = getConfigService();
       const appBaseUrl: string = config.get('appBaseUrl') as string;
@@ -1631,10 +1391,7 @@ const STAGES: PipelineStage[] = [
           }
         }
       } else {
-        ctx.log(
-          'info',
-          `All ${String(report.totalChecked)} images OK`,
-        );
+        ctx.log('info', `All ${String(report.totalChecked)} images OK`);
       }
 
       return {
@@ -1701,11 +1458,11 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
       'newspaper.daily-digest',
       'newspaper.hero-image',
       'newspaper.fake-ad',
-      'newspaper.weekly-editorial',
       'newspaper.editorial-cartoon',
-      'newspaper.company-spotlight',
-      'newspaper.orbital-forecast',
       'newspaper.classifieds',
+      'newspaper.slot-a',
+      'newspaper.slot-b',
+      'newspaper.slot-c',
       'newspaper.check-images',
     ],
   },

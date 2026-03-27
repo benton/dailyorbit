@@ -78,16 +78,30 @@ async function ensureCompanySchema(conn: DuckDBConnection): Promise<void> {
   await ensureCompanyTables(conn);
 }
 
-const CONTENT_TYPES: Record<string, ContentTypeDef> = {
-  daily_digest: {
-    contentType: 'daily_digest',
-    slug: 'three-miles-up',
-    displayOrder: 1,
+/** Helper to create a standard text generator entry */
+function makeTextDef(
+  contentType: NewspaperContentType,
+  slug: string,
+  displayOrder: number,
+  importPath: string,
+  fnName: string,
+): ContentTypeDef {
+  return {
+    contentType,
+    slug,
+    displayOrder,
     generatedByKey: 'newspaperCopyModel',
     generate: async (ctx, editionId, editionDate, log) => {
-      const { generateDailyDigest } =
-        await import('../../newspaper/generators/daily-digest.ts');
-      return generateDailyDigest({
+      const mod = await import(importPath);
+      const fn = mod[fnName] as (opts: {
+        conn: DuckDBConnection;
+        editionId: number;
+        editionDate: string;
+        inferenceService: InferenceServiceType;
+        config: ConfigServiceType;
+        log: (level: string, msg: string) => void;
+      }) => Promise<GeneratorResult>;
+      return fn({
         conn: ctx.conn,
         editionId,
         editionDate,
@@ -96,7 +110,13 @@ const CONTENT_TYPES: Record<string, ContentTypeDef> = {
         log: (level: string, msg: string) => log(level, msg),
       });
     },
-  },
+  };
+}
+
+const CONTENT_TYPES: Record<string, ContentTypeDef> = {
+  // ── Daily types ────────────────────────────────────────────
+  daily_digest: makeTextDef('daily_digest', 'three-miles-up', 1,
+    '../../newspaper/generators/daily-digest.ts', 'generateDailyDigest'),
   hero_image: {
     contentType: 'hero_image',
     slug: 'hero-image',
@@ -116,42 +136,8 @@ const CONTENT_TYPES: Record<string, ContentTypeDef> = {
       });
     },
   },
-  fake_ad: {
-    contentType: 'fake_ad',
-    slug: 'fake-ad',
-    displayOrder: 90,
-    generatedByKey: 'newspaperCopyModel',
-    generate: async (ctx, editionId, editionDate, log) => {
-      const { generateFakeAd } =
-        await import('../../newspaper/generators/fake-ad.ts');
-      return generateFakeAd({
-        conn: ctx.conn,
-        editionId,
-        editionDate,
-        inferenceService: ctx.inferenceService,
-        config: ctx.config,
-        log: (level: string, msg: string) => log(level, msg),
-      });
-    },
-  },
-  editorial: {
-    contentType: 'editorial',
-    slug: 'over-the-horizon',
-    displayOrder: 10,
-    generatedByKey: 'newspaperCopyModel',
-    generate: async (ctx, editionId, editionDate, log) => {
-      const { generateEditorial } =
-        await import('../../newspaper/generators/editorial.ts');
-      return generateEditorial({
-        conn: ctx.conn,
-        editionId,
-        editionDate,
-        inferenceService: ctx.inferenceService,
-        config: ctx.config,
-        log: (level: string, msg: string) => log(level, msg),
-      });
-    },
-  },
+  fake_ad: makeTextDef('fake_ad', 'fake-ad', 90,
+    '../../newspaper/generators/fake-ad.ts', 'generateFakeAd'),
   editorial_cartoon: {
     contentType: 'editorial_cartoon',
     slug: 'editorial-cartoon',
@@ -171,74 +157,65 @@ const CONTENT_TYPES: Record<string, ContentTypeDef> = {
       });
     },
   },
-  company_spotlight: {
-    contentType: 'company_spotlight',
-    slug: 'company-spotlight',
-    displayOrder: 20,
-    generatedByKey: 'newspaperCopyModel',
-    generate: async (ctx, editionId, editionDate, log) => {
-      const { generateCompanySpotlight } =
-        await import('../../newspaper/generators/company-spotlight.ts');
-      return generateCompanySpotlight({
-        conn: ctx.conn,
-        editionId,
-        editionDate,
-        inferenceService: ctx.inferenceService,
-        config: ctx.config,
-        log: (level: string, msg: string) => log(level, msg),
-      });
-    },
-    extraSchemas: async () => {},
-  },
-  orbital_forecast: {
-    contentType: 'orbital_forecast',
-    slug: 'orbital-forecast',
-    displayOrder: 30,
-    generatedByKey: 'newspaperCopyModel',
-    generate: async (ctx, editionId, editionDate, log) => {
-      const { generateOrbitalForecast } =
-        await import('../../newspaper/generators/orbital-forecast.ts');
-      return generateOrbitalForecast({
-        conn: ctx.conn,
-        editionId,
-        editionDate,
-        inferenceService: ctx.inferenceService,
-        config: ctx.config,
-        log: (level: string, msg: string) => log(level, msg),
-      });
-    },
-    extraSchemas: async () => {},
-  },
-  classifieds: {
-    contentType: 'classifieds',
-    slug: 'classifieds',
-    displayOrder: 80,
-    generatedByKey: 'newspaperCopyModel',
-    generate: async (ctx, editionId, editionDate, log) => {
-      const { generateClassifieds } =
-        await import('../../newspaper/generators/classifieds.ts');
-      return generateClassifieds({
-        conn: ctx.conn,
-        editionId,
-        editionDate,
-        inferenceService: ctx.inferenceService,
-        config: ctx.config,
-        log: (level: string, msg: string) => log(level, msg),
-      });
-    },
-  },
+  classifieds: makeTextDef('classifieds', 'classifieds', 80,
+    '../../newspaper/generators/classifieds.ts', 'generateClassifieds'),
+
+  // ── Slot A types ───────────────────────────────────────────
+  orbital_forecast: makeTextDef('orbital_forecast', 'orbital-forecast', 30,
+    '../../newspaper/generators/orbital-forecast.ts', 'generateOrbitalForecast'),
+  the_docket: makeTextDef('the_docket', 'the-docket', 30,
+    '../../newspaper/generators/the-docket.ts', 'generateTheDocket'),
+  spectrum_watch: makeTextDef('spectrum_watch', 'spectrum-watch', 30,
+    '../../newspaper/generators/spectrum-watch.ts', 'generateSpectrumWatch'),
+  competitive_intel: makeTextDef('competitive_intel', 'competitive-intel', 30,
+    '../../newspaper/generators/competitive-intel.ts', 'generateCompetitiveIntel'),
+
+  // ── Slot B types ───────────────────────────────────────────
+  company_spotlight: makeTextDef('company_spotlight', 'company-spotlight', 20,
+    '../../newspaper/generators/company-spotlight.ts', 'generateCompanySpotlight'),
+  filing_in_focus: makeTextDef('filing_in_focus', 'filing-in-focus', 20,
+    '../../newspaper/generators/filing-in-focus.ts', 'generateFilingInFocus'),
+  the_applicant: makeTextDef('the_applicant', 'the-applicant', 20,
+    '../../newspaper/generators/the-applicant.ts', 'generateTheApplicant'),
+  tech_spotlight: makeTextDef('tech_spotlight', 'tech-spotlight', 20,
+    '../../newspaper/generators/tech-spotlight.ts', 'generateTechSpotlight'),
+  from_the_archives: makeTextDef('from_the_archives', 'from-the-archives', 20,
+    '../../newspaper/generators/from-the-archives.ts', 'generateFromTheArchives'),
+
+  // ── Slot C types ───────────────────────────────────────────
+  editorial: makeTextDef('editorial', 'over-the-horizon', 10,
+    '../../newspaper/generators/editorial.ts', 'generateEditorial'),
+  counsels_brief: makeTextDef('counsels_brief', 'counsels-brief', 10,
+    '../../newspaper/generators/counsels-brief.ts', 'generateCounselsBrief'),
+  letters_to_editor: makeTextDef('letters_to_editor', 'letters-to-the-editor', 10,
+    '../../newspaper/generators/letters-to-editor.ts', 'generateLettersToEditor'),
+  market_signals: makeTextDef('market_signals', 'market-signals', 10,
+    '../../newspaper/generators/market-signals.ts', 'generateMarketSignals'),
+  press_gallery: makeTextDef('press_gallery', 'press-gallery', 10,
+    '../../newspaper/generators/press-gallery.ts', 'generatePressGallery'),
 };
 
-// Daily types always generated; weekly types generated for --type all
-const DAILY_TYPES: string[] = ['daily_digest', 'hero_image', 'fake_ad'];
-const WEEKLY_TYPES: string[] = [
-  'editorial',
-  'editorial_cartoon',
-  'company_spotlight',
-  'orbital_forecast',
-  'classifieds',
+// Daily types always generated
+const DAILY_TYPES: string[] = [
+  'daily_digest', 'hero_image', 'fake_ad', 'editorial_cartoon', 'classifieds',
 ];
-const ALL_TYPES: string[] = [...DAILY_TYPES, ...WEEKLY_TYPES];
+/**
+ * Determine which rotation types to generate for a given date.
+ * Returns the 3 slot types scheduled for that day of the week.
+ */
+async function getRotationTypesForDate(editionDate: string): Promise<string[]> {
+  const dayOfWeek: number = new Date(editionDate + 'T12:00:00Z').getUTCDay();
+  if (dayOfWeek === 0 || dayOfWeek === 6) return [];
+
+  const { getContentTypesForDay } =
+    await import('../../newspaper/rotation.ts');
+  const slots = getContentTypesForDay(dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6);
+  const result: string[] = [];
+  if (slots.slotA) result.push(slots.slotA);
+  if (slots.slotB) result.push(slots.slotB);
+  if (slots.slotC) result.push(slots.slotC);
+  return result;
+}
 
 const VALID_TYPES: string = [...Object.keys(CONTENT_TYPES), 'all'].join(', ');
 
@@ -303,8 +280,14 @@ export const newspaperCommand = defineCommand({
             args.region,
           );
 
-          const typesToRun: string[] =
-            args.type === 'all' ? ALL_TYPES : [args.type];
+          let typesToRun: string[];
+          if (args.type === 'all') {
+            const rotationTypes: string[] =
+              await getRotationTypesForDate(editionDate);
+            typesToRun = [...DAILY_TYPES, ...rotationTypes];
+          } else {
+            typesToRun = [args.type];
+          }
 
           for (const typeName of typesToRun) {
             const def: ContentTypeDef | undefined = CONTENT_TYPES[typeName];
@@ -701,8 +684,7 @@ export const newspaperCommand = defineCommand({
     'check-images': defineCommand({
       meta: {
         name: 'check-images',
-        description:
-          'Check that newspaper images are reachable on the CDN',
+        description: 'Check that newspaper images are reachable on the CDN',
       },
       args: {
         database: databaseArg,

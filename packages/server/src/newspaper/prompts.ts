@@ -298,3 +298,403 @@ Each ad should be 2-3 lines in this format:
 Categories: FOR SALE, WANTED, SERVICES, POSITIONS AVAILABLE, LOST & FOUND
 
 Be creative and humorous. Reference real satellite industry concepts in absurd ways.`;
+
+// ── The Docket template variables ───────────────────────────────
+
+export const DOCKET_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Tuesday, March 25, 2026',
+  },
+  {
+    name: 'filingsBySubsystem',
+    description: 'Yesterday\'s filings grouped by subsystem code',
+    source: 'db query',
+    example: 'SAT: 8 filings\nSES: 12 filings',
+  },
+  {
+    name: 'topApplicants',
+    description: 'Top applicants from yesterday\'s filings',
+    source: 'db query',
+    example: '- SpaceX: 3 filings\n- Hughes: 2 filings',
+  },
+];
+
+export const DEFAULT_DOCKET_SYSTEM_PROMPT: string = `You are a court reporter for "The Daily Orbit" newspaper. You write the daily "The Docket" column — a brief, factual snapshot of yesterday's FCC filing activity. Your tone is crisp and reportorial. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_DOCKET_USER_PROMPT: string = `Write today's "The Docket" column for {{editionDate}}.
+
+Yesterday's filings by subsystem:
+{{{filingsBySubsystem}}}
+
+Top applicants:
+{{{topApplicants}}}
+
+Write 1-2 short paragraphs summarizing the filing activity. Reference specific numbers, subsystems, and notable applicants.`;
+
+// ── Spectrum Watch template variables ───────────────────────────
+
+export const SPECTRUM_WATCH_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Wednesday, March 26, 2026',
+  },
+  {
+    name: 'subsystemBreakdown',
+    description: 'This week\'s filing subsystem breakdown with counts',
+    source: 'db query',
+    example: 'SAT: 15 (avg 10.2, +47%)\nSES: 22 (avg 18.5, +19%)',
+  },
+];
+
+export const DEFAULT_SPECTRUM_WATCH_SYSTEM_PROMPT: string = `You are a spectrum analyst for "The Daily Orbit" newspaper. You write the weekly "Spectrum Watch" column — a numbers-driven look at which frequency bands and subsystems are seeing action. Your tone is analytical and data-focused. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_SPECTRUM_WATCH_USER_PROMPT: string = `Write this week's "Spectrum Watch" column for the week of {{editionDate}}.
+
+Filing activity by subsystem this week:
+{{{subsystemBreakdown}}}
+
+Write 1-2 paragraphs highlighting which subsystems are hot, which are quiet, and what that might signal. Use specific numbers and percentages.`;
+
+// ── Competitive Intelligence template variables ─────────────────
+
+export const COMPETITIVE_INTEL_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Thursday, March 27, 2026',
+  },
+  {
+    name: 'companyOverlaps',
+    description: 'Companies filing in overlapping areas this week',
+    source: 'db query',
+    example: '- SpaceX and OneWeb both active in SAT-STA\n- Viasat and Hughes in SES-MOD',
+  },
+];
+
+export const DEFAULT_COMPETITIVE_INTEL_SYSTEM_PROMPT: string = `You are a competitive intelligence analyst for "The Daily Orbit" newspaper. You write the weekly "Competitive Intelligence" column — a brief analysis of which companies are filing in overlapping areas. Your tone is analytical but accessible. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_COMPETITIVE_INTEL_USER_PROMPT: string = `Write this week's "Competitive Intelligence" column for the week of {{editionDate}}.
+
+Companies filing in overlapping areas this week:
+{{{companyOverlaps}}}
+
+Write 1-2 paragraphs highlighting the most interesting competitive overlaps. Which companies are going head-to-head? What might this mean strategically?`;
+
+// ── Filing in Focus template variables ──────────────────────────
+
+export const FILING_IN_FOCUS_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Tuesday, March 25, 2026',
+  },
+  {
+    name: 'fileNumber',
+    description: 'The filing\'s file number',
+    source: 'db query',
+    example: 'SAT-LOA-20260324-00042',
+  },
+  {
+    name: 'applicantName',
+    description: 'Name of the applicant',
+    source: 'db query',
+    example: 'Hughes Network Systems, LLC',
+  },
+  {
+    name: 'filingType',
+    description: 'Subsystem and application type',
+    source: 'db query',
+    example: 'SAT-LOA (Launch and Operate)',
+  },
+  {
+    name: 'filingSummary',
+    description: 'Summary of the filing\'s attachments',
+    source: 'db query',
+    example: 'Application to launch and operate a non-geostationary...',
+  },
+  {
+    name: 'companyDescription',
+    description: 'Description of the filing company if available',
+    source: 'db query',
+    example: 'A leading provider of satellite broadband services...',
+  },
+];
+
+export const DEFAULT_FILING_IN_FOCUS_SYSTEM_PROMPT: string = `You are a regulatory affairs journalist for "The Daily Orbit" newspaper. You write the "Filing in Focus" column — a deep dive on one interesting recent FCC filing. Your tone is informative and analytical. Write in flowing prose — no bullet points. Include a link to the filing page as [File Number](/filings/FILE-NUMBER).`;
+
+export const DEFAULT_FILING_IN_FOCUS_USER_PROMPT: string = `Write today's "Filing in Focus" column for {{editionDate}}.
+
+Filing: {{fileNumber}}
+Applicant: {{applicantName}}
+Type: {{filingType}}
+Company background: {{companyDescription}}
+
+Filing details:
+{{{filingSummary}}}
+
+Write 2-3 paragraphs examining what this filing is asking for, who is asking, and why it matters. Include a link to the filing page.`;
+
+// ── The Applicant template variables ────────────────────────────
+
+export const APPLICANT_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Wednesday, March 26, 2026',
+  },
+  {
+    name: 'companyName',
+    description: 'Canonical company name',
+    source: 'db query',
+    example: 'Telesat Canada',
+  },
+  {
+    name: 'companyId',
+    description: 'Company ID for link generation',
+    source: 'db query',
+    example: '42',
+  },
+  {
+    name: 'companyDescription',
+    description: 'Company description if available',
+    source: 'db query',
+    example: 'A Canadian satellite communications company...',
+  },
+  {
+    name: 'parentCompany',
+    description: 'Parent company name if applicable',
+    source: 'db query',
+    example: 'None',
+  },
+  {
+    name: 'recentFilings',
+    description: 'Summary of recent filings by this company',
+    source: 'db query',
+    example: '- SAT-MOD-20260320-00001: Modification...',
+  },
+  {
+    name: 'aliases',
+    description: 'Known aliases for this company',
+    source: 'db query',
+    example: 'TELESAT CANADA; Telesat Network Inc.',
+  },
+];
+
+export const DEFAULT_APPLICANT_SYSTEM_PROMPT: string = `You are a business journalist for "The Daily Orbit" newspaper. You write "The Applicant" column — a curious, exploratory profile of a less-prominent company active in FCC filings. Your tone is inquisitive and accessible. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_APPLICANT_USER_PROMPT: string = `Write this week's "The Applicant" column for {{editionDate}}.
+
+Company: {{companyName}}
+Company page: [{{companyName}}](/companies/{{companyId}})
+Description: {{companyDescription}}
+Parent company: {{parentCompany}}
+Known aliases: {{aliases}}
+
+Recent filings:
+{{{recentFilings}}}
+
+Write 2-3 paragraphs profiling this company. Who are they? What is their niche in the satellite communications landscape? What does their recent filing activity suggest? Include a link to the company page.`;
+
+// ── Technology Spotlight template variables ──────────────────────
+
+export const TECH_SPOTLIGHT_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Thursday, March 27, 2026',
+  },
+  {
+    name: 'newsSummaries',
+    description: 'Recent technology-related news summaries',
+    source: 'db query',
+    example: '- SpaceNews: New phased array antenna...',
+  },
+];
+
+export const DEFAULT_TECH_SPOTLIGHT_SYSTEM_PROMPT: string = `You are a technology correspondent for "The Daily Orbit" newspaper. You write the "Technology Spotlight" column — an accessible look at emerging satellite technology. Your tone bridges technical and business audiences. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_TECH_SPOTLIGHT_USER_PROMPT: string = `Write this week's "Technology Spotlight" column for {{editionDate}}.
+
+Recent technology news:
+{{{newsSummaries}}}
+
+Write 2-3 paragraphs highlighting one technology trend from the news. What is the technology? Why does it matter for the satellite industry? How might it affect regulatory filings? Include source attributions.`;
+
+// ── From the Archives template variables ────────────────────────
+
+export const ARCHIVES_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Friday, March 28, 2026',
+  },
+  {
+    name: 'historicalFilings',
+    description: 'Filings from the same ISO week in prior years',
+    source: 'db query',
+    example: '- SAT-LOA-20240325-00015: SpaceX filed for...',
+  },
+];
+
+export const DEFAULT_ARCHIVES_SYSTEM_PROMPT: string = `You are a history columnist for "The Daily Orbit" newspaper. You write "From the Archives" — a nostalgic, reflective column connecting past FCC filings to the present. Your tone is warm and storytelling-oriented. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_ARCHIVES_USER_PROMPT: string = `Write this week's "From the Archives" column for {{editionDate}}.
+
+Filings from the same week in prior years:
+{{{historicalFilings}}}
+
+Write 2-3 paragraphs connecting one or more historical filings to the present. What was filed? What came of it? How does it relate to current events? Include filing links as [File Number](/filings/FILE-NUMBER).`;
+
+// ── The Counsel's Brief template variables ──────────────────────
+
+export const COUNSELS_BRIEF_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Tuesday, March 25, 2026',
+  },
+  {
+    name: 'filingSummaries',
+    description: 'Recent filings with regulatory relevance',
+    source: 'db query',
+    example: '- SAT-LOA-20260324-00042: Hughes Network Systems filed...',
+  },
+  {
+    name: 'newsSummaries',
+    description: 'Recent regulatory/legal news',
+    source: 'db query',
+    example: '- FCC Federal Register: New NPRM on spectrum sharing...',
+  },
+];
+
+export const DEFAULT_COUNSELS_BRIEF_SYSTEM_PROMPT: string = `You are The Counsel, a senior regulatory attorney writing for "The Daily Orbit" newspaper. Your column "The Counsel's Brief" provides focused legal and regulatory analysis. Your tone is authoritative and analytical, aimed at telecommunications attorneys. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_COUNSELS_BRIEF_USER_PROMPT: string = `Write this week's "The Counsel's Brief" column for {{editionDate}}.
+
+Recent notable filings:
+{{{filingSummaries}}}
+
+Recent regulatory news:
+{{{newsSummaries}}}
+
+Write 3-4 paragraphs of regulatory analysis. What are the legal implications? What should practitioners watch? End with: "— The Counsel"`;
+
+// ── Letters to the Editor template variables ────────────────────
+
+export const LETTERS_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Wednesday, March 26, 2026',
+  },
+  {
+    name: 'previousDigest',
+    description: 'Previous edition\'s daily digest content',
+    source: 'db query',
+    example: 'Yesterday\'s 300 Miles Up column discussed...',
+  },
+  {
+    name: 'previousEditorial',
+    description: 'Previous edition\'s editorial/slot C content',
+    source: 'db query',
+    example: 'The Counsel\'s Brief analyzed...',
+  },
+];
+
+export const DEFAULT_LETTERS_SYSTEM_PROMPT: string = `You are the letters editor for "The Daily Orbit" newspaper. You compose fictional Victorian-voice reader letters reacting to recent editions. Each letter should be from a distinct character — perhaps a retired admiral, a frontier telegraph operator, a concerned stockholder. Include brief editor responses in brackets. The tone is affectionate, humorous, and in-character for 1890s correspondence.`;
+
+export const DEFAULT_LETTERS_USER_PROMPT: string = `Write this week's "Letters to the Editor" column for {{editionDate}}.
+
+Yesterday's lead column:
+{{{previousDigest}}}
+
+Yesterday's editorial:
+{{{previousEditorial}}}
+
+Write 2-3 short fictional letters reacting to the previous edition's content. Each letter should:
+- Have a "Dear Sir" or "To the Editor" salutation
+- Be from a distinct character with a humorous title
+- React to specific content from the previous edition
+- End with an editor's note in [brackets]`;
+
+// ── Market Signals template variables ───────────────────────────
+
+export const MARKET_SIGNALS_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Thursday, March 27, 2026',
+  },
+  {
+    name: 'ownershipEvents',
+    description: 'Recent ownership events (M&A, transfers)',
+    source: 'db query',
+    example: '- EchoStar acquired Hughes: transfer of control filed 2026-03-20',
+  },
+  {
+    name: 'filingSummaries',
+    description: 'Recent filings with market relevance',
+    source: 'db query',
+    example: '- SAT-T/C-20260320-00001: Transfer of control from...',
+  },
+  {
+    name: 'newsSummaries',
+    description: 'Recent business/strategy news',
+    source: 'db query',
+    example: '- Via Satellite: Viasat announces strategic review...',
+  },
+];
+
+export const DEFAULT_MARKET_SIGNALS_SYSTEM_PROMPT: string = `You are The Strategist, a business analyst writing for "The Daily Orbit" newspaper. Your column "Market Signals" analyzes what regulatory filings and ownership events reveal about market direction. Your tone is that of a seasoned business strategist. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_MARKET_SIGNALS_USER_PROMPT: string = `Write this week's "Market Signals" column for {{editionDate}}.
+
+Recent ownership events:
+{{{ownershipEvents}}}
+
+Recent notable filings:
+{{{filingSummaries}}}
+
+Recent business news:
+{{{newsSummaries}}}
+
+Write 3-4 paragraphs of strategic analysis. What do this week's filings and events reveal about where the industry is heading? End with: "— The Strategist"`;
+
+// ── Press Gallery template variables ────────────────────────────
+
+export const PRESS_GALLERY_VARIABLES: ReadonlyArray<TemplateVariable> = [
+  {
+    name: 'editionDate',
+    description: 'Display-formatted date',
+    source: 'edition',
+    example: 'Friday, March 28, 2026',
+  },
+  {
+    name: 'weeklyNews',
+    description: 'All news items from the current week',
+    source: 'db query',
+    example: '- SpaceNews: Viasat announces...\n- Via Satellite: OneWeb launches...',
+  },
+];
+
+export const DEFAULT_PRESS_GALLERY_SYSTEM_PROMPT: string = `You are The Editor-in-Chief of "The Daily Orbit" newspaper. Your column "From the Press Gallery" synthesizes and comments on the week's news coverage. Your tone is that of a seasoned media critic with deep industry knowledge. Write in flowing prose — no bullet points.`;
+
+export const DEFAULT_PRESS_GALLERY_USER_PROMPT: string = `Write this week's "From the Press Gallery" column for {{editionDate}}.
+
+This week's news coverage:
+{{{weeklyNews}}}
+
+Write 3-4 paragraphs wrapping up the week in satellite industry news. Which stories mattered most? What did the coverage reveal? What should readers watch next week? Include source attributions. End with: "— The Editor-in-Chief"`;

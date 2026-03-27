@@ -11,20 +11,41 @@ import type {
 import { apiFetch } from '../lib/api.ts';
 import './newspaper.css';
 import Masthead from './Masthead.tsx';
-import CompanySpotlight from './sections/CompanySpotlight.tsx';
 import DailyDigest from './sections/DailyDigest.tsx';
-import Editorial from './sections/Editorial.tsx';
 import FakeAd from './sections/FakeAd.tsx';
 import HouseAd from './sections/HouseAd.tsx';
-import OrbitalForecast from './sections/OrbitalForecast.tsx';
+import SlotA from './sections/SlotA.tsx';
+import SlotB from './sections/SlotB.tsx';
+import SlotC from './sections/SlotC.tsx';
 import WideBandTransmissions from './sections/WideBandTransmissions.tsx';
 import YesterdaysFilings from './sections/YesterdaysFilings.tsx';
+
+// ── Slot content type groups ────────────────────────────────────
+
+const SLOT_A_TYPES: ReadonlyArray<NewspaperContentType> = [
+  'orbital_forecast', 'the_docket', 'spectrum_watch', 'competitive_intel',
+];
+
+const SLOT_B_TYPES: ReadonlyArray<NewspaperContentType> = [
+  'company_spotlight', 'filing_in_focus', 'the_applicant', 'tech_spotlight', 'from_the_archives',
+];
+
+const SLOT_C_TYPES: ReadonlyArray<NewspaperContentType> = [
+  'editorial', 'counsels_brief', 'letters_to_editor', 'market_signals', 'press_gallery',
+];
 
 function findArticle(
   articles: Array<Article>,
   contentType: NewspaperContentType,
 ): Article | undefined {
   return articles.find((a) => a.contentType === contentType && a.status === 'generated');
+}
+
+function findSlotArticle(
+  articles: Array<Article>,
+  types: ReadonlyArray<NewspaperContentType>,
+): Article | undefined {
+  return articles.find((a) => types.includes(a.contentType) && a.status === 'generated');
 }
 
 export default function NewspaperView() {
@@ -78,13 +99,14 @@ export default function NewspaperView() {
   const dailyDigest: Article | undefined = findArticle(edition.articles, 'daily_digest');
   const heroImage: Article | undefined = findArticle(edition.articles, 'hero_image');
   const fakeAd: Article | undefined = findArticle(edition.articles, 'fake_ad');
-  const editorial: Article | undefined = findArticle(edition.articles, 'editorial');
   const cartoon: Article | undefined = findArticle(edition.articles, 'editorial_cartoon');
-  const spotlight: Article | undefined = findArticle(edition.articles, 'company_spotlight');
-  const forecast: Article | undefined = findArticle(edition.articles, 'orbital_forecast');
   const classifieds: Article | undefined = findArticle(edition.articles, 'classifieds');
 
-  const hasSecondRow: boolean = !!(spotlight || editorial);
+  const slotAArticle: Article | undefined = findSlotArticle(edition.articles, SLOT_A_TYPES);
+  const slotBArticle: Article | undefined = findSlotArticle(edition.articles, SLOT_B_TYPES);
+  const slotCArticle: Article | undefined = findSlotArticle(edition.articles, SLOT_C_TYPES);
+
+  const hasSecondRow: boolean = !!(slotBArticle || slotCArticle);
 
   return (
     <div className="newspaper-wrapper">
@@ -106,28 +128,34 @@ export default function NewspaperView() {
           ) : (
             <div className="grid-lead" />
           )}
-          {forecast ? <OrbitalForecast article={forecast} /> : <div className="grid-orbital" />}
+          {slotAArticle ? (
+            <SlotA article={slotAArticle} />
+          ) : (
+            <div className="grid-orbital" />
+          )}
 
           {/* Row 2 — Yesterday's Filings */}
           {recentFilings && recentFilings.filings.length > 0 && (
             <YesterdaysFilings dayLabel={recentFilings.dayLabel} filings={recentFilings.filings} />
           )}
 
-          {/* Row 3 — Company Spotlight + News + House Ad (left) | Editorial (right) */}
+          {/* Row 3 — Slot B (left) | Slot C (right) */}
           {hasSecondRow && (
             <>
-              {spotlight ? (
-                <CompanySpotlight article={spotlight} newsItems={newsItems}>
-                  <HouseAd editionDate={edition.editionDate} />
-                </CompanySpotlight>
+              {slotBArticle ? (
+                <SlotB
+                  article={slotBArticle}
+                  editionDate={edition.editionDate}
+                  newsItems={newsItems}
+                />
               ) : (
                 <div className="grid-company">
                   {newsItems.length > 0 && <WideBandTransmissions newsItems={newsItems} />}
                   <HouseAd editionDate={edition.editionDate} />
                 </div>
               )}
-              {editorial ? (
-                <Editorial article={editorial} classifieds={classifieds} />
+              {slotCArticle ? (
+                <SlotC article={slotCArticle} classifieds={classifieds} />
               ) : (
                 <div className="grid-editorial" />
               )}

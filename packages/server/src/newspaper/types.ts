@@ -12,14 +12,29 @@ export type ArticleStatus = 'pending' | 'generated' | 'failed';
 
 /** Content types for newspaper articles */
 export type NewspaperContentType =
+  // Daily (every day)
   | 'daily_digest'
   | 'hero_image'
   | 'fake_ad'
-  | 'editorial'
   | 'editorial_cartoon'
-  | 'company_spotlight'
+  | 'classifieds'
+  // Slot A rotation
   | 'orbital_forecast'
-  | 'classifieds';
+  | 'the_docket'
+  | 'spectrum_watch'
+  | 'competitive_intel'
+  // Slot B rotation
+  | 'company_spotlight'
+  | 'filing_in_focus'
+  | 'the_applicant'
+  | 'tech_spotlight'
+  | 'from_the_archives'
+  // Slot C rotation
+  | 'editorial'
+  | 'counsels_brief'
+  | 'letters_to_editor'
+  | 'market_signals'
+  | 'press_gallery';
 
 export type NewspaperEdition = {
   id: number;
@@ -97,14 +112,6 @@ export function getISOWeekNumber(date: Date): number {
   return weekNumber;
 }
 
-/**
- * Returns true if today is Monday (day 1), i.e. weekly content should be generated.
- * Accepts an optional override for testing.
- */
-export function isWeeklyGenerationDay(now?: Date): boolean {
-  const d: Date = now ?? new Date();
-  return d.getDay() === 1; // 1 = Monday
-}
 
 export type HouseAd = {
   id: number;

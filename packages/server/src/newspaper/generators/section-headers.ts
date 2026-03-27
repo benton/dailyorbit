@@ -87,6 +87,37 @@ export const SECTION_HEADERS: ReadonlyArray<SectionHeaderEntry> = [
     name: 'the-crossword',
     prompt: 'central vignette of a crossword puzzle grid',
   },
+  {
+    name: 'spectrum-watch',
+    prompt:
+      'central vignette of radio spectrum waves across frequency bands',
+  },
+  {
+    name: 'competitive-intel',
+    prompt: 'central vignette of two chess pieces facing each other',
+  },
+  {
+    name: 'filing-in-focus',
+    prompt:
+      'central vignette of a magnifying glass over a document',
+  },
+  {
+    name: 'the-applicant',
+    prompt: 'central vignette of a portrait frame with a silhouette',
+  },
+  {
+    name: 'tech-spotlight',
+    prompt: 'central vignette of a mechanical gear with lightning',
+  },
+  {
+    name: 'counsels-brief',
+    prompt: 'central vignette of a judge\'s gavel with legal scales',
+  },
+  {
+    name: 'press-gallery',
+    prompt:
+      'central vignette of a press gallery with notebooks and pencils',
+  },
 ];
 
 // ── Generator function ─────────────────────────────────────────────

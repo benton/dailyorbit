@@ -141,8 +141,8 @@ describe('section header generator', () => {
     expect(client.generateImage).toHaveBeenCalledTimes(0);
   });
 
-  it('has exactly 15 section headers', () => {
-    expect(SECTION_HEADERS).toHaveLength(15);
+  it('has exactly 22 section headers', () => {
+    expect(SECTION_HEADERS).toHaveLength(22);
   });
 
   it('has unique section header names', () => {
