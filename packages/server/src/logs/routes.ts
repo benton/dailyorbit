@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import {
   CloudWatchLogsClient,
@@ -8,30 +6,24 @@ import {
   type ResultField,
 } from '@aws-sdk/client-cloudwatch-logs';
 import { getLogger } from '../lib/logger.ts';
+// Import JSON directly so the bundler inlines it (no runtime fs read)
+import queriesFile from '../../debugscripts/cwl-queries.json' with { type: 'json' };
 
 const logger = getLogger().child({ module: 'logs' });
 
-// --- Load query definitions from shared JSON ---
+// --- Query definitions from shared JSON ---
 
 type QueryDef = {
-  description: string;
   defaultHours: number;
+  description: string;
   query: string;
 };
 
-type QueriesFile = {
-  logGroup: string;
-  queries: Record<string, QueryDef>;
-};
-
-const queriesPath: string = resolve(
-  import.meta.dirname ?? '.',
-  '../../debugscripts/cwl-queries.json',
-);
-const queriesFile: QueriesFile = JSON.parse(
-  readFileSync(queriesPath, 'utf-8'),
-) as QueriesFile;
-const { logGroup, queries } = queriesFile;
+const logGroup: string = queriesFile.logGroup;
+const queries: Record<string, QueryDef> = queriesFile.queries as Record<
+  string,
+  QueryDef
+>;
 
 const VALID_QUERY_NAMES: Set<string> = new Set(Object.keys(queries));
 
