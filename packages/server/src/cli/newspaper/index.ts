@@ -698,6 +698,70 @@ export const newspaperCommand = defineCommand({
       },
     }),
 
+    'check-images': defineCommand({
+      meta: {
+        name: 'check-images',
+        description:
+          'Check that newspaper images are reachable on the CDN',
+      },
+      args: {
+        database: databaseArg,
+        keyFile: keyFileArg,
+        days: {
+          type: 'string',
+          description: 'Number of recent editions to check (default: 7)',
+          default: '7',
+        },
+        'base-url': {
+          type: 'string',
+          description:
+            'Base URL override (default: from appBaseUrl config + /newspaper)',
+          default: '',
+        },
+      },
+      async run({ args }) {
+        const log = getLogger();
+        const dbInstance = await createDb(args.database);
+        const conn: DuckDBConnection =
+          await DuckDBConnection.create(dbInstance);
+
+        try {
+          const { ConfigService } = await import('../../lib/config-service.ts');
+          const { setConfigService } = await import('../../lib/config.ts');
+
+          const key: Buffer = readKeyFile(resolveFromRoot(args.keyFile));
+          const config = new ConfigService(dbInstance, key);
+          await config.load();
+          setConfigService(config);
+
+          const daysBack: number = parseInt(args.days, 10);
+          const baseUrl: string =
+            args['base-url'] ||
+            `${config.get('appBaseUrl') as string}/newspaper`;
+
+          const { runImageHealthCheck } =
+            await import('../../newspaper/image-health.ts');
+          const report = await runImageHealthCheck(conn, baseUrl, daysBack);
+
+          log.info(
+            `Checked ${String(report.totalChecked)} images: ${String(report.totalOk)} OK, ${String(report.totalMissing)} missing/broken`,
+          );
+
+          for (const r of report.results) {
+            if (r.status !== 'ok') {
+              log.warn(`  ${r.status}: ${r.label} → ${r.url}`);
+            }
+          }
+
+          if (report.totalMissing > 0) {
+            process.exitCode = 1;
+          }
+        } finally {
+          conn.closeSync();
+        }
+      },
+    }),
+
     'sync-images': defineCommand({
       meta: {
         name: 'sync-images',

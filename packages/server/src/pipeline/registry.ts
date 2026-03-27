@@ -1590,6 +1590,61 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+  {
+    id: 'newspaper.check-images',
+    group: 'newspaper',
+    name: 'Image Health Check',
+    description:
+      'HEAD-checks recent newspaper images on the CDN and warns about missing or broken URLs',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const start: number = Date.now();
+      const { getConfigService } = await import('../lib/config.ts');
+      const { runImageHealthCheck } = await import(
+        '../newspaper/image-health.ts'
+      );
+
+      const config = getConfigService();
+      const appBaseUrl: string = config.get('appBaseUrl') as string;
+      if (!appBaseUrl || appBaseUrl.includes('localhost')) {
+        ctx.log('info', 'appBaseUrl not configured for production — skipping');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const baseUrl: string = `${appBaseUrl}/newspaper`;
+      const report = await runImageHealthCheck(ctx.conn, baseUrl, 7);
+
+      if (report.totalMissing > 0) {
+        ctx.log(
+          'error',
+          `${String(report.totalMissing)} of ${String(report.totalChecked)} images missing or wrong content-type`,
+        );
+        for (const r of report.results) {
+          if (r.status !== 'ok') {
+            ctx.log('error', `  ${r.status}: ${r.label} → ${r.url}`);
+          }
+        }
+      } else {
+        ctx.log(
+          'info',
+          `All ${String(report.totalChecked)} images OK`,
+        );
+      }
+
+      return {
+        itemsProcessed: report.totalChecked,
+        itemsFailed: report.totalMissing,
+        durationMs: Date.now() - start,
+        summary: `${String(report.totalOk)}/${String(report.totalChecked)} OK`,
+      };
+    },
+  },
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -1651,6 +1706,7 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
       'newspaper.company-spotlight',
       'newspaper.orbital-forecast',
       'newspaper.classifieds',
+      'newspaper.check-images',
     ],
   },
 ];

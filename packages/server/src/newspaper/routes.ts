@@ -294,4 +294,24 @@ newspaperRoutes.get('/house-ad/:date', async (c) => {
   });
 });
 
-export { newspaperRoutes };
+// ── Admin routes (/api/admin/newspaper) ──────────────────────────────
+
+const newspaperAdminRoutes = new Hono();
+
+/** GET /api/admin/newspaper/image-health?days=7 — check CDN reachability */
+newspaperAdminRoutes.get('/image-health', async (c) => {
+  const days: number = Math.min(Number(c.req.query('days')) || 7, 30);
+
+  const { getConfigService } = await import('../lib/config.ts');
+  const { runImageHealthCheck } = await import('./image-health.ts');
+
+  const config = getConfigService();
+  const baseUrl: string = `${config.get('appBaseUrl') as string}/newspaper`;
+
+  const report = await withConn((conn) =>
+    runImageHealthCheck(conn, baseUrl, days),
+  );
+  return c.json(report);
+});
+
+export { newspaperRoutes, newspaperAdminRoutes };
