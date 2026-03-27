@@ -13,6 +13,10 @@ export type DownloadFileOptions = {
   cookies?: string | undefined;
 };
 
+/** Chromium User-Agent to avoid ServiceNow anti-bot detection */
+const BROWSER_USER_AGENT: string =
+  'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
 /**
  * Build a deterministic relative storage key for an attachment file.
  * Pattern: {subsystem}/{hyphenatedFileNumber}/{attachmentKey}.{ext}
@@ -54,8 +58,15 @@ export async function downloadFile(
   // Skip .pdf normalization for authenticated ServiceNow URLs
   const fetchUrl: string = isAuthenticated ? url : normalizeDownloadUrl(url);
 
+  const headers: Record<string, string> = {};
+  if (isAuthenticated) {
+    headers['Cookie'] = options!.cookies!;
+    headers['User-Agent'] = BROWSER_USER_AGENT;
+    headers['Referer'] = 'https://fccprod.servicenowservices.com/icfs';
+  }
+
   const response: Response = await fetchWithRetry(fetchUrl, {
-    headers: isAuthenticated ? { Cookie: options!.cookies! } : undefined,
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
     // Always follow redirects — ServiceNow may redirect authenticated
     // requests legitimately.  We detect session expiry from the response
     // body / final URL instead of the status code.
