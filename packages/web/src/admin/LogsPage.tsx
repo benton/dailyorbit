@@ -42,18 +42,36 @@ const DURATION_COLUMNS: Set<string> = new Set([
 /** Columns that hold timestamps — give them more width */
 const WIDE_COLUMNS: Set<string> = new Set(['ts', '@timestamp']);
 
+function formatTimestamp(value: string, useUtc: boolean): string {
+  const date: Date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  if (useUtc) {
+    return date.toISOString().replace('T', ' ').replace('Z', ' UTC');
+  }
+  return date.toLocaleString();
+}
+
 function buildColumns(
   columnNames: Array<string>,
+  useUtc: boolean,
 ): Array<ColumnDef<Record<string, string>, unknown>> {
   return columnNames.map((name: string) => {
     const isNumeric: boolean = DURATION_COLUMNS.has(name);
     const isWide: boolean = WIDE_COLUMNS.has(name);
+    const isTimestamp: boolean = isWide; // timestamp columns are the wide ones
     return {
       accessorKey: name,
       cell: ({ getValue }) => {
         const val: unknown = getValue();
+        if (val == null) {
+          return <span />;
+        }
+        const str: string = String(val);
+        const display: string = isTimestamp ? formatTimestamp(str, useUtc) : str;
         return (
-          <span className={isNumeric ? 'tabular-nums' : ''}>{val != null ? String(val) : ''}</span>
+          <span className={isNumeric ? 'tabular-nums' : ''}>{display}</span>
         );
       },
       header: name,
@@ -73,6 +91,7 @@ export default function LogsPage() {
   const [refreshInterval, setRefreshInterval] = useState<number>(30);
   const [autoRefreshActive, setAutoRefreshActive] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [useUtc, setUseUtc] = useState<boolean>(true);
 
   // Fetch available queries on mount
   useEffect(() => {
@@ -150,8 +169,8 @@ export default function LogsPage() {
 
   // Build dynamic columns from result
   const columns: Array<ColumnDef<Record<string, string>, unknown>> = useMemo(
-    () => (result != null ? buildColumns(result.columns) : []),
-    [result],
+    () => (result != null ? buildColumns(result.columns, useUtc) : []),
+    [result, useUtc],
   );
 
   // Client-side pagination adapter — sort and paginate locally
@@ -298,6 +317,24 @@ export default function LogsPage() {
                   {opt.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium text-on-surface"
+              htmlFor="logs-tz"
+            >
+              Timestamps
+            </label>
+            <select
+              className="rounded-theme border border-border-theme bg-transparent px-3 py-1.5 text-sm text-on-surface"
+              id="logs-tz"
+              onChange={(e) => setUseUtc(e.target.value === 'utc')}
+              value={useUtc ? 'utc' : 'local'}
+            >
+              <option value="utc">UTC</option>
+              <option value="local">Local</option>
             </select>
           </div>
 

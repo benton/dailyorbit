@@ -1492,7 +1492,6 @@ export default function SearchPage() {
       {/* Page heading */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-on-surface">Search</h1>
-        {isAuthenticated && <SavedSearchPicker onLoad={handleLoadSavedSearch} />}
       </div>
 
       {/* Content search bar */}
@@ -1568,32 +1567,35 @@ export default function SearchPage() {
                 onChange={setEarthStationFilters}
               />
             )}
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSearch} size="sm">
-                Search
-              </Button>
-              <Button onClick={handleClear} size="sm" variant="outline">
-                Clear
-              </Button>
-              {isAuthenticated && activeTab === 'filings' && (
-                <Button onClick={() => setShowSaveModal(true)} size="sm" variant="outline">
-                  <Bookmark className="mr-1.5 h-3.5 w-3.5" />
-                  Save Search
-                </Button>
-              )}
-              {isAuthenticated && (
-                <label className="ml-4 flex items-center gap-1.5 text-sm text-on-surface-muted">
-                  <input
-                    checked={showHidden}
-                    onChange={(e) => setShowHidden(e.target.checked)}
-                    type="checkbox"
-                  />
-                  <Eye className="h-3.5 w-3.5" />
-                  Show hidden items
-                </label>
-              )}
-            </div>
           </div>
+        )}
+      </div>
+
+      {/* Action buttons — below the Filters card */}
+      <div className="flex items-center gap-2">
+        <Button onClick={handleSearch} size="sm">
+          Search
+        </Button>
+        <Button onClick={handleClear} size="sm" variant="outline">
+          Clear
+        </Button>
+        {isAuthenticated && activeTab === 'filings' && (
+          <Button onClick={() => setShowSaveModal(true)} size="sm" variant="outline">
+            <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+            Save Search
+          </Button>
+        )}
+        {isAuthenticated && <SavedSearchPicker onLoad={handleLoadSavedSearch} />}
+        {isAuthenticated && activeTab === 'filings' && (
+          <label className="ml-4 flex items-center gap-1.5 text-sm text-on-surface-muted">
+            <input
+              checked={showHidden}
+              onChange={(e) => setShowHidden(e.target.checked)}
+              type="checkbox"
+            />
+            <Eye className="h-3.5 w-3.5" />
+            Show hidden items
+          </label>
         )}
       </div>
 

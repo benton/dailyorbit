@@ -1,7 +1,8 @@
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Newspaper, PanelTop } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 import { useSettings } from '../lib/settings-context.tsx';
+import { useTheme } from '../lib/theme-provider.tsx';
 import { useAuth } from '../user/AuthContext.tsx';
 import UserMenu from './UserMenu.tsx';
 
@@ -58,6 +59,21 @@ function AlertBadge() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isBroadsheet: boolean = theme === 'broadsheet';
+  return (
+    <button
+      className="rounded-theme p-1.5 text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
+      onClick={toggleTheme}
+      title={isBroadsheet ? 'Switch to Modern theme' : 'Switch to Broadsheet theme'}
+      type="button"
+    >
+      {isBroadsheet ? <PanelTop className="h-4 w-4" /> : <Newspaper className="h-4 w-4" />}
+    </button>
+  );
+}
+
 export default function PublicLayout() {
   const { isAdmin, isAuthenticated } = useAuth();
   const { settings, updateSetting } = useSettings();
@@ -99,6 +115,7 @@ export default function PublicLayout() {
           {isAuthenticated && <NavLink label="Chat" to="/chat" />}
           {isAuthenticated && <AlertBadge />}
           <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
             <button
               className="rounded-theme p-1.5 text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"
               onClick={toggleWide}
