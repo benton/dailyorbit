@@ -308,6 +308,14 @@ export default function FilingDetailPage() {
           <Badge className={`${subsystem.bg} ${subsystem.text} border-transparent`}>
             {subsystem.label}
           </Badge>
+          {filing.dataSource === 'ibfs-legacy' && (
+            <Badge
+              className="border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300"
+              title="This filing was imported from the FCC's legacy IBFS bulk export. Detail data from the current ICFS system is not available."
+            >
+              IBFS
+            </Badge>
+          )}
           {filing.appTypeLabel != null && (
             <span className="text-sm text-on-surface">
               {filing.appTypeLabel} ({filing.appTypeCode})
