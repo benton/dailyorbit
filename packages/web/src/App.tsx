@@ -40,6 +40,7 @@ const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
 const AlertsPage = lazy(() => import('./alerts/AlertsPage.tsx'));
+const LogsPage = lazy(() => import('./admin/LogsPage.tsx'));
 
 const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <ReactRouterLink
@@ -288,6 +289,14 @@ export default function App() {
                   </Suspense>
                 }
                 path="newspaper/portraits"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <LogsPage />
+                  </Suspense>
+                }
+                path="logs"
               />
               <Route
                 element={

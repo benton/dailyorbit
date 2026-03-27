@@ -83,6 +83,13 @@ export default function AdminLayout() {
           >
             Newspaper
           </Link>
+          <span className="text-on-surface-muted dark:text-on-surface-muted">/</span>
+          <Link
+            className="text-sm text-on-surface-muted hover:text-on-surface dark:text-on-surface-muted dark:hover:text-on-surface"
+            to="/admin/logs"
+          >
+            Logs
+          </Link>
           <div className="ml-auto flex items-center gap-3">
             <button
               className="rounded-theme p-1.5 text-on-surface-muted hover:bg-on-surface/10 hover:text-on-surface"

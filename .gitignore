@@ -23,6 +23,7 @@ packages/*/scripts/
 .mcp.json
 *.log
 logs/
+!packages/server/src/logs/
 doc/proposals
 
 # CDK

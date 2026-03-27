@@ -40,6 +40,7 @@ import {
 import { chatRoutes } from './chat/routes.ts';
 import { testAdminRoutes } from './test-utils/routes.ts';
 import { hiddenItemAdminRoutes } from './hidden-item/admin-routes.ts';
+import { logsRoutes } from './logs/routes.ts';
 
 const app = new Hono();
 
@@ -100,6 +101,7 @@ app.route('/api/stats', publicStatsRoutes);
 app.route('/api/consultants', consultantRoutes);
 app.route('/api/conversations', chatRoutes);
 app.route('/api/admin/consultants', consultantAdminRoutes);
+app.route('/api/admin/logs', logsRoutes);
 app.route('/api/admin/test', testAdminRoutes);
 
 // Serve the built frontend when SERVE_STATIC=true (e.g. in Docker).
