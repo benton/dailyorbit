@@ -39,9 +39,14 @@ FROM node:23-slim
 
 WORKDIR /app
 
-# Production node_modules (includes DuckDB native bindings)
+# Production node_modules (includes DuckDB native bindings + Playwright driver)
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_modules
+
+# Install Chromium system dependencies + browser for headless ICFS login
+RUN npx playwright install-deps chromium \
+ && npx playwright install chromium \
+ && rm -rf /var/lib/apt/lists/*
 
 # Built server bundle + package.json (needed for version at runtime)
 COPY --from=build /app/packages/server/dist ./packages/server/dist

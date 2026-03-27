@@ -62,7 +62,6 @@ export async function headlessLogin(
   } = options;
   const log: (msg: string) => void = onStatus ?? (() => {});
 
-  // Dynamic import — Playwright is a devDependency
   let chromium: typeof import('playwright').chromium;
   try {
     const pw = await import('playwright');

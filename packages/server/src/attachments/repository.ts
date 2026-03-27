@@ -710,12 +710,13 @@ export async function markContentTypeValidated(
   conn: DuckDBConnection,
   attachmentKey: number,
   detectedMimeType: string,
+  source: string = 'file_magic',
 ): Promise<void> {
   await conn.run(
     `UPDATE attachment
       SET content_type = $1,
-          content_type_source = 'file_magic'
-      WHERE attachment_key = $2`,
-    [detectedMimeType, attachmentKey] as DuckDBValue[],
+          content_type_source = $2
+      WHERE attachment_key = $3`,
+    [detectedMimeType, source, attachmentKey] as DuckDBValue[],
   );
 }

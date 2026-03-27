@@ -205,6 +205,54 @@ const STAGES: PipelineStage[] = [
       const { getConfigService } = await import('../lib/config.ts');
       const storage = createStorageFromConfig(getConfigService());
       const start: number = Date.now();
+
+      // Auto-login to ICFS if credentials are configured
+      let authCookies: string | undefined;
+      const config = getConfigService();
+      const rawUser = config.get('icfsUsername');
+      const rawPass = config.get('icfsPassword');
+      const username: string =
+        typeof rawUser === 'string' ? rawUser : rawUser.unwrap();
+      const password: string =
+        typeof rawPass === 'string' ? rawPass : rawPass.unwrap();
+
+      if (username && password) {
+        try {
+          const { headlessLogin } =
+            await import('../icfs/headless-login.ts');
+          ctx.log('info', 'Performing headless ICFS login...');
+          const loginResult = await headlessLogin({
+            username,
+            password,
+            headless: true,
+            onStatus: (msg: string) => ctx.log('progress', msg),
+          });
+          if (loginResult.ok) {
+            authCookies = loginResult.output.cookies;
+            ctx.log(
+              'info',
+              `ICFS login OK — ${String(loginResult.output.cookieCount)} cookies, expires ${loginResult.output.expiresAt}`,
+            );
+          } else {
+            ctx.log(
+              'error',
+              `ICFS login failed: ${loginResult.message} — continuing without auth`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg: string = e instanceof Error ? e.message : String(e);
+          ctx.log(
+            'error',
+            `ICFS login error: ${msg} — continuing without auth`,
+          );
+        }
+      } else {
+        ctx.log(
+          'info',
+          'No ICFS credentials configured — skipping authenticated downloads',
+        );
+      }
+
       const result = await runAttachmentPipeline({
         dbInstance: ctx.db,
         storage,
@@ -212,6 +260,7 @@ const STAGES: PipelineStage[] = [
         concurrency: ctx.concurrency,
         signal: ctx.signal,
         stopAfterDownload: true,
+        authCookies,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
       return {

@@ -412,6 +412,19 @@ export async function runAttachmentPipeline(
           }
         } catch (e: unknown) {
           const msg: string = e instanceof Error ? e.message : String(e);
+          const isNotFound: boolean =
+            msg.includes('NotFound') || msg.includes('not found');
+          if (isNotFound) {
+            // File doesn't exist in storage — mark as file_missing so we
+            // don't retry validation every pipeline run
+            await markContentTypeValidated(
+              conn,
+              row.attachmentKey,
+              row.contentType ?? 'application/octet-stream',
+              'file_missing',
+            );
+            validated++;
+          }
           log(`  ${String(row.attachmentKey)}: validation FAILED — ${msg}`);
         }
 
