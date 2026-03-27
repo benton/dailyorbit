@@ -45,7 +45,8 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS extract_status VARCHAR DEFAULT 'pending'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS content_type_source VARCHAR DEFAULT 'http_header'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_checksum VARCHAR`,
-  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS storage_key VARCHAR`,
+  // storage_key is NOT added here — it's in CREATE_TABLE_SQL for new tables,
+  // and migrateLocalPathToStorageKey handles the rename for existing tables.
 ];
 
 const MIGRATE_INDEXES_SQL: string[] = [
@@ -94,20 +95,52 @@ async function migrateLocalPathToStorageKey(
 ): Promise<void> {
   const colReader = await conn.runAndReadAll(`
     SELECT column_name FROM information_schema.columns
-    WHERE table_name = 'attachment' AND column_name = 'local_path'
+    WHERE table_name = 'attachment' AND column_name IN ('local_path', 'storage_key')
   `);
-  const hasLocalPath: boolean = colReader.getRowObjectsJS().length > 0;
-  if (!hasLocalPath) return;
-
-  await conn.run(
-    `ALTER TABLE attachment RENAME COLUMN local_path TO storage_key`,
+  const cols: Set<string> = new Set(
+    colReader.getRowObjectsJS().map((r) => String(r.column_name)),
   );
+  if (!cols.has('local_path')) return;
+
+  // FTS indexes create dependencies that block ALTER TABLE — drop if present
+  await dropAttachmentFtsIndex(conn);
+  // Regular indexes also block column renames
+  await conn.run(`DROP INDEX IF EXISTS idx_attachment_text_checksum`);
+
+  if (cols.has('storage_key')) {
+    // Both columns exist (e.g. partial migration) — copy data then drop old column
+    await conn.run(`
+      UPDATE attachment
+      SET storage_key = local_path
+      WHERE storage_key IS NULL AND local_path IS NOT NULL
+    `);
+    await conn.run(`ALTER TABLE attachment DROP COLUMN local_path`);
+  } else {
+    await conn.run(
+      `ALTER TABLE attachment RENAME COLUMN local_path TO storage_key`,
+    );
+  }
   // Strip any absolute or relative data/attachments/ prefix to make values relative keys
   await conn.run(`
     UPDATE attachment
     SET storage_key = regexp_replace(storage_key, '^(.*?/)?data/attachments/', '')
     WHERE storage_key IS NOT NULL AND storage_key LIKE '%data/attachments/%'
   `);
+
+  // Recreate the index we dropped (FTS is rebuilt separately by the pipeline)
+  await conn.run(
+    `CREATE INDEX IF NOT EXISTS idx_attachment_text_checksum ON attachment(text_checksum)`,
+  );
+}
+
+async function dropAttachmentFtsIndex(conn: DuckDBConnection): Promise<void> {
+  const ftsReader = await conn.runAndReadAll(`
+    SELECT schema_name FROM information_schema.schemata
+    WHERE schema_name = 'fts_main_attachment'
+  `);
+  if (ftsReader.getRowObjectsJS().length === 0) return;
+  await conn.run(`INSTALL fts; LOAD fts;`);
+  await conn.run(`PRAGMA drop_fts_index('attachment')`);
 }
 
 export async function createAttachmentTable(
@@ -117,8 +150,11 @@ export async function createAttachmentTable(
   for (const sql of MIGRATE_COLUMNS_SQL) {
     await conn.run(sql);
   }
-  await migratePrimaryKeyConstraint(conn);
+  // Must run before PK migration: PK migration recreates the table from
+  // CREATE_TABLE_SQL (which has storage_key), so renaming local_path after
+  // that would conflict with the already-existing storage_key column.
   await migrateLocalPathToStorageKey(conn);
+  await migratePrimaryKeyConstraint(conn);
   await migrateFileNumberNormalization(conn);
   for (const sql of MIGRATE_INDEXES_SQL) {
     await conn.run(sql);
