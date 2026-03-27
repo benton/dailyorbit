@@ -279,14 +279,20 @@ export async function runAttachmentPipeline(
     const downloadErrors: Set<number> = new Set();
     let sessionExpired: boolean = false;
 
+    // Throttle authenticated ServiceNow downloads to avoid triggering anti-bot
+    const isAuthenticated: boolean = options.authCookies != null;
+    const downloadConcurrency: number = isAuthenticated ? 3 : concurrency;
+    const downloadDelay: number = isAuthenticated ? 1000 : delayMs;
+
+    // Abort controller lets us stop the queue immediately on session expiry
+    const downloadAbort: AbortController = new AbortController();
+    if (options.signal != null) {
+      options.signal.addEventListener('abort', () => downloadAbort.abort());
+    }
+
     const downloadResults: (DownloadResult | undefined)[] = await processQueue(
       toDownload,
       async (att: AttachmentRow): Promise<DownloadResult> => {
-        // Stop downloading once session has expired — leave remaining items pending
-        if (sessionExpired) {
-          throw new SessionExpiredError(att.downloadUrl);
-        }
-
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
 
         // Download to a temporary key first, then derive final key from content-type
@@ -299,9 +305,7 @@ export async function runAttachmentPipeline(
 
         const { buffer, fileSizeBytes, contentType } = await downloadFile(
           att.downloadUrl,
-          options.authCookies != null
-            ? { cookies: options.authCookies }
-            : undefined,
+          isAuthenticated ? { cookies: options.authCookies } : undefined,
         );
 
         // Write to tmp key
@@ -330,13 +334,13 @@ export async function runAttachmentPipeline(
         };
       },
       {
-        concurrency,
-        delayMs,
-        signal: options.signal,
+        concurrency: downloadConcurrency,
+        delayMs: downloadDelay,
+        signal: downloadAbort.signal,
         onError: (error: unknown, att: AttachmentRow, index: number) => {
           if (error instanceof SessionExpiredError) {
             sessionExpired = true;
-            // Don't mark as failed — leave pending for next session
+            downloadAbort.abort();
             return;
           }
           downloadErrors.add(index);
