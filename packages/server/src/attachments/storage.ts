@@ -56,13 +56,11 @@ export async function downloadFile(
 
   const response: Response = await fetchWithRetry(fetchUrl, {
     headers: isAuthenticated ? { Cookie: options!.cookies! } : undefined,
-    followRedirects: !isAuthenticated,
+    // Always follow redirects — ServiceNow may redirect authenticated
+    // requests legitimately.  We detect session expiry from the response
+    // body / final URL instead of the status code.
+    followRedirects: true,
   });
-
-  // For authenticated requests, a 302 means session expired
-  if (isAuthenticated && (response.status === 302 || response.status === 301)) {
-    throw new SessionExpiredError(fetchUrl);
-  }
 
   if (!response.ok) {
     throw new Error(
@@ -75,11 +73,23 @@ export async function downloadFile(
   const arrayBuffer: ArrayBuffer = await response.arrayBuffer();
   const buffer: Buffer = Buffer.from(arrayBuffer);
 
-  // Detect FCC "Access Denied" error pages
+  // Detect session expiry: authenticated request landed on a login/nav page
   const baseContentType: string = (contentType ?? '')
     .split(';')[0]!
     .trim()
     .toLowerCase();
+  if (isAuthenticated && baseContentType === 'text/html') {
+    const text: string = new TextDecoder().decode(arrayBuffer);
+    if (
+      text.includes('navpage.do') ||
+      text.includes('ssologin.do') ||
+      text.includes('login.do')
+    ) {
+      throw new SessionExpiredError(fetchUrl);
+    }
+  }
+
+  // Detect FCC "Access Denied" error pages
   if (baseContentType === 'text/html') {
     const text: string = new TextDecoder().decode(arrayBuffer);
     if (text.includes('Access Denied')) {
