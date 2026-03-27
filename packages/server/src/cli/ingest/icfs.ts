@@ -114,24 +114,28 @@ export const icfsCommand = defineCommand({
       }
     }
 
-    const result = await runIcfsIngest({
-      dbInstance,
-      dateFrom,
-      dateTo,
-      delayMs,
-      concurrency,
-      onProgress: (msg: string) => log.info(msg),
-      ...(fileNumbers != null ? { fileNumbers } : {}),
-      ...(subsystemAppTypes != null ? { subsystemAppTypes } : {}),
-    });
+    try {
+      const result = await runIcfsIngest({
+        dbInstance,
+        dateFrom,
+        dateTo,
+        delayMs,
+        concurrency,
+        onProgress: (msg: string) => log.info(msg),
+        ...(fileNumbers != null ? { fileNumbers } : {}),
+        ...(subsystemAppTypes != null ? { subsystemAppTypes } : {}),
+      });
 
-    log.info('\nSummary:');
-    log.info(`  Filings discovered: ${String(result.filingsDiscovered)}`);
-    log.info(`  Filings ingested:   ${String(result.filingsIngested)}`);
-    log.info(`  Filings not found:  ${String(result.filingsNotFound)}`);
-    log.info(`  Filings failed:     ${String(result.filingsFailed)}`);
-    log.info(
-      `  Duration:           ${String(Math.round(result.durationMs / 1000))}s`,
-    );
+      log.info('\nSummary:');
+      log.info(`  Filings discovered: ${String(result.filingsDiscovered)}`);
+      log.info(`  Filings ingested:   ${String(result.filingsIngested)}`);
+      log.info(`  Filings not found:  ${String(result.filingsNotFound)}`);
+      log.info(`  Filings failed:     ${String(result.filingsFailed)}`);
+      log.info(
+        `  Duration:           ${String(Math.round(result.durationMs / 1000))}s`,
+      );
+    } finally {
+      dbInstance.closeSync();
+    }
   },
 });
