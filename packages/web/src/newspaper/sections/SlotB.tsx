@@ -1,17 +1,17 @@
 import type { Article, NewspaperContentType, NewsListItem } from '../types.ts';
-import { DISPLAY_NAME_MAP, TAGLINE_MAP, editionImageUrl } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
+import { DISPLAY_NAME_MAP, TAGLINE_MAP, editionImageUrl } from '../types.ts';
 import CompanySpotlight from './CompanySpotlight.tsx';
-import WideBandTransmissions from './WideBandTransmissions.tsx';
 import HouseAd from './HouseAd.tsx';
+import WideBandTransmissions from './WideBandTransmissions.tsx';
 
 type SlotBProps = {
   article: Article;
-  newsItems: Array<NewsListItem>;
   editionDate: string;
+  newsItems: Array<NewsListItem>;
 };
 
-export default function SlotB({ article, newsItems, editionDate }: SlotBProps) {
+export default function SlotB({ article, editionDate, newsItems }: SlotBProps) {
   const contentType: NewspaperContentType = article.contentType;
 
   // Delegate to existing CompanySpotlight for that type (it has portrait-fetching logic)
@@ -33,10 +33,7 @@ export default function SlotB({ article, newsItems, editionDate }: SlotBProps) {
       <div className="spotlight-body">
         {article.imagePath && (
           <figure className="spotlight-headshot">
-            <img
-              alt={heading}
-              src={editionImageUrl(editionDate, article.imagePath)}
-            />
+            <img alt={heading} src={editionImageUrl(editionDate, article.imagePath)} />
           </figure>
         )}
         <ArticleBody body={article.body} />
