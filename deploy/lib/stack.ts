@@ -281,7 +281,7 @@ export class DailyOrbitStack extends Stack {
       new CfnResource(this, `CwlQuery-${name}`, {
         type: 'AWS::Logs::QueryDefinition',
         properties: {
-          Name: `daily-orbit/${name}`,
+          Name: `daily-orbit - ${name}`,
           QueryString: qdef.query,
           LogGroupNames: [cwlQueries.logGroup],
         },
