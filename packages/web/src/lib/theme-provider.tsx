@@ -1,6 +1,14 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { THEMES } from './themes.ts';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSettings } from './settings-context.tsx';
+import { THEMES } from './themes.ts';
 
 const STORAGE_KEY = 'do-theme';
 const themeIds: Array<string> = THEMES.map((t) => t.id);
@@ -26,7 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   const isAuthenticated: boolean = settings != null;
-  const theme: string = isAuthenticated ? (settings.theme ?? 'modern') : localTheme;
+  const theme: string = settings != null ? (settings.theme ?? 'modern') : localTheme;
   const prevThemeRef = useRef<string>(theme);
 
   const toggleTheme = useCallback(() => {
