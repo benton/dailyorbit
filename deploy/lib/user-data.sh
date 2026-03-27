@@ -77,8 +77,9 @@ aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
 
 chown -R ubuntu:ubuntu /data
 
-# ── Install Docker, DuckDB CLI, and Launch Container ─────────────────────────
-apt-get install -y docker.io
+# ── Install Docker, DuckDB CLI, Python/uv, and Launch Container ──────────────
+apt-get install -y docker.io python3
+curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.5.1/duckdb_cli-linux-arm64.zip" \
   -o /tmp/duckdb.zip
 unzip -qo /tmp/duckdb.zip -d /usr/local/bin

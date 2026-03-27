@@ -1,0 +1,66 @@
+{
+  "$comment": [
+    "CloudWatch Logs Insights queries for daily-orbit.",
+    "Used by: (1) cwl-query.py for CLI access, (2) CDK stack for saved queries in the Console.",
+    "",
+    "Log structure (3 layers):",
+    "  CloudWatch event  → { timestamp, message, ingestionTime }",
+    "  Docker JSON       → { log: '<pino json>', stream: 'stdout', time: '<iso>' }",
+    "  Pino JSON         → { level, time, pid, hostname, msg, ... }",
+    "",
+    "HTTP requests have: module, method, path, status, durationMs",
+    "App events have:    error?, stage?, runId?, localPath?",
+    "",
+    "Pino levels: 10=trace 20=debug 30=info 40=warn 50=error 60=fatal",
+    "",
+    "CloudWatch auto-parses the Docker layer, so 'log' is a top-level field.",
+    "The Pino JSON inside 'log' must be extracted with regex parse statements.",
+    "IMPORTANT: use 'display' not 'fields' after parse — 'fields' conflicts."
+  ],
+  "logGroup": "/daily-orbit/app",
+  "parsePrefix": "parse log /\"level\":(?<lvl>\\d+)/ | parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"msg\":\"(?<msg>[^\"]+)\"/",
+  "parseHttp": "parse log /\"method\":\"(?<method>[^\"]+)\"/ | parse log /\"path\":\"(?<path>[^\"]+)\"/ | parse log /\"status\":(?<status>\\d+)/ | parse log /\"durationMs\":(?<dur>\\d+)/",
+  "parseAppEvent": "parse log /\"error\":\"(?<error>[^\"]+)\"/ | parse log /\"stage\":\"(?<stage>[^\"]+)\"/ | parse log /\"runId\":\"(?<runId>[^\"]+)\"/",
+  "queries": {
+    "errors": {
+      "description": "Errors and warnings (level >= 40)",
+      "defaultHours": 24,
+      "query": "parse log /\"level\":(?<lvl>\\d+)/ | parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"error\":\"(?<error>[^\"]+)\"/ | parse log /\"stage\":\"(?<stage>[^\"]+)\"/ | parse log /\"runId\":\"(?<runId>[^\"]+)\"/ | filter lvl >= 40 | display ts, lvl, msg, error, stage, runId | sort ts desc | limit 200"
+    },
+    "slow": {
+      "description": "Slow requests (durationMs > 500)",
+      "defaultHours": 6,
+      "query": "parse log /\"level\":(?<lvl>\\d+)/ | parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"method\":\"(?<method>[^\"]+)\"/ | parse log /\"path\":\"(?<path>[^\"]+)\"/ | parse log /\"status\":(?<status>\\d+)/ | parse log /\"durationMs\":(?<dur>\\d+)/ | filter dur > 500 | display ts, method, path, status, dur | sort dur desc | limit 100"
+    },
+    "status-codes": {
+      "description": "Request count by HTTP status code",
+      "defaultHours": 24,
+      "query": "parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"status\":(?<status>\\d+)/ | filter msg = \"request\" | stats count(*) as cnt by status | sort cnt desc"
+    },
+    "top-paths": {
+      "description": "Most-hit API paths with latency stats",
+      "defaultHours": 24,
+      "query": "parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"path\":\"(?<path>[^\"]+)\"/ | parse log /\"durationMs\":(?<dur>\\d+)/ | filter msg = \"request\" | stats count(*) as cnt, avg(dur) as avg_ms, max(dur) as max_ms by path | sort cnt desc | limit 50"
+    },
+    "path": {
+      "description": "Requests matching a path substring (pass --arg <pattern>)",
+      "defaultHours": 6,
+      "query": "parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"method\":\"(?<method>[^\"]+)\"/ | parse log /\"path\":\"(?<path>[^\"]+)\"/ | parse log /\"status\":(?<status>\\d+)/ | parse log /\"durationMs\":(?<dur>\\d+)/ | filter path like \"{arg}\" | display ts, method, path, status, dur | sort ts desc | limit 200"
+    },
+    "search": {
+      "description": "Free-text search across all log messages (pass --arg <text>)",
+      "defaultHours": 6,
+      "query": "parse log /\"level\":(?<lvl>\\d+)/ | parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"method\":\"(?<method>[^\"]+)\"/ | parse log /\"path\":\"(?<path>[^\"]+)\"/ | parse log /\"status\":(?<status>\\d+)/ | parse log /\"error\":\"(?<error>[^\"]+)\"/ | filter log like \"{arg}\" | display ts, lvl, msg, method, path, status, error | sort ts desc | limit 200"
+    },
+    "non-http": {
+      "description": "Non-request log entries (backup, pipeline, startup)",
+      "defaultHours": 24,
+      "query": "parse log /\"level\":(?<lvl>\\d+)/ | parse log /\"time\":\"(?<ts>[^\"]+)\"/ | parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | parse log /\"error\":\"(?<error>[^\"]+)\"/ | parse log /\"stage\":\"(?<stage>[^\"]+)\"/ | parse log /\"runId\":\"(?<runId>[^\"]+)\"/ | filter msg not like \"request\" | display ts, lvl, msg, error, stage, runId | sort ts desc | limit 200"
+    },
+    "traffic": {
+      "description": "Request volume per 5-minute bin",
+      "defaultHours": 6,
+      "query": "parse log /\"msg\":\"(?<msg>[^\"]+)\"/ | filter msg = \"request\" | stats count(*) as requests by bin(5m) | sort bin(5m) asc"
+    }
+  }
+}

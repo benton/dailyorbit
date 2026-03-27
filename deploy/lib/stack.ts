@@ -5,6 +5,7 @@ import {
   Stack,
   StackProps,
   CfnOutput,
+  CfnResource,
   RemovalPolicy,
   Duration,
   Tags,
@@ -21,6 +22,17 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import type { SeedConfig } from './config.js';
+
+interface CwlQueryDef {
+  description: string;
+  defaultHours: number;
+  query: string;
+}
+
+interface CwlQueriesConfig {
+  logGroup: string;
+  queries: Record<string, CwlQueryDef>;
+}
 
 export interface DailyOrbitStackProps extends StackProps {
   config: SeedConfig;
@@ -255,6 +267,26 @@ export class DailyOrbitStack extends Stack {
       recordName: 'www',
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
+
+    // ── 5i. CloudWatch Logs Insights Saved Queries ────────────────────────
+    // Reads query definitions from the shared cwl-queries.json used by both
+    // the CLI tool (cwl-query.py) and these saved queries in the Console.
+    const cwlQueriesPath: string = resolve(__dirname, '../../packages/server/debugscripts/cwl-queries.json');
+    const cwlQueries: CwlQueriesConfig = JSON.parse(readFileSync(cwlQueriesPath, 'utf-8'));
+
+    for (const [name, qdef] of Object.entries(cwlQueries.queries)) {
+      // Skip parameterized queries — they need runtime args, not useful as saved queries
+      if (qdef.query.includes('{arg}')) continue;
+
+      new CfnResource(this, `CwlQuery-${name}`, {
+        type: 'AWS::Logs::QueryDefinition',
+        properties: {
+          Name: `daily-orbit/${name}`,
+          QueryString: qdef.query,
+          LogGroupNames: [cwlQueries.logGroup],
+        },
+      });
+    }
 
     // ── 5h. Outputs ──────────────────────────────────────────────────────
     new CfnOutput(this, 'ElasticIpAddress', {
