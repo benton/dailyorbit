@@ -147,6 +147,8 @@ export class DailyOrbitStack extends Stack {
           'logs:CreateLogStream',
           'logs:PutLogEvents',
           'logs:DescribeLogStreams',
+          'logs:StartQuery',
+          'logs:GetQueryResults',
         ],
         resources: ['*'],
       }),
