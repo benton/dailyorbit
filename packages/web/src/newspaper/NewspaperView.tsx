@@ -88,7 +88,7 @@ export default function NewspaperView() {
 
   return (
     <div className="newspaper-wrapper">
-      <Link className="newspaper-back" to={`/admin/newspaper/${date}`}>
+      <Link className="newspaper-back" to={`/admin/maintain/newspaper/${date}`}>
         &larr; Back to Admin
       </Link>
       <article className="newspaper">

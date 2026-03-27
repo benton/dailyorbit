@@ -1,4 +1,4 @@
-import { PlayCircle, StopCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, PlayCircle, StopCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LogLine } from './LogPanel.tsx';
 import type { StageStatus } from './PipelineStep.tsx';
@@ -7,6 +7,7 @@ import env from '../../lib/env.tsx';
 import { Button } from '../../ui/button.tsx';
 import LogPanel from './LogPanel.tsx';
 import PipelineGroup from './PipelineGroup.tsx';
+import PipelineHistoryPage from './PipelineHistoryPage.tsx';
 import SchedulerPanel from './SchedulerPanel.tsx';
 
 // ── API response types ──────────────────────────────────────────────
@@ -51,6 +52,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [concurrencyOverrides, setConcurrencyOverrides] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   // ── Fetch status ────────────────────────────────────────────────
@@ -326,6 +328,27 @@ export default function PipelinePage() {
       {/* Log panel */}
       <div className="mt-6">
         <LogPanel lines={logLines} onClear={handleClearLog} />
+      </div>
+
+      {/* Collapsible run history */}
+      <div className="mt-8 border-t border-border-theme pt-6">
+        <button
+          className="flex items-center gap-1.5 rounded-theme px-2 py-1 text-lg font-semibold text-on-surface hover:bg-on-surface/10"
+          onClick={() => setShowHistory((prev: boolean) => !prev)}
+          type="button"
+        >
+          {showHistory ? (
+            <ChevronDown className="h-5 w-5 text-on-surface-muted" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-on-surface-muted" />
+          )}
+          Run History
+        </button>
+        {showHistory && (
+          <div className="mt-4">
+            <PipelineHistoryPage />
+          </div>
+        )}
       </div>
     </>
   );

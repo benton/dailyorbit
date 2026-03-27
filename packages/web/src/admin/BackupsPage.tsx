@@ -115,7 +115,7 @@ export default function BackupsPage() {
         >
           <p className="text-sm text-amber-800 dark:text-amber-200">
             S3 snapshot bucket is not configured. Set <code>snapshotBucket</code> in{' '}
-            <a className="underline" href="/admin/settings">
+            <a className="underline" href="/admin/config">
               Settings
             </a>{' '}
             to enable backups.

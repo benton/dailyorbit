@@ -108,13 +108,13 @@ export default function EditionDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/newspaper">
+        <Link className="text-sm text-on-surface-muted hover:text-on-surface" to="/admin/maintain/newspaper">
           &larr; All Editions
         </Link>
         {edition.articles.some((a) => a.status === 'generated') && (
           <Link
             className="inline-flex items-center rounded-theme border border-border-theme bg-surface-card px-3 py-1.5 text-sm font-medium text-on-surface shadow-sm hover:bg-on-surface/5"
-            to={`/admin/newspaper/${edition.editionDate}/view`}
+            to={`/admin/maintain/newspaper/${edition.editionDate}/view`}
           >
             View as Newspaper
           </Link>

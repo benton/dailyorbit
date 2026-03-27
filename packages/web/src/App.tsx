@@ -3,7 +3,7 @@ import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router'
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
 import Dashboard from './admin/Dashboard.tsx';
-import SettingsLayout from './admin/SettingsLayout.tsx';
+import { Navigate } from 'react-router';
 import EarthStationDetail from './earth-stations/EarthStationDetail.tsx';
 import FilingDetail from './filings/FilingDetail.tsx';
 import { SettingsProvider } from './lib/settings-context.tsx';
@@ -24,7 +24,7 @@ const Users = lazy(() => import('./admin/Users.tsx'));
 const AiSettings = lazy(() => import('./admin/AiSettings.tsx'));
 const InferenceCosts = lazy(() => import('./admin/InferenceCosts.tsx'));
 const PipelinePage = lazy(() => import('./admin/pipeline/PipelinePage.tsx'));
-const PipelineHistoryPage = lazy(() => import('./admin/pipeline/PipelineHistoryPage.tsx'));
+
 const CompaniesPage = lazy(() => import('./companies/CompaniesPage.tsx'));
 const CompanyDetail = lazy(() => import('./companies/CompanyDetail.tsx'));
 const OwnershipEventsPage = lazy(() => import('./companies/OwnershipEventsPage.tsx'));
@@ -171,7 +171,7 @@ export default function App() {
                   </RequireAdmin>
                 </RequireAuth>
               }
-              path="/admin/newspaper/:date/view"
+              path="/admin/maintain/newspaper/:date/view"
             />
             {/* Admin routes */}
             <Route
@@ -185,78 +185,63 @@ export default function App() {
               path="/admin"
             >
               <Route element={<Dashboard />} index />
-              <Route element={<SettingsLayout />} path="settings">
-                <Route element={<ConfigEditor />} index />
-                <Route
-                  element={
-                    <Suspense
-                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                    >
-                      <AiSettings />
-                    </Suspense>
-                  }
-                  path="ai"
-                />
-                <Route
-                  element={
-                    <Suspense
-                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                    >
-                      <NewsSourcesAdmin />
-                    </Suspense>
-                  }
-                  path="news"
-                />
-                <Route
-                  element={
-                    <Suspense
-                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
-                    >
-                      <ConsultantAdmin />
-                    </Suspense>
-                  }
-                  path="consultants"
-                />
-              </Route>
+              {/* Configuration */}
+              <Route element={<ConfigEditor />} path="config" />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <Companies />
+                  <Suspense
+                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                  >
+                    <AiSettings />
                   </Suspense>
                 }
-                path="companies"
+                path="config/ai"
               />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <Users />
+                  <Suspense
+                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                  >
+                    <NewsSourcesAdmin />
                   </Suspense>
                 }
-                path="users"
+                path="config/news"
               />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <InferenceCosts />
+                  <Suspense
+                    fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                  >
+                    <ConsultantAdmin />
                   </Suspense>
                 }
-                path="costs"
+                path="config/consultants"
               />
-              <Route
-                element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <PipelineHistoryPage />
-                  </Suspense>
-                }
-                path="pipeline/history"
-              />
+              {/* Maintenance */}
               <Route
                 element={
                   <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
                     <PipelinePage />
                   </Suspense>
                 }
-                path="pipeline"
+                path="maintain/pipeline"
+              />
+
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <Users />
+                  </Suspense>
+                }
+                path="maintain/users"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <Companies />
+                  </Suspense>
+                }
+                path="maintain/companies"
               />
               <Route
                 element={
@@ -264,7 +249,7 @@ export default function App() {
                     <HiddenItemsAdmin />
                   </Suspense>
                 }
-                path="hidden-items"
+                path="maintain/hidden-items"
               />
               <Route
                 element={
@@ -272,31 +257,7 @@ export default function App() {
                     <BackupsPage />
                   </Suspense>
                 }
-                path="backups"
-              />
-              <Route
-                element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <EditionDetail />
-                  </Suspense>
-                }
-                path="newspaper/:date"
-              />
-              <Route
-                element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <PortraitLibrary />
-                  </Suspense>
-                }
-                path="newspaper/portraits"
-              />
-              <Route
-                element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <LogsPage />
-                  </Suspense>
-                }
-                path="logs"
+                path="maintain/backups"
               />
               <Route
                 element={
@@ -304,8 +265,55 @@ export default function App() {
                     <EditionBrowser />
                   </Suspense>
                 }
-                path="newspaper"
+                path="maintain/newspaper"
               />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <EditionDetail />
+                  </Suspense>
+                }
+                path="maintain/newspaper/:date"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <PortraitLibrary />
+                  </Suspense>
+                }
+                path="maintain/newspaper/portraits"
+              />
+              {/* Info */}
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <InferenceCosts />
+                  </Suspense>
+                }
+                path="info/costs"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <LogsPage />
+                  </Suspense>
+                }
+                path="info/logs"
+              />
+              {/* Redirects from old routes */}
+              <Route element={<Navigate replace to="/admin/config" />} path="settings" />
+              <Route element={<Navigate replace to="/admin/config/ai" />} path="settings/ai" />
+              <Route element={<Navigate replace to="/admin/config/news" />} path="settings/news" />
+              <Route element={<Navigate replace to="/admin/config/consultants" />} path="settings/consultants" />
+              <Route element={<Navigate replace to="/admin/maintain/companies" />} path="companies" />
+              <Route element={<Navigate replace to="/admin/maintain/users" />} path="users" />
+              <Route element={<Navigate replace to="/admin/info/costs" />} path="costs" />
+              <Route element={<Navigate replace to="/admin/maintain/pipeline" />} path="pipeline" />
+              <Route element={<Navigate replace to="/admin/maintain/pipeline" />} path="pipeline/history" />
+              <Route element={<Navigate replace to="/admin/maintain/hidden-items" />} path="hidden-items" />
+              <Route element={<Navigate replace to="/admin/maintain/backups" />} path="backups" />
+              <Route element={<Navigate replace to="/admin/maintain/newspaper" />} path="newspaper" />
+              <Route element={<Navigate replace to="/admin/info/logs" />} path="logs" />
             </Route>
           </Routes>
         </ThemeProvider>

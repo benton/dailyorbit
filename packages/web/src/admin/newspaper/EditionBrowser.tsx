@@ -104,7 +104,7 @@ export default function EditionBrowser() {
                   <td className="px-4 py-3">
                     <Link
                       className="font-medium text-blue-600 hover:underline dark:text-blue-400"
-                      to={`/admin/newspaper/${edition.editionDate}`}
+                      to={`/admin/maintain/newspaper/${edition.editionDate}`}
                     >
                       {edition.editionDate}
                     </Link>
@@ -119,7 +119,7 @@ export default function EditionBrowser() {
                   <td className="px-4 py-3">
                     <Link
                       className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                      to={`/admin/newspaper/${edition.editionDate}/view`}
+                      to={`/admin/maintain/newspaper/${edition.editionDate}/view`}
                     >
                       View
                     </Link>

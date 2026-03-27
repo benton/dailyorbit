@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api.ts';
+import { Button } from '../ui/button.tsx';
 
 type NewsSource = {
   category: string;
@@ -103,6 +104,10 @@ export default function NewsSourcesAdmin() {
   };
 
   const handleToggleEnabled = async (source: NewsSource): Promise<void> => {
+    const action: string = source.enabled ? 'Disable' : 'Enable';
+    if (!confirm(`${action} "${source.name}"?`)) {
+      return;
+    }
     try {
       await apiFetch<NewsSource>(`/api/admin/news/sources/${String(source.id)}`, {
         body: JSON.stringify({ enabled: !source.enabled }),
@@ -114,7 +119,10 @@ export default function NewsSourcesAdmin() {
     }
   };
 
-  const handleFetchNow = async (id: number): Promise<void> => {
+  const handleFetchNow = async (id: number, name: string): Promise<void> => {
+    if (!confirm(`Fetch articles from "${name}" now?`)) {
+      return;
+    }
     setFetchingId(id);
     try {
       await apiFetch(`/api/admin/news/sources/${String(id)}/fetch`, { method: 'POST' });
@@ -145,13 +153,13 @@ export default function NewsSourcesAdmin() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-on-surface">News Sources</h2>
-        <button
-          className="rounded-theme bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+        <Button
           onClick={() => setShowAdd(!showAdd)}
-          type="button"
+          size="sm"
+          variant={showAdd ? 'ghost' : 'default'}
         >
           {showAdd ? 'Cancel' : 'Add Source'}
-        </button>
+        </Button>
       </div>
 
       {error != null && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -193,14 +201,15 @@ export default function NewsSourcesAdmin() {
               value={addForm.fetchIntervalMinutes}
             />
           </div>
-          <button
-            className="mt-3 rounded-theme bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+          <Button
+            className="mt-3"
             disabled={saving || addForm.name.trim() === '' || addForm.feedUrl.trim() === ''}
             onClick={() => void handleAdd()}
-            type="button"
+            size="sm"
+            variant="default"
           >
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -251,21 +260,23 @@ export default function NewsSourcesAdmin() {
                     <td className="px-3 py-2 text-xs text-on-surface-muted">—</td>
                     <td className="px-3 py-2 text-xs text-on-surface-muted">—</td>
                     <td className="px-3 py-2">
-                      <button
-                        className="mr-2 text-xs text-green-600 hover:underline"
-                        disabled={saving}
-                        onClick={() => void handleUpdate(source.id)}
-                        type="button"
-                      >
-                        Save
-                      </button>
-                      <button
-                        className="text-xs text-on-surface-muted hover:underline"
-                        onClick={() => setEditId(null)}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          disabled={saving}
+                          onClick={() => void handleUpdate(source.id)}
+                          size="sm"
+                          variant="default"
+                        >
+                          {saving ? 'Saving...' : 'Save'}
+                        </Button>
+                        <Button
+                          onClick={() => setEditId(null)}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </td>
                   </>
                 ) : (
@@ -317,28 +328,30 @@ export default function NewsSourcesAdmin() {
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <button
-                        className="mr-2 text-xs text-blue-600 hover:underline disabled:text-on-surface-muted"
-                        disabled={fetchingId === source.id}
-                        onClick={() => void handleFetchNow(source.id)}
-                        type="button"
-                      >
-                        {fetchingId === source.id ? 'Fetching...' : 'Fetch now'}
-                      </button>
-                      <button
-                        className="mr-2 text-xs text-on-surface-muted hover:underline dark:text-on-surface-muted"
-                        onClick={() => startEdit(source)}
-                        type="button"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-xs text-red-600 hover:underline"
-                        onClick={() => void handleDelete(source.id)}
-                        type="button"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          disabled={fetchingId === source.id}
+                          onClick={() => void handleFetchNow(source.id, source.name)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          {fetchingId === source.id ? 'Fetching...' : 'Fetch now'}
+                        </Button>
+                        <Button
+                          onClick={() => startEdit(source)}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => void handleDelete(source.id)}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </>
                 )}
