@@ -1,5 +1,4 @@
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
-import { readFileSync } from 'node:fs';
 import { getLogger } from '../lib/logger.ts';
 import {
   trackConnection,
@@ -26,10 +25,12 @@ import type {
   PendingValidationRow,
 } from './repository.ts';
 import { detectContentType } from './validate-content-type.ts';
+import type { StorageBackend } from './storage-backend.ts';
 
 export type ExtractionPipelineOptions = {
   databaseUrl?: string | undefined;
   dbInstance?: DuckDBInstance | undefined;
+  storage: StorageBackend;
   retryFailed?: boolean | undefined;
   limit?: number | undefined;
   concurrency?: number | undefined;
@@ -66,6 +67,8 @@ export async function runExtractionPipeline(
   trackConnection(conn);
   await createAttachmentTable(conn);
 
+  const storage: StorageBackend = options.storage;
+
   // Pre-validate content types so extraction only sees real PDFs
   const unvalidated: PendingValidationRow[] = await getPendingValidations(conn);
   if (unvalidated.length > 0) {
@@ -75,10 +78,8 @@ export async function runExtractionPipeline(
     let validationCorrected: number = 0;
     for (const row of unvalidated) {
       try {
-        const detected = await detectContentType(
-          row.localPath,
-          row.contentType,
-        );
+        const data: Buffer = await storage.read(row.storageKey);
+        const detected = await detectContentType(data, row.contentType);
         await markContentTypeValidated(
           conn,
           row.attachmentKey,
@@ -118,12 +119,14 @@ export async function runExtractionPipeline(
     concurrency,
     async (row: PendingExtractionRow) => {
       try {
+        const data: Buffer = await storage.read(row.storageKey);
+
         // Text and CSV files: read directly as UTF-8 text
         if (
           row.contentType === 'text/plain' ||
           row.contentType === 'text/csv'
         ) {
-          const text: string = readFileSync(row.localPath, 'utf-8');
+          const text: string = data.toString('utf-8');
           const textLength: number = text.replace(/\s/g, '').length;
           if (textLength >= 10) {
             await markExtracted(conn, row.attachmentKey, text, textLength);
@@ -143,9 +146,8 @@ export async function runExtractionPipeline(
           }
         } else if (row.contentType === 'text/html') {
           // HTML extraction
-          const html: string = readFileSync(row.localPath, 'utf-8');
-          const { statSync } = await import('node:fs');
-          const fileSizeBytes: number = statSync(row.localPath).size;
+          const html: string = data.toString('utf-8');
+          const fileSizeBytes: number = data.byteLength;
           if (looksLikeAuthError(html, fileSizeBytes)) {
             await markExtractionSkipped(
               conn,
@@ -190,37 +192,57 @@ export async function runExtractionPipeline(
             }
           }
         } else {
-          // PDF extraction
-          const bytes: Uint8Array = new Uint8Array(readFileSync(row.localPath));
-          const result = extractTextFromPdf(bytes, row.localPath);
+          // PDF extraction — pdftotext fallback needs a temp file
+          const bytes: Uint8Array = new Uint8Array(data);
+          let tempPath: string | undefined;
+          try {
+            const { writeFileSync } = await import('node:fs');
+            const { join } = await import('node:path');
+            const { tmpdir } = await import('node:os');
+            tempPath = join(
+              tmpdir(),
+              `extract-${String(row.attachmentKey)}.pdf`,
+            );
+            writeFileSync(tempPath, data);
+            const result = extractTextFromPdf(bytes, tempPath);
 
-          if (result.status === 'extracted') {
-            await markExtracted(
-              conn,
-              row.attachmentKey,
-              result.text,
-              result.textLength,
-            );
-            extracted++;
-            if (options.verbose) {
-              log(
-                `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+            if (result.status === 'extracted') {
+              await markExtracted(
+                conn,
+                row.attachmentKey,
+                result.text,
+                result.textLength,
               );
+              extracted++;
+              if (options.verbose) {
+                log(
+                  `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+                );
+              }
+            } else if (result.status === 'skipped_no_text') {
+              await markExtractionSkipped(
+                conn,
+                row.attachmentKey,
+                'skipped_no_text',
+              );
+              skippedNoText++;
+              if (options.verbose) {
+                log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+              }
+            } else {
+              await markExtractionFailed(conn, row.attachmentKey);
+              failed++;
+              log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
             }
-          } else if (result.status === 'skipped_no_text') {
-            await markExtractionSkipped(
-              conn,
-              row.attachmentKey,
-              'skipped_no_text',
-            );
-            skippedNoText++;
-            if (options.verbose) {
-              log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+          } finally {
+            if (tempPath != null) {
+              try {
+                const { unlinkSync } = await import('node:fs');
+                unlinkSync(tempPath);
+              } catch {
+                // Best-effort cleanup
+              }
             }
-          } else {
-            await markExtractionFailed(conn, row.attachmentKey);
-            failed++;
-            log(`  ${String(row.attachmentKey)}: FAILED — ${result.error}`);
           }
         }
       } catch (e: unknown) {

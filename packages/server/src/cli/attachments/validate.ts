@@ -1,7 +1,8 @@
 import { defineCommand } from 'citty';
-import { databaseArg } from '../shared/args.ts';
+import { databaseArg, storagePathArg } from '../shared/args.ts';
 import { getLogger } from '../../lib/logger.ts';
 import { resolveFromRoot } from '../shared/context.ts';
+import { createFsBackend } from '../../attachments/storage-backend.ts';
 
 export const validateCommand = defineCommand({
   meta: {
@@ -11,6 +12,7 @@ export const validateCommand = defineCommand({
   },
   args: {
     database: databaseArg,
+    'storage-path': storagePathArg,
     limit: {
       type: 'string',
       description: 'Maximum number of attachments to validate',
@@ -25,8 +27,11 @@ export const validateCommand = defineCommand({
     const { runValidationPipeline } =
       await import('../../attachments/validate-pipeline.ts');
 
+    const storage = createFsBackend(resolveFromRoot(args['storage-path']));
+
     const result = await runValidationPipeline({
       databaseUrl: resolveFromRoot(args.database),
+      storage,
       limit: args.limit != null ? Number(args.limit) : undefined,
       verbose: args.verbose,
     });

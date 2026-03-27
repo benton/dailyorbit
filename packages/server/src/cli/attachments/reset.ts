@@ -1,11 +1,10 @@
-import { existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { DuckDBConnection } from '@duckdb/node-api';
 import { defineCommand } from 'citty';
 import { trackConnection } from '../../lib/graceful-shutdown.ts';
 import { getLogger } from '../../lib/logger.ts';
 import { databaseArg, storagePathArg } from '../shared/args.ts';
 import { createDb, resolveFromRoot } from '../shared/context.ts';
+import { createFsBackend } from '../../attachments/storage-backend.ts';
 
 export const resetCommand = defineCommand({
   meta: {
@@ -18,15 +17,19 @@ export const resetCommand = defineCommand({
   },
   async run({ args }) {
     const log = getLogger();
-    const storagePath: string = resolveFromRoot(args['storage-path']);
+    const storage = createFsBackend(resolveFromRoot(args['storage-path']));
 
-    // Step 1: Delete local attachment files
-    if (existsSync(storagePath)) {
-      log.info(`Deleting ${storagePath}/ ...`);
-      execFileSync('rm', ['-rf', storagePath]);
+    // Step 1: Delete all files in storage
+    log.info('Listing storage entries...');
+    const entries: string[] = await storage.list('/');
+    if (entries.length > 0) {
+      log.info(`Deleting ${String(entries.length)} storage entries...`);
+      for (const entry of entries) {
+        await storage.delete(entry);
+      }
       log.info('Done.');
     } else {
-      log.info(`${storagePath}/ does not exist — skipping file deletion.`);
+      log.info('No storage entries found — skipping file deletion.');
     }
 
     // Step 2: Reset download status in database
@@ -43,7 +46,7 @@ export const resetCommand = defineCommand({
     await conn.run(`
       UPDATE attachment
       SET download_status = 'pending',
-          local_path = NULL,
+          storage_key = NULL,
           file_size_bytes = NULL,
           content_type = NULL,
           downloaded_at = NULL

@@ -37,8 +37,6 @@ RUN pnpm install --frozen-lockfile --prod
 # ── Stage 4: Final runtime image ─────────────────────────────────
 FROM node:23-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends file && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # Production node_modules (includes DuckDB native bindings)

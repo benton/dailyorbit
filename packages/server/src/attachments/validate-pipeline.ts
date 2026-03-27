@@ -17,10 +17,12 @@ import {
 } from './repository.ts';
 import type { PendingValidationRow } from './repository.ts';
 import { detectContentType } from './validate-content-type.ts';
+import type { StorageBackend } from './storage-backend.ts';
 
 export type ValidationPipelineOptions = {
   databaseUrl?: string | undefined;
   dbInstance?: DuckDBInstance | undefined;
+  storage: StorageBackend;
   limit?: number | undefined;
   concurrency?: number | undefined;
   verbose?: boolean | undefined;
@@ -64,16 +66,15 @@ export async function runValidationPipeline(
   let failed: number = 0;
   let processed: number = 0;
   const concurrency: number = options.concurrency ?? 1;
+  const storage: StorageBackend = options.storage;
 
   await processWithConcurrency(
     pending,
     concurrency,
     async (row: PendingValidationRow) => {
       try {
-        const detected = await detectContentType(
-          row.localPath,
-          row.contentType,
-        );
+        const data: Buffer = await storage.read(row.storageKey);
+        const detected = await detectContentType(data, row.contentType);
         await markContentTypeValidated(
           conn,
           row.attachmentKey,

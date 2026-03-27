@@ -458,6 +458,36 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     description:
       'S3 bucket for newspaper image CDN (empty = local-only, no upload)',
   },
+  storageBackend: {
+    key: 'storageBackend',
+    defaultValue: 'fs',
+    encrypted: false,
+    description: "Attachment storage backend: 'fs' (local) or 's3'",
+  },
+  storageBucket: {
+    key: 'storageBucket',
+    defaultValue: '',
+    encrypted: false,
+    description: 'S3 bucket name for attachment storage',
+  },
+  storagePrefix: {
+    key: 'storagePrefix',
+    defaultValue: 'attachments/',
+    encrypted: false,
+    description: 'S3 key prefix for attachment storage',
+  },
+  storageRegion: {
+    key: 'storageRegion',
+    defaultValue: 'us-east-2',
+    encrypted: false,
+    description: 'AWS region for attachment S3 storage',
+  },
+  storageFsRoot: {
+    key: 'storageFsRoot',
+    defaultValue: 'data/attachments',
+    encrypted: false,
+    description: "Local root directory for 'fs' storage backend",
+  },
   schedulerAutoStart: {
     key: 'schedulerAutoStart',
     defaultValue: 'false',

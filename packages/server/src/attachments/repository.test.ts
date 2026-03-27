@@ -90,7 +90,7 @@ describe('attachment repository', () => {
           download_url VARCHAR NOT NULL,
           download_status VARCHAR NOT NULL DEFAULT 'pending',
           file_size_bytes BIGINT,
-          local_path VARCHAR,
+          storage_key VARCHAR,
           discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
           downloaded_at TIMESTAMP
         )
@@ -132,7 +132,7 @@ describe('attachment repository', () => {
           download_status VARCHAR NOT NULL DEFAULT 'pending',
           file_size_bytes BIGINT,
           content_type VARCHAR,
-          local_path VARCHAR,
+          storage_key VARCHAR,
           discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
           downloaded_at TIMESTAMP,
           full_text TEXT,
@@ -256,19 +256,21 @@ describe('attachment repository', () => {
       await markDownloaded(
         conn,
         ATTACHMENT_A.attachmentKey,
-        '/data/a.pdf',
+        'SAT/SAT-STA-20230614-00142/100.pdf',
         2048,
         'application/pdf',
       );
 
       const reader = await conn.runAndReadAll(
-        `SELECT download_status, local_path, file_size_bytes, content_type
+        `SELECT download_status, storage_key, file_size_bytes, content_type
          FROM attachment WHERE attachment_key = $1`,
         [ATTACHMENT_A.attachmentKey],
       );
       const row = reader.getRowObjectsJS()[0]!;
       expect(String(row.download_status)).toEqual('downloaded');
-      expect(String(row.local_path)).toEqual('/data/a.pdf');
+      expect(String(row.storage_key)).toEqual(
+        'SAT/SAT-STA-20230614-00142/100.pdf',
+      );
       expect(Number(row.file_size_bytes)).toEqual(2048);
       expect(String(row.content_type)).toEqual('application/pdf');
     });
@@ -362,7 +364,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, content_type, local_path, extract_status)
+           download_status, content_type, storage_key, extract_status)
          VALUES
           (100, 1, 'SAT-STA-20230614-00142', 'Narrative', 'https://example.com/100.pdf',
            'downloaded', 'application/pdf', '/tmp/100.pdf', 'pending'),
@@ -394,7 +396,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, content_type, local_path, extract_status)
+           download_status, content_type, storage_key, extract_status)
          VALUES
           (110, 1, 'SAT-STA-20230614-00142', 'Text Doc', 'https://example.com/110.txt',
            'downloaded', 'text/plain', '/tmp/110.txt', 'pending'),
@@ -422,7 +424,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, content_type, local_path, extract_status)
+           download_status, content_type, storage_key, extract_status)
          VALUES (104, 1, 'SAT-STA-20230614-00142', 'Another', 'https://example.com/104.pdf',
            'downloaded', 'application/pdf', '/tmp/104.pdf', 'pending')`,
       );
@@ -436,7 +438,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, local_path, extract_status)
+           download_status, storage_key, extract_status)
          VALUES (200, 1, 'SAT-STA-20230614-00142', 'Doc', 'https://example.com/200.pdf',
            'downloaded', '/tmp/200.pdf', 'pending')`,
       );
@@ -459,7 +461,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, local_path, extract_status)
+           download_status, storage_key, extract_status)
          VALUES (201, 1, 'SAT-STA-20230614-00142', 'Scan', 'https://example.com/201.pdf',
            'downloaded', '/tmp/201.pdf', 'pending')`,
       );
@@ -491,7 +493,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, local_path, extract_status)
+           download_status, storage_key, extract_status)
          VALUES (202, 1, 'SAT-STA-20230614-00142', 'Bad', 'https://example.com/202.pdf',
            'downloaded', '/tmp/202.pdf', 'pending')`,
       );
@@ -588,7 +590,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, content_type, local_path, content_type_source)
+           download_status, content_type, storage_key, content_type_source)
          VALUES
           (300, 1, 'SAT-STA-20230614-00142', 'Doc A', 'https://example.com/300',
            'downloaded', 'application/pdf', '/tmp/300.pdf', 'http_header'),
@@ -620,7 +622,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, content_type, local_path, content_type_source)
+           download_status, content_type, storage_key, content_type_source)
          VALUES (400, 1, 'SAT-STA-20230614-00142', 'Mistyped', 'https://example.com/400',
            'downloaded', 'application/pdf', '/tmp/400.pdf', 'http_header')`,
       );
@@ -667,7 +669,7 @@ describe('attachment repository', () => {
       await conn.run(
         `INSERT INTO attachment
           (attachment_key, filing_key, file_number, attachment_name, download_url,
-           download_status, local_path, extract_status)
+           download_status, storage_key, extract_status)
          VALUES (500, 1, 'SAT-STA-20230614-00142', 'Doc', 'https://example.com/500.pdf',
            'downloaded', '/tmp/500.pdf', 'pending')`,
       );

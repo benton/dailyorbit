@@ -200,10 +200,14 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runAttachmentPipeline } =
         await import('../attachments/pipeline.ts');
+      const { createStorageFromConfig } =
+        await import('../attachments/create-storage.ts');
+      const { getConfigService } = await import('../lib/config.ts');
+      const storage = createStorageFromConfig(getConfigService());
       const start: number = Date.now();
       const result = await runAttachmentPipeline({
         dbInstance: ctx.db,
-        storageBasePath: 'data/attachments',
+        storage,
         scope: {},
         concurrency: ctx.concurrency,
         signal: ctx.signal,
@@ -229,9 +233,14 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runExtractionPipeline } =
         await import('../attachments/extract-pipeline.ts');
+      const { createStorageFromConfig } =
+        await import('../attachments/create-storage.ts');
+      const { getConfigService } = await import('../lib/config.ts');
+      const storage = createStorageFromConfig(getConfigService());
       const start: number = Date.now();
       const result = await runExtractionPipeline({
         dbInstance: ctx.db,
+        storage,
         concurrency: ctx.concurrency,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });
@@ -254,9 +263,14 @@ const STAGES: PipelineStage[] = [
     async run(ctx: PipelineContext): Promise<StageResult> {
       const { runValidationPipeline } =
         await import('../attachments/validate-pipeline.ts');
+      const { createStorageFromConfig } =
+        await import('../attachments/create-storage.ts');
+      const { getConfigService } = await import('../lib/config.ts');
+      const storage = createStorageFromConfig(getConfigService());
       const start: number = Date.now();
       const result = await runValidationPipeline({
         dbInstance: ctx.db,
+        storage,
         concurrency: ctx.concurrency,
         onProgress: (msg: string) => ctx.log('progress', msg),
       });

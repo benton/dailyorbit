@@ -42,11 +42,11 @@ import type {
 } from './repository.ts';
 import { detectContentType } from './validate-content-type.ts';
 import {
-  attachmentStoragePath,
+  attachmentStorageKey,
   downloadFile,
-  findExistingAttachment,
   SessionExpiredError,
 } from './storage.ts';
+import type { StorageBackend } from './storage-backend.ts';
 import type {
   AttachmentMetadata,
   AttachmentPipelineOptions,
@@ -58,7 +58,7 @@ import type {
 
 type DownloadResult = {
   attachmentKey: number;
-  destPath: string;
+  storageKey: string;
   fileSizeBytes: number;
   contentType: string | null;
 };
@@ -76,6 +76,7 @@ export async function runAttachmentPipeline(
   const concurrency: number = options.concurrency ?? 1;
   const providerName: 'fcc-report' | 'fcc-gov' =
     options.provider ?? 'fcc-report';
+  const storage: StorageBackend = options.storage;
 
   // Stage 1: Connect to DB and ensure table exists
   const verbose: boolean = options.verbose ?? false;
@@ -229,43 +230,46 @@ export async function runAttachmentPipeline(
       filings.map((f) => [f.filingKey, f]),
     );
 
-    // When skipExisting is enabled, check disk for already-downloaded files
+    // When skipExisting is enabled, check storage for already-downloaded files
     // and reconcile them with the DB before queuing network downloads.
     const toDownload: AttachmentRow[] = [];
 
     if (skipExisting) {
       for (const att of pending) {
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
-        const existing = await findExistingAttachment(
-          options.storageBasePath,
-          filing.subsystemCode,
-          filing.fileNumber,
-          att.attachmentKey,
+        // Check if any file with this attachment key exists in storage
+        const entries: string[] = await storage.list(
+          `${filing.subsystemCode}/${filing.fileNumber}/`,
         );
-        if (existing != null) {
-          // File already on disk — reconcile DB status without re-downloading
-          const ext: string = existing.path.split('.').pop() ?? 'bin';
-          const mimeGuess: string | null =
-            ext === 'pdf'
-              ? 'application/pdf'
-              : ext === 'html'
-                ? 'text/html'
-                : null;
-          await markDownloaded(
-            conn,
-            att.attachmentKey,
-            existing.path,
-            existing.fileSizeBytes,
-            mimeGuess,
-          );
-          attachmentsSkipped++;
-        } else {
-          toDownload.push(att);
+        const match: string | undefined = entries.find((e) =>
+          e.includes(`${String(att.attachmentKey)}.`),
+        );
+        if (match != null) {
+          const stat = await storage.stat(match);
+          if (stat != null) {
+            const ext: string = match.split('.').pop() ?? 'bin';
+            const mimeGuess: string | null =
+              ext === 'pdf'
+                ? 'application/pdf'
+                : ext === 'html'
+                  ? 'text/html'
+                  : null;
+            await markDownloaded(
+              conn,
+              att.attachmentKey,
+              match,
+              stat.contentLength,
+              mimeGuess,
+            );
+            attachmentsSkipped++;
+            continue;
+          }
         }
+        toDownload.push(att);
       }
       if (attachmentsSkipped > 0) {
         log(
-          `Skipped ${String(attachmentsSkipped)} attachments already on disk`,
+          `Skipped ${String(attachmentsSkipped)} attachments already in storage`,
         );
       }
     } else {
@@ -285,43 +289,42 @@ export async function runAttachmentPipeline(
 
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
 
-        // Download to a temporary path first, then derive final path from content-type
-        const tmpPath: string = attachmentStoragePath(
-          options.storageBasePath,
+        // Download to a temporary key first, then derive final key from content-type
+        const tmpKey: string = attachmentStorageKey(
           filing.subsystemCode,
           filing.fileNumber,
           att.attachmentKey,
           'tmp',
         );
 
-        const { fileSizeBytes, contentType } = await downloadFile(
+        const { buffer, fileSizeBytes, contentType } = await downloadFile(
           att.downloadUrl,
-          tmpPath,
           options.authCookies != null
             ? { cookies: options.authCookies }
             : undefined,
         );
 
+        // Write to tmp key
+        await storage.write(tmpKey, buffer);
+
         const ext: string = extensionForContentType(
           contentType ?? 'application/octet-stream',
         );
-        const destPath: string = attachmentStoragePath(
-          options.storageBasePath,
+        const finalKey: string = attachmentStorageKey(
           filing.subsystemCode,
           filing.fileNumber,
           att.attachmentKey,
           ext,
         );
 
-        // Rename tmp → final path (same directory, just extension change)
-        if (tmpPath !== destPath) {
-          const { rename } = await import('node:fs/promises');
-          await rename(tmpPath, destPath);
+        // Rename tmp → final key (same directory, just extension change)
+        if (tmpKey !== finalKey) {
+          await storage.rename(tmpKey, finalKey);
         }
 
         return {
           attachmentKey: att.attachmentKey,
-          destPath,
+          storageKey: finalKey,
           fileSizeBytes,
           contentType,
         };
@@ -357,7 +360,7 @@ export async function runAttachmentPipeline(
         await markDownloaded(
           conn,
           dl.attachmentKey,
-          dl.destPath,
+          dl.storageKey,
           dl.fileSizeBytes,
           dl.contentType,
         );
@@ -391,10 +394,8 @@ export async function runAttachmentPipeline(
       for (let i: number = 0; i < validationPending.length; i++) {
         const row: PendingValidationRow = validationPending[i]!;
         try {
-          const detected = await detectContentType(
-            row.localPath,
-            row.contentType,
-          );
+          const data: Buffer = await storage.read(row.storageKey);
+          const detected = await detectContentType(data, row.contentType);
           await markContentTypeValidated(
             conn,
             row.attachmentKey,
@@ -474,18 +475,18 @@ export async function runAttachmentPipeline(
         `${String(pendingExtractions.length)} attachments pending text extraction`,
       );
 
-      const { readFileSync } = await import('node:fs');
-
       for (let i: number = 0; i < pendingExtractions.length; i++) {
         const row: PendingExtractionRow = pendingExtractions[i]!;
 
         try {
+          const data: Buffer = await storage.read(row.storageKey);
+
           // Text and CSV files: read directly as UTF-8 text
           if (
             row.contentType === 'text/plain' ||
             row.contentType === 'text/csv'
           ) {
-            const text: string = readFileSync(row.localPath, 'utf-8');
+            const text: string = data.toString('utf-8');
             const textLength: number = text.replace(/\s/g, '').length;
             if (textLength >= 10) {
               await markExtracted(conn, row.attachmentKey, text, textLength);
@@ -505,9 +506,8 @@ export async function runAttachmentPipeline(
             }
           } else if (row.contentType === 'text/html') {
             // HTML extraction
-            const html: string = readFileSync(row.localPath, 'utf-8');
-            const { statSync } = await import('node:fs');
-            const fileSizeBytes: number = statSync(row.localPath).size;
+            const html: string = data.toString('utf-8');
+            const fileSizeBytes: number = data.byteLength;
             if (looksLikeAuthError(html, fileSizeBytes)) {
               await markExtractionSkipped(
                 conn,
@@ -556,41 +556,60 @@ export async function runAttachmentPipeline(
               }
             }
           } else {
-            // PDF extraction
-            const bytes: Uint8Array = new Uint8Array(
-              readFileSync(row.localPath),
-            );
-            const result = extractTextFromPdf(bytes, row.localPath);
-
-            if (result.status === 'extracted') {
-              await markExtracted(
-                conn,
-                row.attachmentKey,
-                result.text,
-                result.textLength,
+            // PDF extraction — pdftotext fallback needs a temp file
+            const bytes: Uint8Array = new Uint8Array(data);
+            let tempPath: string | undefined;
+            try {
+              // For pdftotext fallback, write to a temp file
+              const { writeFileSync } = await import('node:fs');
+              const { join } = await import('node:path');
+              const { tmpdir } = await import('node:os');
+              tempPath = join(
+                tmpdir(),
+                `extract-${String(row.attachmentKey)}.pdf`,
               );
-              textsExtracted++;
-              if (verbose) {
+              writeFileSync(tempPath, data);
+              const result = extractTextFromPdf(bytes, tempPath);
+
+              if (result.status === 'extracted') {
+                await markExtracted(
+                  conn,
+                  row.attachmentKey,
+                  result.text,
+                  result.textLength,
+                );
+                textsExtracted++;
+                if (verbose) {
+                  log(
+                    `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+                  );
+                }
+              } else if (result.status === 'skipped_no_text') {
+                await markExtractionSkipped(
+                  conn,
+                  row.attachmentKey,
+                  'skipped_no_text',
+                );
+                textsSkippedNoText++;
+                if (verbose) {
+                  log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+                }
+              } else {
+                await markExtractionFailed(conn, row.attachmentKey);
+                textsFailed++;
                 log(
-                  `  ${String(row.attachmentKey)}: extracted ${String(result.textLength)} chars (${String(result.pageCount)} pages)`,
+                  `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
                 );
               }
-            } else if (result.status === 'skipped_no_text') {
-              await markExtractionSkipped(
-                conn,
-                row.attachmentKey,
-                'skipped_no_text',
-              );
-              textsSkippedNoText++;
-              if (verbose) {
-                log(`  ${String(row.attachmentKey)}: skipped (no text)`);
+            } finally {
+              if (tempPath != null) {
+                try {
+                  const { unlinkSync } = await import('node:fs');
+                  unlinkSync(tempPath);
+                } catch {
+                  // Best-effort cleanup
+                }
               }
-            } else {
-              await markExtractionFailed(conn, row.attachmentKey);
-              textsFailed++;
-              log(
-                `  ${String(row.attachmentKey)}: extraction FAILED — ${result.error}`,
-              );
             }
           }
         } catch (e: unknown) {
@@ -784,7 +803,7 @@ export async function runAttachmentPipeline(
   const durationMs: number = Date.now() - start;
   const skippedSuffix: string =
     attachmentsSkipped > 0
-      ? `, ${String(attachmentsSkipped)} skipped (on disk)`
+      ? `, ${String(attachmentsSkipped)} skipped (in storage)`
       : '';
   log(
     `Pipeline complete: ${String(filingsProcessed)} filings, ${String(totalDiscovered)} discovered, ${String(attachmentsDownloaded)} downloaded, ${String(attachmentsFailed)} failed${skippedSuffix} (${String(Math.round(durationMs / 1000))}s)`,

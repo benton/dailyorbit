@@ -25,7 +25,7 @@ const CREATE_TABLE_SQL: string = `
     download_status VARCHAR NOT NULL DEFAULT 'pending',
     file_size_bytes BIGINT,
     content_type VARCHAR,
-    local_path VARCHAR,
+    storage_key VARCHAR,
     discovered_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
     downloaded_at TIMESTAMP,
     full_text TEXT,
@@ -45,6 +45,7 @@ const MIGRATE_COLUMNS_SQL: string[] = [
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS extract_status VARCHAR DEFAULT 'pending'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS content_type_source VARCHAR DEFAULT 'http_header'`,
   `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS text_checksum VARCHAR`,
+  `ALTER TABLE attachment ADD COLUMN IF NOT EXISTS storage_key VARCHAR`,
 ];
 
 const MIGRATE_INDEXES_SQL: string[] = [
@@ -83,6 +84,32 @@ async function migratePrimaryKeyConstraint(
   await conn.run(`DROP TABLE attachment_old`);
 }
 
+/**
+ * Migrate storage_key → storage_key:
+ * 1. Rename the column if the old name still exists
+ * 2. Strip the base path prefix from existing values so they become relative keys
+ */
+async function migrateLocalPathToStorageKey(
+  conn: DuckDBConnection,
+): Promise<void> {
+  const colReader = await conn.runAndReadAll(`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = 'attachment' AND column_name = 'local_path'
+  `);
+  const hasLocalPath: boolean = colReader.getRowObjectsJS().length > 0;
+  if (!hasLocalPath) return;
+
+  await conn.run(
+    `ALTER TABLE attachment RENAME COLUMN local_path TO storage_key`,
+  );
+  // Strip any absolute or relative data/attachments/ prefix to make values relative keys
+  await conn.run(`
+    UPDATE attachment
+    SET storage_key = regexp_replace(storage_key, '^(.*?/)?data/attachments/', '')
+    WHERE storage_key IS NOT NULL AND storage_key LIKE '%data/attachments/%'
+  `);
+}
+
 export async function createAttachmentTable(
   conn: DuckDBConnection,
 ): Promise<void> {
@@ -91,6 +118,7 @@ export async function createAttachmentTable(
     await conn.run(sql);
   }
   await migratePrimaryKeyConstraint(conn);
+  await migrateLocalPathToStorageKey(conn);
   await migrateFileNumberNormalization(conn);
   for (const sql of MIGRATE_INDEXES_SQL) {
     await conn.run(sql);
@@ -278,7 +306,7 @@ export async function getPendingDownloads(
     SELECT
       attachment_key, filing_key, file_number, source, attachment_name,
       description, download_url, download_status, file_size_bytes,
-      content_type, local_path, discovered_at, downloaded_at,
+      content_type, storage_key, discovered_at, downloaded_at,
       full_text, text_length, summary
     FROM attachment
     WHERE ${statusCondition} AND filing_key IN (${filingPlaceholders})
@@ -298,7 +326,7 @@ export async function getPendingDownloads(
     downloadStatus: String(r.download_status),
     fileSizeBytes: r.file_size_bytes != null ? Number(r.file_size_bytes) : null,
     contentType: r.content_type != null ? String(r.content_type) : null,
-    localPath: r.local_path != null ? String(r.local_path) : null,
+    storageKey: r.storage_key != null ? String(r.storage_key) : null,
     discoveredAt: String(r.discovered_at),
     downloadedAt: r.downloaded_at != null ? String(r.downloaded_at) : null,
     fullText: r.full_text != null ? String(r.full_text) : null,
@@ -310,19 +338,19 @@ export async function getPendingDownloads(
 export async function markDownloaded(
   conn: DuckDBConnection,
   attachmentKey: number,
-  localPath: string,
+  storageKey: string,
   fileSizeBytes: number,
   contentType: string | null,
 ): Promise<void> {
   await conn.run(
     `UPDATE attachment
       SET download_status = 'downloaded',
-          local_path = $1,
+          storage_key = $1,
           file_size_bytes = $2,
           content_type = $3,
           downloaded_at = current_timestamp
       WHERE attachment_key = $4`,
-    [localPath, fileSizeBytes, contentType, attachmentKey] as DuckDBValue[],
+    [storageKey, fileSizeBytes, contentType, attachmentKey] as DuckDBValue[],
   );
 }
 
@@ -382,7 +410,7 @@ export async function createDiscoveryLogTable(
  */
 export type PendingExtractionRow = {
   attachmentKey: number;
-  localPath: string;
+  storageKey: string;
   contentType: string;
 };
 
@@ -410,11 +438,11 @@ export async function getPendingExtractions(
       : '';
 
   const sql: string = `
-    SELECT attachment_key, local_path, content_type
+    SELECT attachment_key, storage_key, content_type
     FROM attachment
     WHERE download_status = 'downloaded'
       AND content_type IN ('application/pdf', 'text/plain', 'text/csv', 'text/html')
-      AND local_path IS NOT NULL
+      AND storage_key IS NOT NULL
       AND ${statusCondition}
       ${filingFilter}
     ORDER BY attachment_key
@@ -429,7 +457,7 @@ export async function getPendingExtractions(
   const reader = await stmt.runAndReadAll();
   return reader.getRowObjectsJS().map((r) => ({
     attachmentKey: Number(r.attachment_key),
-    localPath: String(r.local_path),
+    storageKey: String(r.storage_key),
     contentType: String(r.content_type),
   }));
 }
@@ -610,7 +638,7 @@ export async function markFilingsDiscovered(
 
 export type PendingValidationRow = {
   attachmentKey: number;
-  localPath: string;
+  storageKey: string;
   contentType: string | null;
 };
 
@@ -626,10 +654,10 @@ export async function getPendingValidations(
     options.limit != null ? `LIMIT ${String(options.limit)}` : '';
 
   const sql: string = `
-    SELECT attachment_key, local_path, content_type
+    SELECT attachment_key, storage_key, content_type
     FROM attachment
     WHERE download_status = 'downloaded'
-      AND local_path IS NOT NULL
+      AND storage_key IS NOT NULL
       AND (content_type_source IS NULL OR content_type_source = 'http_header')
     ORDER BY attachment_key
     ${limitClause}`;
@@ -637,7 +665,7 @@ export async function getPendingValidations(
   const reader = await conn.runAndReadAll(sql);
   return reader.getRowObjectsJS().map((r) => ({
     attachmentKey: Number(r.attachment_key),
-    localPath: String(r.local_path),
+    storageKey: String(r.storage_key),
     contentType: r.content_type != null ? String(r.content_type) : null,
   }));
 }
