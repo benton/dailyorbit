@@ -17,6 +17,7 @@ export const SLOT_A_SCHEDULE: ReadonlyArray<SlotSchedule> = [
   { contentType: 'the_docket', days: [2, 5] },
   { contentType: 'spectrum_watch', days: [3] },
   { contentType: 'competitive_intel', days: [4] },
+  { contentType: 'week_in_review', days: [0, 6] },
 ];
 
 // ── Slot B: wide left with portrait/illustration ────────────────
@@ -68,9 +69,6 @@ function findForDay(
  * Weekends (0=Sunday, 6=Saturday) return null for all slots.
  */
 export function getContentTypesForDay(dayOfWeek: DayOfWeek): DaySlots {
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return { slotA: null, slotB: null, slotC: null };
-  }
   return {
     slotA: findForDay(SLOT_A_SCHEDULE, dayOfWeek),
     slotB: findForDay(SLOT_B_SCHEDULE, dayOfWeek),

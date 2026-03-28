@@ -20,6 +20,7 @@ export const SLUG_MAP: Record<NewspaperContentType, string> = {
   fake_ad: 'fake-ad',
   editorial_cartoon: 'editorial-cartoon',
   classifieds: 'classifieds',
+  week_in_review: 'week-in-review',
   orbital_forecast: 'orbital-forecast',
   the_docket: 'the-docket',
   spectrum_watch: 'spectrum-watch',
@@ -46,6 +47,7 @@ export const DISPLAY_ORDER_MAP: Record<NewspaperContentType, number> = {
   the_applicant: 20,
   tech_spotlight: 20,
   from_the_archives: 20,
+  week_in_review: 30,
   orbital_forecast: 30,
   the_docket: 30,
   spectrum_watch: 30,
@@ -70,6 +72,10 @@ async function loadGenerator(
   contentType: NewspaperContentType,
 ): Promise<GeneratorFn> {
   switch (contentType) {
+    case 'week_in_review': {
+      const m = await import('./generators/week-in-review.ts');
+      return m.generateWeekInReview;
+    }
     case 'orbital_forecast': {
       const m = await import('./generators/orbital-forecast.ts');
       return m.generateOrbitalForecast;
@@ -139,6 +145,7 @@ const MODEL_KEY_MAP: Record<NewspaperContentType, string> = {
   fake_ad: 'newspaperCopyModel',
   editorial_cartoon: 'newspaperImageModel',
   classifieds: 'newspaperCopyModel',
+  week_in_review: 'newspaperCopyModel',
   orbital_forecast: 'newspaperCopyModel',
   the_docket: 'newspaperCopyModel',
   spectrum_watch: 'newspaperCopyModel',

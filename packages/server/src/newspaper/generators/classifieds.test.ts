@@ -244,6 +244,60 @@ describe('generateClassifieds', () => {
     ).toBe(true);
   });
 
+  it('throws after 3 content-filter blocks', async () => {
+    const inferenceService = makeMockInferenceService(
+      'The generated text has been blocked by our content filters.',
+    );
+    const config = makeMockConfig();
+
+    await expect(
+      generateClassifieds({
+        conn,
+        editionId: 1,
+        editionDate: '2026-03-24',
+        inferenceService:
+          inferenceService as unknown as GenerateOptions['inferenceService'],
+        config: config as unknown as GenerateOptions['config'],
+        log: vi.fn(),
+      }),
+    ).rejects.toThrow('blocked by content filter after 3 attempts');
+    expect(inferenceService.complete).toHaveBeenCalledTimes(3);
+  });
+
+  it('retries on content-filter block and succeeds', async () => {
+    const inferenceService = {
+      complete: vi.fn()
+        .mockResolvedValueOnce({
+          content: 'The generated text has been blocked by our content filters.',
+          modelId: 'test-model',
+          usage: { inputTokens: 80, outputTokens: 10, totalTokens: 90 },
+          stopReason: 'end_turn',
+          latencyMs: 50,
+        } satisfies InferenceResponse)
+        .mockResolvedValueOnce({
+          content: SAMPLE_CLASSIFIEDS,
+          modelId: 'test-model',
+          usage: { inputTokens: 80, outputTokens: 400, totalTokens: 480 },
+          stopReason: 'end_turn',
+          latencyMs: 50,
+        } satisfies InferenceResponse),
+    };
+    const config = makeMockConfig();
+
+    const result: GeneratorResult = await generateClassifieds({
+      conn,
+      editionId: 1,
+      editionDate: '2026-03-24',
+      inferenceService:
+        inferenceService as unknown as GenerateOptions['inferenceService'],
+      config: config as unknown as GenerateOptions['config'],
+      log: vi.fn(),
+    });
+
+    expect(inferenceService.complete).toHaveBeenCalledTimes(2);
+    expect(result.body).toContain('FOR SALE');
+  });
+
   it('generates even when no companies or filings exist', async () => {
     const inferenceService = makeMockInferenceService(SAMPLE_CLASSIFIEDS);
     const config = makeMockConfig();

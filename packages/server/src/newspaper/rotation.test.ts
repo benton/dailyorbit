@@ -62,9 +62,9 @@ describe('getContentTypesForDay', () => {
   test.each([
     { day: 0 as DayOfWeek, label: 'Sunday' },
     { day: 6 as DayOfWeek, label: 'Saturday' },
-  ])('$label returns null for all slots', ({ day }) => {
+  ])('$label returns week_in_review for slotA, null for B/C', ({ day }) => {
     expect(getContentTypesForDay(day)).toEqual({
-      slotA: null,
+      slotA: 'week_in_review',
       slotB: null,
       slotC: null,
     });

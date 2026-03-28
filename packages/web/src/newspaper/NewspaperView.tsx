@@ -28,6 +28,7 @@ const SLOT_A_TYPES: ReadonlyArray<NewspaperContentType> = [
   'the_docket',
   'spectrum_watch',
   'competitive_intel',
+  'week_in_review',
 ];
 
 const SLOT_B_TYPES: ReadonlyArray<NewspaperContentType> = [

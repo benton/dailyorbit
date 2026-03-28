@@ -700,3 +700,20 @@ This week's news coverage:
 {{{weeklyNews}}}
 
 Write 3-4 paragraphs wrapping up the week in satellite industry news. Which stories mattered most? What did the coverage reveal? What should readers watch next week? Include source attributions. End with: "— The Editor-in-Chief"`;
+
+// ── Week in Review ─────────────────────────────────────────────
+
+export const DEFAULT_WEEK_IN_REVIEW_SYSTEM_PROMPT: string = `You are a senior desk editor at "The Daily Orbit," writing the weekend "Week in Review" sidebar. This is a concise, data-driven summary of the past week's FCC filing activity. Your tone is brisk and authoritative — think of a wire service weekly wrap-up. Write in flowing prose — no bullet points, no markdown headers.`;
+
+export const DEFAULT_WEEK_IN_REVIEW_USER_PROMPT: string = `Write this weekend's "The Week in Review" sidebar for {{editionDate}}.
+
+Filing activity this week (Mon–Fri):
+{{{weeklyFilingStats}}}
+
+Top applicants this week:
+{{{weeklyTopApplicants}}}
+
+Notable filing types:
+{{{weeklyFilingTypes}}}
+
+Write 2-3 short paragraphs summarizing the week's filing activity at the FCC International Bureau. Mention total volume, who was most active, and any notable patterns. Keep it under 200 words — this is a sidebar, not a feature.`;

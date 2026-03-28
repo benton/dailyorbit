@@ -7,6 +7,7 @@ export type NewspaperContentType =
   | 'editorial_cartoon'
   | 'classifieds'
   // Slot A rotation
+  | 'week_in_review'
   | 'orbital_forecast'
   | 'the_docket'
   | 'spectrum_watch'
@@ -93,6 +94,7 @@ export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
   letters_to_editor: 'Letters to the Editor',
   market_signals: 'Market Signals',
   orbital_forecast: 'Orbital Forecast',
+  week_in_review: 'The Week in Review',
   press_gallery: 'From the Press Gallery',
   spectrum_watch: 'Spectrum Watch',
   tech_spotlight: 'Technology Spotlight',
@@ -115,6 +117,7 @@ export const TAGLINE_MAP: Partial<Record<NewspaperContentType, string>> = {
   tech_spotlight: 'Innovation Watch',
   the_applicant: 'Industry Profiles',
   the_docket: 'Daily Filing Activity',
+  week_in_review: 'Seven Days at the Bureau',
 };
 
 export type RecentFiling = {

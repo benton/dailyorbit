@@ -19,6 +19,7 @@ export type NewspaperContentType =
   | 'editorial_cartoon'
   | 'classifieds'
   // Slot A rotation
+  | 'week_in_review'
   | 'orbital_forecast'
   | 'the_docket'
   | 'spectrum_watch'
