@@ -136,14 +136,19 @@ export function extractTextFromPdf(
 
   const needsFallback: boolean =
     (wasmResult.status === 'extracted' && looksLikeBinary(wasmResult.text)) ||
-    wasmResult.status === 'failed';
+    wasmResult.status === 'failed' ||
+    wasmResult.status === 'skipped_no_text';
 
   if (needsFallback && filePath) {
     const fallbackResult: ExtractionResult = extractWithPdftotext(filePath);
     if (fallbackResult.status !== 'failed') {
       return fallbackResult;
     }
-    // Both methods failed — report both errors
+    // pdftotext also failed/skipped — return WASM result if it was just short text
+    if (wasmResult.status === 'skipped_no_text') {
+      return wasmResult;
+    }
+    // Both methods truly failed — report both errors
     const wasmError: string =
       wasmResult.status === 'failed'
         ? wasmResult.error
@@ -158,6 +163,10 @@ export function extractTextFromPdf(
   }
 
   if (needsFallback && !filePath) {
+    // No filePath — can't try pdftotext. Return WASM result if it was just short text.
+    if (wasmResult.status === 'skipped_no_text') {
+      return wasmResult;
+    }
     const reason: string =
       wasmResult.status === 'failed'
         ? wasmResult.error
