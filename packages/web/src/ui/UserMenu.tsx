@@ -57,10 +57,9 @@ export default function UserMenu() {
       onClick: () => void navigate('/profile'),
     },
     {
-      disabled: true,
       icon: <Settings className="h-4 w-4" />,
       label: 'Settings',
-      onClick: () => {},
+      onClick: () => void navigate('/settings'),
     },
     {
       disabled: true,

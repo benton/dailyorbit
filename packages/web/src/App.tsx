@@ -14,6 +14,8 @@ import PublicLayout from './ui/PublicLayout.tsx';
 import { AuthProvider } from './user/AuthContext.tsx';
 import LoginPage from './user/LoginPage.tsx';
 import ProfilePage from './user/ProfilePage.tsx';
+
+const SettingsPage = lazy(() => import('./user/SettingsPage.tsx'));
 import RequireAdmin from './user/RequireAdmin.tsx';
 import RequireAuth from './user/RequireAuth.tsx';
 
@@ -157,6 +159,14 @@ export default function App() {
                 path="/filings/unread"
               />
               <Route element={<ProfilePage />} path="/profile" />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <SettingsPage />
+                  </Suspense>
+                }
+                path="/settings"
+              />
             </Route>
             {/* Full-page newspaper view (no AdminLayout) */}
             <Route
