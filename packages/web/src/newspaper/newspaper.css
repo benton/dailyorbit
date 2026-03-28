@@ -644,6 +644,18 @@
   color: var(--np-accent-red);
 }
 
+.newspaper-placeholder {
+  text-align: center;
+  padding: 8rem 2rem;
+}
+
+.newspaper-placeholder-text {
+  font-family: var(--np-font-headline);
+  font-size: 1.5rem;
+  font-style: italic;
+  color: var(--np-sepia-light);
+}
+
 /* ── Yesterday's Filings (ledger table) ────────────────────── */
 .filings-heading {
   font-family: var(--np-font-headline);

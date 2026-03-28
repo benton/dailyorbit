@@ -122,13 +122,20 @@ export default function AdminSidebar() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border-theme px-3 py-3">
+      <div className="space-y-1 border-t border-border-theme px-3 py-3">
+        <Link
+          className="flex items-center gap-2 rounded-theme px-2 py-1.5 text-sm text-on-surface-muted hover:bg-on-surface/5 hover:text-on-surface"
+          to="/dashboard"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Dashboard
+        </Link>
         <Link
           className="flex items-center gap-2 rounded-theme px-2 py-1.5 text-sm text-on-surface-muted hover:bg-on-surface/5 hover:text-on-surface"
           to="/"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to app
+          Daily Orbit
         </Link>
       </div>
     </aside>

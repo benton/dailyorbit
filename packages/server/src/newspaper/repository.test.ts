@@ -3,6 +3,7 @@ import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { ensureNewspaperTables } from './schema.ts';
 import {
   countImagesByType,
+  deleteEdition,
   ensureEdition,
   getArticle,
   getArticlesByEdition,
@@ -12,7 +13,10 @@ import {
   insertImage,
   listEditions,
   listImagesByType,
+  publishEdition,
   resetArticle,
+  unpublishEdition,
+  updateArticle,
   updateEditionStatus,
   upsertArticle,
 } from './repository.ts';
@@ -74,10 +78,18 @@ describe('newspaper repository', () => {
       expect(result).toBeNull();
     });
 
-    it('returns the most recent edition by date', async () => {
-      await ensureEdition(conn, '2026-03-22');
-      await ensureEdition(conn, '2026-03-24');
-      await ensureEdition(conn, '2026-03-23');
+    it('returns the most recent published edition by date', async () => {
+      const ed1 = await ensureEdition(conn, '2026-03-22');
+      await updateEditionStatus(conn, ed1.id, 'complete');
+      await publishEdition(conn, '2026-03-22');
+
+      const ed2 = await ensureEdition(conn, '2026-03-24');
+      await updateEditionStatus(conn, ed2.id, 'complete');
+      await publishEdition(conn, '2026-03-24');
+
+      const ed3 = await ensureEdition(conn, '2026-03-23');
+      await updateEditionStatus(conn, ed3.id, 'complete');
+      await publishEdition(conn, '2026-03-23');
 
       const latest = await getLatestEdition(conn);
       expect(latest!.editionDate).toContain('2026-03-24');
@@ -372,6 +384,176 @@ describe('newspaper repository', () => {
       expect(await countImagesByType(conn, 'portrait')).toEqual(2);
       expect(await countImagesByType(conn, 'section_header')).toEqual(1);
       expect(await countImagesByType(conn, 'logo')).toEqual(0);
+    });
+  });
+
+  // ── Publish / Unpublish / Delete ────────────────────────────────
+
+  describe('publishEdition', () => {
+    it('publishes a complete edition and sets published_at', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await updateEditionStatus(conn, edition.id, 'complete');
+
+      const result: boolean = await publishEdition(conn, '2026-03-24');
+      expect(result).toBe(true);
+
+      const updated = await getEditionByDate(conn, '2026-03-24');
+      expect(updated!.publishedAt).not.toBeNull();
+    });
+
+    it('returns false for a non-complete edition', async () => {
+      await ensureEdition(conn, '2026-03-24');
+
+      const result: boolean = await publishEdition(conn, '2026-03-24');
+      expect(result).toBe(false);
+    });
+
+    it('returns false for a non-existent edition', async () => {
+      const result: boolean = await publishEdition(conn, '2099-01-01');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('unpublishEdition', () => {
+    it('clears published_at on a published edition', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await updateEditionStatus(conn, edition.id, 'complete');
+      await publishEdition(conn, '2026-03-24');
+
+      const result: boolean = await unpublishEdition(conn, '2026-03-24');
+      expect(result).toBe(true);
+
+      const updated = await getEditionByDate(conn, '2026-03-24');
+      expect(updated!.publishedAt).toBeNull();
+    });
+
+    it('returns false for a non-existent edition', async () => {
+      const result: boolean = await unpublishEdition(conn, '2099-01-01');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('getLatestEdition (published filter)', () => {
+    it('returns the most recent published edition, skipping unpublished', async () => {
+      const ed1 = await ensureEdition(conn, '2026-03-22');
+      await updateEditionStatus(conn, ed1.id, 'complete');
+      await publishEdition(conn, '2026-03-22');
+
+      const ed2 = await ensureEdition(conn, '2026-03-24');
+      await updateEditionStatus(conn, ed2.id, 'complete');
+      // ed2 is complete but NOT published
+
+      const latest = await getLatestEdition(conn);
+      expect(latest!.editionDate).toContain('2026-03-22');
+    });
+
+    it('returns null when no editions are published', async () => {
+      await ensureEdition(conn, '2026-03-24');
+
+      const latest = await getLatestEdition(conn);
+      expect(latest).toBeNull();
+    });
+  });
+
+  describe('deleteEdition', () => {
+    it('deletes edition and its articles, returning image paths', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'digest',
+        body: 'Content.',
+        imagePath: 'images/2026-03-24/digest.webp',
+      });
+      await upsertArticle(conn, edition.id, {
+        contentType: 'editorial',
+        slug: 'editorial',
+        body: 'Editorial.',
+      });
+
+      const result = await deleteEdition(conn, '2026-03-24');
+      expect(result.deleted).toBe(true);
+      expect(result.imagePaths).toEqual(['images/2026-03-24/digest.webp']);
+
+      expect(await getEditionByDate(conn, '2026-03-24')).toBeNull();
+      expect(await getArticlesByEdition(conn, edition.id)).toEqual([]);
+    });
+
+    it('returns deleted: false for a non-existent edition', async () => {
+      const result = await deleteEdition(conn, '2099-01-01');
+      expect(result).toEqual({ deleted: false, imagePaths: [] });
+    });
+  });
+
+  describe('updateArticle', () => {
+    it('updates headline only', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'digest',
+        headline: 'Original',
+        body: 'Original body.',
+      });
+
+      const updated = await updateArticle(conn, edition.id, 'digest', {
+        headline: 'New Headline',
+      });
+      expect(updated!.headline).toEqual('New Headline');
+      expect(updated!.body).toEqual('Original body.');
+    });
+
+    it('updates body only', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'digest',
+        headline: 'Keep This',
+        body: 'Old body.',
+      });
+
+      const updated = await updateArticle(conn, edition.id, 'digest', {
+        body: 'New body content.',
+      });
+      expect(updated!.headline).toEqual('Keep This');
+      expect(updated!.body).toEqual('New body content.');
+    });
+
+    it('updates both headline and body', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'digest',
+        headline: 'Old',
+        body: 'Old body.',
+      });
+
+      const updated = await updateArticle(conn, edition.id, 'digest', {
+        headline: 'New',
+        body: 'New body.',
+      });
+      expect(updated!.headline).toEqual('New');
+      expect(updated!.body).toEqual('New body.');
+    });
+
+    it('returns null for a non-existent article', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      const result = await updateArticle(conn, edition.id, 'nonexistent', {
+        headline: 'X',
+      });
+      expect(result).toBeNull();
+    });
+
+    it('returns existing article unchanged when patch is empty', async () => {
+      const edition = await ensureEdition(conn, '2026-03-24');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'daily_digest',
+        slug: 'digest',
+        headline: 'Keep',
+        body: 'Keep body.',
+      });
+
+      const result = await updateArticle(conn, edition.id, 'digest', {});
+      expect(result!.headline).toEqual('Keep');
+      expect(result!.body).toEqual('Keep body.');
     });
   });
 });

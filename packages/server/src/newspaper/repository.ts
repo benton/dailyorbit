@@ -31,6 +31,7 @@ function rowToEdition(r: Record<string, unknown>): NewspaperEdition {
     status: String(r.status) as EditionStatus,
     pipelineRunId: r.pipeline_run_id != null ? Number(r.pipeline_run_id) : null,
     heroImagePath: r.hero_image_path != null ? String(r.hero_image_path) : null,
+    publishedAt: r.published_at != null ? String(r.published_at) : null,
     createdAt: String(r.created_at),
     updatedAt: String(r.updated_at),
   };
@@ -97,7 +98,9 @@ export async function getLatestEdition(
   conn: DuckDBConnection,
 ): Promise<NewspaperEdition | null> {
   const reader = await conn.runAndReadAll(
-    `SELECT * FROM newspaper_edition ORDER BY edition_date DESC LIMIT 1`,
+    `SELECT * FROM newspaper_edition
+     WHERE published_at IS NOT NULL
+     ORDER BY edition_date DESC LIMIT 1`,
   );
   const rows = reader.getRowObjectsJS();
   if (rows.length === 0) return null;
@@ -129,6 +132,115 @@ export async function updateEditionStatus(
      WHERE id = ?`,
     [status, id] as DuckDBValue[],
   );
+}
+
+/**
+ * Set published_at = NOW() on a complete edition.
+ * Returns true if the edition was published, false if not found or not complete.
+ */
+export async function publishEdition(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<boolean> {
+  const reader = await conn.runAndReadAll(
+    `UPDATE newspaper_edition
+     SET published_at = current_timestamp, updated_at = current_timestamp
+     WHERE edition_date = CAST(? AS DATE) AND status = 'complete'
+     RETURNING id`,
+    [date] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().length > 0;
+}
+
+/**
+ * Clear published_at on an edition (unpublish).
+ * Returns true if the edition was found and unpublished.
+ */
+export async function unpublishEdition(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<boolean> {
+  const reader = await conn.runAndReadAll(
+    `UPDATE newspaper_edition
+     SET published_at = NULL, updated_at = current_timestamp
+     WHERE edition_date = CAST(? AS DATE)
+     RETURNING id`,
+    [date] as DuckDBValue[],
+  );
+  return reader.getRowObjectsJS().length > 0;
+}
+
+/**
+ * Delete an edition and its articles. Returns image paths for cleanup.
+ */
+export async function deleteEdition(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<{ deleted: boolean; imagePaths: string[] }> {
+  const edition = await getEditionByDate(conn, date);
+  if (!edition) return { deleted: false, imagePaths: [] };
+
+  // Collect image paths before deletion
+  const imgReader = await conn.runAndReadAll(
+    `SELECT image_path FROM newspaper_article
+     WHERE edition_id = ? AND image_path IS NOT NULL`,
+    [edition.id] as DuckDBValue[],
+  );
+  const imagePaths: string[] = imgReader
+    .getRowObjectsJS()
+    .map((r: Record<string, unknown>) => String(r.image_path));
+
+  if (edition.heroImagePath) {
+    imagePaths.push(edition.heroImagePath);
+  }
+
+  // Delete articles first, then edition
+  await conn.run(`DELETE FROM newspaper_article WHERE edition_id = ?`, [
+    edition.id,
+  ] as DuckDBValue[]);
+  await conn.run(`DELETE FROM newspaper_edition WHERE id = ?`, [
+    edition.id,
+  ] as DuckDBValue[]);
+
+  return { deleted: true, imagePaths };
+}
+
+/**
+ * Partial update of an article's headline and/or body.
+ * Returns the updated article, or null if not found.
+ */
+export async function updateArticle(
+  conn: DuckDBConnection,
+  editionId: number,
+  slug: string,
+  patch: { headline?: string; body?: string },
+): Promise<NewspaperArticle | null> {
+  const existing = await getArticle(conn, editionId, slug);
+  if (!existing) return null;
+
+  const sets: string[] = ['updated_at = current_timestamp'];
+  const params: DuckDBValue[] = [];
+
+  if (patch.headline !== undefined) {
+    sets.push('headline = ?');
+    params.push(patch.headline as DuckDBValue);
+  }
+  if (patch.body !== undefined) {
+    sets.push('body = ?');
+    params.push(patch.body as DuckDBValue);
+  }
+
+  if (params.length === 0) return existing;
+
+  params.push(editionId as DuckDBValue, slug as DuckDBValue);
+
+  await conn.run(
+    `UPDATE newspaper_article SET ${sets.join(', ')}
+     WHERE edition_id = ? AND slug = ?`,
+    params,
+  );
+
+  return getArticle(conn, editionId, slug);
 }
 
 // ── Article CRUD ────────────────────────────────────────────────────
