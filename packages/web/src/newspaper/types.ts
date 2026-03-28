@@ -94,12 +94,12 @@ export const DISPLAY_NAME_MAP: Record<NewspaperContentType, string> = {
   letters_to_editor: 'Letters to the Editor',
   market_signals: 'Market Signals',
   orbital_forecast: 'Orbital Forecast',
-  week_in_review: 'The Week in Review',
   press_gallery: 'From the Press Gallery',
   spectrum_watch: 'Spectrum Watch',
   tech_spotlight: 'Technology Spotlight',
   the_applicant: 'The Applicant',
   the_docket: 'The Docket',
+  week_in_review: 'The Week in Review',
 };
 
 /** Maps content type to byline/tagline */
