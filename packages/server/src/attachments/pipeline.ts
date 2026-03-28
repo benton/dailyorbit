@@ -297,10 +297,9 @@ export async function runAttachmentPipeline(
     const downloadErrors: Set<number> = new Set();
     let sessionExpired: boolean = false;
 
-    // Throttle authenticated ServiceNow downloads to avoid triggering anti-bot
     const isAuthenticated: boolean = options.authCookies != null;
-    const downloadConcurrency: number = isAuthenticated ? 1 : concurrency;
-    const downloadDelay: number = isAuthenticated ? 3000 : delayMs;
+    const downloadConcurrency: number = concurrency;
+    const downloadDelay: number = delayMs;
 
     // Abort controller lets us stop the queue immediately on session expiry
     const downloadAbort: AbortController = new AbortController();

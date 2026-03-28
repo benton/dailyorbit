@@ -47,8 +47,7 @@ export async function canaryDownload(
     .trim()
     .toLowerCase();
   if (ct === 'text/html') {
-    const preview: string = new TextDecoder().decode(buf.slice(0, 1000));
-    log(`[canary] FAIL: got text/html — body preview: ${preview}`);
+    log(`[canary] FAIL: got text/html (${String(buf.byteLength)} bytes)`);
     return false;
   }
 
