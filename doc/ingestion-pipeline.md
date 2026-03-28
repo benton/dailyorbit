@@ -356,43 +356,61 @@ flowchart TD
 ### 2b′. Authenticated Attachment Download (ServiceNow)
 
 Attachments hosted at `fccprod.servicenowservices.com` require FCC Okta SSO
-authentication. The pipeline supports a semi-automated workflow: a human logs
-in once via browser, session cookies are extracted, and the download pipeline
-uses those cookies to fetch ServiceNow-hosted attachments.
+authentication. The pipeline uses a **resilient, layered strategy**:
+
+1. **Headed login via Xvfb** (production default) — Playwright runs in headed
+   mode against a virtual framebuffer (`xvfb-run`), which passes Okta's
+   browser fingerprint checks that block headless mode.
+2. **Persisted cookie fallback** — On successful login, cookies are persisted
+   to the encrypted `icfsCookies` config key in the DB. If login fails on a
+   subsequent run, the pipeline falls back to these persisted cookies.
+3. **Manual cookie injection** — Emergency bootstrap via the CLI if automated
+   login is unavailable.
 
 #### One-time setup
 
-Install the Playwright browser used for cookie extraction:
+Store ICFS credentials in the encrypted config:
 
 ```bash
-pnpx playwright install chromium
+./daily-orbit config set icfsUsername <email>
+./daily-orbit config set icfsPassword <password>
 ```
 
-#### Cookie extraction
+#### Automated login (pipeline)
+
+The pipeline's `attachments.download` stage automatically:
+
+1. Reads credentials from encrypted config
+2. Launches a headed Chromium browser (Xvfb provides the display in Docker)
+3. Completes Okta SSO login
+4. Extracts session cookies and persists them to the DB
+5. Falls back to persisted cookies if login fails
+6. Skips authenticated downloads if no usable cookies are available
+
+#### Manual login (CLI)
 
 | | |
 |---|---|
-| **Command** | `./daily-orbit attachments extract-cookies [--output PATH]` |
+| **Command** | `./daily-orbit attachments login [--headed] [--save-credentials]` |
 | **Output** | `data/icfs-cookies.json` |
 
-The command opens a Chromium browser to the ICFS login page. The operator
-completes SSO login (email + password + 2FA if prompted), then returns to
-the terminal and presses **Enter**. The CLI extracts all ServiceNow session
-cookies from the browser and writes them to a JSON file.
+The CLI can also be used for manual login or to bootstrap cookies:
 
-#### Authenticated download
+```bash
+# Headed login (recommended — bypasses Okta headless detection)
+./daily-orbit attachments login --headed
 
-| | |
-|---|---|
-| **Command** | `./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed` |
-| **Source** | `attachment` rows where `download_url LIKE '%servicenowservices.com%'` |
-| **Writes to** | `data/attachments/{subsystem}/{file_number}/` + updates `attachment` table |
+# Store credentials for future automated use
+./daily-orbit attachments login --headed --save-credentials
+```
 
-When `--auth-cookies` is provided, the pipeline:
+#### Authenticated download behavior
+
+When session cookies are available, the pipeline:
 
 - Filters to only ServiceNow-hosted attachment URLs
 - Sends the session cookie with each download request
-- Does **not** follow HTTP redirects (a 302 means the session expired)
+- Detects session expiry via response content-type (HTML = expired)
 - On session expiry, stops gracefully and logs the count of successful
   downloads — remaining attachments stay `pending` for the next run
 - Skips the `.pdf` URL suffix normalization used for fcc.report URLs
@@ -400,21 +418,8 @@ When `--auth-cookies` is provided, the pipeline:
 **Session lifetime:** ServiceNow sessions expire after roughly 30 minutes
 (governed by the `glide_session_store` cookie). For daily operations this is
 more than enough — a typical day's new filings produce only a handful of
-attachments. If a large backlog run outlasts the session, re-extract cookies
-and re-run; the pipeline picks up where it left off.
-
-#### Daily procedure
-
-```bash
-# 1. Extract cookies (opens browser — log in, then press Enter)
-./daily-orbit attachments extract-cookies
-
-# 2. Download authenticated attachments
-./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed
-
-# 3. Extract text from newly downloaded PDFs
-./daily-orbit attachments extract
-```
+attachments. If a large backlog run outlasts the session, the next pipeline
+run will re-login automatically.
 
 ### 2c. Content-Type Validation
 
@@ -718,7 +723,7 @@ In production, the **PipelineScheduler** handles pipeline execution automaticall
 - **Probes** run every ~60 seconds, checking for new ICFS filings and firing metadata alerts
 - **Full refreshes** run every ~15 minutes, processing all pending work including embeddings, FTS rebuild, and all alert types
 
-The scheduler is started/stopped from the admin Pipeline page. For manual runs or debugging, the recommended sequence is below. Steps 1–2 and 12–16 are fully automated. Steps 3–5 require a human to log in once for ServiceNow authentication; the rest is automated.
+The scheduler is started/stopped from the admin Pipeline page. For manual runs or debugging, the recommended sequence is below. All steps are fully automated when ICFS credentials are configured (see `./daily-orbit config set icfsUsername` / `icfsPassword`). The pipeline handles login and cookie management automatically.
 
 ```bash
 # 1. Ingest new filings from ICFS (includes auto-attribution)
@@ -730,13 +735,12 @@ The scheduler is started/stopped from the admin Pipeline page. For manual runs o
 # 3. Generate vector embeddings for semantic search
 ./daily-orbit inference embed --source all
 
-# 4. Extract ICFS session cookies (opens browser — log in, press Enter)
-./daily-orbit attachments extract-cookies
-
-# 5. Download ServiceNow-hosted attachments using session cookies
+# 4. Download ServiceNow-hosted attachments (auto-login via headed browser)
+# (Requires icfsUsername and icfsPassword in config; uses Xvfb in Docker)
+./daily-orbit attachments login --headed
 ./daily-orbit attachments download --auth-cookies data/icfs-cookies.json --retry-failed
 
-# 6. Extract text from newly downloaded authenticated attachments
+# 5. Extract text from newly downloaded authenticated attachments
 ./daily-orbit attachments extract
 
 # 7. Ensure company seed data is current (no-ops if unchanged)
@@ -908,7 +912,7 @@ All pipeline stages accept `--delay` and `--concurrency` overrides (except enric
 | IBFS pipeline | `packages/server/src/ingest/` |
 | ICFS pipeline | `packages/server/src/icfs/` |
 | Attachments pipeline | `packages/server/src/attachments/` |
-| ICFS session cookies | `data/icfs-cookies.json` (gitignored) |
+| ICFS session cookies | Encrypted in DB config (`icfsCookies`), file fallback: `data/icfs-cookies.json` |
 | Inference module | `packages/server/src/inference/` |
 | Prompt templates | `packages/server/src/inference/prompts.ts` |
 | Companies module | `packages/server/src/companies/` |

@@ -43,8 +43,10 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_modules
 
-# Install Chromium system dependencies + browser for headless ICFS login
-RUN npx playwright install-deps chromium \
+# Install Chromium system dependencies + browser + Xvfb for headed ICFS login
+RUN apt-get update \
+ && npx playwright install-deps chromium \
+ && apt-get install -y --no-install-recommends xvfb xauth \
  && npx playwright install chromium \
  && rm -rf /var/lib/apt/lists/*
 
@@ -64,5 +66,5 @@ VOLUME /app/data
 
 EXPOSE 9000
 
-ENTRYPOINT ["./daily-orbit"]
+ENTRYPOINT ["xvfb-run", "--auto-servernum", "./daily-orbit"]
 CMD ["serve", "api"]

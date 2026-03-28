@@ -206,7 +206,12 @@ const STAGES: PipelineStage[] = [
       const storage = createStorageFromConfig(getConfigService());
       const start: number = Date.now();
 
-      // Auto-login to ICFS if credentials are configured
+      // Auto-login to ICFS if credentials are configured, with DB-persisted
+      // cookie fallback.  Flow:
+      //   1. Try headed login (Xvfb provides virtual display in prod)
+      //   2. On success → use fresh cookies, persist to DB
+      //   3. On failure → load persisted cookies from DB if not expired
+      //   4. If no usable cookies → skip authenticated downloads
       let authCookies: string | undefined;
       const config = getConfigService();
       const rawUser = config.get('icfsUsername');
@@ -219,11 +224,11 @@ const STAGES: PipelineStage[] = [
       if (username && password) {
         try {
           const { headlessLogin } = await import('../icfs/headless-login.ts');
-          ctx.log('info', 'Performing headless ICFS login...');
+          ctx.log('info', 'Performing ICFS login (headed via Xvfb)...');
           const loginResult = await headlessLogin({
             username,
             password,
-            headless: true,
+            headless: false,
             onStatus: (msg: string) => ctx.log('progress', msg),
           });
           if (loginResult.ok) {
@@ -232,18 +237,67 @@ const STAGES: PipelineStage[] = [
               'info',
               `ICFS login OK — ${String(loginResult.output.cookieCount)} cookies, expires ${loginResult.output.expiresAt}`,
             );
+            // Persist fresh cookies to DB for fallback on future failures
+            try {
+              await config.set(
+                'icfsCookies',
+                JSON.stringify(loginResult.output),
+              );
+              ctx.log('info', 'Persisted ICFS cookies to config');
+            } catch (persistErr: unknown) {
+              const msg: string =
+                persistErr instanceof Error
+                  ? persistErr.message
+                  : String(persistErr);
+              ctx.log('error', `Failed to persist ICFS cookies: ${msg}`);
+            }
           } else {
             ctx.log(
               'error',
-              `ICFS login failed: ${loginResult.message} — continuing without auth`,
+              `ICFS login failed: ${loginResult.message} — trying persisted cookies`,
             );
           }
         } catch (e: unknown) {
           const msg: string = e instanceof Error ? e.message : String(e);
           ctx.log(
             'error',
-            `ICFS login error: ${msg} — continuing without auth`,
+            `ICFS login error: ${msg} — trying persisted cookies`,
           );
+        }
+
+        // Fallback: load persisted cookies from DB if login didn't produce any
+        if (!authCookies) {
+          try {
+            const rawCookies = config.get('icfsCookies');
+            const cookieJson: string =
+              typeof rawCookies === 'string' ? rawCookies : rawCookies.unwrap();
+            if (cookieJson) {
+              const persisted: {
+                cookies: string;
+                expiresAt: string;
+                cookieCount: number;
+              } = JSON.parse(cookieJson);
+              const expiresAt: number = new Date(persisted.expiresAt).getTime();
+              if (expiresAt > Date.now()) {
+                authCookies = persisted.cookies;
+                ctx.log(
+                  'info',
+                  `Using persisted ICFS cookies (${String(persisted.cookieCount)} cookies, expires ${persisted.expiresAt})`,
+                );
+              } else {
+                ctx.log(
+                  'error',
+                  `Persisted ICFS cookies expired at ${persisted.expiresAt} — skipping auth downloads`,
+                );
+              }
+            }
+          } catch (fallbackErr: unknown) {
+            const msg: string =
+              fallbackErr instanceof Error
+                ? fallbackErr.message
+                : String(fallbackErr);
+            ctx.log('error', `Failed to load persisted ICFS cookies: ${msg}`);
+          }
         }
       } else {
         ctx.log(

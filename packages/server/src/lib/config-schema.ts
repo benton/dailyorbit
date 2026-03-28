@@ -205,6 +205,12 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: true,
     description: 'ICFS/Okta password for headless login',
   },
+  icfsCookies: {
+    key: 'icfsCookies',
+    defaultValue: '',
+    encrypted: true,
+    description: 'Persisted ICFS session cookies (auto-refreshed by pipeline)',
+  },
   newspaperCopyModel: {
     key: 'newspaperCopyModel',
     defaultValue: 'us.amazon.nova-pro-v1:0',
