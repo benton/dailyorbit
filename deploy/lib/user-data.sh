@@ -85,6 +85,15 @@ curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.5.1/duckdb_cli
 unzip -qo /tmp/duckdb.zip -d /usr/local/bin
 rm /tmp/duckdb.zip
 chmod +x /usr/local/bin/duckdb
+
+# Store Docker images on the ZFS data pool (root EBS is too small for Chromium)
+mkdir -p /data/docker /etc/docker
+cat > /etc/docker/daemon.json << 'DOCKERCFG'
+{
+  "data-root": "/data/docker"
+}
+DOCKERCFG
+
 systemctl enable docker
 systemctl start docker
 
@@ -145,7 +154,7 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << CWCON
       "files": {
         "collect_list": [
           {
-            "file_path": "/var/lib/docker/containers/*/*.log",
+            "file_path": "/data/docker/containers/*/*.log",
             "log_group_name": "/daily-orbit/app",
             "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S"

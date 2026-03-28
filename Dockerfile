@@ -43,12 +43,14 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_modules
 
-# Install Chromium system dependencies + browser + Xvfb for headed ICFS login
+# Install tini (lightweight init), Xvfb, and Chromium system deps
 RUN apt-get update \
+ && apt-get install -y --no-install-recommends tini xvfb xauth \
  && npx playwright install-deps chromium \
- && apt-get install -y --no-install-recommends xvfb xauth \
- && npx playwright install chromium \
  && rm -rf /var/lib/apt/lists/*
+
+# Download Chromium browser binary (separate layer — ~180MB)
+RUN npx playwright install chromium
 
 # Built server bundle + package.json (needed for version at runtime)
 COPY --from=build /app/packages/server/dist ./packages/server/dist
@@ -60,11 +62,14 @@ COPY --from=build /app/packages/web/dist ./packages/web/dist
 # CLI wrapper — uses `exec` so node becomes PID 1
 COPY daily-orbit .
 
+# Entrypoint: starts Xvfb, then execs the app under tini
+COPY docker-entrypoint.sh .
+
 ENV SERVE_STATIC=true
 
 VOLUME /app/data
 
 EXPOSE 9000
 
-ENTRYPOINT ["xvfb-run", "--auto-servernum", "./daily-orbit"]
+ENTRYPOINT ["tini", "--", "./docker-entrypoint.sh"]
 CMD ["serve", "api"]
