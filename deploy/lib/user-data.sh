@@ -14,6 +14,14 @@ unzip -qo /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install
 rm -rf /tmp/awscliv2.zip /tmp/aws
 
+# ── Grow root filesystem to fill EBS volume ─────────────────────────────────
+ROOT_DEV=$(findmnt -n -o SOURCE /)
+ROOT_DISK=$(lsblk -npo PKNAME "$ROOT_DEV")
+ROOT_PARTNUM=$(cat /sys/class/block/$(basename "$ROOT_DEV")/partition)
+growpart "$ROOT_DISK" "$ROOT_PARTNUM" || true
+resize2fs "$ROOT_DEV" || true
+echo "Root filesystem: $(df -h / | tail -1)"
+
 # ── Elastic IP Association ────────────────────────────────────────────────────
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
   -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
