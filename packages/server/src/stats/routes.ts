@@ -61,9 +61,20 @@ function todayEastern(): string {
   return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 }
 
-/** Returns true if the current Eastern time hour is >= 8 (8:00 AM through 11:59 PM). */
-function isEasternBusinessHours(): boolean {
+/**
+ * Returns true when "Today's Filings" should be shown on the dashboard.
+ * Hidden on Saturday and Sunday (ET), and hidden before 8 AM ET on Monday
+ * (since no new filings arrive over the weekend).
+ */
+function isTodaysFilingsVisible(): boolean {
   const now: Date = new Date();
+  const eastern: string = now.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+  });
+  if (eastern === 'Sat' || eastern === 'Sun') {
+    return false;
+  }
   const hourStr: string = now.toLocaleString('en-US', {
     hour: 'numeric',
     hour12: false,
@@ -131,7 +142,7 @@ publicStatsRoutes.get('/recent-filings', async (c) => {
 });
 
 publicStatsRoutes.get('/todays-filings', async (c) => {
-  if (!isEasternBusinessHours()) {
+  if (!isTodaysFilingsVisible()) {
     return c.json({ visible: false, date: null, filings: [] });
   }
   const db = await getDb();
