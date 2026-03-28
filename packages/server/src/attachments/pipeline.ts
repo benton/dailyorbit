@@ -755,6 +755,10 @@ export async function runAttachmentPipeline(
       );
 
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const { InstrumentedBedrockClient } =
+        await import('../inference/instrumented-client.ts');
+      const { ensureInferenceLogTable } =
+        await import('../inference/schema.ts');
       const { InferenceService } =
         await import('../inference/inference-service.ts');
       const {
@@ -791,7 +795,13 @@ export async function runAttachmentPipeline(
         // ConfigService not initialized (standalone CLI) — use defaults
       }
 
-      const client = new BedrockClient(region);
+      await ensureInferenceLogTable(conn);
+      const raw = new BedrockClient(region);
+      const client = new InstrumentedBedrockClient(
+        raw,
+        conn,
+        'attachment_summarize',
+      );
       const service = new InferenceService(client);
       const summConcurrency: number = options.summarizationConcurrency ?? 10;
 

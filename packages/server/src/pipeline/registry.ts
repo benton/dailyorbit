@@ -517,6 +517,10 @@ const STAGES: PipelineStage[] = [
       // Mirrors the CLI embed command for source=attachment
       const { DuckDBConnection } = await import('@duckdb/node-api');
       const { BedrockClient } = await import('../inference/bedrock-client.ts');
+      const { InstrumentedBedrockClient } =
+        await import('../inference/instrumented-client.ts');
+      const { ensureInferenceLogTable } =
+        await import('../inference/schema.ts');
       const { EmbeddingService } =
         await import('../inference/embedding-service.ts');
       const { ensureEmbeddingSchema } =
@@ -533,8 +537,14 @@ const STAGES: PipelineStage[] = [
         const modelId: string = 'amazon.titan-embed-text-v2:0';
         const dimensions: number = 512;
         const region: string = process.env.AWS_REGION ?? 'us-east-2';
-        const client = new BedrockClient(region);
-        const service = new EmbeddingService(client);
+        await ensureInferenceLogTable(conn);
+        const raw = new BedrockClient(region);
+        const instrumented = new InstrumentedBedrockClient(
+          raw,
+          conn,
+          'embed_attachment',
+        );
+        const service = new EmbeddingService(instrumented);
 
         // Find attachments needing embeddings (exclude permanently failed)
         const sql: string = `
