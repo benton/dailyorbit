@@ -25,17 +25,16 @@
 - v1.5.0 [x] News items UI - user and admin
 - v1.6.0 [x] Premium feature: Query-modifying RAG / interrogation mode
 - v1.7.0 [x] LLM-powered question answering / different "consultants"
-- v1.8.0 [x] RAG Search module
-- v1.9.0 [x] Per-use, per-request inference cost accounting
+- v1.8.0 [x] Per-user, per-request inference cost accounting
 
 ## Medium Term: The Daily Orbit Newspaper
 
-- v2.0.0 [ ] Generate Newspaper layout home page
-- v2.0.1 [ ] Article idea: News summary ("3 miles Up");
-- v2.0.2 [ ] Article idea: "Over the Horizon" - Rotating Editorials from different "Editors" (e.g. Claude Antrhos, Gemini Baker, Rufus Bedrock);
-- v2.0.3 [ ] Article idea: "Ask the Editor" - Premium Q&A feature (with user consent, share output anonymously next day in "Letters to the Editor")
-- v2.0.4 [ ] Article idea: Wordcloud-based crossword puzze?
-- v2.1.x [ ] More data - Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss
+- v2.0.0 [x] Generate Newspaper layout home page
+- v2.0.1 [x] Article idea: News summary ("3 miles Up");
+- v2.0.2 [x] Article idea: "Over the Horizon" - Rotating Editorials from different "Editors" (e.g. Claude Antrhos, Gemini Baker, Rufus Bedrock);
+- v2.0.3 [x] Article idea: "Ask the Editor" - Premium Q&A feature (with user consent, share output anonymously next day in "Letters to the Editor")
+- v2.1.0 [x] More data - Track FCC notices from https://fcc.report/IBFS/Filing-List/Public-Notices.rss
+- v2.2.0 [ ] RAG Search module
 
 ## Long Term: Marketing / styling features
 
@@ -50,7 +49,7 @@
 
 ## Bug fixes
 
-- v?.x.x [ ] CloudwatchLogs w structured output
-- v?.x.x [ ] show software version on admin dashboard
+- v?.x.x [ ] Clean up user settings
+- v?.x.x [ ] Article idea: Wordcloud-based crossword puzze?
 - v?.x.x [ ] Basic EC2 instance metrics dashboard?
 - v?.x.x [ ] Exponential backoff during ingest
