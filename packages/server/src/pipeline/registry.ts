@@ -306,6 +306,16 @@ const STAGES: PipelineStage[] = [
         );
       }
 
+      if (authCookies != null) {
+        const cookieCount: number = (authCookies.match(/; /g)?.length ?? 0) + 1;
+        ctx.log(
+          'info',
+          `Passing ${String(cookieCount)} cookies (length=${String(authCookies.length)}) to pipeline`,
+        );
+      } else {
+        ctx.log('info', 'No auth cookies — unauthenticated download mode');
+      }
+
       const result = await runAttachmentPipeline({
         dbInstance: ctx.db,
         storage,

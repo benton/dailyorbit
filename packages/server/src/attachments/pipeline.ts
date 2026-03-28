@@ -43,6 +43,7 @@ import type {
 import { detectContentType } from './validate-content-type.ts';
 import {
   attachmentStorageKey,
+  canaryDownload,
   downloadFile,
   SessionExpiredError,
 } from './storage.ts';
@@ -209,6 +210,23 @@ export async function runAttachmentPipeline(
           )
         : allPending;
 
+    if (options.authCookies != null) {
+      log(
+        `Auth filter: ${String(allPending.length)} total pending → ${String(afterAuthFilter.length)} with ServiceNow URLs (filtered out ${String(allPending.length - afterAuthFilter.length)})`,
+      );
+      if (afterAuthFilter.length > 0) {
+        const sampleUrls: string[] = afterAuthFilter
+          .slice(0, 3)
+          .map((a) => a.downloadUrl);
+        log(`Sample download URLs: ${JSON.stringify(sampleUrls)}`);
+        const cookieCount: number =
+          (options.authCookies.match(/; /g)?.length ?? 0) + 1;
+        log(
+          `Auth cookies: ${String(cookieCount)} cookies, length=${String(options.authCookies.length)}`,
+        );
+      }
+    }
+
     // Filter out undownloadable URLs (empty, /ibfs? form links, /nav_to nav links)
     const pending: AttachmentRow[] = [];
     for (const att of afterAuthFilter) {
@@ -290,10 +308,71 @@ export async function runAttachmentPipeline(
       options.signal.addEventListener('abort', () => downloadAbort.abort());
     }
 
+    // ── Canary download: test first URL with raw fetch (same as test_icfs_auth_download.sh) ──
+    if (isAuthenticated && toDownload.length > 0) {
+      const canaryAtt: AttachmentRow = toDownload[0]!;
+      log(`=== CANARY DOWNLOAD: testing ${canaryAtt.downloadUrl} ===`);
+
+      const canaryOk: boolean = await canaryDownload(
+        canaryAtt.downloadUrl,
+        options.authCookies!,
+        log,
+      );
+
+      if (!canaryOk) {
+        log(
+          '=== CANARY got HTML — checking if auth failure or legitimate HTML attachment ===',
+        );
+        log('=== Testing with downloadFile() (has auth-failure detection) ===');
+
+        try {
+          const result = await downloadFile(canaryAtt.downloadUrl, {
+            cookies: options.authCookies,
+          });
+          log(
+            `=== downloadFile() SUCCEEDED: ${String(result.fileSizeBytes)} bytes, ${result.contentType} — HTML is a legitimate attachment, proceeding ===`,
+          );
+        } catch (e: unknown) {
+          log(
+            `=== downloadFile() ALSO FAILED: ${e instanceof Error ? e.message : String(e)} ===`,
+          );
+          sessionExpired = true;
+        }
+      } else {
+        log('=== CANARY PASSED — proceeding with download queue ===');
+
+        // Also verify downloadFile() works before trusting the queue
+        log('=== Verifying downloadFile() path matches canary ===');
+        try {
+          const result = await downloadFile(canaryAtt.downloadUrl, {
+            cookies: options.authCookies,
+          });
+          log(
+            `=== downloadFile() also OK: ${String(result.fileSizeBytes)} bytes, ${result.contentType} ===`,
+          );
+        } catch (e: unknown) {
+          log(
+            `=== downloadFile() FAILED despite canary passing: ${e instanceof Error ? e.message : String(e)} ===`,
+          );
+          log('=== BUG IS IN downloadFile/fetchWithRetry PATH ===');
+          sessionExpired = true;
+        }
+      }
+    }
+
+    log(
+      `Starting download queue: ${String(toDownload.length)} items, concurrency=${String(downloadConcurrency)}, delay=${String(downloadDelay)}ms`,
+    );
+
     const downloadResults: (DownloadResult | undefined)[] = await processQueue(
       toDownload,
-      async (att: AttachmentRow): Promise<DownloadResult> => {
+      async (att: AttachmentRow, index: number): Promise<DownloadResult> => {
         const filing: FilingRow = filingByKey.get(att.filingKey)!;
+        if (index < 5) {
+          log(
+            `Downloading [${String(index)}]: key=${String(att.attachmentKey)} url=${att.downloadUrl} filing=${filing.fileNumber}`,
+          );
+        }
 
         // Download to a temporary key first, then derive final key from content-type
         const tmpKey: string = attachmentStorageKey(
@@ -339,6 +418,9 @@ export async function runAttachmentPipeline(
         signal: downloadAbort.signal,
         onError: (error: unknown, att: AttachmentRow, index: number) => {
           if (error instanceof SessionExpiredError) {
+            log(
+              `SessionExpiredError on item ${String(index)}/${String(toDownload.length)}: url=${att.downloadUrl} error=${error.message}`,
+            );
             sessionExpired = true;
             downloadAbort.abort();
             return;

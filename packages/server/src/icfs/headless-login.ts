@@ -251,13 +251,17 @@ export async function headlessLogin(
       if (currentUrl.includes(OKTA_DOMAIN)) {
         // Check for Okta form validation errors (wrong credentials)
         const hasFormError: boolean = await page
-          .locator('.okta-form-infobox-error, .o-form-error-container, [data-se="o-form-error-container"]')
+          .locator(
+            '.okta-form-infobox-error, .o-form-error-container, [data-se="o-form-error-container"]',
+          )
           .count()
           .then((n: number) => n > 0);
 
         if (hasFormError) {
           const errorText: string = await page
-            .locator('.okta-form-infobox-error, .o-form-error-container, [data-se="o-form-error-container"]')
+            .locator(
+              '.okta-form-infobox-error, .o-form-error-container, [data-se="o-form-error-container"]',
+            )
             .first()
             .innerText()
             .catch(() => 'unknown error');

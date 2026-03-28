@@ -5,30 +5,24 @@ set -eox pipefail
 
 echo "=== Debug snapshot: $(date -u) ==="
 
-# ── System ──────────────────────────────────────────────────────────────────
-echo "--- Disk usage ---"
-df -h /data
+IMAGE=$(sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep daily-orbit | head -1)
+echo "Using image: $IMAGE"
 
-echo "--- Memory ---"
-free -h
+# Kill any stale containers and ensure service is stopped
+sudo docker kill $(sudo docker ps -q) 2>/dev/null || true
+sudo systemctl stop daily-orbit 2>/dev/null || true
 
-echo "--- Uptime ---"
-uptime
+# Remove stale DuckDB lock files
+rm -f /data/daily-orbit.duckdb.wal /data/daily-orbit.duckdb.tmp 2>/dev/null || true
 
-# ── Application ─────────────────────────────────────────────────────────────
-echo "--- Service status ---"
-systemctl is-active daily-orbit.service && echo "running" || echo "NOT running"
+echo "--- Waiting 2s for lock release ---"
+sleep 2
 
-echo "--- Container ---"
-sudo docker ps --filter name=daily-orbit --format '{{.Status}}'
+# Run attachment download pipeline with canary download
+echo "=== Running pipeline with canary download ==="
+sudo docker run --rm --network host -v /data:/app/data \
+  -e NODE_ENV=production \
+  "$IMAGE" attachments download --concurrency 1 --verbose \
+  --auth-cookies data/icfs-cookies.json 2>&1
 
-echo "--- Recent logs (last 30 lines) ---"
-sudo journalctl -u daily-orbit --no-pager -n 30
-
-# ── Database ────────────────────────────────────────────────────────────────
-echo "--- DuckDB file ---"
-ls -lh /data/daily-orbit.duckdb
-
-# ── Add your debug commands below this line ─────────────────────────────────
-# copy production DB to a second file for querying
-# run a query
+echo "=== DONE ==="
