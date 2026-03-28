@@ -110,6 +110,7 @@ export default function PublicLayout() {
           </Link>
           <span style={{ color: 'var(--do-border)' }}>|</span>
           <NavLink label="Home" to="/" />
+          <NavLink label="Dashboard" to="/dashboard" />
           <NavLink label="Search" to="/search" />
           <NavLink label="News" to="/news" />
           {isAuthenticated && <NavLink label="Chat" to="/chat" />}

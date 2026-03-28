@@ -8,6 +8,7 @@ import type {
   PaginatedNewsResponse,
   RecentFilingsResponse,
 } from './types.ts';
+import { ApiError } from '../lib/api.ts';
 import { apiFetch } from '../lib/api.ts';
 import './newspaper.css';
 import Masthead from './Masthead.tsx';
@@ -59,21 +60,25 @@ function findSlotArticle(
   return articles.find((a) => types.includes(a.contentType) && a.status === 'generated');
 }
 
-export default function NewspaperView() {
+export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
   const { date } = useParams<{ date: string }>();
+  const editionPath: string = latest
+    ? '/api/newspaper/edition/latest'
+    : `/api/newspaper/edition/${date}`;
   const [edition, setEdition] = useState<EditionWithArticles | null>(null);
   const [recentFilings, setRecentFilings] = useState<RecentFilingsResponse | null>(null);
   const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState<boolean>(false);
 
   const fetchEdition = useCallback(async () => {
-    if (!date) {
+    if (!latest && !date) {
       return;
     }
     try {
       const [data, filings, news] = await Promise.all([
-        apiFetch<EditionWithArticles>(`/api/newspaper/edition/${date}`),
+        apiFetch<EditionWithArticles>(editionPath),
         apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
         apiFetch<PaginatedNewsResponse>('/api/news?pageSize=5&sort=published_at&order=desc'),
       ]);
@@ -81,11 +86,15 @@ export default function NewspaperView() {
       setRecentFilings(filings);
       setNewsItems(news.data);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load edition');
+      if (latest && error instanceof ApiError && error.status === 404) {
+        setNotFound(true);
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to load edition');
+      }
     } finally {
       setLoading(false);
     }
-  }, [date]);
+  }, [latest, date, editionPath]);
 
   useEffect(() => {
     void fetchEdition();
@@ -97,6 +106,10 @@ export default function NewspaperView() {
         <div className="newspaper-loading">Loading edition...</div>
       </div>
     );
+  }
+
+  if (notFound) {
+    return <NewspaperPlaceholder />;
   }
 
   if (error || !edition) {
@@ -168,6 +181,29 @@ export default function NewspaperView() {
               )}
             </>
           )}
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function NewspaperPlaceholder() {
+  const today: string = new Date().toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
+    weekday: 'long',
+    year: 'numeric',
+  });
+
+  return (
+    <div className="newspaper-wrapper">
+      <article className="newspaper">
+        <header className="masthead">
+          <div className="masthead-title">The Daily Orbit</div>
+          <div className="masthead-date">{today}</div>
+        </header>
+        <div className="newspaper-placeholder">
+          <p className="newspaper-placeholder-text">Today&rsquo;s edition is being prepared.</p>
         </div>
       </article>
     </div>

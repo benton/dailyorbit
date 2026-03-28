@@ -19,9 +19,22 @@ export async function ensureNewspaperTables(
       status          VARCHAR NOT NULL DEFAULT 'pending',
       pipeline_run_id INTEGER,
       hero_image_path VARCHAR,
+      published_at    TIMESTAMP,
       created_at      TIMESTAMP DEFAULT current_timestamp,
       updated_at      TIMESTAMP DEFAULT current_timestamp
     )
+  `);
+
+  // Migration: add published_at column if missing (existing databases)
+  await conn.run(`
+    ALTER TABLE newspaper_edition ADD COLUMN IF NOT EXISTS published_at TIMESTAMP
+  `);
+
+  // Backfill: mark complete editions as published
+  await conn.run(`
+    UPDATE newspaper_edition
+    SET published_at = updated_at
+    WHERE status = 'complete' AND published_at IS NULL
   `);
 
   await conn.run(

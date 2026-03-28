@@ -420,6 +420,15 @@ export const newspaperCommand = defineCommand({
               log.error(`[${def.slug}] failed: ${(err as Error).message}`);
             }
           }
+
+          // Mark edition as complete and auto-publish
+          const { updateEditionStatus, publishEdition } =
+            await import('../../newspaper/repository.ts');
+          await updateEditionStatus(conn, edition.id, 'complete');
+          const published: boolean = await publishEdition(conn, editionDate);
+          log.info(
+            `Edition ${editionDate} marked complete${published ? ' and published' : ''}`,
+          );
         } finally {
           conn.closeSync();
         }

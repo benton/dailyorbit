@@ -43,6 +43,7 @@ export type NewspaperEdition = {
   status: EditionStatus;
   pipelineRunId: number | null;
   heroImagePath: string | null;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

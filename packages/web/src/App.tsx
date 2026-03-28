@@ -82,10 +82,26 @@ export default function App() {
               <Route
                 element={
                   <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <HomePage />
+                    <NewspaperView latest />
                   </Suspense>
                 }
                 path="/"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <HomePage />
+                  </Suspense>
+                }
+                path="/dashboard"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <NewspaperView />
+                  </Suspense>
+                }
+                path="/newspaper/:date"
               />
               <Route element={<About />} path="/about" />
               <Route element={<SearchPage />} path="/search" />

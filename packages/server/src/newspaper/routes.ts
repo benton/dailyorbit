@@ -6,6 +6,7 @@ import { getDb } from '../lib/db.ts';
 import { trackConnection } from '../lib/graceful-shutdown.ts';
 import { ensureNewspaperTables } from './schema.ts';
 import {
+  deleteEdition,
   getArticlesByEdition,
   getEditionByDate,
   getHouseAdForDate,
@@ -13,7 +14,10 @@ import {
   getLatestEdition,
   listEditions,
   listImagesByType,
+  publishEdition,
   resetArticle,
+  unpublishEdition,
+  updateArticle,
 } from './repository.ts';
 import { getPortraitForPerson } from './portrait-assignment.ts';
 
@@ -297,6 +301,74 @@ newspaperRoutes.get('/house-ad/:date', async (c) => {
 // ── Admin routes (/api/admin/newspaper) ──────────────────────────────
 
 const newspaperAdminRoutes = new Hono();
+
+/** POST /api/admin/newspaper/edition/:date/publish — publish a complete edition */
+newspaperAdminRoutes.post('/edition/:date/publish', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const published: boolean = await withConn((conn) =>
+    publishEdition(conn, date),
+  );
+  if (!published) {
+    return c.json({ error: 'Edition not found or not complete' }, 409);
+  }
+  return c.json({ success: true });
+});
+
+/** POST /api/admin/newspaper/edition/:date/unpublish — unpublish an edition */
+newspaperAdminRoutes.post('/edition/:date/unpublish', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const unpublished: boolean = await withConn((conn) =>
+    unpublishEdition(conn, date),
+  );
+  if (!unpublished) {
+    return c.json({ error: 'Edition not found' }, 404);
+  }
+  return c.json({ success: true });
+});
+
+/** DELETE /api/admin/newspaper/edition/:date — delete edition and articles */
+newspaperAdminRoutes.delete('/edition/:date', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const result = await withConn((conn) => deleteEdition(conn, date));
+  if (!result.deleted) {
+    return c.json({ error: 'Edition not found' }, 404);
+  }
+  return c.json({ success: true, imagePaths: result.imagePaths });
+});
+
+/** PUT /api/admin/newspaper/edition/:date/article/:slug — edit article headline/body */
+newspaperAdminRoutes.put('/edition/:date/article/:slug', async (c) => {
+  const date: string = c.req.param('date');
+  const slug: string = c.req.param('slug');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const body = await c.req.json<{ headline?: string; body?: string }>();
+
+  const article = await withConn(async (conn) => {
+    const edition = await getEditionByDate(conn, date);
+    if (!edition) return null;
+    return updateArticle(conn, edition.id, slug, body);
+  });
+
+  if (article == null) {
+    return c.json({ error: 'Edition or article not found' }, 404);
+  }
+  return c.json(article);
+});
 
 /** GET /api/admin/newspaper/image-health?days=7 — check CDN reachability */
 newspaperAdminRoutes.get('/image-health', async (c) => {
