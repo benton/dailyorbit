@@ -45,7 +45,7 @@ COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_m
 
 # Install tini (lightweight init), Xvfb, and Chromium system deps
 RUN apt-get update \
- && apt-get install -y --no-install-recommends tini xvfb xauth \
+ && apt-get install -y --no-install-recommends tini xvfb xauth poppler-utils \
  && npx playwright install-deps chromium \
  && rm -rf /var/lib/apt/lists/*
 
