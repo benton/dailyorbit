@@ -100,10 +100,10 @@ describe('generateEditorialCartoon', () => {
     expect(result.sourceData.editorialSlug).toEqual('over-the-horizon');
   });
 
-  it('throws when editorial has not been generated', async () => {
-    // Reset the editorial to pending
+  it('throws when no editorial exists in any edition', async () => {
+    // Remove all editorials so neither current nor fallback is found
     await conn.run(
-      `UPDATE newspaper_article SET status = 'pending' WHERE slug = 'over-the-horizon'`,
+      `DELETE FROM newspaper_article WHERE slug = 'over-the-horizon'`,
     );
 
     const inferenceService = makeMockInferenceService('');
@@ -123,7 +123,37 @@ describe('generateEditorialCartoon', () => {
         log: vi.fn(),
         _dataDir: tmpDir,
       }),
-    ).rejects.toThrow('Editorial must be generated');
+    ).rejects.toThrow('No editorial found in any edition');
+  });
+
+  it('falls back to a recent editorial from a prior edition', async () => {
+    // Create a second edition with no editorial
+    await conn.run(
+      `INSERT INTO newspaper_edition (id, edition_date) VALUES (2, '2026-03-25')`,
+    );
+
+    const inferenceService = makeMockInferenceService(
+      'A satellite balanced on a tightrope between two orbital slots.',
+    );
+    const imageClient = makeMockImageClient();
+    const config = makeMockConfig();
+
+    // Generate cartoon for edition 2 — should fall back to edition 1's editorial
+    const result = await generateEditorialCartoon({
+      conn,
+      editionId: 2,
+      editionDate: '2026-03-25',
+      inferenceService:
+        inferenceService as unknown as EditorialCartoonOptions['inferenceService'],
+      imageClient:
+        imageClient as unknown as EditorialCartoonOptions['imageClient'],
+      config: config as unknown as EditorialCartoonOptions['config'],
+      log: vi.fn(),
+      _dataDir: tmpDir,
+    });
+
+    expect(result.imagePath).toContain('editorial-cartoon.webp');
+    expect(result.sourceData.editorialSlug).toEqual('over-the-horizon');
   });
 
   it('calls image generation at 512x512 with cartoon style', async () => {

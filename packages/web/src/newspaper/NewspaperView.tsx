@@ -130,7 +130,12 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
   const slotBArticle: Article | undefined = findSlotArticle(edition.articles, SLOT_B_TYPES);
   const slotCArticle: Article | undefined = findSlotArticle(edition.articles, SLOT_C_TYPES);
 
-  const hasSecondRow: boolean = !!(slotBArticle || slotCArticle);
+  const hasSecondRow: boolean = !!(
+    slotBArticle ||
+    slotCArticle ||
+    classifieds ||
+    newsItems.length > 0
+  );
 
   return (
     <div className="newspaper-wrapper">
@@ -176,6 +181,8 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
               )}
               {slotCArticle ? (
                 <SlotC article={slotCArticle} classifieds={classifieds} />
+              ) : classifieds ? (
+                <SlotC classifieds={classifieds} />
               ) : (
                 <div className="grid-editorial" />
               )}

@@ -2,7 +2,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { BedrockClientLike } from '../../inference/bedrock-client.ts';
 import { renderPrompt } from '../../inference/prompts.ts';
-import { getArticle } from '../repository.ts';
+import { getArticle, getRecentArticleBySlug } from '../repository.ts';
 import type { GenerateOptions, GeneratorResult } from '../types.ts';
 import { createImageUploader } from './upload-after-write.ts';
 
@@ -46,10 +46,15 @@ export async function generateEditorialCartoon(
   } = opts;
   const dataDir: string = _dataDir ?? 'data';
 
-  // 1. Read the editorial to get the theme
-  const editorial = await getArticle(conn, editionId, 'over-the-horizon');
+  // 1. Read the editorial to get the theme — prefer today's, fall back to most recent
+  let editorial = await getArticle(conn, editionId, 'over-the-horizon');
   if (editorial == null || editorial.status !== 'generated') {
-    throw new Error('Editorial must be generated before editorial cartoon');
+    editorial = await getRecentArticleBySlug(conn, 'over-the-horizon');
+  }
+  if (editorial == null) {
+    throw new Error(
+      'No editorial found in any edition — cannot generate cartoon',
+    );
   }
 
   // 2. Generate a short cartoon description via LLM

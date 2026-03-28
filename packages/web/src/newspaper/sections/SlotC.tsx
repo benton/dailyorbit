@@ -1,23 +1,27 @@
 import Markdown from 'react-markdown';
-import type { Article, NewspaperContentType } from '../types.ts';
+import type { Article } from '../types.ts';
 import ArticleBody from '../ArticleBody.tsx';
 import { DISPLAY_NAME_MAP, TAGLINE_MAP } from '../types.ts';
 
 type SlotCProps = {
-  article: Article;
+  article?: Article;
   classifieds?: Article;
 };
 
 export default function SlotC({ article, classifieds }: SlotCProps) {
-  const contentType: NewspaperContentType = article.contentType;
-  const heading: string = DISPLAY_NAME_MAP[contentType] ?? 'Editorial';
-  const tagline: string | undefined = TAGLINE_MAP[contentType];
-
   return (
     <div className="grid-editorial">
-      <h3 className="article-headline-small">{heading}</h3>
-      {tagline && <p className="byline">{tagline}</p>}
-      <ArticleBody body={article.body} />
+      {article && (
+        <>
+          <h3 className="article-headline-small">
+            {DISPLAY_NAME_MAP[article.contentType] ?? 'Editorial'}
+          </h3>
+          {TAGLINE_MAP[article.contentType] && (
+            <p className="byline">{TAGLINE_MAP[article.contentType]}</p>
+          )}
+          <ArticleBody body={article.body} />
+        </>
+      )}
 
       {classifieds && (
         <>

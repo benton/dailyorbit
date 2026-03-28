@@ -329,6 +329,28 @@ export async function getArticle(
 }
 
 /**
+ * Find the most recent generated article with the given slug across all editions.
+ * Useful for cross-edition dependencies (e.g. editorial cartoon needs an editorial
+ * that may have been generated on a different day).
+ */
+export async function getRecentArticleBySlug(
+  conn: DuckDBConnection,
+  slug: string,
+): Promise<NewspaperArticle | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT a.* FROM newspaper_article a
+     JOIN newspaper_edition e ON a.edition_id = e.id
+     WHERE a.slug = ? AND a.status = 'generated'
+     ORDER BY e.edition_date DESC
+     LIMIT 1`,
+    [slug] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToArticle(rows[0]!);
+}
+
+/**
  * Reset an article to pending status for regeneration.
  */
 export async function resetArticle(
