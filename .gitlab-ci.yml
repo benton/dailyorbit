@@ -122,6 +122,17 @@ deploy:
     - aws s3 cp /tmp/frontend-dist/index.html s3://$FRONTEND_BUCKET/index.html
         --cache-control "no-cache"
 
+    # Verify newspaper images survived the sync
+    - |
+      IMG_COUNT=$(aws s3 ls s3://$FRONTEND_BUCKET/newspaper/images/ --recursive \
+        --summarize | grep "Total Objects:" | awk '{print $3}')
+      if [ "${IMG_COUNT:-0}" -lt 1 ]; then
+        echo "FATAL: newspaper images missing from S3 after frontend sync"
+        echo "The --exclude 'newspaper/*' flag may have been removed from the s3 sync command"
+        exit 1
+      fi
+      echo "Verified: ${IMG_COUNT} newspaper images in S3"
+
     # Invalidate CloudFront index.html
     - |
       DISTRIBUTION_ID=$(aws cloudfront list-distributions \

@@ -79,7 +79,21 @@ echo "--- API deploy complete: \${ECR_URI}:\${TAG}"
 REMOTE
 
 echo "==> Syncing frontend to S3 (${FRONTEND_BUCKET})"
-aws s3 sync packages/web/dist/ "s3://${FRONTEND_BUCKET}/" --delete
+aws s3 sync packages/web/dist/ "s3://${FRONTEND_BUCKET}/" --delete \
+  --cache-control "public,max-age=31536000,immutable" \
+  --exclude "index.html" --exclude "newspaper/*"
+aws s3 cp packages/web/dist/index.html "s3://${FRONTEND_BUCKET}/index.html" \
+  --cache-control "no-cache"
+
+echo "==> Verifying newspaper images still in S3"
+IMG_COUNT=$(aws s3 ls "s3://${FRONTEND_BUCKET}/newspaper/images/" --recursive \
+  --summarize --region "${AWS_REGION}" | grep "Total Objects:" | awk '{print $3}')
+if [ "${IMG_COUNT:-0}" -lt 1 ]; then
+  echo "!!! FATAL: newspaper images missing from S3 after deploy — aborting"
+  echo "!!! Run: make deploy-newspaper-images"
+  exit 1
+fi
+echo "--- ${IMG_COUNT} newspaper images verified in S3"
 
 echo "==> Invalidating CloudFront (${CLOUDFRONT_DIST_ID})"
 aws cloudfront create-invalidation \
