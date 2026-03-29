@@ -123,6 +123,34 @@ const setCommand = defineCommand({
   },
 });
 
+const unsetCommand = defineCommand({
+  meta: {
+    name: 'unset',
+    description: 'Remove a config value, reverting to schema default',
+  },
+  args: {
+    database: databaseArg,
+    keyFile: keyFileArg,
+    key: {
+      type: 'positional',
+      description: 'Config key name',
+      required: true,
+    },
+  },
+  async run({ args }) {
+    const schema = CONFIG_SCHEMA[args.key as ConfigKey];
+    if (schema == null) {
+      getLogger().error(`Unknown config key: ${args.key}`);
+      process.exit(1);
+    }
+    const config = await createConfigService(args.database, args.keyFile);
+    await config.unset(args.key as ConfigKey);
+    getLogger().info(
+      `Unset ${args.key} (reverted to default: ${schema.defaultValue || '(empty)'})`,
+    );
+  },
+});
+
 export const configCommand = defineCommand({
   meta: {
     name: 'config',
@@ -132,5 +160,6 @@ export const configCommand = defineCommand({
     list: listCommand,
     get: getCommand,
     set: setCommand,
+    unset: unsetCommand,
   },
 });

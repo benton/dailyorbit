@@ -112,8 +112,13 @@ export function formatEditionDate(isoDate: string): string {
 
 export function formatWeeklyStats(rows: DailyCount[]): string {
   if (rows.length === 0) return '_No filing data available._';
-  const total: number = rows.reduce((sum: number, r: DailyCount) => sum + r.count, 0);
-  const lines: string[] = rows.map((r: DailyCount) => `- ${r.dateFiled}: ${String(r.count)} filings`);
+  const total: number = rows.reduce(
+    (sum: number, r: DailyCount) => sum + r.count,
+    0,
+  );
+  const lines: string[] = rows.map(
+    (r: DailyCount) => `- ${r.dateFiled}: ${String(r.count)} filings`,
+  );
   lines.push(`- **Total: ${String(total)} filings**`);
   return lines.join('\n');
 }
@@ -121,7 +126,10 @@ export function formatWeeklyStats(rows: DailyCount[]): string {
 export function formatTopApplicants(rows: TopApplicant[]): string {
   if (rows.length === 0) return '_No applicant data available._';
   return rows
-    .map((r: TopApplicant) => `- ${r.companyName}: ${String(r.filingCount)} filings`)
+    .map(
+      (r: TopApplicant) =>
+        `- ${r.companyName}: ${String(r.filingCount)} filings`,
+    )
     .join('\n');
 }
 
@@ -141,12 +149,27 @@ export async function generateWeekInReview(
 
   // 1. Query weekly data
   log('info', 'Querying weekly filing stats for Week in Review...');
-  const weeklyStats: DailyCount[] = await queryWeeklyFilingStats(conn, editionDate);
-  const topApplicants: TopApplicant[] = await queryWeeklyTopApplicants(conn, editionDate);
-  const filingTypes: FilingTypeCount[] = await queryWeeklyFilingTypes(conn, editionDate);
+  const weeklyStats: DailyCount[] = await queryWeeklyFilingStats(
+    conn,
+    editionDate,
+  );
+  const topApplicants: TopApplicant[] = await queryWeeklyTopApplicants(
+    conn,
+    editionDate,
+  );
+  const filingTypes: FilingTypeCount[] = await queryWeeklyFilingTypes(
+    conn,
+    editionDate,
+  );
 
-  const totalFilings: number = weeklyStats.reduce((s: number, r: DailyCount) => s + r.count, 0);
-  log('info', `Found ${String(totalFilings)} filings across ${String(weeklyStats.length)} days`);
+  const totalFilings: number = weeklyStats.reduce(
+    (s: number, r: DailyCount) => s + r.count,
+    0,
+  );
+  log(
+    'info',
+    `Found ${String(totalFilings)} filings across ${String(weeklyStats.length)} days`,
+  );
 
   // 2. Build prompt
   const modelId: string = config.get('newspaperCopyModel') as string;

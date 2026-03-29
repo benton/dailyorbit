@@ -1,28 +1,22 @@
 #!/usr/bin/bash
-# Generic production-side debugging script — edit the commands below as needed.
-# Upload and run via: ./run_in_prod.sh debug_ec2_instance.sh
-set -eox pipefail
+set -xo pipefail
 
-echo "=== Debug snapshot: $(date -u) ==="
+echo "=== Block devices ==="
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
 
-IMAGE=$(sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep daily-orbit | head -1)
-echo "Using image: $IMAGE"
+echo "=== Root filesystem ==="
+df -h /
 
-# Kill any stale containers and ensure service is stopped
-sudo docker kill $(sudo docker ps -q) 2>/dev/null || true
-sudo systemctl stop daily-orbit 2>/dev/null || true
+echo "=== /data filesystem ==="
+df -h /data
 
-# Remove stale DuckDB lock files
-rm -f /data/daily-orbit.duckdb.wal /data/daily-orbit.duckdb.tmp 2>/dev/null || true
+echo "=== ZFS status ==="
+sudo zpool status 2>&1 || echo "No ZFS pool"
 
-echo "--- Waiting 2s for lock release ---"
-sleep 2
+echo "=== Config table ==="
+sudo systemctl stop daily-orbit
+duckdb /data/daily-orbit.duckdb "SELECT key, encrypted, length(value) as val_len FROM config ORDER BY key"
+sudo systemctl start daily-orbit
 
-# Run attachment download pipeline with canary download
-echo "=== Running pipeline with canary download ==="
-sudo docker run --rm --network host -v /data:/app/data \
-  -e NODE_ENV=production \
-  "$IMAGE" attachments download --concurrency 1 --verbose \
-  --auth-cookies data/icfs-cookies.json 2>&1
-
-echo "=== DONE ==="
+echo "=== Boot log key events ==="
+sudo grep -v 'Completed.*remaining\|download: s3://\|Reading \|Building \|Fetched \|Get:\|Selecting \|Preparing \|Unpacking \|Setting up \|Processing \|Created symlink\|Need to get\|upgraded,\|Reading database' /var/log/user-data.log

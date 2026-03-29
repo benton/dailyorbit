@@ -1,4 +1,6 @@
-Run the hot-deploy script to build, push, and deploy the Docker image to production.
+---
+description: Run the hot-deploy script to build, push, and deploy a Docker image to production
+---
 
 Execute `./deploy/hot-deploy.sh` and stream the output. This script will:
 

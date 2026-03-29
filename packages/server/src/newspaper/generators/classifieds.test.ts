@@ -266,9 +266,11 @@ describe('generateClassifieds', () => {
 
   it('retries on content-filter block and succeeds', async () => {
     const inferenceService = {
-      complete: vi.fn()
+      complete: vi
+        .fn()
         .mockResolvedValueOnce({
-          content: 'The generated text has been blocked by our content filters.',
+          content:
+            'The generated text has been blocked by our content filters.',
           modelId: 'test-model',
           usage: { inputTokens: 80, outputTokens: 10, totalTokens: 90 },
           stopReason: 'end_turn',

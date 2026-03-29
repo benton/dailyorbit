@@ -41,29 +41,29 @@ Each deployment is driven by a JSON seed config at `deploy/config/aws-{account}-
 
 See `deploy/config/aws-EXAMPLE-us-east-1-seed.json` for the full schema. Required fields:
 
-| Field | Description |
-|---|---|
-| `stackName` | CloudFormation stack name |
-| `domainName` | Apex domain (e.g. `dailyorbit.org`) |
-| `certificateArn` | ACM cert ARN for the API domain |
+| Field              | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `stackName`        | CloudFormation stack name                       |
+| `domainName`       | Apex domain (e.g. `dailyorbit.org`)             |
+| `certificateArn`   | ACM cert ARN for the API domain                 |
 | `dbSnapshotBucket` | S3 bucket for DB snapshots (must already exist) |
 
 Optional fields with defaults:
 
-| Field | Default | Description |
-|---|---|---|
-| `apiDomainName` | — | API subdomain (e.g. `api.dailyorbit.org`) |
-| `apiCertificateArn` | — | ACM cert for API TLS (export-enabled) |
-| `cloudfrontCertificateArn` | — | ACM cert in us-east-1 for CloudFront |
-| `vpcId` | `null` (creates new) | Existing VPC to use |
-| `instanceType` | `r6gd.xlarge` | EC2 instance type (ARM64 + NVMe recommended) |
-| `keyPairName` | `null` | SSH key pair name |
-| `dbSnapshotKey` | `db/latest.duckdb` | S3 key for the latest DB snapshot |
-| `ecrRepositoryName` | `daily-orbit` | ECR repository name |
-| `containerTag` | `latest` | Docker image tag to deploy |
-| `snapshotIntervalMinutes` | `60` | Cron interval for DB snapshots |
-| `healthCheckPath` | `/api/health` | Health check endpoint |
-| `tags` | `{Project: "daily-orbit"}` | Tags applied to all resources |
+| Field                      | Default                    | Description                                  |
+| -------------------------- | -------------------------- | -------------------------------------------- |
+| `apiDomainName`            | —                          | API subdomain (e.g. `api.dailyorbit.org`)    |
+| `apiCertificateArn`        | —                          | ACM cert for API TLS (export-enabled)        |
+| `cloudfrontCertificateArn` | —                          | ACM cert in us-east-1 for CloudFront         |
+| `vpcId`                    | `null` (creates new)       | Existing VPC to use                          |
+| `instanceType`             | `r6gd.xlarge`              | EC2 instance type (ARM64 + NVMe recommended) |
+| `keyPairName`              | `null`                     | SSH key pair name                            |
+| `dbSnapshotKey`            | `db/latest.duckdb`         | S3 key for the latest DB snapshot            |
+| `ecrRepositoryName`        | `daily-orbit`              | ECR repository name                          |
+| `containerTag`             | `latest`                   | Docker image tag to deploy                   |
+| `snapshotIntervalMinutes`  | `60`                       | Cron interval for DB snapshots               |
+| `healthCheckPath`          | `/api/health`              | Health check endpoint                        |
+| `tags`                     | `{Project: "daily-orbit"}` | Tags applied to all resources                |
 
 ---
 
@@ -127,15 +127,15 @@ The CORS origin is controlled by the `clientDomain` config field (e.g. `https://
 
 All deployment commands are available as `make` targets:
 
-| Target | Description |
-|---|---|
-| `make deploy-synth` | Synthesize the CloudFormation template |
-| `make deploy-diff` | Show pending infrastructure changes |
-| `make deploy-up` | Deploy the stack |
-| `make deploy-destroy` | Tear down the stack |
-| `make deploy-frontend` | Build frontend, sync to S3, invalidate CloudFront |
+| Target                         | Description                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| `make deploy-synth`            | Synthesize the CloudFormation template                   |
+| `make deploy-diff`             | Show pending infrastructure changes                      |
+| `make deploy-up`               | Deploy the stack                                         |
+| `make deploy-destroy`          | Tear down the stack                                      |
+| `make deploy-frontend`         | Build frontend, sync to S3, invalidate CloudFront        |
 | `make deploy-newspaper-images` | Sync local newspaper images to S3, invalidate CloudFront |
-| `make deploy-refresh` | Trigger ASG instance refresh (rolling replace) |
+| `make deploy-refresh`          | Trigger ASG instance refresh (rolling replace)           |
 
 ### Frontend Deployment
 
@@ -147,12 +147,7 @@ All deployment commands are available as `make` targets:
 
 ### Server Deployment
 
-To deploy a new server version:
-
-1. Build and push the Docker image to ECR
-2. Run `make deploy-refresh` to trigger an ASG instance refresh
-
-The refresh terminates the current instance and launches a new one, which auto-deploys via user-data (EIP re-association, S3 restore, Docker pull, etc.).
+This normally happens via CI, so don't do it without asking first. Push a tagged commit intead.
 
 ### Hot Deploy (No CI, No Instance Recycle)
 
@@ -165,6 +160,7 @@ For code-only changes on a running instance, `deploy/hot-deploy.sh` provides a f
 This builds the Docker image locally, pushes to ECR, SSHes to the instance, pulls the new image, and restarts the systemd service in-place.
 
 **Limitations:**
+
 - Does **not** invalidate CloudFront — run `make deploy-newspaper-images` or manually invalidate if static assets changed
 - Does **not** run `cdk deploy` — IAM/infra changes require a separate `make deploy-up`
 - Does **not** survive instance recycle — the systemd unit is patched via `sed`, but a new instance boots with the CI-deployed tag from the launch template
@@ -229,9 +225,9 @@ Set the target S3 bucket in the application config (persists in DuckDB, survives
 
 ### URL Routing
 
-| Environment | Image URL pattern | Served by |
-|---|---|---|
-| Production | `dailyorbit.org/newspaper/images/...` | CloudFront -> S3 |
+| Environment | Image URL pattern                         | Served by                      |
+| ----------- | ----------------------------------------- | ------------------------------ |
+| Production  | `dailyorbit.org/newspaper/images/...`     | CloudFront -> S3               |
 | Development | `localhost:9000/api/newspaper/images/...` | API server -> local filesystem |
 
 The frontend build uses `VITE_NEWSPAPER_IMAGES_URL=/newspaper` in production (set as a Docker
@@ -240,6 +236,7 @@ build arg in `.gitlab-ci.yml`). When unset (dev), it falls back to the API serve
 ### Cache Behavior
 
 CloudFront has a dedicated cache behavior for `newspaper/images/*`:
+
 - Library images (portraits, headers, masthead, house ads): `immutable`, 1 year TTL
 - Edition images (hero, cartoon): 24-hour TTL
 - Missing images return real 404 (not SPA fallback)
@@ -274,11 +271,11 @@ The application uses structured JSON logging in production (`NODE_ENV=production
 
 ### CloudWatch Log Groups
 
-| Log Group | Source | Content |
-|---|---|---|
-| `/daily-orbit/app` | Docker container stdout | Structured JSON: HTTP requests, pipeline events, errors |
-| `/daily-orbit/user-data` | `/var/log/user-data.log` | Instance bootstrap output |
-| `/daily-orbit/db-snapshot` | `/var/log/db-snapshot.log` | Cron and shutdown snapshot output |
+| Log Group                  | Source                     | Content                                                 |
+| -------------------------- | -------------------------- | ------------------------------------------------------- |
+| `/daily-orbit/app`         | Docker container stdout    | Structured JSON: HTTP requests, pipeline events, errors |
+| `/daily-orbit/user-data`   | `/var/log/user-data.log`   | Instance bootstrap output                               |
+| `/daily-orbit/db-snapshot` | `/var/log/db-snapshot.log` | Cron and shutdown snapshot output                       |
 
 ### Viewing Logs
 

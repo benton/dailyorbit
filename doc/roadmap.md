@@ -46,10 +46,10 @@
 - v?.x.x [ ] Revisit, refine, and document Company Entity attribution with Filings and News
 - v?.x.x [ ] ? Use DuckDB WASM to move functionality into the browser
 - v?.x.x [ ] Parse GXT files
+- v?.x.x [ ] Article idea: Wordcloud-based crossword puzze?
 
 ## Bug fixes
 
-- v?.x.x [ ] Clean up user settings
-- v?.x.x [ ] Article idea: Wordcloud-based crossword puzze?
+- v?.x.x [ ] Don't attempt login until attempting attachmentMove Company Detection After Alerts but before Newspaper - have it _use_ the RAG system?
 - v?.x.x [ ] Basic EC2 instance metrics dashboard?
 - v?.x.x [ ] Exponential backoff during ingest

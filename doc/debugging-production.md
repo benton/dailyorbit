@@ -29,10 +29,10 @@ api.dailyorbit.org─>│  Elastic IP  │──> EC2 Spot (Ubuntu 24.04 ARM64)
 
 ### CloudWatch Log Groups
 
-| Log Group | Content |
-|-----------|---------|
-| `/daily-orbit/app` | Application logs (HTTP requests, pipeline, backup, errors) |
-| `/daily-orbit/user-data` | Instance bootstrap output (plain text) |
+| Log Group                | Content                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `/daily-orbit/app`       | Application logs (HTTP requests, pipeline, backup, errors) |
+| `/daily-orbit/user-data` | Instance bootstrap output (plain text)                     |
 
 ### Log Structure (3 layers of nesting)
 
@@ -100,19 +100,23 @@ Query definitions live in `packages/server/debugscripts/cwl-queries.json`. The s
 # Via AWS CLI
 aws logs tail /daily-orbit/app --follow --region us-east-2
 
-# Via SSH (raw Docker logs)
-ssh ubuntu@api.dailyorbit.org 'sudo docker logs -f daily-orbit'
+# Via SSH (journalctl)
+ssh ubuntu@api.dailyorbit.org 'sudo journalctl -fu daily-orbit.service'
 ```
 
 ---
 
 ## 2. SSH Access
 
-```bash
-ssh ubuntu@api.dailyorbit.org
-```
+**IMPORTANT**: DON'T use SSH to access the production server directly. Use _only_ the following two actions to interact with the produciton server:
+
+1. Edit the script `packages/server/debugscripts/debug_ec2_instance.sh`
+2. Run the script on the server. From the main project directory, run :
+   `packages/server/debugscripts/run_in_prod.sh packages/server/debugscripts/debug_ec2_instance.sh [args]`
 
 ### Useful Instance Commands
+
+Put these in `packages/server/debugscripts/debug_ec2_instance.sh` as needed...
 
 ```bash
 # Service status
@@ -141,25 +145,6 @@ sudo cp -pv /data/daily-orbit.duckdb /tmp/query.duckdb
 duckdb /tmp/query.duckdb "SELECT count(*) FROM filing"
 ```
 
-### Remote Script Execution
-
-Upload and run a script on the instance without SSH:
-
-```bash
-cd packages/server/debugscripts
-
-# Run the generic debug snapshot
-./run_in_prod.sh debug_ec2_instance.sh
-
-# Run the systemctl helper
-./run_in_prod.sh server_systemctl.sh status
-
-# Run any custom script
-./run_in_prod.sh my-script.sh arg1 arg2
-```
-
-Edit `debug_ec2_instance.sh` freely — it's a scratchpad for whatever you need.
-
 ### Available Tools on the Instance
 
 - `duckdb` CLI (v1.5.1)
@@ -182,32 +167,6 @@ ssh ubuntu@api.dailyorbit.org \
 # Check recent 404s in the logs
 python3 packages/server/debugscripts/cwl-query.py path --arg "/api/filings" --hours 24 | \
   python3 -c "import json,sys; [print(r) for r in json.load(sys.stdin) if r.get('status')=='404']"
-```
-
-### Service is down or unresponsive
-
-```bash
-# Quick health check
-curl -sf https://api.dailyorbit.org/api/health || echo "DOWN"
-
-# Check service and container status
-packages/server/debugscripts/run_in_prod.sh server_systemctl.sh status
-
-# Check recent error logs
-python3 packages/server/debugscripts/cwl-query.py errors --hours 1
-
-# Check boot log (if instance just launched)
-aws logs tail /daily-orbit/user-data --since 1h --region us-east-2
-```
-
-### Slow responses
-
-```bash
-# Find slow requests
-python3 packages/server/debugscripts/cwl-query.py slow --hours 6
-
-# Check if it's a specific path
-python3 packages/server/debugscripts/cwl-query.py top-paths --hours 6
 ```
 
 ### Pipeline or news fetch failures
@@ -277,21 +236,6 @@ This terminates the current instance and launches a fresh one from the latest sn
 ```bash
 curl -X POST https://api.dailyorbit.org/api/admin/backups/trigger
 ```
-
----
-
-## 5. Debugging Tools Inventory
-
-| Tool | Location | Purpose |
-|------|----------|---------|
-| `cwl-query.py` | `packages/server/debugscripts/` | CloudWatch Logs Insights queries |
-| `cwl-queries.json` | `packages/server/debugscripts/` | Query definitions (shared with CDK) |
-| `run_in_prod.sh` | `packages/server/debugscripts/` | Upload and run scripts on the instance |
-| `debug_ec2_instance.sh` | `packages/server/debugscripts/` | Editable server-side debug template |
-| `server_systemctl.sh` | `packages/server/debugscripts/` | systemd service control |
-| `copy_dev_db.sh` | `packages/server/debugscripts/` | Copy locked dev DB for querying |
-| `hot-deploy.sh` | `deploy/` | Fast code-only deploy |
-| `./daily-orbit` | repo root | CLI with full access to all app commands |
 
 ---
 

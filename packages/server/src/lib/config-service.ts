@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { DuckDBInstance } from '@duckdb/node-api';
 import {
+  deleteConfigValue as repoDelete,
   getAllConfig,
   setConfigValue as repoSet,
 } from './config-repository.ts';
@@ -56,6 +57,16 @@ export class ConfigService {
       : value;
     await repoSet(this.db, key, stored, def.encrypted);
     this.cache.set(key, value);
+  }
+
+  /** Remove a config value from DB, reverting to schema default. */
+  async unset(key: ConfigKey): Promise<void> {
+    const def = CONFIG_SCHEMA[key];
+    if (def == null) {
+      throw new Error(`Unknown config key: ${key}`);
+    }
+    await repoDelete(this.db, key);
+    this.cache.set(key, def.defaultValue);
   }
 
   /** Re-read all config from DB (hot-reload). */

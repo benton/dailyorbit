@@ -84,7 +84,10 @@ export async function generateClassifieds(
   let body: string = '';
   for (let attempt: number = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const temperature: number = 0.7 + (attempt - 1) * 0.1;
-    log('info', `Generating classifieds with ${modelId} (attempt ${String(attempt)}, temp=${String(temperature)})...`);
+    log(
+      'info',
+      `Generating classifieds with ${modelId} (attempt ${String(attempt)}, temp=${String(temperature)})...`,
+    );
     const response = await inferenceService.complete({
       modelId,
       messages: [{ role: 'user' as const, content: userPrompt }],
@@ -96,7 +99,9 @@ export async function generateClassifieds(
     if (body.length < 200 && lc.includes('blocked') && lc.includes('filter')) {
       log('info', `Attempt ${String(attempt)} hit content filter, retrying...`);
       if (attempt === MAX_ATTEMPTS) {
-        throw new Error(`Classifieds blocked by content filter after ${String(MAX_ATTEMPTS)} attempts: ${body.slice(0, 120)}`);
+        throw new Error(
+          `Classifieds blocked by content filter after ${String(MAX_ATTEMPTS)} attempts: ${body.slice(0, 120)}`,
+        );
       }
       continue;
     }
