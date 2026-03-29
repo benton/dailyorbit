@@ -8,7 +8,7 @@ echo "=== user-data start: $(date -u) ==="
 
 # ── Bootstrap: install AWS CLI ────────────────────────────────────────────────
 apt-get update -qq
-apt-get install -y unzip curl
+apt-get install -y unzip curl nvme-cli bpytop
 curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip
 unzip -qo /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install
@@ -36,12 +36,19 @@ aws ec2 associate-address \
 echo "EIP associated to $INSTANCE_ID"
 
 # ── ZFS Pool Setup (NVMe instances only) ──────────────────────────────────────
-# Find unformatted NVMe devices (ephemeral instance storage has no filesystem)
+# Find NVMe instance storage (ephemeral) devices by checking the NVMe model.
+# EBS volumes report "Amazon Elastic Block Store"; instance storage reports
+# "Amazon EC2 NVMe Instance Storage". blkid alone can't tell them apart when
+# an EBS volume is freshly attached with no filesystem.
 EPHEMERALS=""
 for dev in /dev/nvme*n1; do
   [ -b "$dev" ] || continue
-  blkid "$dev" >/dev/null 2>&1 && continue  # has a filesystem → EBS, skip
-  EPHEMERALS="$EPHEMERALS $dev"
+  model=$(nvme id-ctrl "$dev" -o json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('mn','').strip())" 2>/dev/null || true)
+  if echo "$model" | grep -qi "Instance Storage"; then
+    EPHEMERALS="$EPHEMERALS $dev"
+  else
+    echo "Skipping $dev (model: ${model:-unknown}) — not instance storage"
+  fi
 done
 EPHEMERALS=$(echo "$EPHEMERALS" | xargs)  # trim
 
