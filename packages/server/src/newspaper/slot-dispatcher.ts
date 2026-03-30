@@ -139,7 +139,7 @@ async function loadGenerator(
 
 // ── Model key mapping ───────────────────────────────────────────
 
-const MODEL_KEY_MAP: Record<NewspaperContentType, string> = {
+export const MODEL_KEY_MAP: Record<NewspaperContentType, string> = {
   daily_digest: 'newspaperCopyModel',
   hero_image: 'newspaperImageModel',
   fake_ad: 'newspaperCopyModel',
