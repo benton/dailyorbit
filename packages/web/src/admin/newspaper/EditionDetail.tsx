@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
+import { DISPLAY_NAME_MAP } from '../../newspaper/types.ts';
 import { Badge } from '../../ui/badge.tsx';
 import { Button } from '../../ui/button.tsx';
 import {
@@ -387,13 +388,16 @@ function SlotCard({
   const { manifest, article } = slot;
   const groupLabel: string = SLOT_GROUP_LABELS[manifest.slotGroup] ?? manifest.slotGroup;
 
+  const displayName: string =
+    DISPLAY_NAME_MAP[manifest.contentType as keyof typeof DISPLAY_NAME_MAP] ?? manifest.slug;
+
   if (article == null) {
     // Missing slot — placeholder with Generate button
     return (
       <div className="rounded-theme border border-dashed border-border-theme bg-surface/50 p-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-on-surface-muted">{manifest.slug}</h3>
+            <h3 className="font-medium text-on-surface-muted">{displayName}</h3>
             <div className="mt-1 flex items-center gap-2 text-xs text-on-surface-muted">
               <Badge variant="secondary">{groupLabel}</Badge>
               <span className="font-mono">{manifest.contentType}</span>
@@ -426,6 +430,7 @@ function SlotCard({
   return (
     <ArticleCard
       article={article}
+      displayName={displayName}
       editionDate={editionDate}
       onRegenerate={onRegenerate}
       onUpdate={onUpdate}
@@ -440,6 +445,7 @@ function SlotCard({
 
 type ArticleCardProps = {
   article: Article;
+  displayName: string;
   editionDate: string;
   onRegenerate: (slug: string) => Promise<void>;
   onUpdate: () => Promise<void>;
@@ -450,6 +456,7 @@ type ArticleCardProps = {
 
 function ArticleCard({
   article,
+  displayName,
   editionDate,
   onRegenerate,
   onUpdate,
@@ -515,7 +522,7 @@ function ArticleCard({
             />
           ) : (
             <h3 className="font-medium text-on-surface">
-              {article.headline ?? article.contentType}
+              {article.headline ?? displayName}
             </h3>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-on-surface-muted">
