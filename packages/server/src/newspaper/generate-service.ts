@@ -42,10 +42,7 @@ type GeneratorFn = (ctx: GenerateContext) => Promise<GeneratorResult>;
 
 // ── Generator registry ──────────────────────────────────────────────
 
-function makeTextGenerator(
-  importPath: string,
-  fnName: string,
-): GeneratorFn {
+function makeTextGenerator(importPath: string, fnName: string): GeneratorFn {
   return async (ctx: GenerateContext): Promise<GeneratorResult> => {
     const mod = await import(importPath);
     const fn = mod[fnName] as (opts: {
@@ -86,12 +83,9 @@ const GENERATORS: Record<NewspaperContentType, GeneratorFn> = {
     });
   },
   fake_ad: makeTextGenerator('./generators/fake-ad.ts', 'generateFakeAd'),
-  editorial_cartoon: async (
-    ctx: GenerateContext,
-  ): Promise<GeneratorResult> => {
-    const { generateEditorialCartoon } = await import(
-      './generators/editorial-cartoon.ts'
-    );
+  editorial_cartoon: async (ctx: GenerateContext): Promise<GeneratorResult> => {
+    const { generateEditorialCartoon } =
+      await import('./generators/editorial-cartoon.ts');
     return generateEditorialCartoon({
       conn: ctx.conn,
       editionId: ctx.editionId,
@@ -184,9 +178,8 @@ async function createImageClient(
   const config = getConfigService();
   const region: string = config.get('bedrockRegion') as string;
   const { BedrockClient } = await import('../inference/bedrock-client.ts');
-  const { InstrumentedBedrockClient: IBC } = await import(
-    '../inference/instrumented-client.ts'
-  );
+  const { InstrumentedBedrockClient: IBC } =
+    await import('../inference/instrumented-client.ts');
   return new IBC(new BedrockClient(region), conn, 'newspaper');
 }
 
@@ -210,8 +203,7 @@ export async function generateEdition(
 
   const config = getConfigService();
   const inferenceService = getInferenceService();
-  const imageClient: InstrumentedBedrockClient =
-    await createImageClient(conn);
+  const imageClient: InstrumentedBedrockClient = await createImageClient(conn);
 
   // Determine types to generate
   let typesToRun: NewspaperContentType[];
