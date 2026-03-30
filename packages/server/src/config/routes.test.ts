@@ -44,7 +44,7 @@ describe('config routes', () => {
       const entries = buildConfigEntries();
       const domain = entries.find((e) => e.key === 'clientDomain');
       expect(domain).toBeDefined();
-      expect(domain!.value).toEqual('http://localhost:5173');
+      expect(domain!.value).toEqual('http://localhost:5973');
       expect(domain!.encrypted).toEqual(false);
     });
 

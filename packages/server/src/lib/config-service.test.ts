@@ -25,8 +25,8 @@ describe('ConfigService', () => {
   describe('load and get', () => {
     it('returns defaults when DB is empty', async () => {
       await service.load();
-      expect(service.get('betterAuthUrl')).toEqual('http://localhost:9000');
-      expect(service.get('clientDomain')).toEqual('http://localhost:5173');
+      expect(service.get('betterAuthUrl')).toEqual('http://localhost:9900');
+      expect(service.get('clientDomain')).toEqual('http://localhost:5973');
     });
 
     it('returns SecretValue for encrypted keys', async () => {
@@ -85,8 +85,8 @@ describe('ConfigService', () => {
     it('seeds all schema keys into DB', async () => {
       await service.seedDefaults();
 
-      expect(service.get('betterAuthUrl')).toEqual('http://localhost:9000');
-      expect(service.get('clientDomain')).toEqual('http://localhost:5173');
+      expect(service.get('betterAuthUrl')).toEqual('http://localhost:9900');
+      expect(service.get('clientDomain')).toEqual('http://localhost:5973');
 
       // betterAuthSecret should be auto-generated (non-empty)
       const secret = service.get('betterAuthSecret') as SecretValue;
@@ -112,7 +112,7 @@ describe('ConfigService', () => {
       await service2.set('clientDomain', 'https://changed.com');
 
       // Original service still has old value
-      expect(service.get('clientDomain')).toEqual('http://localhost:5173');
+      expect(service.get('clientDomain')).toEqual('http://localhost:5973');
 
       // After reload, picks up new value
       await service.reload();

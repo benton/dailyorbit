@@ -11,7 +11,7 @@ export const serveHtmlCommand = defineCommand({
   args: {
     port: {
       alias: 'p',
-      default: '5173',
+      default: '5973',
       description: 'Port for the Vite dev server',
       type: 'string',
     },

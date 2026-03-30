@@ -14,13 +14,13 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
   },
   betterAuthUrl: {
     key: 'betterAuthUrl',
-    defaultValue: 'http://localhost:9000',
+    defaultValue: 'http://localhost:9900',
     encrypted: false,
     description: 'Auth service base URL',
   },
   clientDomain: {
     key: 'clientDomain',
-    defaultValue: 'http://localhost:5173',
+    defaultValue: 'http://localhost:5973',
     encrypted: false,
     description: 'Frontend domain for CORS',
   },
@@ -153,7 +153,7 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
   },
   appBaseUrl: {
     key: 'appBaseUrl',
-    defaultValue: 'http://localhost:5173',
+    defaultValue: 'http://localhost:5973',
     encrypted: false,
     description: 'Application base URL for links in emails',
   },

@@ -12,9 +12,9 @@ import { createDb } from '../shared/context.ts';
  * - null means unset (delete row, revert to schema default)
  */
 const LOCAL_OVERRIDES: Record<string, string | null> = {
-  appBaseUrl: 'http://localhost:5173',
-  betterAuthUrl: 'http://localhost:9000',
-  clientDomain: 'http://localhost:5173',
+  appBaseUrl: 'http://localhost:5973',
+  betterAuthUrl: 'http://localhost:9900',
+  clientDomain: 'http://localhost:5973',
   tlsCert: null,
   tlsKey: null,
   snapshotBucket: null,

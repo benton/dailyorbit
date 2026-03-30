@@ -64,7 +64,7 @@ export class DailyOrbitStack extends Stack {
     });
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS');
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP redirect');
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9000), 'App HTTP (dev)');
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9900), 'App HTTP (dev)');
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
 
     const eip: ec2.CfnEIP = new ec2.CfnEIP(this, 'Eip', {

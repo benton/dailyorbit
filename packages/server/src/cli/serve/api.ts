@@ -32,7 +32,7 @@ export const serveApiCommand = defineCommand({
       type: 'string',
       alias: 'p',
       description: 'Port to listen on',
-      default: '9000',
+      default: '9900',
     },
     watch: {
       type: 'boolean',

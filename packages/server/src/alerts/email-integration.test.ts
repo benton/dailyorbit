@@ -118,7 +118,7 @@ describe('alert email integration', () => {
       conn,
       runId,
       emailService,
-      'http://localhost:5173',
+      'http://localhost:5973',
     );
 
     expect(result.searchesEvaluated).toEqual(1);
@@ -158,7 +158,7 @@ describe('alert email integration', () => {
       conn,
       runId2,
       emailService,
-      'http://localhost:5173',
+      'http://localhost:5973',
     );
 
     // Watermark from prior alert_run should prevent re-matching
@@ -186,7 +186,7 @@ describe('alert email integration', () => {
       conn,
       runId3,
       emailService,
-      'http://localhost:5173',
+      'http://localhost:5973',
     );
 
     // The new search's watermark is its updated_at (when alert was enabled),
