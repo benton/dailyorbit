@@ -78,6 +78,42 @@ newspaperRoutes.get('/edition/:date', async (c) => {
   return c.json(result);
 });
 
+/** GET /api/newspaper/edition/:date/news — edition-scoped news items */
+newspaperRoutes.get('/edition/:date/news', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const items = await withConn(async (conn) => {
+    const reader = await conn.runAndReadAll(
+      `SELECT ni.id, ni.title, ni.source_url, ns.name AS source_name,
+              ni.summary, CAST(ni.published_at AS VARCHAR) AS published_at,
+              c.name AS company_name
+       FROM news_item ni
+       JOIN news_source ns ON ns.id = ni.news_source_id
+       LEFT JOIN company c ON c.id = ni.company_id
+       WHERE ni.published_at < CAST(? AS DATE) + INTERVAL 1 DAY
+         AND ni.summary IS NOT NULL AND LENGTH(ni.summary) > 0
+       ORDER BY ni.published_at DESC
+       LIMIT 5`,
+      [date] as import('@duckdb/node-api').DuckDBValue[],
+    );
+
+    return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({
+      id: Number(r.id),
+      title: String(r.title),
+      sourceUrl: String(r.source_url),
+      sourceName: r.source_name != null ? String(r.source_name) : null,
+      summary: r.summary != null ? String(r.summary) : null,
+      publishedAt: r.published_at != null ? String(r.published_at) : null,
+      companyName: r.company_name != null ? String(r.company_name) : null,
+    }));
+  });
+
+  return c.json({ data: items });
+});
+
 /** GET /api/newspaper/editions — paginated edition list */
 newspaperRoutes.get('/editions', async (c) => {
   const q = c.req.query();

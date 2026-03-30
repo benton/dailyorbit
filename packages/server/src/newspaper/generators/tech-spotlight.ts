@@ -29,7 +29,7 @@ export async function queryTechNews(
      FROM news_item ni
      JOIN news_source ns ON ns.id = ni.news_source_id
      WHERE ni.published_at >= CAST(? AS TIMESTAMP) - INTERVAL 7 DAY
-       AND ni.published_at <= CAST(? AS TIMESTAMP) + INTERVAL 1 DAY
+       AND ni.published_at < CAST(? AS DATE) + INTERVAL 1 DAY
        AND ni.summary IS NOT NULL AND LENGTH(ni.summary) > 0
        AND (
          LOWER(ni.title) LIKE '%technology%'
@@ -68,7 +68,7 @@ export async function queryGeneralNews(
      FROM news_item ni
      JOIN news_source ns ON ns.id = ni.news_source_id
      WHERE ni.published_at >= CAST(? AS TIMESTAMP) - INTERVAL 7 DAY
-       AND ni.published_at <= CAST(? AS TIMESTAMP) + INTERVAL 1 DAY
+       AND ni.published_at < CAST(? AS DATE) + INTERVAL 1 DAY
        AND ni.summary IS NOT NULL AND LENGTH(ni.summary) > 0
      ORDER BY ni.published_at DESC
      LIMIT 10`,

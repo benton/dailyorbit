@@ -37,6 +37,8 @@ Today's notable filings:
 Recent industry news:
 {{{newsSummaries}}}
 
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
+
 Write 2-3 paragraphs. Reference specific file numbers and company names. Include links to Daily Orbit filing pages as [Company Name](/filings/FILE-NUMBER). At the bottom, include source attributions as "Source: [Publication Name](original-url)".`;
 
 // ── Fake Ad template variables ─────────────────────────────────────
@@ -137,6 +139,8 @@ Recent notable filings (last 7 days):
 
 Recent industry news:
 {{{newsSummaries}}}
+
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
 
 Write 3-4 paragraphs of editorial analysis. End with a brief byline: "— {{personaName}}"`;
 
@@ -528,6 +532,8 @@ export const DEFAULT_TECH_SPOTLIGHT_USER_PROMPT: string = `Write this week's "Te
 Recent technology news:
 {{{newsSummaries}}}
 
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
+
 Write 2-3 paragraphs highlighting one technology trend from the news. What is the technology? Why does it matter for the satellite industry? How might it affect regulatory filings? Include source attributions.`;
 
 // ── From the Archives template variables ────────────────────────
@@ -588,6 +594,8 @@ Recent notable filings:
 
 Recent regulatory news:
 {{{newsSummaries}}}
+
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
 
 Write 3-4 paragraphs of regulatory analysis. What are the legal implications? What should practitioners watch? End with: "— The Counsel"`;
 
@@ -672,6 +680,8 @@ Recent notable filings:
 Recent business news:
 {{{newsSummaries}}}
 
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
+
 Write 3-4 paragraphs of strategic analysis. What do this week's filings and events reveal about where the industry is heading? End with: "— The Strategist"`;
 
 // ── Press Gallery template variables ────────────────────────────
@@ -698,6 +708,8 @@ export const DEFAULT_PRESS_GALLERY_USER_PROMPT: string = `Write this week's "Fro
 
 This week's news coverage:
 {{{weeklyNews}}}
+
+IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
 
 Write 3-4 paragraphs wrapping up the week in satellite industry news. Which stories mattered most? What did the coverage reveal? What should readers watch next week? Include source attributions. End with: "— The Editor-in-Chief"`;
 

@@ -78,12 +78,15 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
       return;
     }
     try {
-      const [data, filings, news] = await Promise.all([
-        apiFetch<EditionWithArticles>(editionPath),
-        apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
-        apiFetch<PaginatedNewsResponse>('/api/news?pageSize=5&sort=published_at&order=desc'),
-      ]);
+      // Fetch edition first to get its date, then fetch scoped news + filings
+      const data = await apiFetch<EditionWithArticles>(editionPath);
       setEdition(data);
+
+      const editionDate: string = data.editionDate;
+      const [filings, news] = await Promise.all([
+        apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
+        apiFetch<PaginatedNewsResponse>(`/api/newspaper/edition/${editionDate}/news`),
+      ]);
       setRecentFilings(filings);
       setNewsItems(news.data);
     } catch (error) {

@@ -24,8 +24,7 @@ const LOCAL_OVERRIDES: Record<string, string | null> = {
 export const localizeCommand = defineCommand({
   meta: {
     name: 'localize',
-    description:
-      'Reconfigure a production DB copy for local development',
+    description: 'Reconfigure a production DB copy for local development',
   },
   args: {
     database: databaseArg,
@@ -51,7 +50,9 @@ export const localizeCommand = defineCommand({
       }
       if (v === null) {
         await config.unset(configKey);
-        log.info(`Unset ${k} → default: ${CONFIG_SCHEMA[configKey].defaultValue || '(empty)'}`);
+        log.info(
+          `Unset ${k} → default: ${CONFIG_SCHEMA[configKey].defaultValue || '(empty)'}`,
+        );
       } else {
         await config.set(configKey, v);
         log.info(`Set ${k} = ${v}`);
