@@ -115,7 +115,9 @@ export default function EditionBrowser() {
   const [generating, setGenerating] = useState<boolean>(false);
 
   const handleGenerate = useCallback(async () => {
-    if (!generateDate) return;
+    if (!generateDate) {
+      return;
+    }
     setGenerating(true);
     setError(null);
     try {
@@ -167,10 +169,7 @@ export default function EditionBrowser() {
 
       <div className="flex items-end gap-3">
         <div>
-          <label
-            className="mb-1 block text-sm font-medium text-on-surface"
-            htmlFor="generate-date"
-          >
+          <label className="mb-1 block text-sm font-medium text-on-surface" htmlFor="generate-date">
             Generate Edition
           </label>
           <input

@@ -49,15 +49,15 @@ type EditionWithArticles = {
 
 type SlotManifestEntry = {
   contentType: string;
-  slug: string;
   displayOrder: number;
   promptSlug: string | null;
   slotGroup: 'daily' | 'slotA' | 'slotB' | 'slotC';
+  slug: string;
 };
 
 type MergedSlot = {
-  manifest: SlotManifestEntry;
   article: Article | null;
+  manifest: SlotManifestEntry;
 };
 
 const ARTICLE_STATUS_COLORS: Record<ArticleStatus, 'default' | 'secondary' | 'destructive'> = {
@@ -170,7 +170,9 @@ export default function EditionDetail() {
 
   const handleGenerateSlot = useCallback(
     async (slug: string) => {
-      if (!date) return;
+      if (!date) {
+        return;
+      }
       setGeneratingSlot(slug);
       try {
         await apiFetch(`/api/admin/newspaper/generate/${date}/${slug}`, {
@@ -187,7 +189,9 @@ export default function EditionDetail() {
   );
 
   const handleGenerateAll = useCallback(async () => {
-    if (!date) return;
+    if (!date) {
+      return;
+    }
     setGeneratingAll(true);
     try {
       await apiFetch(`/api/admin/newspaper/generate/${date}`, { method: 'POST' });
@@ -200,12 +204,14 @@ export default function EditionDetail() {
   }, [date, fetchEdition]);
 
   const mergedSlots: Array<MergedSlot> = useMemo(() => {
-    if (slots.length === 0) return [];
+    if (slots.length === 0) {
+      return [];
+    }
     return slots
       .sort((a, b) => a.displayOrder - b.displayOrder)
       .map((manifest) => ({
-        manifest,
         article: edition?.articles.find((a) => a.slug === manifest.slug) ?? null,
+        manifest,
       }));
   }, [slots, edition]);
 
@@ -250,7 +256,7 @@ export default function EditionDetail() {
                 onRegenerate={handleRegenerate}
                 onUpdate={fetchEdition}
                 regenerating={false}
-                slot={{ manifest, article: null }}
+                slot={{ article: null, manifest }}
               />
             ))}
         </div>
@@ -367,25 +373,25 @@ const SLOT_GROUP_LABELS: Record<string, string> = {
 };
 
 type SlotCardProps = {
-  slot: MergedSlot;
   editionDate: string;
-  onRegenerate: (slug: string) => Promise<void>;
+  generating: boolean;
   onGenerate: (slug: string) => Promise<void>;
+  onRegenerate: (slug: string) => Promise<void>;
   onUpdate: () => Promise<void>;
   regenerating: boolean;
-  generating: boolean;
+  slot: MergedSlot;
 };
 
 function SlotCard({
-  slot,
   editionDate,
-  onRegenerate,
+  generating,
   onGenerate,
+  onRegenerate,
   onUpdate,
   regenerating,
-  generating,
+  slot,
 }: SlotCardProps) {
-  const { manifest, article } = slot;
+  const { article, manifest } = slot;
   const groupLabel: string = SLOT_GROUP_LABELS[manifest.slotGroup] ?? manifest.slotGroup;
 
   const displayName: string =
@@ -413,11 +419,7 @@ function SlotCard({
                 Edit Prompt
               </Link>
             )}
-            <Button
-              disabled={generating}
-              onClick={() => void onGenerate(manifest.slug)}
-              size="sm"
-            >
+            <Button disabled={generating} onClick={() => void onGenerate(manifest.slug)} size="sm">
               {generating ? 'Generating...' : 'Generate'}
             </Button>
           </div>
@@ -521,9 +523,7 @@ function ArticleCard({
               value={editHeadline}
             />
           ) : (
-            <h3 className="font-medium text-on-surface">
-              {article.headline ?? displayName}
-            </h3>
+            <h3 className="font-medium text-on-surface">{article.headline ?? displayName}</h3>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-on-surface-muted">
             <Badge variant={ARTICLE_STATUS_COLORS[article.status]}>{article.status}</Badge>
