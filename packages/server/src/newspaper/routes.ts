@@ -20,6 +20,7 @@ import {
   updateArticle,
 } from './repository.ts';
 import { getPortraitForPerson } from './portrait-assignment.ts';
+import type { NewspaperContentType } from './types.ts';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -298,6 +299,62 @@ newspaperRoutes.get('/house-ad/:date', async (c) => {
   });
 });
 
+/** GET /api/newspaper/edition/:date/slots — expected content slots for the date */
+newspaperRoutes.get('/edition/:date/slots', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const { getContentTypesForDay } = await import('./rotation.ts');
+  const { SLUG_MAP, DISPLAY_ORDER_MAP } = await import('./slot-dispatcher.ts');
+
+  const dayOfWeek = new Date(date + 'T12:00:00Z').getUTCDay() as
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6;
+  const slots = getContentTypesForDay(dayOfWeek);
+
+  const DAILY_TYPES: NewspaperContentType[] = [
+    'daily_digest',
+    'hero_image',
+    'fake_ad',
+    'editorial_cartoon',
+    'classifieds',
+  ];
+
+  const rotationTypes: NewspaperContentType[] = [
+    slots.slotA,
+    slots.slotB,
+    slots.slotC,
+  ].filter((t): t is NewspaperContentType => t != null);
+
+  const allTypes: NewspaperContentType[] = [...DAILY_TYPES, ...rotationTypes];
+
+  const IMAGE_TYPES = new Set<string>(['hero_image', 'editorial_cartoon']);
+  const manifest = allTypes.map((ct) => ({
+    contentType: ct,
+    slug: SLUG_MAP[ct],
+    displayOrder: DISPLAY_ORDER_MAP[ct],
+    promptSlug: IMAGE_TYPES.has(ct)
+      ? null
+      : `newspaper-${ct.replace(/_/g, '-')}`,
+    slotGroup: DAILY_TYPES.includes(ct)
+      ? 'daily'
+      : ct === slots.slotA
+        ? 'slotA'
+        : ct === slots.slotB
+          ? 'slotB'
+          : 'slotC',
+  }));
+
+  return c.json(manifest);
+});
+
 // ── Admin routes (/api/admin/newspaper) ──────────────────────────────
 
 const newspaperAdminRoutes = new Hono();
@@ -384,6 +441,68 @@ newspaperAdminRoutes.get('/image-health', async (c) => {
     runImageHealthCheck(conn, baseUrl, days),
   );
   return c.json(report);
+});
+
+/** POST /api/admin/newspaper/generate/:date — generate (or fill missing) an edition */
+newspaperAdminRoutes.post('/generate/:date', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const result = await withConn(async (conn) => {
+    const { generateEdition } = await import('./generate-service.ts');
+    return generateEdition(conn, date);
+  });
+
+  return c.json(result);
+});
+
+/** POST /api/admin/newspaper/generate/:date/:slug — generate a single content slot */
+newspaperAdminRoutes.post('/generate/:date/:slug', async (c) => {
+  const date: string = c.req.param('date');
+  const slug: string = c.req.param('slug');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  // Reverse-lookup: slug → contentType
+  const { SLUG_MAP } = await import('./slot-dispatcher.ts');
+  const contentType = (
+    Object.entries(SLUG_MAP) as Array<[NewspaperContentType, string]>
+  ).find(([, s]) => s === slug)?.[0];
+
+  if (contentType == null) {
+    return c.json({ error: `Unknown article slug: ${slug}` }, 400);
+  }
+
+  const result = await withConn(async (conn) => {
+    // Reset article to pending first so generation isn't skipped
+    const edition = await getEditionByDate(conn, date);
+    if (edition) {
+      await resetArticle(conn, edition.id, slug);
+    }
+    const { generateEdition } = await import('./generate-service.ts');
+    return generateEdition(conn, date, [contentType]);
+  });
+
+  return c.json(result);
+});
+
+/** POST /api/admin/newspaper/regenerate/:date — delete and regenerate an entire edition */
+newspaperAdminRoutes.post('/regenerate/:date', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+
+  const result = await withConn(async (conn) => {
+    await deleteEdition(conn, date);
+    const { generateEdition } = await import('./generate-service.ts');
+    return generateEdition(conn, date);
+  });
+
+  return c.json(result);
 });
 
 export { newspaperRoutes, newspaperAdminRoutes };
