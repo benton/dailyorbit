@@ -126,7 +126,7 @@ export class DailyOrbitStack extends Stack {
     // Bedrock for AI features
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:Converse', 'bedrock:ConverseStream', 'bedrock:ListInferenceProfiles'],
+        actions: ['bedrock:InvokeModel', 'bedrock:Converse', 'bedrock:ConverseStream', 'bedrock:ListInferenceProfiles', 'bedrock:ListFoundationModels'],
         resources: ['*'],
       }),
     );

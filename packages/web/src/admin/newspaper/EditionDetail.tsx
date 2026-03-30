@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
-import { DISPLAY_NAME_MAP } from '../../newspaper/types.ts';
+import { DISPLAY_NAME_MAP, editionImageUrl } from '../../newspaper/types.ts';
 import { Badge } from '../../ui/badge.tsx';
 import { Button } from '../../ui/button.tsx';
 import {
@@ -339,7 +339,7 @@ export default function EditionDetail() {
           <img
             alt="Edition hero"
             className="w-full object-cover"
-            src={`/api/newspaper/images/${edition.editionDate}/${edition.heroImagePath.split('/').pop()}`}
+            src={editionImageUrl(edition.editionDate, edition.heroImagePath)}
             style={{ maxHeight: '300px' }}
           />
         </div>
@@ -579,7 +579,7 @@ function ArticleCard({
           <img
             alt={article.headline ?? article.slug}
             className="max-h-48 w-auto"
-            src={`/api/newspaper/images/${editionDate}/${article.imagePath.split('/').pop()}`}
+            src={editionImageUrl(editionDate, article.imagePath)}
           />
         </div>
       )}

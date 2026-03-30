@@ -227,7 +227,11 @@ export default function EditionBrowser() {
                     <td className="px-4 py-3">
                       <span
                         className={`inline-block h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                        title={isPublished ? `Published ${edition.publishedAt}` : 'Not published'}
+                        title={
+                          isPublished
+                            ? `Published ${new Date(edition.publishedAt!).toLocaleString()}`
+                            : 'Not published'
+                        }
                       />
                     </td>
                     <td className="px-4 py-3 text-on-surface-muted">
