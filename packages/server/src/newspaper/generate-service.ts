@@ -1,5 +1,9 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
-import type { NewspaperContentType, GeneratorResult } from './types.ts';
+import type {
+  NewspaperContentType,
+  GeneratorResult,
+  GenerateOptions,
+} from './types.ts';
 import type { ConfigService } from '../lib/config-service.ts';
 import type { InferenceService } from '../inference/inference-service.ts';
 import type { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
@@ -40,134 +44,133 @@ type GenerateContext = {
 
 type GeneratorFn = (ctx: GenerateContext) => Promise<GeneratorResult>;
 
-// ── Generator registry ──────────────────────────────────────────────
-
-function makeTextGenerator(importPath: string, fnName: string): GeneratorFn {
-  return async (ctx: GenerateContext): Promise<GeneratorResult> => {
-    const mod = await import(importPath);
-    const fn = mod[fnName] as (opts: {
-      conn: DuckDBConnection;
-      editionId: number;
-      editionDate: string;
-      inferenceService: InferenceService;
-      config: ConfigService;
-      log: (level: string, msg: string) => void;
-    }) => Promise<GeneratorResult>;
-    return fn({
-      conn: ctx.conn,
-      editionId: ctx.editionId,
-      editionDate: ctx.editionDate,
-      inferenceService: ctx.inferenceService,
-      config: ctx.config,
-      log: () => {},
-    });
+/** Build GenerateOptions from the internal GenerateContext */
+function toOpts(ctx: GenerateContext): GenerateOptions {
+  return {
+    conn: ctx.conn,
+    editionId: ctx.editionId,
+    editionDate: ctx.editionDate,
+    inferenceService: ctx.inferenceService,
+    config: ctx.config,
+    log: () => {},
   };
 }
 
+// ── Generator registry ──────────────────────────────────────────────
+// Each import() uses a static string literal so the bundler can resolve it.
+
 const GENERATORS: Record<NewspaperContentType, GeneratorFn> = {
   // Daily types
-  daily_digest: makeTextGenerator(
-    './generators/daily-digest.ts',
-    'generateDailyDigest',
-  ),
-  hero_image: async (ctx: GenerateContext): Promise<GeneratorResult> => {
+  daily_digest: async (ctx) => {
+    const { generateDailyDigest } =
+      await import('./generators/daily-digest.ts');
+    return generateDailyDigest(toOpts(ctx));
+  },
+  hero_image: async (ctx) => {
     const { generateHeroImage } = await import('./generators/hero-image.ts');
     return generateHeroImage({
-      conn: ctx.conn,
-      editionId: ctx.editionId,
-      editionDate: ctx.editionDate,
+      ...toOpts(ctx),
       inferenceService: null as never,
-      config: ctx.config,
       imageClient: ctx.imageClient,
-      log: () => {},
     });
   },
-  fake_ad: makeTextGenerator('./generators/fake-ad.ts', 'generateFakeAd'),
-  editorial_cartoon: async (ctx: GenerateContext): Promise<GeneratorResult> => {
+  fake_ad: async (ctx) => {
+    const { generateFakeAd } = await import('./generators/fake-ad.ts');
+    return generateFakeAd(toOpts(ctx));
+  },
+  editorial_cartoon: async (ctx) => {
     const { generateEditorialCartoon } =
       await import('./generators/editorial-cartoon.ts');
     return generateEditorialCartoon({
-      conn: ctx.conn,
-      editionId: ctx.editionId,
-      editionDate: ctx.editionDate,
-      inferenceService: ctx.inferenceService,
-      config: ctx.config,
+      ...toOpts(ctx),
       imageClient: ctx.imageClient,
-      log: () => {},
     });
   },
-  classifieds: makeTextGenerator(
-    './generators/classifieds.ts',
-    'generateClassifieds',
-  ),
+  classifieds: async (ctx) => {
+    const { generateClassifieds } = await import('./generators/classifieds.ts');
+    return generateClassifieds(toOpts(ctx));
+  },
 
   // Slot A types
-  orbital_forecast: makeTextGenerator(
-    './generators/orbital-forecast.ts',
-    'generateOrbitalForecast',
-  ),
-  the_docket: makeTextGenerator(
-    './generators/the-docket.ts',
-    'generateTheDocket',
-  ),
-  spectrum_watch: makeTextGenerator(
-    './generators/spectrum-watch.ts',
-    'generateSpectrumWatch',
-  ),
-  competitive_intel: makeTextGenerator(
-    './generators/competitive-intel.ts',
-    'generateCompetitiveIntel',
-  ),
+  orbital_forecast: async (ctx) => {
+    const { generateOrbitalForecast } =
+      await import('./generators/orbital-forecast.ts');
+    return generateOrbitalForecast(toOpts(ctx));
+  },
+  the_docket: async (ctx) => {
+    const { generateTheDocket } = await import('./generators/the-docket.ts');
+    return generateTheDocket(toOpts(ctx));
+  },
+  spectrum_watch: async (ctx) => {
+    const { generateSpectrumWatch } =
+      await import('./generators/spectrum-watch.ts');
+    return generateSpectrumWatch(toOpts(ctx));
+  },
+  competitive_intel: async (ctx) => {
+    const { generateCompetitiveIntel } =
+      await import('./generators/competitive-intel.ts');
+    return generateCompetitiveIntel(toOpts(ctx));
+  },
 
   // Slot B types
-  company_spotlight: makeTextGenerator(
-    './generators/company-spotlight.ts',
-    'generateCompanySpotlight',
-  ),
-  filing_in_focus: makeTextGenerator(
-    './generators/filing-in-focus.ts',
-    'generateFilingInFocus',
-  ),
-  the_applicant: makeTextGenerator(
-    './generators/the-applicant.ts',
-    'generateTheApplicant',
-  ),
-  tech_spotlight: makeTextGenerator(
-    './generators/tech-spotlight.ts',
-    'generateTechSpotlight',
-  ),
-  from_the_archives: makeTextGenerator(
-    './generators/from-the-archives.ts',
-    'generateFromTheArchives',
-  ),
+  company_spotlight: async (ctx) => {
+    const { generateCompanySpotlight } =
+      await import('./generators/company-spotlight.ts');
+    return generateCompanySpotlight(toOpts(ctx));
+  },
+  filing_in_focus: async (ctx) => {
+    const { generateFilingInFocus } =
+      await import('./generators/filing-in-focus.ts');
+    return generateFilingInFocus(toOpts(ctx));
+  },
+  the_applicant: async (ctx) => {
+    const { generateTheApplicant } =
+      await import('./generators/the-applicant.ts');
+    return generateTheApplicant(toOpts(ctx));
+  },
+  tech_spotlight: async (ctx) => {
+    const { generateTechSpotlight } =
+      await import('./generators/tech-spotlight.ts');
+    return generateTechSpotlight(toOpts(ctx));
+  },
+  from_the_archives: async (ctx) => {
+    const { generateFromTheArchives } =
+      await import('./generators/from-the-archives.ts');
+    return generateFromTheArchives(toOpts(ctx));
+  },
 
   // Slot C types
-  editorial: makeTextGenerator(
-    './generators/editorial.ts',
-    'generateEditorial',
-  ),
-  counsels_brief: makeTextGenerator(
-    './generators/counsels-brief.ts',
-    'generateCounselsBrief',
-  ),
-  letters_to_editor: makeTextGenerator(
-    './generators/letters-to-editor.ts',
-    'generateLettersToEditor',
-  ),
-  market_signals: makeTextGenerator(
-    './generators/market-signals.ts',
-    'generateMarketSignals',
-  ),
-  press_gallery: makeTextGenerator(
-    './generators/press-gallery.ts',
-    'generatePressGallery',
-  ),
+  editorial: async (ctx) => {
+    const { generateEditorial } = await import('./generators/editorial.ts');
+    return generateEditorial(toOpts(ctx));
+  },
+  counsels_brief: async (ctx) => {
+    const { generateCounselsBrief } =
+      await import('./generators/counsels-brief.ts');
+    return generateCounselsBrief(toOpts(ctx));
+  },
+  letters_to_editor: async (ctx) => {
+    const { generateLettersToEditor } =
+      await import('./generators/letters-to-editor.ts');
+    return generateLettersToEditor(toOpts(ctx));
+  },
+  market_signals: async (ctx) => {
+    const { generateMarketSignals } =
+      await import('./generators/market-signals.ts');
+    return generateMarketSignals(toOpts(ctx));
+  },
+  press_gallery: async (ctx) => {
+    const { generatePressGallery } =
+      await import('./generators/press-gallery.ts');
+    return generatePressGallery(toOpts(ctx));
+  },
 
   // Weekend only
-  week_in_review: makeTextGenerator(
-    './generators/week-in-review.ts',
-    'generateWeekInReview',
-  ),
+  week_in_review: async (ctx) => {
+    const { generateWeekInReview } =
+      await import('./generators/week-in-review.ts');
+    return generateWeekInReview(toOpts(ctx));
+  },
 };
 
 // ── Service function ────────────────────────────────────────────────

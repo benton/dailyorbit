@@ -20,8 +20,7 @@ type OwnershipEvent = {
   effectiveDate: string;
   acquirerName: string;
   targetName: string;
-  sourceReference: string;
-  notes: string;
+  description: string;
 };
 
 // ── Query helpers ───────────────────────────────────────────────
@@ -35,11 +34,10 @@ export async function queryRecentOwnershipEvents(
             CAST(oe.effective_date AS VARCHAR) AS effective_date,
             acquirer.name AS acquirer_name,
             target.name AS target_name,
-            oe.source_reference,
-            oe.notes
+            oe.description
      FROM ownership_event oe
-     JOIN company acquirer ON acquirer.id = oe.acquirer_company_id
-     JOIN company target ON target.id = oe.target_company_id
+     JOIN company acquirer ON acquirer.id = oe.transferee_company_id
+     JOIN company target ON target.id = oe.transferor_company_id
      WHERE oe.effective_date >= CAST(? AS DATE) - INTERVAL 90 DAY
        AND oe.effective_date <= CAST(? AS DATE)
      ORDER BY oe.effective_date DESC
@@ -52,8 +50,7 @@ export async function queryRecentOwnershipEvents(
     effectiveDate: String(r.effective_date ?? ''),
     acquirerName: String(r.acquirer_name),
     targetName: String(r.target_name),
-    sourceReference: String(r.source_reference ?? ''),
-    notes: String(r.notes ?? ''),
+    description: String(r.description ?? ''),
   }));
 }
 
@@ -64,7 +61,7 @@ function formatOwnershipEvents(events: OwnershipEvent[]): string {
   return events
     .map(
       (e: OwnershipEvent) =>
-        `- ${e.acquirerName} ${e.eventType} ${e.targetName} (${e.effectiveDate})${e.notes ? ': ' + e.notes : ''}`,
+        `- ${e.acquirerName} ${e.eventType} ${e.targetName} (${e.effectiveDate})${e.description ? ': ' + e.description : ''}`,
     )
     .join('\n');
 }

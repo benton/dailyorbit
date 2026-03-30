@@ -38,7 +38,7 @@ export async function queryCompanyOverlaps(
          AND f.subsystem_code IS NOT NULL
        GROUP BY c.name, f.subsystem_code, f.app_type_code
      ),
-     overlaps AS (
+     filing_overlaps AS (
        SELECT subsystem_code, app_type_code,
               STRING_AGG(company_name || ' (' || CAST(cnt AS VARCHAR) || ')', ', '
                          ORDER BY cnt DESC) AS companies,
@@ -48,7 +48,7 @@ export async function queryCompanyOverlaps(
        HAVING COUNT(DISTINCT company_name) >= 2
      )
      SELECT subsystem_code, app_type_code, companies, company_count
-     FROM overlaps
+     FROM filing_overlaps
      ORDER BY company_count DESC, subsystem_code
      LIMIT 10`,
     [editionDate, editionDate] as DuckDBValue[],
