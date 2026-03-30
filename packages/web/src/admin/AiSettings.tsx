@@ -1,6 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ChevronDown, ChevronRight, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 import { Badge } from '../ui/badge.tsx';
 import { Button } from '../ui/button.tsx';
@@ -84,7 +85,9 @@ type UnifiedPromptEditorProps = {
 };
 
 function UnifiedPromptEditor({ configEntries, onSave, promptSets }: UnifiedPromptEditorProps) {
-  const [selectedSlug, setSelectedSlug] = useState<string>(promptSets[0]?.slug ?? '');
+  const [searchParams] = useSearchParams();
+  const initialSlug: string = searchParams.get('prompt') ?? promptSets[0]?.slug ?? '';
+  const [selectedSlug, setSelectedSlug] = useState<string>(initialSlug);
   const [systemPrompt, setSystemPrompt] = useState<string>('');
   const [userPrompt, setUserPrompt] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
@@ -124,6 +127,14 @@ function UnifiedPromptEditor({ configEntries, onSave, promptSets }: UnifiedPromp
     setUserPrompt(userEntry?.value ?? '');
     setVarsOpen(false);
   }, [selected, configEntries]);
+
+  // Deep-link: update selection when ?prompt= query param changes
+  useEffect(() => {
+    const paramSlug: string | null = searchParams.get('prompt');
+    if (paramSlug != null && promptSets.some((p: PromptSetDef) => p.slug === paramSlug)) {
+      setSelectedSlug(paramSlug);
+    }
+  }, [searchParams, promptSets]);
 
   const isSystemDefault: boolean =
     selected != null && (systemPrompt === selected.defaultSystemPrompt || systemPrompt === '');

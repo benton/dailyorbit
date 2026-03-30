@@ -110,6 +110,44 @@ export default function EditionBrowser() {
     [fetchEditions],
   );
 
+  // Generate for date
+  const [generateDate, setGenerateDate] = useState<string>('');
+  const [generating, setGenerating] = useState<boolean>(false);
+
+  const handleGenerate = useCallback(async () => {
+    if (!generateDate) return;
+    setGenerating(true);
+    setError(null);
+    try {
+      await apiFetch(`/api/admin/newspaper/generate/${generateDate}`, {
+        method: 'POST',
+      });
+      await fetchEditions();
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Generation failed');
+    } finally {
+      setGenerating(false);
+    }
+  }, [generateDate, fetchEditions]);
+
+  // Regenerate existing edition
+  const handleRegenerate = useCallback(
+    async (date: string) => {
+      setActing(date);
+      try {
+        await apiFetch(`/api/admin/newspaper/regenerate/${date}`, {
+          method: 'POST',
+        });
+        await fetchEditions();
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_.message : 'Regeneration failed');
+      } finally {
+        setActing(null);
+      }
+    },
+    [fetchEditions],
+  );
+
   if (loading) {
     return <p className="text-sm text-on-surface-muted">Loading editions...</p>;
   }
@@ -125,6 +163,27 @@ export default function EditionBrowser() {
         <p className="mt-1 text-sm text-on-surface-muted">
           Manage newspaper editions: publish, unpublish, edit, or delete.
         </p>
+      </div>
+
+      <div className="flex items-end gap-3">
+        <div>
+          <label
+            className="mb-1 block text-sm font-medium text-on-surface"
+            htmlFor="generate-date"
+          >
+            Generate Edition
+          </label>
+          <input
+            className="rounded-theme border border-border-theme bg-surface px-3 py-1.5 text-sm text-on-surface"
+            id="generate-date"
+            onChange={(e) => setGenerateDate(e.target.value)}
+            type="date"
+            value={generateDate}
+          />
+        </div>
+        <Button disabled={!generateDate || generating} onClick={() => void handleGenerate()}>
+          {generating ? 'Generating...' : 'Generate'}
+        </Button>
       </div>
 
       {editions.length === 0 ? (
@@ -185,6 +244,11 @@ export default function EditionBrowser() {
                         >
                           {isPublished ? 'Unpublish' : 'Publish'}
                         </Button>
+                        <RegenerateEditionDialog
+                          date={edition.editionDate}
+                          disabled={isBusy}
+                          onConfirm={() => void handleRegenerate(edition.editionDate)}
+                        />
                         <DeleteEditionDialog
                           articleCount={0}
                           date={edition.editionDate}
@@ -207,6 +271,43 @@ export default function EditionBrowser() {
         </div>
       )}
     </div>
+  );
+}
+
+type RegenerateEditionDialogProps = {
+  date: string;
+  disabled: boolean;
+  onConfirm: () => void;
+};
+
+function RegenerateEditionDialog({ date, disabled, onConfirm }: RegenerateEditionDialogProps) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button disabled={disabled} size="sm" variant="outline">
+          Regenerate
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Regenerate edition {date}?</DialogTitle>
+          <DialogDescription>
+            This will delete the existing edition and all its articles, then regenerate everything
+            from scratch. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button onClick={onConfirm} variant="destructive">
+              Regenerate
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
 import { Badge } from '../../ui/badge.tsx';
@@ -46,6 +46,19 @@ type EditionWithArticles = {
   updatedAt: string;
 };
 
+type SlotManifestEntry = {
+  contentType: string;
+  slug: string;
+  displayOrder: number;
+  promptSlug: string | null;
+  slotGroup: 'daily' | 'slotA' | 'slotB' | 'slotC';
+};
+
+type MergedSlot = {
+  manifest: SlotManifestEntry;
+  article: Article | null;
+};
+
 const ARTICLE_STATUS_COLORS: Record<ArticleStatus, 'default' | 'secondary' | 'destructive'> = {
   failed: 'destructive',
   generated: 'default',
@@ -66,16 +79,31 @@ export default function EditionDetail() {
   const [error, setError] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [acting, setActing] = useState<boolean>(false);
+  const [slots, setSlots] = useState<Array<SlotManifestEntry>>([]);
+  const [generatingSlot, setGeneratingSlot] = useState<string | null>(null);
+  const [generatingAll, setGeneratingAll] = useState<boolean>(false);
 
   const fetchEdition = useCallback(async () => {
     if (!date) {
       return;
     }
     try {
-      const data: EditionWithArticles = await apiFetch(`/api/newspaper/edition/${date}`);
-      setEdition(data);
+      // Always fetch the slot manifest
+      const slotsData: Array<SlotManifestEntry> = await apiFetch(
+        `/api/newspaper/edition/${date}/slots`,
+      );
+      setSlots(slotsData);
+
+      // Try to fetch the edition (may not exist yet)
+      try {
+        const data: EditionWithArticles = await apiFetch(`/api/newspaper/edition/${date}`);
+        setEdition(data);
+      } catch {
+        // Edition doesn't exist yet — that's fine, slots will show as all-missing
+        setEdition(null);
+      }
     } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : 'Failed to load edition');
+      setError(error_ instanceof Error ? error_.message : 'Failed to load');
     } finally {
       setLoading(false);
     }
@@ -139,12 +167,94 @@ export default function EditionDetail() {
     }
   }, [date]);
 
+  const handleGenerateSlot = useCallback(
+    async (slug: string) => {
+      if (!date) return;
+      setGeneratingSlot(slug);
+      try {
+        await apiFetch(`/api/admin/newspaper/generate/${date}/${slug}`, {
+          method: 'POST',
+        });
+        await fetchEdition();
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_.message : 'Failed to generate');
+      } finally {
+        setGeneratingSlot(null);
+      }
+    },
+    [date, fetchEdition],
+  );
+
+  const handleGenerateAll = useCallback(async () => {
+    if (!date) return;
+    setGeneratingAll(true);
+    try {
+      await apiFetch(`/api/admin/newspaper/generate/${date}`, { method: 'POST' });
+      await fetchEdition();
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : 'Generation failed');
+    } finally {
+      setGeneratingAll(false);
+    }
+  }, [date, fetchEdition]);
+
+  const mergedSlots: Array<MergedSlot> = useMemo(() => {
+    if (slots.length === 0) return [];
+    return slots
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((manifest) => ({
+        manifest,
+        article: edition?.articles.find((a) => a.slug === manifest.slug) ?? null,
+      }));
+  }, [slots, edition]);
+
   if (loading) {
     return <p className="text-sm text-on-surface-muted">Loading edition...</p>;
   }
 
   if (error) {
     return <p className="text-sm text-red-600">{error}</p>;
+  }
+
+  if (!edition && slots.length > 0) {
+    // No edition yet — show slot manifest with all-missing state
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            className="text-sm text-on-surface-muted hover:text-on-surface"
+            to="/admin/maintain/newspaper"
+          >
+            &larr; All Editions
+          </Link>
+          <Button disabled={generatingAll} onClick={() => void handleGenerateAll()}>
+            {generatingAll ? 'Generating...' : 'Generate All'}
+          </Button>
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold text-on-surface">{date}</h1>
+          <p className="mt-1 text-sm text-on-surface-muted">
+            No edition exists yet. Generate individual slots or all at once.
+          </p>
+        </div>
+        <div className="space-y-4">
+          {slots
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((manifest) => (
+              <SlotCard
+                editionDate={date!}
+                generating={generatingSlot === manifest.slug}
+                key={manifest.slug}
+                onGenerate={handleGenerateSlot}
+                onRegenerate={handleRegenerate}
+                onUpdate={fetchEdition}
+                regenerating={false}
+                slot={{ manifest, article: null }}
+              />
+            ))}
+        </div>
+      </div>
+    );
   }
 
   if (!edition) {
@@ -229,29 +339,113 @@ export default function EditionDetail() {
       )}
 
       <div className="space-y-4">
-        {edition.articles
-          .sort((a, b) => a.displayOrder - b.displayOrder)
-          .map((article) => (
-            <ArticleCard
-              article={article}
-              editionDate={edition.editionDate}
-              key={article.id}
-              onRegenerate={handleRegenerate}
-              onUpdate={fetchEdition}
-              regenerating={regenerating === article.slug}
-            />
-          ))}
+        {mergedSlots.map((slot) => (
+          <SlotCard
+            editionDate={edition.editionDate}
+            generating={generatingSlot === slot.manifest.slug}
+            key={slot.manifest.slug}
+            onGenerate={handleGenerateSlot}
+            onRegenerate={handleRegenerate}
+            onUpdate={fetchEdition}
+            regenerating={regenerating === slot.manifest.slug}
+            slot={slot}
+          />
+        ))}
       </div>
     </div>
   );
 }
+
+// ── Slot card ─────────────────────────────────────────────────────
+
+const SLOT_GROUP_LABELS: Record<string, string> = {
+  daily: 'Daily',
+  slotA: 'Slot A',
+  slotB: 'Slot B',
+  slotC: 'Slot C',
+};
+
+type SlotCardProps = {
+  slot: MergedSlot;
+  editionDate: string;
+  onRegenerate: (slug: string) => Promise<void>;
+  onGenerate: (slug: string) => Promise<void>;
+  onUpdate: () => Promise<void>;
+  regenerating: boolean;
+  generating: boolean;
+};
+
+function SlotCard({
+  slot,
+  editionDate,
+  onRegenerate,
+  onGenerate,
+  onUpdate,
+  regenerating,
+  generating,
+}: SlotCardProps) {
+  const { manifest, article } = slot;
+  const groupLabel: string = SLOT_GROUP_LABELS[manifest.slotGroup] ?? manifest.slotGroup;
+
+  if (article == null) {
+    // Missing slot — placeholder with Generate button
+    return (
+      <div className="rounded-theme border border-dashed border-border-theme bg-surface/50 p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium text-on-surface-muted">{manifest.slug}</h3>
+            <div className="mt-1 flex items-center gap-2 text-xs text-on-surface-muted">
+              <Badge variant="secondary">{groupLabel}</Badge>
+              <span className="font-mono">{manifest.contentType}</span>
+              <Badge variant="secondary">Not generated</Badge>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {manifest.promptSlug != null && (
+              <Link
+                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                to={`/admin/config/ai?prompt=${manifest.promptSlug}`}
+              >
+                Edit Prompt
+              </Link>
+            )}
+            <Button
+              disabled={generating}
+              onClick={() => void onGenerate(manifest.slug)}
+              size="sm"
+            >
+              {generating ? 'Generating...' : 'Generate'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Existing article
+  return (
+    <ArticleCard
+      article={article}
+      editionDate={editionDate}
+      onRegenerate={onRegenerate}
+      onUpdate={onUpdate}
+      promptSlug={manifest.promptSlug}
+      regenerating={regenerating}
+      slotGroup={groupLabel}
+    />
+  );
+}
+
+// ── Article card ──────────────────────────────────────────────────
 
 type ArticleCardProps = {
   article: Article;
   editionDate: string;
   onRegenerate: (slug: string) => Promise<void>;
   onUpdate: () => Promise<void>;
+  promptSlug: string | null;
   regenerating: boolean;
+  slotGroup: string;
 };
 
 function ArticleCard({
@@ -259,7 +453,9 @@ function ArticleCard({
   editionDate,
   onRegenerate,
   onUpdate,
+  promptSlug,
   regenerating,
+  slotGroup,
 }: ArticleCardProps) {
   const [sourceOpen, setSourceOpen] = useState<boolean>(false);
   const [editing, setEditing] = useState<boolean>(false);
@@ -322,11 +518,20 @@ function ArticleCard({
               {article.headline ?? article.contentType}
             </h3>
           )}
-          <div className="mt-1 flex items-center gap-2 text-xs text-on-surface-muted">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-on-surface-muted">
             <Badge variant={ARTICLE_STATUS_COLORS[article.status]}>{article.status}</Badge>
+            <Badge variant="secondary">{slotGroup}</Badge>
             <span className="font-mono">{article.slug}</span>
             {article.generatedBy && <span>by {article.generatedBy}</span>}
             {wasEdited && <Badge variant="secondary">Edited</Badge>}
+            {promptSlug != null && (
+              <Link
+                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                to={`/admin/config/ai?prompt=${promptSlug}`}
+              >
+                Edit Prompt
+              </Link>
+            )}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
