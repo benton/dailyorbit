@@ -10,7 +10,7 @@ AWS_REGION=us-east-2
 ECR_REPO=daily-orbit
 ECR_URI="${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
 SSH_HOST=api.dailyorbit.org
-SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+SSH_OPTS="-i ~/elaptop/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
 FRONTEND_BUCKET=daily-orbit-prod-frontend
 CLOUDFRONT_DIST_ID=E2YVC4MEMBIV20
 
@@ -23,7 +23,7 @@ VITE_SERVER_URL="https://api.dailyorbit.org"
 VITE_NEWSPAPER_IMAGES_URL="/newspaper"
 
 echo "==> Building Docker image: ${ECR_REPO}:${TAG}"
-docker build \
+podman build \
   --build-arg VITE_SERVER_URL="${VITE_SERVER_URL}" \
   --build-arg VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
   -t "${ECR_REPO}:${TAG}" .
@@ -34,14 +34,14 @@ VITE_NEWSPAPER_IMAGES_URL="${VITE_NEWSPAPER_IMAGES_URL}" \
   pnpm --filter @daily-orbit/web build
 
 echo "==> Tagging for ECR"
-docker tag "${ECR_REPO}:${TAG}" "${ECR_URI}:${TAG}"
+podman tag "${ECR_REPO}:${TAG}" "${ECR_URI}:${TAG}"
 
 echo "==> Logging into ECR"
 aws ecr get-login-password --region "${AWS_REGION}" \
-  | docker login --username AWS --password-stdin "${ECR_URI}"
+  | podman login --username AWS --password-stdin "${ECR_URI}"
 
 echo "==> Pushing ${ECR_URI}:${TAG}"
-docker push "${ECR_URI}:${TAG}"
+podman push "${ECR_URI}:${TAG}"
 
 echo "==> Deploying API to ${SSH_HOST}"
 # shellcheck disable=SC2087
