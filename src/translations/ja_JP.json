@@ -1,0 +1,30 @@
+{
+  "ja_JP": {
+    "1u0skA": "ようこそ",
+    "PjLQx": "ミニマル、高速、妥当なデフォルト。",
+    "2nsl0r": "Using {tools} .",
+    "1M4HXR": "ライブ更新のために {=m2} を変更。",
+    "4dvQmd": "src/App.tsx",
+    "2Aa0HZ": "Hello, {name}",
+    "45Vjsy": "Logout",
+    "3KHUKm": "このテンプレートについて",
+    "4r9BJg": "概要",
+    "1ixRuk": "ホーム",
+    "2VPV74": {
+      "*": "{number}+"
+    },
+    "1REuSN": {
+      "*": "<{number}"
+    },
+    "3uo8du": "{previous items}; {following items}",
+    "1UOVWD": "{previous items} • {following items}",
+    "4DAMgG": "{previous items}、{following items}",
+    "1C255": "{list of items}, and {last item}",
+    "17bm9d": "{list of items} と {last item}",
+    "phH4S": "{list of items}, or {last item}",
+    "3q8AmB": "{list of items} or {last item}",
+    "4zJcb": "{previous items}; {last item}",
+    "1wKCx": "{list of items} • {last item}",
+    "3Q0iaX": "{list of items}, {last item}"
+  }
+}

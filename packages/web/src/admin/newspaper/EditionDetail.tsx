@@ -51,8 +51,8 @@ type GenerateResult = {
   date: string;
   editionId: number;
   failed: Array<{ error: string; slug: string }>;
-  generated: string[];
-  skipped: string[];
+  generated: Array<string>;
+  skipped: Array<string>;
 };
 
 type SlotManifestEntry = {
