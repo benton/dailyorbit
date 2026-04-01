@@ -47,6 +47,14 @@ type EditionWithArticles = {
   updatedAt: string;
 };
 
+type GenerateResult = {
+  date: string;
+  editionId: number;
+  failed: Array<{ error: string; slug: string }>;
+  generated: string[];
+  skipped: string[];
+};
+
 type SlotManifestEntry = {
   contentType: string;
   displayOrder: number;
@@ -175,9 +183,13 @@ export default function EditionDetail() {
       }
       setGeneratingSlot(slug);
       try {
-        await apiFetch(`/api/admin/newspaper/generate/${date}/${slug}`, {
-          method: 'POST',
-        });
+        const result = await apiFetch<GenerateResult>(
+          `/api/admin/newspaper/generate/${date}/${slug}`,
+          { method: 'POST' },
+        );
+        if (result.failed.length > 0) {
+          setError(result.failed.map((f) => `${f.slug}: ${f.error}`).join('\n'));
+        }
         await fetchEdition();
       } catch (error_) {
         setError(error_ instanceof Error ? error_.message : 'Failed to generate');
@@ -194,7 +206,12 @@ export default function EditionDetail() {
     }
     setGeneratingAll(true);
     try {
-      await apiFetch(`/api/admin/newspaper/generate/${date}`, { method: 'POST' });
+      const result = await apiFetch<GenerateResult>(`/api/admin/newspaper/generate/${date}`, {
+        method: 'POST',
+      });
+      if (result.failed.length > 0) {
+        setError(result.failed.map((f) => `${f.slug}: ${f.error}`).join('\n'));
+      }
       await fetchEdition();
     } catch (error_) {
       setError(error_ instanceof Error ? error_.message : 'Generation failed');
