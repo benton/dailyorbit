@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { defineCommand } from 'citty';
 import { getLogger } from '../../lib/logger.ts';
@@ -23,7 +23,7 @@ export const serveHtmlCommand = defineCommand({
 
     getLogger().info(`Starting Vite dev server on http://localhost:${port}`);
 
-    execFileSync(vite, ['dev', '--port', port], {
+    spawnSync(vite, ['dev', '--port', port], {
       cwd: webDir,
       stdio: 'inherit',
     });
