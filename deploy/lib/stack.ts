@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   Stack,
   StackProps,
@@ -9,19 +9,19 @@ import {
   RemovalPolicy,
   Duration,
   Tags,
-} from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
-import * as targets from 'aws-cdk-lib/aws-route53-targets';
-import type { SeedConfig } from './config.js';
+} from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as autoscaling from "aws-cdk-lib/aws-autoscaling";
+import * as targets from "aws-cdk-lib/aws-route53-targets";
+import type { SeedConfig } from "./config.js";
 
 interface CwlQueryDef {
   description: string;
@@ -51,33 +51,53 @@ export class DailyOrbitStack extends Stack {
 
     // ── 5a. Networking ─────────────────────────────────────────────────────
     const vpc: ec2.IVpc = config.vpcId
-      ? ec2.Vpc.fromLookup(this, 'Vpc', { vpcId: config.vpcId })
-      : new ec2.Vpc(this, 'Vpc', {
+      ? ec2.Vpc.fromLookup(this, "Vpc", { vpcId: config.vpcId })
+      : new ec2.Vpc(this, "Vpc", {
           maxAzs: 2,
           natGateways: 1,
         });
 
-    const securityGroup: ec2.SecurityGroup = new ec2.SecurityGroup(this, 'InstanceSg', {
-      vpc,
-      description: 'Daily Orbit instance security group',
-      allowAllOutbound: true,
-    });
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS');
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP redirect');
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9900), 'App HTTP (dev)');
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
+    const securityGroup: ec2.SecurityGroup = new ec2.SecurityGroup(
+      this,
+      "InstanceSg",
+      {
+        vpc,
+        description: "Daily Orbit instance security group",
+        allowAllOutbound: true,
+      },
+    );
+    securityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(443),
+      "HTTPS",
+    );
+    securityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(80),
+      "HTTP redirect",
+    );
+    // securityGroup.addIngressRule(
+    //   ec2.Peer.anyIpv4(),
+    //   ec2.Port.tcp(9900),
+    //   "App HTTP (dev)",
+    // );
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), "SSH");
 
-    const eip: ec2.CfnEIP = new ec2.CfnEIP(this, 'Eip', {
-      tags: [{ key: 'Name', value: `${config.stackName}-eip` }],
+    const eip: ec2.CfnEIP = new ec2.CfnEIP(this, "Eip", {
+      tags: [{ key: "Name", value: `${config.stackName}-eip` }],
     });
 
     // ── 5b. DNS ────────────────────────────────────────────────────────────
-    const hostedZone: route53.IHostedZone = route53.HostedZone.fromLookup(this, 'Zone', {
-      domainName: config.domainName,
-    });
+    const hostedZone: route53.IHostedZone = route53.HostedZone.fromLookup(
+      this,
+      "Zone",
+      {
+        domainName: config.domainName,
+      },
+    );
 
     // API subdomain → Elastic IP
-    new route53.ARecord(this, 'ApiRecord', {
+    new route53.ARecord(this, "ApiRecord", {
       zone: hostedZone,
       recordName: config.apiDomainName,
       target: route53.RecordTarget.fromIpAddresses(eip.ref),
@@ -86,17 +106,19 @@ export class DailyOrbitStack extends Stack {
     // ── 5d. Storage ──────────────────────────────────────────────────────
     // Import the existing S3 bucket (created outside CDK)
     const snapshotBucket: s3.IBucket = s3.Bucket.fromBucketName(
-      this, 'SnapshotBucket', config.dbSnapshotBucket,
+      this,
+      "SnapshotBucket",
+      config.dbSnapshotBucket,
     );
 
     // ── 5e. Container Registry ───────────────────────────────────────────
-    const ecrRepo: ecr.Repository = new ecr.Repository(this, 'EcrRepo', {
+    const ecrRepo: ecr.Repository = new ecr.Repository(this, "EcrRepo", {
       repositoryName: config.ecrRepositoryName,
       imageTagMutability: ecr.TagMutability.MUTABLE,
       removalPolicy: RemovalPolicy.RETAIN,
       lifecycleRules: [
         {
-          description: 'Expire untagged images after 7 days',
+          description: "Expire untagged images after 7 days",
           tagStatus: ecr.TagStatus.UNTAGGED,
           maxImageAge: Duration.days(7),
         },
@@ -104,9 +126,9 @@ export class DailyOrbitStack extends Stack {
     });
 
     // ── 5f. IAM ──────────────────────────────────────────────────────────
-    const instanceRole: iam.Role = new iam.Role(this, 'InstanceRole', {
-      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-      description: 'Daily Orbit EC2 instance role',
+    const instanceRole: iam.Role = new iam.Role(this, "InstanceRole", {
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      description: "Daily Orbit EC2 instance role",
     });
 
     // ECR pull
@@ -118,24 +140,31 @@ export class DailyOrbitStack extends Stack {
     // EC2 EIP association
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['ec2:AssociateAddress'],
-        resources: ['*'],
+        actions: ["ec2:AssociateAddress"],
+        resources: ["*"],
       }),
     );
 
     // Bedrock for AI features
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['bedrock:InvokeModel', 'bedrock:Converse', 'bedrock:ConverseStream', 'bedrock:ListInferenceProfiles', 'bedrock:ListFoundationModels'],
-        resources: ['*'],
+        actions: [
+          "bedrock:ListFoundationModels",
+          "bedrock:InvokeModel",
+          "bedrock:Converse",
+          "bedrock:ConverseStream",
+          "bedrock:ListInferenceProfiles",
+          "bedrock:ListFoundationModels",
+        ],
+        resources: ["*"],
       }),
     );
 
     // SES for alerts
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-        resources: ['*'],
+        actions: ["ses:SendEmail", "ses:SendRawEmail"],
+        resources: ["*"],
       }),
     );
 
@@ -143,60 +172,68 @@ export class DailyOrbitStack extends Stack {
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
-          'logs:CreateLogGroup',
-          'logs:CreateLogStream',
-          'logs:PutLogEvents',
-          'logs:DescribeLogStreams',
-          'logs:StartQuery',
-          'logs:GetQueryResults',
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams",
+          "logs:StartQuery",
+          "logs:GetQueryResults",
         ],
-        resources: ['*'],
+        resources: ["*"],
       }),
     );
 
     // ── 5g. Compute ──────────────────────────────────────────────────────
     const __dirname: string = dirname(fileURLToPath(import.meta.url));
-    const userDataRaw: string = readFileSync(resolve(__dirname, 'user-data.sh'), 'utf-8');
+    const userDataRaw: string = readFileSync(
+      resolve(__dirname, "user-data.sh"),
+      "utf-8",
+    );
 
     const ecrUri: string = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${config.ecrRepositoryName}`;
 
     const userDataRendered: string = userDataRaw
-      .replaceAll('{{EIP_ALLOCATION_ID}}', eip.attrAllocationId)
-      .replaceAll('{{DB_SNAPSHOT_BUCKET}}', config.dbSnapshotBucket)
-      .replaceAll('{{REGION}}', this.region)
-      .replaceAll('{{ECR_URI}}', ecrUri)
-      .replaceAll('{{CONTAINER_TAG}}', config.containerTag);
+      .replaceAll("{{EIP_ALLOCATION_ID}}", eip.attrAllocationId)
+      .replaceAll("{{DB_SNAPSHOT_BUCKET}}", config.dbSnapshotBucket)
+      .replaceAll("{{REGION}}", this.region)
+      .replaceAll("{{ECR_URI}}", ecrUri)
+      .replaceAll("{{CONTAINER_TAG}}", config.containerTag);
 
     const userData: ec2.UserData = ec2.UserData.custom(userDataRendered);
 
-    const launchTemplate: ec2.LaunchTemplate = new ec2.LaunchTemplate(this, 'LaunchTemplate', {
-      machineImage: ec2.MachineImage.fromSsmParameter(
-        '/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id',
-      ),
-      instanceType: new ec2.InstanceType(config.instanceType),
-      role: instanceRole,
-      userData,
-      securityGroup,
-      requireImdsv2: true,
-      keyPair: config.keyPairName
-        ? ec2.KeyPair.fromKeyPairName(this, 'KeyPair', config.keyPairName)
-        : undefined,
-      blockDevices: [
-        {
-          deviceName: '/dev/sda1',
-          volume: ec2.BlockDeviceVolume.ebs(60, {
-            volumeType: ec2.EbsDeviceVolumeType.GP3,
-          }),
-        },
-      ],
-    });
+    const launchTemplate: ec2.LaunchTemplate = new ec2.LaunchTemplate(
+      this,
+      "LaunchTemplate",
+      {
+        machineImage: ec2.MachineImage.fromSsmParameter(
+          "/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id",
+        ),
+        instanceType: new ec2.InstanceType(config.instanceType),
+        role: instanceRole,
+        userData,
+        securityGroup,
+        requireImdsv2: true,
+        keyPair: config.keyPairName
+          ? ec2.KeyPair.fromKeyPairName(this, "KeyPair", config.keyPairName)
+          : undefined,
+        blockDevices: [
+          {
+            deviceName: "/dev/sda1",
+            volume: ec2.BlockDeviceVolume.ebs(60, {
+              volumeType: ec2.EbsDeviceVolumeType.GP3,
+            }),
+          },
+        ],
+      },
+    );
 
-    new autoscaling.AutoScalingGroup(this, 'Asg', {
+    new autoscaling.AutoScalingGroup(this, "Asg", {
       vpc,
       mixedInstancesPolicy: {
         instancesDistribution: {
           onDemandPercentageAboveBaseCapacity: 0,
-          spotAllocationStrategy: autoscaling.SpotAllocationStrategy.PRICE_CAPACITY_OPTIMIZED,
+          spotAllocationStrategy:
+            autoscaling.SpotAllocationStrategy.PRICE_CAPACITY_OPTIMIZED,
         },
         launchTemplate,
       },
@@ -210,7 +247,7 @@ export class DailyOrbitStack extends Stack {
     });
 
     // ── 6. CloudFront (frontend) ───────────────────────────────────────
-    const frontendBucket: s3.Bucket = new s3.Bucket(this, 'FrontendBucket', {
+    const frontendBucket: s3.Bucket = new s3.Bucket(this, "FrontendBucket", {
       bucketName: `${config.stackName}-frontend`,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -221,16 +258,19 @@ export class DailyOrbitStack extends Stack {
     frontendBucket.grantReadWrite(instanceRole);
 
     const cloudfrontCert: acm.ICertificate = acm.Certificate.fromCertificateArn(
-      this, 'CloudFrontCert', config.cloudfrontCertificateArn,
+      this,
+      "CloudFrontCert",
+      config.cloudfrontCertificateArn,
     );
 
     // CloudFront Function: SPA routing on the default behavior.
     // Rewrites non-file paths to /index.html so client-side routing works.
     // This replaces distribution-level errorResponses, which cannot be
     // scoped per-behavior and were silently masking missing images.
-    const spaRoutingFn = new cloudfront.Function(this, 'SpaRoutingFn', {
+    const spaRoutingFn = new cloudfront.Function(this, "SpaRoutingFn", {
       runtime: cloudfront.FunctionRuntime.JS_2_0,
-      code: cloudfront.FunctionCode.fromInline(`
+      code: cloudfront.FunctionCode.fromInline(
+        `
 function handler(event) {
   var uri = event.request.uri;
   if (uri.match(/\\.[a-zA-Z0-9]+$/)) {
@@ -239,56 +279,76 @@ function handler(event) {
   event.request.uri = '/index.html';
   return event.request;
 }
-      `.trim()),
+      `.trim(),
+      ),
     });
 
-    const distribution: cloudfront.Distribution = new cloudfront.Distribution(this, 'Distribution', {
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-        functionAssociations: [{
-          function: spaRoutingFn,
-          eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-        }],
-      },
-      additionalBehaviors: {
-        'newspaper/images/*': {
-          origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    const distribution: cloudfront.Distribution = new cloudfront.Distribution(
+      this,
+      "Distribution",
+      {
+        defaultBehavior: {
+          origin:
+            origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
+          functionAssociations: [
+            {
+              function: spaRoutingFn,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
         },
+        additionalBehaviors: {
+          "newspaper/images/*": {
+            origin:
+              origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+            compress: true,
+          },
+        },
+        domainNames: [config.domainName],
+        certificate: cloudfrontCert,
+        defaultRootObject: "index.html",
       },
-      domainNames: [config.domainName],
-      certificate: cloudfrontCert,
-      defaultRootObject: 'index.html',
-    });
+    );
 
     // dailyorbit.org → CloudFront
-    new route53.ARecord(this, 'ApexRecord', {
+    new route53.ARecord(this, "ApexRecord", {
       zone: hostedZone,
-      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(distribution),
+      ),
     });
 
-    new route53.ARecord(this, 'WwwRecord', {
+    new route53.ARecord(this, "WwwRecord", {
       zone: hostedZone,
-      recordName: 'www',
-      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+      recordName: "www",
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(distribution),
+      ),
     });
 
     // ── 5i. CloudWatch Logs Insights Saved Queries ────────────────────────
     // Reads query definitions from the shared cwl-queries.json used by both
     // the CLI tool (cwl-query.py) and these saved queries in the Console.
-    const cwlQueriesPath: string = resolve(__dirname, '../../packages/server/debugscripts/cwl-queries.json');
-    const cwlQueries: CwlQueriesConfig = JSON.parse(readFileSync(cwlQueriesPath, 'utf-8'));
+    const cwlQueriesPath: string = resolve(
+      __dirname,
+      "../../packages/server/debugscripts/cwl-queries.json",
+    );
+    const cwlQueries: CwlQueriesConfig = JSON.parse(
+      readFileSync(cwlQueriesPath, "utf-8"),
+    );
 
     for (const [name, qdef] of Object.entries(cwlQueries.queries)) {
       // Skip parameterized queries — they need runtime args, not useful as saved queries
-      if (qdef.query.includes('{arg}')) continue;
+      if (qdef.query.includes("{arg}")) continue;
 
       new CfnResource(this, `CwlQuery-${name}`, {
-        type: 'AWS::Logs::QueryDefinition',
+        type: "AWS::Logs::QueryDefinition",
         properties: {
           Name: `daily-orbit - ${name}`,
           QueryString: qdef.query,
@@ -298,39 +358,39 @@ function handler(event) {
     }
 
     // ── 5h. Outputs ──────────────────────────────────────────────────────
-    new CfnOutput(this, 'ElasticIpAddress', {
+    new CfnOutput(this, "ElasticIpAddress", {
       value: eip.ref,
-      description: 'Elastic IP address',
+      description: "Elastic IP address",
     });
 
-    new CfnOutput(this, 'ApiUrl', {
+    new CfnOutput(this, "ApiUrl", {
       value: `https://${config.apiDomainName}`,
-      description: 'API URL',
+      description: "API URL",
     });
 
-    new CfnOutput(this, 'EcrRepositoryUri', {
+    new CfnOutput(this, "EcrRepositoryUri", {
       value: ecrRepo.repositoryUri,
-      description: 'ECR repository URI',
+      description: "ECR repository URI",
     });
 
-    new CfnOutput(this, 'SnapshotBucketName', {
+    new CfnOutput(this, "SnapshotBucketName", {
       value: snapshotBucket.bucketName,
-      description: 'S3 snapshot bucket name',
+      description: "S3 snapshot bucket name",
     });
 
-    new CfnOutput(this, 'FrontendBucketName', {
+    new CfnOutput(this, "FrontendBucketName", {
       value: frontendBucket.bucketName,
-      description: 'S3 bucket for frontend static assets',
+      description: "S3 bucket for frontend static assets",
     });
 
-    new CfnOutput(this, 'DistributionDomainName', {
+    new CfnOutput(this, "DistributionDomainName", {
       value: distribution.distributionDomainName,
-      description: 'CloudFront distribution domain',
+      description: "CloudFront distribution domain",
     });
 
-    new CfnOutput(this, 'FrontendUrl', {
+    new CfnOutput(this, "FrontendUrl", {
       value: `https://${config.domainName}`,
-      description: 'Frontend URL',
+      description: "Frontend URL",
     });
   }
 }
