@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as cdk from "aws-cdk-lib";
 import {
   Stack,
   StackProps,
@@ -111,6 +112,20 @@ export class DailyOrbitStack extends Stack {
       config.dbSnapshotBucket,
     );
 
+    // ── 5d2. Persistent EBS Data Volume ─────────────────────────────────
+    const dataVolume = new ec2.Volume(this, "DataVolume", {
+      availabilityZone: config.availabilityZone,
+      size: cdk.Size.gibibytes(config.ebsVolumeSize),
+      volumeType: ec2.EbsDeviceVolumeType.GP3,
+      iops: config.ebsVolumeIops,
+      throughput: config.ebsVolumeThroughput,
+      encrypted: true,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    Tags.of(dataVolume).add("Name", `${config.stackName}-data`);
+    Tags.of(dataVolume).add("daily-orbit-role", "data-volume");
+
     // ── 5e. Container Registry ───────────────────────────────────────────
     const ecrRepo: ecr.Repository = new ecr.Repository(this, "EcrRepo", {
       repositoryName: config.ecrRepositoryName,
@@ -168,6 +183,14 @@ export class DailyOrbitStack extends Stack {
       }),
     );
 
+    // EBS volume attach/detach for persistent data volume
+    instanceRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["ec2:AttachVolume", "ec2:DetachVolume", "ec2:DescribeVolumes"],
+        resources: ["*"],
+      }),
+    );
+
     // CloudWatch Logs for structured log shipping
     instanceRole.addToPolicy(
       new iam.PolicyStatement({
@@ -197,7 +220,8 @@ export class DailyOrbitStack extends Stack {
       .replaceAll("{{DB_SNAPSHOT_BUCKET}}", config.dbSnapshotBucket)
       .replaceAll("{{REGION}}", this.region)
       .replaceAll("{{ECR_URI}}", ecrUri)
-      .replaceAll("{{CONTAINER_TAG}}", config.containerTag);
+      .replaceAll("{{CONTAINER_TAG}}", config.containerTag)
+      .replaceAll("{{DATA_VOLUME_ID}}", dataVolume.volumeId);
 
     const userData: ec2.UserData = ec2.UserData.custom(userDataRendered);
 
@@ -229,6 +253,10 @@ export class DailyOrbitStack extends Stack {
 
     new autoscaling.AutoScalingGroup(this, "Asg", {
       vpc,
+      vpcSubnets: {
+        availabilityZones: [config.availabilityZone],
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
       mixedInstancesPolicy: {
         instancesDistribution: {
           onDemandPercentageAboveBaseCapacity: 0,
@@ -391,6 +419,11 @@ function handler(event) {
     new CfnOutput(this, "FrontendUrl", {
       value: `https://${config.domainName}`,
       description: "Frontend URL",
+    });
+
+    new CfnOutput(this, "DataVolumeId", {
+      value: dataVolume.volumeId,
+      description: "EBS volume ID for persistent data storage",
     });
   }
 }

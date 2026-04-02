@@ -35,60 +35,81 @@ aws ec2 associate-address \
 
 echo "EIP associated to $INSTANCE_ID"
 
-# ── ZFS Pool Setup (NVMe instances only) ──────────────────────────────────────
-# Find NVMe instance storage (ephemeral) devices by checking the NVMe model.
-# EBS volumes report "Amazon Elastic Block Store"; instance storage reports
-# "Amazon EC2 NVMe Instance Storage". blkid alone can't tell them apart when
-# an EBS volume is freshly attached with no filesystem.
-EPHEMERALS=""
-for dev in /dev/nvme*n1; do
-  [ -b "$dev" ] || continue
-  model=$(nvme id-ctrl "$dev" -o json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('mn','').strip())" 2>/dev/null || true)
-  if echo "$model" | grep -qi "Instance Storage"; then
-    EPHEMERALS="$EPHEMERALS $dev"
-  else
-    echo "Skipping $dev (model: ${model:-unknown}) — not instance storage"
+# ── Data Volume Setup ─────────────────────────────────────────────────────────
+DATA_VOLUME_ID="{{DATA_VOLUME_ID}}"
+DEVICE_PATH="/dev/xvdf"
+
+# Attach the persistent EBS volume
+echo "Attaching EBS volume $DATA_VOLUME_ID..."
+aws ec2 attach-volume \
+  --volume-id "$DATA_VOLUME_ID" \
+  --instance-id "$INSTANCE_ID" \
+  --device "$DEVICE_PATH" \
+  --region "{{REGION}}"
+
+# Wait for attachment (up to 60 seconds)
+for i in $(seq 1 30); do
+  if [ -b "$DEVICE_PATH" ] || [ -b "/dev/nvme1n1" ]; then
+    echo "Volume attached"
+    break
+  fi
+  sleep 2
+done
+
+# On Nitro instances, /dev/xvdf maps to an NVMe device.
+# Identify it by matching the volume ID in the NVMe controller serial number.
+ACTUAL_DEVICE="$DEVICE_PATH"
+VOL_SHORT="${DATA_VOLUME_ID#vol-}"
+for nvme_dev in /dev/nvme*n1; do
+  [ -b "$nvme_dev" ] || continue
+  serial=$(nvme id-ctrl "$nvme_dev" -o json 2>/dev/null \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('sn','').strip())" 2>/dev/null || true)
+  if echo "$serial" | grep -qi "$VOL_SHORT"; then
+    ACTUAL_DEVICE="$nvme_dev"
+    echo "Resolved $DATA_VOLUME_ID → $ACTUAL_DEVICE (serial: $serial)"
+    break
   fi
 done
-EPHEMERALS=$(echo "$EPHEMERALS" | xargs)  # trim
 
-if [ -n "$EPHEMERALS" ]; then
-  echo "NVMe ephemeral devices found: $EPHEMERALS"
-  apt-get install -y zfsutils-linux
-  modprobe zfs
-
-  zpool create -f datapool $EPHEMERALS
-  zfs set compression=lz4 datapool
-  zfs set atime=off datapool
-  mkdir -p /data
-  zfs set mountpoint=/data datapool
-  echo "ZFS pool created on NVMe storage"
+# Format if new (no filesystem), otherwise mount existing
+if ! blkid "$ACTUAL_DEVICE" >/dev/null 2>&1; then
+  echo "New volume detected — formatting as ext4"
+  mkfs.ext4 -L daily-orbit-data "$ACTUAL_DEVICE"
+  NEEDS_RESTORE=true
 else
-  echo "No NVMe ephemeral devices — using EBS /data"
-  mkdir -p /data
+  echo "Existing filesystem found"
+  NEEDS_RESTORE=false
 fi
 
-# ── Data Restore from S3 ─────────────────────────────────────────────────────
-# Find the most recent timestamped snapshot (YYYYMMDD-HHMM.duckdb).
-# The in-process BackupService is the sole producer of these snapshots.
-DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" --recursive \
-  | grep -oE 'db/[0-9]{8}-[0-9]{4}\.duckdb$' \
-  | sort | tail -1)
+mkdir -p /data
+mount "$ACTUAL_DEVICE" /data
 
-if [ -n "$DB_SNAPSHOT" ]; then
-  echo "Restoring newest snapshot: $DB_SNAPSHOT"
-  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
-else
-  echo "FATAL: No timestamped snapshot found in s3://{{DB_SNAPSHOT_BUCKET}}/db/"
-  echo "Container will initialize a fresh database on startup."
+# If the volume is empty (first boot or disaster), restore from S3
+if [ "$NEEDS_RESTORE" = true ] || [ ! -f /data/daily-orbit.duckdb ]; then
+  echo "No database found on volume — restoring from S3..."
+
+  # Try Parquet fast-restore first (Phase 2), fall back to full snapshot
+  if [ -f /data/parquet-restore.sh ]; then
+    bash /data/parquet-restore.sh
+  else
+    DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" --recursive \
+      | grep -oE 'db/[0-9]{8}-[0-9]{4}\.duckdb$' \
+      | sort | tail -1)
+
+    if [ -n "$DB_SNAPSHOT" ]; then
+      echo "Restoring snapshot: $DB_SNAPSHOT"
+      aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
+    else
+      echo "WARNING: No snapshot found — container will initialize fresh database"
+    fi
+  fi
+
+  aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
+    || echo "No encryption key found"
+  mkdir -p /data/attachments
+  aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
+    || echo "No attachments found in S3"
 fi
-
-aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
-  || echo "No encryption key found"
-
-mkdir -p /data/attachments
-aws s3 sync "s3://{{DB_SNAPSHOT_BUCKET}}/attachments/" /data/attachments/ \
-  || echo "No attachments found in S3"
 
 chown -R ubuntu:ubuntu /data
 
@@ -101,7 +122,7 @@ unzip -qo /tmp/duckdb.zip -d /usr/local/bin
 rm /tmp/duckdb.zip
 chmod +x /usr/local/bin/duckdb
 
-# Store Docker images on the ZFS data pool (root EBS is too small for Chromium)
+# Store Docker images on the persistent data volume (root EBS is too small for Chromium)
 mkdir -p /data/docker /etc/docker
 cat > /etc/docker/daemon.json << 'DOCKERCFG'
 {

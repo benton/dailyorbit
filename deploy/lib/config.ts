@@ -10,12 +10,16 @@ export interface SeedConfig {
   apiCertificateArn: string;
   cloudfrontCertificateArn: string;
   vpcId: string | null;
+  availabilityZone: string;
   instanceType: string;
   keyPairName: string | null;
   dbSnapshotBucket: string;
   ecrRepositoryName: string;
   containerTag: string;
   healthCheckPath: string;
+  ebsVolumeSize: number;
+  ebsVolumeIops: number;
+  ebsVolumeThroughput: number;
   tags: Record<string, string>;
 }
 
@@ -26,6 +30,9 @@ const DEFAULTS: Partial<SeedConfig> = {
   ecrRepositoryName: 'daily-orbit',
   containerTag: 'latest',
   healthCheckPath: '/api/health',
+  ebsVolumeSize: 60,
+  ebsVolumeIops: 6000,
+  ebsVolumeThroughput: 500,
   tags: {
     Project: 'daily-orbit',
   },
@@ -36,6 +43,7 @@ const REQUIRED_FIELDS: (keyof SeedConfig)[] = [
   'domainName',
   'certificateArn',
   'dbSnapshotBucket',
+  'availabilityZone',
 ];
 
 export function loadSeedConfig(): SeedConfig {
