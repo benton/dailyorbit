@@ -30,7 +30,7 @@ const DEFAULTS: Partial<SeedConfig> = {
   ecrRepositoryName: 'daily-orbit',
   containerTag: 'latest',
   healthCheckPath: '/api/health',
-  ebsVolumeSize: 60,
+  ebsVolumeSize: 100,
   ebsVolumeIops: 6000,
   ebsVolumeThroughput: 500,
   tags: {
