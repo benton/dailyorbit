@@ -1532,7 +1532,7 @@ const STAGES: PipelineStage[] = [
         (a) => a.status === 'generated',
       ).length;
       if (generated === 0) {
-        ctx.log('warn', 'No generated articles — not marking complete');
+        ctx.log('error', 'No generated articles — not marking complete');
         return {
           itemsProcessed: 0,
           itemsFailed: 1,
