@@ -46,11 +46,11 @@ COPY --from=prod-deps /app/packages/server/node_modules ./packages/server/node_m
 # Install tini (lightweight init), Xvfb, and Chromium system deps
 RUN apt-get update \
  && apt-get install -y --no-install-recommends tini xvfb xauth poppler-utils \
- && npx playwright install-deps chromium \
+ && packages/server/node_modules/.bin/playwright install-deps chromium \
  && rm -rf /var/lib/apt/lists/*
 
 # Download Chromium browser binary (separate layer — ~180MB)
-RUN npx playwright install chromium
+RUN packages/server/node_modules/.bin/playwright install chromium
 
 # Built server bundle + package.json (needed for version at runtime)
 COPY --from=build /app/packages/server/dist ./packages/server/dist
