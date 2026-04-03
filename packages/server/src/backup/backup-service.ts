@@ -8,12 +8,21 @@ import {
   failBackupSnapshot,
 } from './repository.ts';
 import type { S3Uploader } from './s3-client.ts';
+import { runParquetExport } from './parquet-export-service.ts';
+
+export type ParquetExportConfig = {
+  bucket: string;
+  region: string;
+  prefix: string;
+};
 
 export type BackupServiceConfig = {
   conn: DuckDBConnection;
   uploader: S3Uploader;
   dbPath: string;
   snapshotPrefix: string;
+  /** If set, run a Parquet DR export after each successful snapshot. */
+  parquetExport?: ParquetExportConfig;
 };
 
 export type BackupService = {
@@ -68,6 +77,27 @@ export function createBackupService(
       const fullS3Key: string = `${config.snapshotPrefix}${s3Key}`;
       await completeBackupSnapshot(config.conn, id, fullS3Key, snapStat.size);
       log.info(`[backup] Snapshot ${s3Key} uploaded successfully`);
+
+      // 7. Parquet DR export (non-fatal — snapshot already succeeded)
+      if (config.parquetExport != null) {
+        try {
+          const result = await runParquetExport(
+            config.conn,
+            config.parquetExport,
+          );
+          log.info(
+            `[backup] Parquet export complete (${String(result.tablesExported)} tables)`,
+          );
+        } catch (parquetErr: unknown) {
+          const parquetMsg =
+            parquetErr instanceof Error
+              ? parquetErr.message
+              : String(parquetErr);
+          log.error(
+            `[backup] Parquet export failed (snapshot still succeeded): ${parquetMsg}`,
+          );
+        }
+      }
     } catch (err: unknown) {
       const msg: string = err instanceof Error ? err.message : String(err);
       log.error(`[backup] Snapshot failed: ${msg}`);

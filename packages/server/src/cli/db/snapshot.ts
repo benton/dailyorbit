@@ -55,6 +55,7 @@ export const snapshotCommand = defineCommand({
       uploader,
       dbPath,
       snapshotPrefix: prefix,
+      parquetExport: { bucket, region, prefix: 'parquet/' },
     });
 
     await service.runBackup('cli');

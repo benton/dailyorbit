@@ -48,6 +48,7 @@ async function getBackupService(): Promise<BackupService> {
     uploader,
     dbPath,
     snapshotPrefix: prefix,
+    parquetExport: { bucket, region, prefix: 'parquet/' },
   });
   return backupService;
 }
