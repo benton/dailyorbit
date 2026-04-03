@@ -7,6 +7,7 @@ import { trackConnection } from '../lib/graceful-shutdown.ts';
 import { ensureNewspaperTables } from './schema.ts';
 import {
   deleteEdition,
+  getAdjacentEditions,
   getArticlesByEdition,
   getEditionByDate,
   getHouseAdForDate,
@@ -112,6 +113,16 @@ newspaperRoutes.get('/edition/:date/news', async (c) => {
   });
 
   return c.json({ data: items });
+});
+
+/** GET /api/newspaper/edition/:date/adjacent — prev and next edition dates */
+newspaperRoutes.get('/edition/:date/adjacent', async (c) => {
+  const date: string = c.req.param('date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return c.json({ error: 'Invalid date format, expected YYYY-MM-DD' }, 400);
+  }
+  const result = await withConn((conn) => getAdjacentEditions(conn, date));
+  return c.json(result);
 });
 
 /** GET /api/newspaper/editions — paginated edition list */
