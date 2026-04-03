@@ -1536,6 +1536,120 @@ const STAGES: PipelineStage[] = [
       };
     },
   },
+
+  // ── Backup stages ───────────────────────────────────────────────────
+
+  {
+    id: 'backup.snapshot',
+    group: 'backup',
+    name: 'DB Snapshot',
+    description:
+      'Checkpoint the database and upload a full .duckdb snapshot to S3',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const start: number = Date.now();
+      const { getConfigService } = await import('../lib/config.ts');
+      const { getDb, getDbPath } = await import('../lib/db.ts');
+      const { createS3Uploader } = await import('../backup/s3-client.ts');
+      const { createBackupService } =
+        await import('../backup/backup-service.ts');
+      const { ensureBackupTables } = await import('../backup/schema.ts');
+
+      const config = getConfigService();
+      const bucket: string = String(config.get('snapshotBucket'));
+      const prefix: string = String(config.get('snapshotPrefix') ?? 'db/');
+      const region: string = String(
+        config.get('snapshotRegion') ?? 'us-east-2',
+      );
+
+      if (!bucket) {
+        ctx.log('info', 'snapshotBucket not configured — skipping DB snapshot');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      await getDb(); // ensure DB is initialised before getDbPath()
+      await ensureBackupTables(ctx.conn);
+      const uploader = createS3Uploader({ bucket, prefix, region });
+      const service = createBackupService({
+        conn: ctx.conn,
+        uploader,
+        dbPath: getDbPath(),
+        snapshotPrefix: prefix,
+      });
+
+      await service.runBackup('scheduled');
+      ctx.log('info', 'DB snapshot uploaded to S3');
+
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+        summary: `snapshot → s3://${bucket}/${prefix}`,
+      };
+    },
+  },
+
+  {
+    id: 'backup.export-parquet',
+    group: 'backup',
+    name: 'Parquet DR Export',
+    description:
+      'Export core tables to S3 as Parquet files for disaster recovery',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const start: number = Date.now();
+      const { getConfigService } = await import('../lib/config.ts');
+      const { runParquetExport } =
+        await import('../backup/parquet-export-service.ts');
+
+      const config = getConfigService();
+      const bucket: string = String(config.get('snapshotBucket'));
+      const region: string = String(
+        config.get('snapshotRegion') ?? 'us-east-2',
+      );
+      const prefix = 'parquet/';
+
+      if (!bucket) {
+        ctx.log(
+          'info',
+          'snapshotBucket not configured — skipping Parquet export',
+        );
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      const result = await runParquetExport(ctx.conn, {
+        bucket,
+        region,
+        prefix,
+        signal: ctx.signal,
+        onProgress: (exported, total) => ctx.onProgress(exported, total),
+      });
+
+      ctx.log(
+        'info',
+        `Exported ${String(result.tablesExported)} tables to s3://${bucket}/${prefix}`,
+      );
+
+      return {
+        itemsProcessed: result.tablesExported,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+        summary: `${String(result.tablesExported)} tables → s3://${bucket}/${prefix}`,
+      };
+    },
+  },
 ];
 
 // ── Groups ──────────────────────────────────────────────────────────
@@ -1575,6 +1689,11 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
     ],
   },
   { id: 'search', name: 'Search', stageIds: ['search.rebuild-index'] },
+  {
+    id: 'backup',
+    name: 'Backup',
+    stageIds: ['backup.snapshot', 'backup.export-parquet'],
+  },
   {
     id: 'alerts',
     name: 'Alerts',
