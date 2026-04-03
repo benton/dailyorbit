@@ -69,9 +69,9 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
   const [edition, setEdition] = useState<EditionWithArticles | null>(null);
   const [recentFilings, setRecentFilings] = useState<RecentFilingsResponse | null>(null);
   const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
-  const [adjacentDates, setAdjacentDates] = useState<{ prev: string | null; next: string | null }>({
-    prev: null,
+  const [adjacentDates, setAdjacentDates] = useState<{ next: string | null; prev: string | null }>({
     next: null,
+    prev: null,
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
       const [filings, news, adjacent] = await Promise.all([
         apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
         apiFetch<PaginatedNewsResponse>(`/api/newspaper/edition/${editionDate}/news`),
-        apiFetch<{ prev: string | null; next: string | null }>(
+        apiFetch<{ next: string | null; prev: string | null }>(
           `/api/newspaper/edition/${editionDate}/adjacent`,
         ),
       ]);

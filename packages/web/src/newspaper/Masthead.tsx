@@ -46,7 +46,7 @@ function roman(n: number): string {
   return result;
 }
 
-export default function Masthead({ editionDate, prevDate, nextDate }: MastheadProps) {
+export default function Masthead({ editionDate, nextDate, prevDate }: MastheadProps) {
   const navigate = useNavigate();
   const [emblemFailed, setEmblemFailed] = useState<boolean>(false);
 
