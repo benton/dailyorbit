@@ -1,5 +1,5 @@
 import { Clock, Pause, Play, RefreshCw, Zap } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '../../lib/api.ts';
 import { Button } from '../../ui/button.tsx';
 
@@ -65,6 +65,7 @@ export default function SchedulerPanel() {
   const [probeInterval, setProbeInterval] = useState<number>(60);
   const [refreshInterval, setRefreshInterval] = useState<number>(15);
   const [autoStart, setAutoStart] = useState<boolean>(false);
+  const initializedRef = useRef<boolean>(false);
 
   const fetchSchedulerStatus = useCallback(async () => {
     try {
@@ -72,8 +73,11 @@ export default function SchedulerPanel() {
         '/api/admin/pipeline/scheduler',
       );
       setStatus(data);
-      setProbeInterval(data.probeIntervalMs / 1000);
-      setRefreshInterval(data.refreshIntervalMs / 60_000);
+      if (!initializedRef.current) {
+        setProbeInterval(data.probeIntervalMs / 1000);
+        setRefreshInterval(data.refreshIntervalMs / 60_000);
+        initializedRef.current = true;
+      }
     } catch {
       // Scheduler endpoint may not exist yet
     } finally {
@@ -222,7 +226,8 @@ export default function SchedulerPanel() {
           <input
             className="w-14 rounded-theme border border-border-theme bg-surface-card px-1.5 py-0.5 text-xs"
             disabled={isRunning}
-            min={5}
+            max={refreshInterval * 60}
+            min={60}
             onChange={(e) => setProbeInterval(Number(e.target.value))}
             type="number"
             value={probeInterval}
