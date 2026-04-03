@@ -206,6 +206,10 @@
 }
 
 .masthead-dateline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   font-family: var(--np-font-body);
   font-size: 11px;
   font-variant: small-caps;
@@ -214,6 +218,33 @@
   margin-top: 0.5rem;
   border-top: 1px solid var(--np-sepia-medium);
   padding-top: 0.5rem;
+}
+
+.masthead-edition-nav {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--np-sepia-medium);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--np-sepia-medium);
+  font-family: var(--np-font-body);
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  cursor: pointer;
+  opacity: 0.15;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.masthead-edition-nav:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.masthead-edition-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Broadsheet Grid (>900px) ───────────────────────────────── */
