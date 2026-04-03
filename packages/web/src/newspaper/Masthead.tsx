@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import MastheadFilingVolume from './MastheadFilingVolume.tsx';
 import MastheadWeather from './MastheadWeather.tsx';
 import { libraryImageUrl } from './types.ts';
 
 type MastheadProps = {
   editionDate: string;
+  nextDate?: string | null;
+  prevDate?: string | null;
 };
 
 function formatDateLine(dateStr: string): string {
@@ -43,7 +46,8 @@ function roman(n: number): string {
   return result;
 }
 
-export default function Masthead({ editionDate }: MastheadProps) {
+export default function Masthead({ editionDate, prevDate, nextDate }: MastheadProps) {
+  const navigate = useNavigate();
   const [emblemFailed, setEmblemFailed] = useState<boolean>(false);
 
   return (
@@ -62,7 +66,29 @@ export default function Masthead({ editionDate }: MastheadProps) {
           />
         )}
         <p className="masthead-tagline">AI-Powered SatCom Industry Coverage</p>
-        <p className="masthead-dateline">{formatDateLine(editionDate)}</p>
+        <div className="masthead-dateline">
+          <button
+            aria-label="Previous edition"
+            className="masthead-edition-nav masthead-edition-nav--prev"
+            disabled={!prevDate}
+            onClick={() => prevDate && void navigate(`/newspaper/${prevDate}`)}
+            title="Previous edition"
+            type="button"
+          >
+            ← Prev
+          </button>
+          <span>{formatDateLine(editionDate)}</span>
+          <button
+            aria-label="Next edition"
+            className="masthead-edition-nav masthead-edition-nav--next"
+            disabled={!nextDate}
+            onClick={() => nextDate && void navigate(`/newspaper/${nextDate}`)}
+            title="Next edition"
+            type="button"
+          >
+            Next →
+          </button>
+        </div>
       </div>
       <div className="masthead-wing masthead-wing-right">
         <MastheadFilingVolume editionDate={editionDate} />

@@ -69,6 +69,10 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
   const [edition, setEdition] = useState<EditionWithArticles | null>(null);
   const [recentFilings, setRecentFilings] = useState<RecentFilingsResponse | null>(null);
   const [newsItems, setNewsItems] = useState<Array<NewsListItem>>([]);
+  const [adjacentDates, setAdjacentDates] = useState<{ prev: string | null; next: string | null }>({
+    prev: null,
+    next: null,
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState<boolean>(false);
@@ -83,12 +87,16 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
       setEdition(data);
 
       const editionDate: string = data.editionDate;
-      const [filings, news] = await Promise.all([
+      const [filings, news, adjacent] = await Promise.all([
         apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
         apiFetch<PaginatedNewsResponse>(`/api/newspaper/edition/${editionDate}/news`),
+        apiFetch<{ prev: string | null; next: string | null }>(
+          `/api/newspaper/edition/${editionDate}/adjacent`,
+        ),
       ]);
       setRecentFilings(filings);
       setNewsItems(news.data);
+      setAdjacentDates(adjacent);
     } catch (error) {
       if (latest && error instanceof ApiError && error.status === 404) {
         setNotFound(true);
@@ -149,7 +157,11 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
         </Link>
       )}
       <article className="newspaper">
-        <Masthead editionDate={edition.editionDate} />
+        <Masthead
+          editionDate={edition.editionDate}
+          nextDate={adjacentDates.next}
+          prevDate={adjacentDates.prev}
+        />
         <div className="newspaper-grid">
           {/* Row 1 */}
           {fakeAd ? <FakeAd article={fakeAd} /> : <div className="grid-fakead" />}
