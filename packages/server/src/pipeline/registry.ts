@@ -1486,6 +1486,75 @@ const STAGES: PipelineStage[] = [
     }),
   ),
   {
+    id: 'newspaper.finalize-edition',
+    group: 'newspaper',
+    name: 'Finalize Edition',
+    description:
+      'Mark edition as complete and auto-publish once all articles are generated',
+    defaultConcurrency: 1,
+    parallelizable: false,
+    async run(ctx: PipelineContext): Promise<StageResult> {
+      const { ensureNewspaperTables } = await import('../newspaper/schema.ts');
+      const {
+        getEditionByDate,
+        getArticlesByEdition,
+        updateEditionStatus,
+        publishEdition,
+      } = await import('../newspaper/repository.ts');
+      const start: number = Date.now();
+      await ensureNewspaperTables(ctx.conn);
+
+      const today: string = new Date().toISOString().split('T')[0]!;
+      const edition = await getEditionByDate(ctx.conn, today);
+      if (!edition) {
+        ctx.log('info', 'No edition for today — skipping finalize');
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      if (edition.status === 'complete') {
+        ctx.log('info', `Edition ${today} already complete`);
+        return {
+          itemsProcessed: 0,
+          itemsSkipped: 1,
+          itemsFailed: 0,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      // Check that at least some articles were generated
+      const articles = await getArticlesByEdition(ctx.conn, edition.id);
+      const generated: number = articles.filter(
+        (a) => a.status === 'generated',
+      ).length;
+      if (generated === 0) {
+        ctx.log('warn', 'No generated articles — not marking complete');
+        return {
+          itemsProcessed: 0,
+          itemsFailed: 1,
+          durationMs: Date.now() - start,
+        };
+      }
+
+      await updateEditionStatus(ctx.conn, edition.id, 'complete');
+      const published: boolean = await publishEdition(ctx.conn, today);
+      ctx.log(
+        'info',
+        `Edition ${today} marked complete (${String(generated)} articles)${published ? ' and published' : ''}`,
+      );
+
+      return {
+        itemsProcessed: 1,
+        itemsFailed: 0,
+        durationMs: Date.now() - start,
+      };
+    },
+  },
+  {
     id: 'newspaper.check-images',
     group: 'newspaper',
     name: 'Image Health Check',
@@ -1597,6 +1666,7 @@ export const PIPELINE_GROUPS: PipelineGroup[] = [
       'newspaper.slot-a',
       'newspaper.slot-b',
       'newspaper.slot-c',
+      'newspaper.finalize-edition',
       'newspaper.check-images',
     ],
   },
