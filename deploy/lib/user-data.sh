@@ -2,13 +2,17 @@
 set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
+export DATA_VOLUME_ID="{{DATA_VOLUME_ID}}"
+export REGION="{{REGION}}"
+export AWS_REGION="$REGION"
+export AWS_DEFAULT_REGION="$REGION"
 
 exec > >(tee /var/log/user-data.log) 2>&1
 echo "=== user-data start: $(date -u) ==="
 
 # ── Bootstrap: install AWS CLI ────────────────────────────────────────────────
 apt-get update -qq
-apt-get install -y unzip curl nvme-cli bpytop
+apt-get install -y unzip curl nvme-cli bpytop docker.io python3
 curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip
 unzip -qo /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install
@@ -31,13 +35,12 @@ INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
 aws ec2 associate-address \
   --instance-id "$INSTANCE_ID" \
   --allocation-id "{{EIP_ALLOCATION_ID}}" \
-  --region "{{REGION}}"
+  --region "$REGION"
 
 echo "EIP associated to $INSTANCE_ID"
 
 # ── Data Volume Setup ─────────────────────────────────────────────────────────
-DATA_VOLUME_ID="{{DATA_VOLUME_ID}}"
-DEVICE_PATH="/dev/xvdf"
+EBS_DEVICE="/dev/sdf"
 
 mkdir -pv /data
 
@@ -46,8 +49,8 @@ echo "Attaching EBS volume $DATA_VOLUME_ID..."
 aws ec2 attach-volume \
   --volume-id "$DATA_VOLUME_ID" \
   --instance-id "$INSTANCE_ID" \
-  --device "$DEVICE_PATH" \
-  --region "{{REGION}}"
+  --device "$EBS_DEVICE" \
+  --region "$REGION"
 
 # Wait for EBS volume attachment via AWS API (up to 60 seconds)
 # NOTE: Do NOT check /dev/nvme1n1 — r6gd instances have local NVMe instance
@@ -55,7 +58,7 @@ aws ec2 attach-volume \
 for i in $(seq 1 30); do
   state=$(aws ec2 describe-volumes \
     --volume-ids "$DATA_VOLUME_ID" \
-    --region "{{REGION}}" \
+    --region "$REGION" \
     --query "Volumes[0].Attachments[0].State" \
     --output text 2>/dev/null || echo "unknown")
   if [ "$state" = "attached" ]; then
@@ -66,28 +69,11 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-# On Nitro instances, /dev/xvdf maps to an NVMe device.
-# Identify it by matching the volume ID in the NVMe controller serial number.
-ACTUAL_DEVICE="$DEVICE_PATH"
-VOL_SHORT="${DATA_VOLUME_ID#vol-}"
-for nvme_dev in /dev/nvme*n1; do
-  [ -b "$nvme_dev" ] || continue
-  serial=$(nvme id-ctrl "$nvme_dev" -o json 2>/dev/null \
-    | python3 -c "import sys,json; print(json.load(sys.stdin).get('sn','').strip())" 2>/dev/null || true)
-  if echo "$serial" | grep -qi "$VOL_SHORT"; then
-    ACTUAL_DEVICE="$nvme_dev"
-    echo "Resolved $DATA_VOLUME_ID → $ACTUAL_DEVICE (serial: $serial)"
-    break
-  fi
-done
+# Mount the EBS volume
+FILESYSTEM_DEV="/dev/nvme2n1"
+mount "$FILESYSTEM_DEV" /data
+echo "Mounted $FILESYSTEM_DEV → /data: $(df -h /data | tail -1)"
 
-if [ "$ACTUAL_DEVICE" = "$DEVICE_PATH" ] && [ ! -b "$ACTUAL_DEVICE" ]; then
-  echo "ERROR: Could not resolve NVMe device for $DATA_VOLUME_ID — aborting"
-  exit 1
-fi
-
-mount "$ACTUAL_DEVICE" /data
-echo "Mounted $ACTUAL_DEVICE → /data: $(df -h /data | tail -1)"
 
 # If the database is missing (disaster recovery), restore from S3
 if [ ! -f /data/daily-orbit.duckdb ]; then
@@ -113,8 +99,8 @@ fi
 
 chown -R ubuntu:ubuntu /data
 
-# ── Install Docker, DuckDB CLI, Python/uv, and Launch Container ──────────────
-apt-get install -y docker.io python3
+# ── Install DuckDB CLI, Python/uv, and Launch Container ──────────────
+# apt-get install -y docker.io python3 ^^ moved to top
 curl -fsSL https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v1.5.1/duckdb_cli-linux-arm64.zip" \
   -o /tmp/duckdb.zip
@@ -133,7 +119,7 @@ DOCKERCFG
 systemctl enable docker
 systemctl start docker
 
-aws ecr get-login-password --region {{REGION}} | \
+aws ecr get-login-password --region $REGION | \
   docker login --username AWS --password-stdin {{ECR_URI}}
 
 docker pull {{ECR_URI}}:{{CONTAINER_TAG}}
