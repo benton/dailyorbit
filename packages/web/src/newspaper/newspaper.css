@@ -45,26 +45,6 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* ── Back-to-admin link ─────────────────────────────────────── */
-.newspaper-back {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 100;
-  font-family: var(--np-font-body);
-  font-size: 12px;
-  color: var(--np-sepia-light);
-  background: rgba(42, 37, 32, 0.85);
-  padding: 0.4rem 0.75rem;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.newspaper-back:hover {
-  color: var(--np-parchment);
-}
-
 /* ── Masthead ───────────────────────────────────────────────── */
 .masthead {
   display: grid;

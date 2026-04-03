@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import type {
   Article,
   EditionWithArticles,
@@ -151,11 +151,6 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
 
   return (
     <div className="newspaper-wrapper">
-      {!latest && (
-        <Link className="newspaper-back" to={`/admin/maintain/newspaper/${date}`}>
-          &larr; Back to Admin
-        </Link>
-      )}
       <article className="newspaper">
         <Masthead
           editionDate={edition.editionDate}
