@@ -4,7 +4,7 @@
 
 **Goal:** Reduce instance replacement downtime from ~8 minutes to ~10-30 seconds (Phase 1) and provide a fast disaster-recovery fallback that can serve queries in ~8 seconds even if the EBS volume is lost (Phase 2).
 
-**Architecture:** Phase 1 replaces ephemeral NVMe storage with a persistent EBS gp3 volume that survives spot instance replacement. Phase 2 adds a nightly Parquet export of core tables to S3, a fast `IMPORT` startup path, and background FTS/vector index rebuilding with a UI degraded-mode indicator.
+**Architecture:** Phase 1 replaces ephemeral NVMe storage with a persistent EBS gp3 volume that survives spot instance replacement — **this is the primary backup**. Normal instance replacement attaches the existing EBS volume in seconds with no restore needed. Phase 2 adds a nightly Parquet export of core tables to S3 as a **disaster recovery fallback only** (used when the EBS volume is lost or corrupted). When DR is needed, the fast `IMPORT` path restores core data in ~8 seconds, then FTS/vector indexes rebuild in the background with a UI degraded-mode indicator.
 
 **Tech Stack:** AWS CDK (TypeScript), DuckDB, Hono (API), React (frontend), `@aws-sdk/client-s3`
 
@@ -235,6 +235,8 @@ fi
 chown -R ubuntu:ubuntu /data
 ```
 
+**Restore priority:** On a healthy instance replacement, `NEEDS_RESTORE` will be `false` and `/data/daily-orbit.duckdb` will exist — the restore block is skipped entirely. The S3 restore path (full snapshot or Parquet) only runs when the volume is new or empty (disaster recovery scenario).
+
 **Also update the shutdown hook** — the existing `db-snapshot-on-shutdown` service should remain as-is (it snapshots to S3 for disaster recovery), but it no longer needs to be the primary recovery mechanism.
 
 **Verification:**
@@ -264,7 +266,9 @@ This is a lower priority than Tasks 1-3. The existing S3 snapshot mechanism prov
 
 ---
 
-## Phase 2: Parquet Export + Lazy Index Rebuild
+## Phase 2: Parquet Disaster Recovery Fallback + Lazy Index Rebuild
+
+> **Priority:** The EBS volume is the primary backup — it persists across instance replacements with no restore step. Tasks 5-6 are **disaster recovery only**: they are used when the EBS volume is lost or corrupted, not on normal instance replacement. Tasks 7-9 implement the degraded-mode UX needed during post-DR index rebuilding.
 
 ### Task 5: Add `db export-parquet` CLI Subcommand
 
@@ -317,7 +321,7 @@ Usage: `./daily-orbit db export-parquet [--database path] [--bucket name] [--pre
 
 **Step 3: Add to nightly pipeline**
 
-The backup scheduler should run `export-parquet` after the regular snapshot completes. This ensures the Parquet export is always up-to-date alongside the full `.duckdb` snapshot.
+The backup scheduler should run `export-parquet` after the regular snapshot completes. This keeps the S3 Parquet files current as a disaster recovery safety net — but they are not part of the normal boot path.
 
 **Verification:**
 1. Run `./daily-orbit db export-parquet` locally against `data/daily-orbit-for-querying.duckdb`
@@ -514,16 +518,17 @@ If the embedding table has rows but no HNSW index, rebuild it in the same backgr
 
 1. **Deploy Phase 1 (Tasks 1-3):** CDK changes + user-data.sh rewrite
    - First deploy: instance will still restore from S3 (EBS volume is new/empty)
-   - Subsequent instance replacements: EBS volume persists, no S3 download
+   - **All subsequent instance replacements: EBS volume persists — no S3 download, no restore**
    - Task 4 (EBS snapshots) can be done later via AWS Console
 
-2. **Deploy Phase 2 (Tasks 5-9):** Application changes
+2. **Deploy Phase 2 (Tasks 5-9):** Disaster recovery + degraded-mode UX
    - Merge Tasks 5-9 as a feature branch
-   - After deploy, run `./daily-orbit db export-parquet` once to seed S3 Parquet files
-   - Add to nightly pipeline schedule
-   - Test disaster recovery by creating a fresh EBS volume and verifying Parquet fast-restore
+   - After deploy, run `./daily-orbit db export-parquet` once to seed the S3 Parquet files
+   - Add `export-parquet` to the nightly pipeline schedule (runs after regular snapshot)
+   - Tasks 7-9 (index status, background rebuild, UI banner) are dormant in normal operation — they only activate when the server detects FTS indexes are missing (post-DR scenario)
+   - To verify disaster recovery end-to-end: snapshot the EBS volume, provision a fresh volume, start the instance, confirm Parquet fast-restore completes and UI shows degraded-mode banner until FTS indexes finish rebuilding
 
 ## Rollback Plan
 
 - Phase 1 rollback: Revert CDK to use NVMe + S3 restore (the old user-data.sh). The S3 snapshots continue running regardless.
-- Phase 2 rollback: The Parquet export is additive — it doesn't affect the existing snapshot mechanism. Simply don't use `import-parquet` on startup.
+- Phase 2 rollback: The Parquet export is purely additive — it doesn't affect the normal boot path (EBS volume) or the existing full `.duckdb` snapshot mechanism. Simply stop running `export-parquet` in the nightly pipeline. The `import-parquet` command is only invoked explicitly during disaster recovery, never on normal startup.
