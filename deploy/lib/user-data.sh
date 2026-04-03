@@ -39,6 +39,8 @@ echo "EIP associated to $INSTANCE_ID"
 DATA_VOLUME_ID="{{DATA_VOLUME_ID}}"
 DEVICE_PATH="/dev/xvdf"
 
+mkdir -pv /data
+
 # Attach the persistent EBS volume
 echo "Attaching EBS volume $DATA_VOLUME_ID..."
 aws ec2 attach-volume \
@@ -47,12 +49,20 @@ aws ec2 attach-volume \
   --device "$DEVICE_PATH" \
   --region "{{REGION}}"
 
-# Wait for attachment (up to 60 seconds)
+# Wait for EBS volume attachment via AWS API (up to 60 seconds)
+# NOTE: Do NOT check /dev/nvme1n1 — r6gd instances have local NVMe instance
+# store at nvme1n1 which causes a false-positive before the EBS volume attaches.
 for i in $(seq 1 30); do
-  if [ -b "$DEVICE_PATH" ] || [ -b "/dev/nvme1n1" ]; then
-    echo "Volume attached"
+  state=$(aws ec2 describe-volumes \
+    --volume-ids "$DATA_VOLUME_ID" \
+    --region "{{REGION}}" \
+    --query "Volumes[0].Attachments[0].State" \
+    --output text 2>/dev/null || echo "unknown")
+  if [ "$state" = "attached" ]; then
+    echo "Volume $DATA_VOLUME_ID attached"
     break
   fi
+  echo "Waiting for attachment (state: $state)..."
   sleep 2
 done
 
@@ -71,37 +81,27 @@ for nvme_dev in /dev/nvme*n1; do
   fi
 done
 
-# Format if new (no filesystem), otherwise mount existing
-if ! blkid "$ACTUAL_DEVICE" >/dev/null 2>&1; then
-  echo "New volume detected — formatting as ext4"
-  mkfs.ext4 -L daily-orbit-data "$ACTUAL_DEVICE"
-  NEEDS_RESTORE=true
-else
-  echo "Existing filesystem found"
-  NEEDS_RESTORE=false
+if [ "$ACTUAL_DEVICE" = "$DEVICE_PATH" ] && [ ! -b "$ACTUAL_DEVICE" ]; then
+  echo "ERROR: Could not resolve NVMe device for $DATA_VOLUME_ID — aborting"
+  exit 1
 fi
 
-mkdir -p /data
 mount "$ACTUAL_DEVICE" /data
+echo "Mounted $ACTUAL_DEVICE → /data: $(df -h /data | tail -1)"
 
-# If the volume is empty (first boot or disaster), restore from S3
-if [ "$NEEDS_RESTORE" = true ] || [ ! -f /data/daily-orbit.duckdb ]; then
+# If the database is missing (disaster recovery), restore from S3
+if [ ! -f /data/daily-orbit.duckdb ]; then
   echo "No database found on volume — restoring from S3..."
 
-  # Try Parquet fast-restore first (Phase 2), fall back to full snapshot
-  if [ -f /data/parquet-restore.sh ]; then
-    bash /data/parquet-restore.sh
-  else
-    DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" --recursive \
-      | grep -oE 'db/[0-9]{8}-[0-9]{4}\.duckdb$' \
-      | sort | tail -1)
+  DB_SNAPSHOT=$(aws s3 ls "s3://{{DB_SNAPSHOT_BUCKET}}/db/" --recursive \
+    | grep -oE 'db/[0-9]{8}-[0-9]{4}\.duckdb$' \
+    | sort | tail -1)
 
-    if [ -n "$DB_SNAPSHOT" ]; then
-      echo "Restoring snapshot: $DB_SNAPSHOT"
-      aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
-    else
-      echo "WARNING: No snapshot found — container will initialize fresh database"
-    fi
+  if [ -n "$DB_SNAPSHOT" ]; then
+    echo "Restoring snapshot: $DB_SNAPSHOT"
+    aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/${DB_SNAPSHOT}" /data/daily-orbit.duckdb
+  else
+    echo "WARNING: No snapshot found — container will initialize fresh database"
   fi
 
   aws s3 cp "s3://{{DB_SNAPSHOT_BUCKET}}/db/daily-orbit.key" /data/daily-orbit.key \
