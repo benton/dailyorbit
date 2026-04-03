@@ -1,6 +1,16 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import DOMPurify from 'dompurify';
-import { Bookmark, ChevronDown, ChevronRight, Eye, EyeOff, Flag, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  Bookmark,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Flag,
+  Search,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
@@ -956,6 +966,146 @@ function buildEarthStationQueryString(
   return parts.join('&');
 }
 
+// ── Index status types and hook ──────────────────────────────────────
+
+type IndexStatusEntry = {
+  error: string | null;
+  lastRebuiltAt: string | null;
+  ready: boolean;
+  rebuilding: boolean;
+};
+
+type IndexStatuses = Record<string, IndexStatusEntry>;
+
+const FTS_INDEX_NAMES = ['fts_filing', 'fts_attachment', 'fts_pleading', 'fts_news_item'];
+
+function useIndexStatus(): {
+  anyFtsNotReady: boolean;
+  anyVectorNotReady: boolean;
+  statuses: IndexStatuses | null;
+} {
+  const [statuses, setStatuses] = useState<IndexStatuses | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const data = await apiFetch<IndexStatuses>('/api/search/index-status');
+        if (!cancelled) {
+          setStatuses(data);
+        }
+      } catch {
+        // Silently ignore — degraded-mode banner is non-critical
+      }
+    }
+
+    void poll();
+
+    // Schedule next poll: fast (10s) if any index not ready, slow (60s) otherwise
+    function schedule() {
+      const interval =
+        statuses != null && Object.values(statuses).some((s) => !s.ready || s.rebuilding)
+          ? 10_000
+          : 60_000;
+      return setTimeout(async () => {
+        if (!cancelled) {
+          await poll();
+          if (!cancelled) {
+            timer = schedule();
+          }
+        }
+      }, interval);
+    }
+
+    let timer = schedule();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const anyFtsNotReady =
+    statuses != null &&
+    FTS_INDEX_NAMES.some((name) => {
+      const s = statuses[name];
+      return s != null && (!s.ready || s.rebuilding);
+    });
+
+  const anyVectorNotReady =
+    statuses != null &&
+    statuses['vector'] != null &&
+    (!statuses['vector'].ready || statuses['vector'].rebuilding);
+
+  return { anyFtsNotReady, anyVectorNotReady, statuses };
+}
+
+// ── IndexRebuildBanner component ─────────────────────────────────────
+
+function IndexRebuildBanner({
+  anyFtsNotReady,
+  anyVectorNotReady,
+  statuses,
+}: {
+  anyFtsNotReady: boolean;
+  anyVectorNotReady: boolean;
+  statuses: IndexStatuses | null;
+}) {
+  const [dismissed, setDismissed] = useState<boolean>(false);
+
+  if (statuses == null || dismissed || (!anyFtsNotReady && !anyVectorNotReady)) {
+    return null;
+  }
+
+  const rebuilding: Array<string> = FTS_INDEX_NAMES.filter((name) => {
+    const s = statuses[name];
+    return s != null && (!s.ready || s.rebuilding);
+  }).map((name) => name.replace('fts_', '').replace('_', ' '));
+  if (anyVectorNotReady) {
+    rebuilding.push('vector');
+  }
+
+  const available: Array<string> = [];
+  if (!anyFtsNotReady) {
+    available.push('keyword');
+  }
+  if (!anyVectorNotReady) {
+    available.push('semantic');
+  }
+  if (!anyFtsNotReady && !anyVectorNotReady) {
+    available.push('hybrid');
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-theme border border-yellow-400/40 bg-yellow-50/80 px-4 py-3 text-sm dark:border-yellow-500/30 dark:bg-yellow-900/20">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
+      <div className="flex-1 space-y-0.5">
+        <p className="font-medium text-yellow-800 dark:text-yellow-300">
+          Search indexes are being rebuilt. Some search modes are temporarily unavailable.
+        </p>
+        {available.length > 0 && (
+          <p className="text-yellow-700 dark:text-yellow-400">Available: {available.join(', ')}</p>
+        )}
+        {rebuilding.length > 0 && (
+          <p className="text-yellow-700 dark:text-yellow-400">
+            Rebuilding: {rebuilding.join(', ')}
+          </p>
+        )}
+      </div>
+      <button
+        aria-label="Dismiss"
+        className="shrink-0 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200"
+        onClick={() => setDismissed(true)}
+        type="button"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 // ── Main SearchPage component ────────────────────────────────────────
 
 export default function SearchPage() {
@@ -968,6 +1118,9 @@ export default function SearchPage() {
 
   // Filter panel collapsed state
   const [filtersOpen, setFiltersOpen] = useState<boolean>(true);
+
+  // Index rebuild status
+  const { anyFtsNotReady, anyVectorNotReady, statuses: indexStatuses } = useIndexStatus();
 
   // Content search state
   const [contentQuery, setContentQuery] = useState<string>('');
@@ -1494,6 +1647,13 @@ export default function SearchPage() {
         <h1 className="text-2xl font-bold text-on-surface">Search</h1>
       </div>
 
+      {/* Degraded-mode banner — shown when FTS or vector indexes are rebuilding */}
+      <IndexRebuildBanner
+        anyFtsNotReady={anyFtsNotReady}
+        anyVectorNotReady={anyVectorNotReady}
+        statuses={indexStatuses}
+      />
+
       {/* Content search bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -1515,9 +1675,15 @@ export default function SearchPage() {
           onChange={(e) => setSearchMode(e.target.value as 'keyword' | 'semantic' | 'hybrid')}
           value={searchMode}
         >
-          <option value="keyword">Keyword</option>
-          <option value="semantic">Semantic</option>
-          <option value="hybrid">Hybrid</option>
+          <option disabled={anyFtsNotReady} value="keyword">
+            {anyFtsNotReady ? 'Keyword (rebuilding…)' : 'Keyword'}
+          </option>
+          <option disabled={anyVectorNotReady} value="semantic">
+            {anyVectorNotReady ? 'Semantic (rebuilding…)' : 'Semantic'}
+          </option>
+          <option disabled={anyFtsNotReady || anyVectorNotReady} value="hybrid">
+            {anyFtsNotReady || anyVectorNotReady ? 'Hybrid (rebuilding…)' : 'Hybrid'}
+          </option>
         </select>
       </div>
 

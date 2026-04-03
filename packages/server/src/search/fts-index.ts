@@ -1,11 +1,19 @@
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { getConfigValue, setConfigValue } from '../lib/config-repository.ts';
 import { getLogger } from '../lib/logger.ts';
+import {
+  type IndexName,
+  setIndexError,
+  setIndexNotReady,
+  setIndexReady,
+  setIndexRebuilding,
+} from './index-status.ts';
 
 type FtsIndexDef = {
   table: string;
   keyColumn: string;
   textColumns: string[];
+  indexName: IndexName;
 };
 
 const FTS_INDEXES: ReadonlyArray<FtsIndexDef> = [
@@ -13,21 +21,25 @@ const FTS_INDEXES: ReadonlyArray<FtsIndexDef> = [
     table: 'filing',
     keyColumn: 'file_number',
     textColumns: ['description', 'brief_description'],
+    indexName: 'fts_filing',
   },
   {
     table: 'attachment',
     keyColumn: 'attachment_key',
     textColumns: ['full_text', 'summary'],
+    indexName: 'fts_attachment',
   },
   {
     table: 'pleading',
     keyColumn: 'pleading_key',
     textColumns: ['filer_name', 'exhibit_attachment_html'],
+    indexName: 'fts_pleading',
   },
   {
     table: 'news_item',
     keyColumn: 'id',
     textColumns: ['title', 'full_text', 'summary'],
+    indexName: 'fts_news_item',
   },
 ];
 
@@ -81,6 +93,7 @@ export async function rebuildAllFtsIndexes(
     const cols: string = def.textColumns
       .map((c: string) => `'${c}'`)
       .join(', ');
+    setIndexRebuilding(def.indexName);
     try {
       await conn.run(`
         PRAGMA create_fts_index(
@@ -92,6 +105,7 @@ export async function rebuildAllFtsIndexes(
           overwrite = 1
         )
       `);
+      setIndexReady(def.indexName);
     } catch (err: unknown) {
       const msg: string = err instanceof Error ? err.message : String(err);
       // Skip if table/column doesn't exist (common in test environments)
@@ -100,7 +114,9 @@ export async function rebuildAllFtsIndexes(
         msg.includes('does not exist')
       ) {
         getLogger().warn(`FTS index skipped for ${def.table}: ${msg}`);
+        setIndexReady(def.indexName);
       } else {
+        setIndexError(def.indexName, msg);
         throw err;
       }
     }
@@ -113,4 +129,51 @@ export async function rebuildAllFtsIndexes(
   }
 
   return { skipped: false };
+}
+
+/**
+ * Check whether all FTS schemas exist in the database.
+ * Returns false if any are missing (e.g. after a Parquet disaster-recovery restore).
+ */
+export async function ftsIndexesExist(
+  conn: DuckDBConnection,
+): Promise<boolean> {
+  const result = await conn.runAndReadAll(`
+    SELECT COUNT(*) AS cnt
+    FROM information_schema.schemata
+    WHERE schema_name LIKE 'fts_main_%'
+  `);
+  const cnt = Number(
+    (result.getRowObjectsJS()[0] as { cnt: number } | undefined)?.cnt ?? 0,
+  );
+  return cnt >= FTS_INDEXES.length;
+}
+
+/**
+ * Mark all FTS indexes as not ready (used when FTS schemas are missing on startup).
+ */
+export function markFtsIndexesNotReady(): void {
+  for (const def of FTS_INDEXES) {
+    setIndexNotReady(def.indexName);
+  }
+}
+
+/**
+ * Rebuild all FTS indexes in the background. The server should already be
+ * serving requests before this is called. Updates index-status as it goes.
+ */
+export async function rebuildFtsInBackground(
+  conn: DuckDBConnection,
+  db: DuckDBInstance,
+): Promise<void> {
+  const log = getLogger();
+  try {
+    log.info('Background FTS rebuild starting');
+    await rebuildAllFtsIndexes(conn, db, true);
+    log.info('Background FTS rebuild complete');
+  } catch (err: unknown) {
+    const msg: string = err instanceof Error ? err.message : String(err);
+    log.error({ error: msg }, 'Background FTS rebuild failed');
+    // Individual index errors are already set by rebuildAllFtsIndexes
+  }
 }

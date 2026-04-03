@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import type { PaginatedRequest } from '../lib/pagination.ts';
 import { getDb } from '../lib/db.ts';
 import { getConfigService } from '../lib/config.ts';
+import { getAllIndexStatuses } from './index-status.ts';
 import { BedrockClient } from '../inference/bedrock-client.ts';
 import { InstrumentedBedrockClient } from '../inference/instrumented-client.ts';
 import { EmbeddingService } from '../inference/embedding-service.ts';
@@ -71,6 +72,11 @@ function getEmbeddingContext(): EmbeddingContext | undefined {
     return undefined;
   }
 }
+
+// GET /api/search/index-status
+searchRoutes.get('/index-status', (c) => {
+  return c.json(getAllIndexStatuses());
+});
 
 // GET /api/search/filings
 searchRoutes.get('/filings', async (c) => {

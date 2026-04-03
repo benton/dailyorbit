@@ -264,5 +264,31 @@ export const serveApiCommand = defineCommand({
         log.info({ port, version }, 'Server started');
       });
     }
+
+    // Check for missing FTS indexes (e.g. after a Parquet disaster-recovery restore)
+    // and trigger a background rebuild if needed. The server is already serving by now.
+    try {
+      const {
+        ftsIndexesExist,
+        markFtsIndexesNotReady,
+        rebuildFtsInBackground,
+      } = await import('../../search/fts-index.ts');
+      const { DuckDBConnection: DuckDBConn } = await import('@duckdb/node-api');
+      const checkConn = await DuckDBConn.create(db);
+      const exist = await ftsIndexesExist(checkConn);
+      checkConn.closeSync();
+      if (!exist) {
+        log.warn('FTS indexes missing — starting background rebuild');
+        markFtsIndexesNotReady();
+        const rebuildConn = await DuckDBConn.create(db);
+        void rebuildFtsInBackground(rebuildConn, db);
+      }
+    } catch (err: unknown) {
+      const msg: string = err instanceof Error ? err.message : String(err);
+      log.warn(
+        { error: msg },
+        'FTS index check failed — skipping background rebuild',
+      );
+    }
   },
 });
