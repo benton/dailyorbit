@@ -94,6 +94,24 @@ export async function getEditionByDate(
   return rowToEdition(rows[0]!);
 }
 
+export async function getAdjacentEditions(
+  conn: DuckDBConnection,
+  date: string,
+): Promise<{ prev: string | null; next: string | null }> {
+  const reader = await conn.runAndReadAll(
+    `SELECT
+       MAX(CASE WHEN edition_date < CAST(? AS DATE) THEN CAST(edition_date AS VARCHAR) END) AS prev,
+       MIN(CASE WHEN edition_date > CAST(? AS DATE) THEN CAST(edition_date AS VARCHAR) END) AS next
+     FROM newspaper_edition`,
+    [date, date] as DuckDBValue[],
+  );
+  const row = reader.getRowObjectsJS()[0] as Record<string, unknown>;
+  return {
+    prev: row.prev != null ? String(row.prev).slice(0, 10) : null,
+    next: row.next != null ? String(row.next).slice(0, 10) : null,
+  };
+}
+
 export async function getLatestEdition(
   conn: DuckDBConnection,
 ): Promise<NewspaperEdition | null> {

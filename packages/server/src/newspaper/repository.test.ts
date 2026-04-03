@@ -5,6 +5,7 @@ import {
   countImagesByType,
   deleteEdition,
   ensureEdition,
+  getAdjacentEditions,
   getArticle,
   getArticlesByEdition,
   getEditionByDate,
@@ -93,6 +94,40 @@ describe('newspaper repository', () => {
 
       const latest = await getLatestEdition(conn);
       expect(latest!.editionDate).toContain('2026-03-24');
+    });
+  });
+
+  describe('getAdjacentEditions', () => {
+    it('returns prev and next dates when neighbours exist', async () => {
+      await ensureEdition(conn, '2026-03-25');
+      await ensureEdition(conn, '2026-03-26');
+      await ensureEdition(conn, '2026-03-27');
+
+      const result = await getAdjacentEditions(conn, '2026-03-26');
+      expect(result).toEqual({ prev: '2026-03-25', next: '2026-03-27' });
+    });
+
+    it('returns null for prev when it is the oldest edition', async () => {
+      await ensureEdition(conn, '2026-03-25');
+      await ensureEdition(conn, '2026-03-26');
+
+      const result = await getAdjacentEditions(conn, '2026-03-25');
+      expect(result).toEqual({ prev: null, next: '2026-03-26' });
+    });
+
+    it('returns null for next when it is the newest edition', async () => {
+      await ensureEdition(conn, '2026-03-25');
+      await ensureEdition(conn, '2026-03-26');
+
+      const result = await getAdjacentEditions(conn, '2026-03-26');
+      expect(result).toEqual({ prev: '2026-03-25', next: null });
+    });
+
+    it('returns null for both when only one edition exists', async () => {
+      await ensureEdition(conn, '2026-03-26');
+
+      const result = await getAdjacentEditions(conn, '2026-03-26');
+      expect(result).toEqual({ prev: null, next: null });
     });
   });
 
