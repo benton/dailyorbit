@@ -61,7 +61,7 @@ Other endpoints:
 
 ## Scheduled Backups
 
-A `BackupScheduler` exists in `packages/server/src/backup/scheduler.ts` but is **not yet wired into the server startup**. When enabled, it will read `snapshotIntervalMinutes` from config and call `runBackup('scheduled')` on that interval, skipping if a backup is already in progress.
+The `BackupScheduler` (`packages/server/src/backup/scheduler.ts`) starts automatically on server startup when `snapshotIntervalMinutes > 0`. It reads that value from config and calls `runBackup('scheduled')` on the interval, skipping runs if a backup is already in progress.
 
 ## S3 Layout
 
@@ -99,8 +99,52 @@ The `backup_snapshot` table tracks every backup attempt:
 | `packages/server/src/backup/schema.ts` | Table DDL |
 | `packages/server/src/backup/routes.ts` | Admin API endpoints |
 | `packages/server/src/backup/scheduler.ts` | Interval-based scheduler |
-| `packages/server/src/cli/db/snapshot.ts` | CLI command |
+| `packages/server/src/cli/db/snapshot.ts` | CLI snapshot command |
+| `packages/server/src/cli/db/export-parquet.ts` | CLI Parquet export (DR) |
+| `packages/server/src/cli/db/import-parquet.ts` | CLI Parquet import (DR) |
+| `packages/server/src/search/index-status.ts` | In-memory FTS/vector index readiness registry |
 | `packages/web/src/admin/BackupsPage.tsx` | Admin UI page |
+
+## Parquet Disaster Recovery (Phase 2)
+
+In addition to full `.duckdb` snapshots, the app provides a fast disaster-recovery path via Parquet exports. This is a **fallback only** — used when the EBS persistent volume is lost or corrupted, not on normal instance replacement.
+
+### Export
+
+```bash
+./daily-orbit db export-parquet --database data/daily-orbit.duckdb --keyFile data/daily-orbit.key
+```
+
+Exports every `main`-schema base table to S3 as individual Parquet files, plus `schema.sql` (DDL) and `_manifest.json` (table list, row counts, timestamp). Uses the `snapshotBucket` and `snapshotRegion` config values by default; override with `--bucket` and `--prefix`.
+
+**S3 layout** (default prefix `parquet/`):
+```
+s3://daily-orbit-storage/parquet/_manifest.json
+s3://daily-orbit-storage/parquet/schema.sql
+s3://daily-orbit-storage/parquet/filing.parquet
+s3://daily-orbit-storage/parquet/attachment.parquet
+...
+```
+
+Run after each regular snapshot to keep DR files current.
+
+### Import (disaster recovery)
+
+```bash
+./daily-orbit db import-parquet --database data/daily-orbit.duckdb --keyFile data/daily-orbit.key
+```
+
+Downloads `_manifest.json` and `schema.sql` from S3, creates a fresh database, recreates all tables, and bulk-loads each table from its Parquet file. Completes in ~8 seconds for ~4-5 GiB of core data. **FTS and vector indexes are not included** — they rebuild in the background after the server starts.
+
+### Background Index Rebuild
+
+When the API server starts and detects that FTS schemas are missing (e.g. after a Parquet DR restore), it:
+
+1. Marks all FTS indexes as `not ready` in an in-memory registry
+2. Starts serving requests immediately
+3. Rebuilds all FTS indexes in the background
+
+The search page shows a degraded-mode banner during rebuild. FTS search modes (`keyword`, `hybrid`) are disabled with a `(rebuilding…)` label until complete. The status endpoint is `GET /api/search/index-status`.
 
 ## Coexistence with Cron Script
 
