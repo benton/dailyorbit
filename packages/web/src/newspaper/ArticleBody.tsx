@@ -12,10 +12,13 @@ export default function ArticleBody({ body, className, dropCap, headline }: Arti
     .filter(Boolean)
     .join(' ');
 
+  // Strip leading markdown heading — the layout already renders the section header
+  const stripped: string = body.replace(/^#+\s+.*\n+/, '');
+
   return (
     <div className={classes}>
       {headline && <h2 className="article-headline">{headline}</h2>}
-      <Markdown>{body}</Markdown>
+      <Markdown>{stripped}</Markdown>
     </div>
   );
 }
