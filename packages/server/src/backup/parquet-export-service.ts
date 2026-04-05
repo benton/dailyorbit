@@ -29,6 +29,7 @@ export async function runParquetExport(
   const { bucket, region, prefix, onProgress, signal } = options;
 
   await conn.run(`INSTALL httpfs; LOAD httpfs;`);
+  await conn.run(`INSTALL aws; LOAD aws;`);
   await conn.run(
     `SET s3_region = '${region}'; SET s3_use_credential_chain = 'true';`,
   );

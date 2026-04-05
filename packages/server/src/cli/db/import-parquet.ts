@@ -141,6 +141,7 @@ export const importParquetCommand = defineCommand({
 
     // 5. Configure S3 access for COPY FROM
     await conn.run(`INSTALL httpfs; LOAD httpfs;`);
+    await conn.run(`INSTALL aws; LOAD aws;`);
     await conn.run(
       `SET s3_region = '${region}'; SET s3_use_credential_chain = 'true';`,
     );
