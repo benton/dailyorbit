@@ -113,8 +113,8 @@ export default function PublicLayout() {
           <NavLink label="Dashboard" to="/dashboard" />
           <NavLink label="Search" to="/search" />
           <NavLink label="News" to="/news" />
-          {isAuthenticated && <NavLink label="Chat" to="/chat" />}
-          {isAuthenticated && <AlertBadge />}
+          <NavLink label="Chat" to="/chat" />
+          {isAuthenticated ? <AlertBadge /> : <NavLink label="Alerts" to="/alerts" />}
           <div className="ml-auto flex items-center gap-3">
             <ThemeToggle />
             <button
