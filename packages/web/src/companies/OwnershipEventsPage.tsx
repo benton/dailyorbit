@@ -118,7 +118,7 @@ export default function OwnershipEventsPage() {
       ) : events.length === 0 ? (
         <p className="text-sm text-on-surface-muted">No ownership events found.</p>
       ) : (
-        <div className="rounded-md border border-border-theme bg-white dark:border-border-theme dark:bg-on-surface">
+        <div className="rounded-md border border-border-theme bg-white dark:border-border-theme dark:bg-surface-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

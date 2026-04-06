@@ -119,7 +119,7 @@ export function FilingTimeline({ events }: { events: Array<TimelineEvent> }) {
   return (
     <section>
       <h2 className="mb-3 text-lg font-semibold text-on-surface">Timeline</h2>
-      <div className="rounded-md border border-border-theme bg-white p-4 dark:border-border-theme dark:bg-on-surface">
+      <div className="rounded-md border border-border-theme bg-white p-4 dark:border-border-theme dark:bg-surface-card">
         <div ref={chartRef} />
         {rendered && <TimelineLegend events={events} />}
       </div>

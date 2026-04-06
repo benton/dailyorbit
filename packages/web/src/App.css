@@ -46,6 +46,31 @@
     --do-border: rgb(64, 64, 64);
     --do-accent: #f472b6;
   }
+
+  /* Override white backgrounds inside vgplot SVGs */
+  :root:not([data-theme='broadsheet']) .plot svg > rect[fill='white'] {
+    fill: var(--do-bg-card);
+  }
+
+  /* Ensure vgplot axis labels and ticks are visible */
+  :root:not([data-theme='broadsheet']) .plot svg text {
+    fill: var(--do-text-muted);
+  }
+
+  :root:not([data-theme='broadsheet']) .plot svg [aria-label='x-axis tick'] line,
+  :root:not([data-theme='broadsheet']) .plot svg [aria-label='y-axis tick'] line {
+    stroke: var(--do-border);
+  }
+
+  /* Observable Plot tooltip dark mode */
+  :root:not([data-theme='broadsheet']) .plot svg [aria-label='tip'] rect {
+    fill: var(--do-bg-card) !important;
+    stroke: var(--do-border) !important;
+  }
+
+  :root:not([data-theme='broadsheet']) .plot svg [aria-label='tip'] text {
+    fill: var(--do-text) !important;
+  }
 }
 
 /* ── Broadsheet theme ── */

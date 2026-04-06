@@ -57,7 +57,7 @@ export default function ChatInput({
   }, []);
 
   return (
-    <div className="border-t border-border-theme bg-white p-3 dark:border-border-theme dark:bg-on-surface">
+    <div className="border-t border-border-theme bg-white p-3 dark:border-border-theme dark:bg-surface-card">
       <div className="mx-auto max-w-3xl">
         <div className="mb-2">
           <ConsultantSelector
