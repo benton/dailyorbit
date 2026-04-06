@@ -19,7 +19,9 @@ export function SubscribeDialog({ message, onClose, open }: SubscribeDialogProps
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
+        if (!nextOpen) {
+          onClose();
+        }
       }}
       open={open}
     >

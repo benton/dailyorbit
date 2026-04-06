@@ -25,6 +25,13 @@ export default function ChatPage() {
   );
 }
 
+const CANNED_REPLIES: Array<string> = [
+  "Sorry, Dear Reader. You'll have to [become a subscriber](/about) to chat with our editorial staff.",
+  "I'd love to help, but my editor says [subscribers only](/about). Head to our About page to learn more!",
+  'This conversation requires a [subscription](/about). Our editorial team is standing by for subscribers!',
+  'No freeloaders at the press desk! [Subscribe](/about) to unlock full access to our consultants.',
+];
+
 function ChatPageInner() {
   const [consultants, setConsultants] = useState<Array<Consultant>>([]);
   const [conversations, setConversations] = useState<Array<Conversation>>([]);
@@ -37,13 +44,6 @@ function ChatPageInner() {
   const { toast } = useToast();
   const { cancel, reset, sendMessage, state: streamState } = useChatStream();
   const { isAuthenticated } = useAuth();
-
-  const cannedReplies: Array<string> = [
-    "Sorry, Dear Reader. You'll have to [become a subscriber](/about) to chat with our editorial staff.",
-    "I'd love to help, but my editor says [subscribers only](/about). Head to our About page to learn more!",
-    'This conversation requires a [subscription](/about). Our editorial team is standing by for subscribers!',
-    'No freeloaders at the press desk! [Subscribe](/about) to unlock full access to our consultants.',
-  ];
   const cannedReplyIndex = useRef<number>(0);
 
   // Build consultant lookup map
@@ -217,7 +217,7 @@ function ChatPageInner() {
       };
 
       // Pick next canned reply in rotation
-      const reply: string = cannedReplies[cannedReplyIndex.current % cannedReplies.length]!;
+      const reply: string = CANNED_REPLIES[cannedReplyIndex.current % CANNED_REPLIES.length]!;
       cannedReplyIndex.current += 1;
 
       const assistantMsg: Message = {

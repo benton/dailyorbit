@@ -16,34 +16,34 @@ import { libraryImageUrl } from '../newspaper/types.ts';
 
 const features = [
   {
+    desc: 'Every international and satellite filing, comment, and attachment — fully indexed and searchable.',
     icon: Database,
     title: 'Complete FCC IBFS Archive',
-    desc: 'Every international and satellite filing, comment, and attachment — fully indexed and searchable.',
   },
   {
+    desc: 'LLM-generated summaries of every document and filing timeline, powered by multi-model inference.',
     icon: Bot,
     title: 'AI-Powered Summaries',
-    desc: 'LLM-generated summaries of every document and filing timeline, powered by multi-model inference.',
   },
   {
+    desc: 'BM25 keyword and semantic vector search across every FCC IBFS filing ever submitted.',
     icon: Search,
     title: 'Full-Text Keyword & Vector Search',
-    desc: 'BM25 keyword and semantic vector search across every FCC IBFS filing ever submitted.',
   },
   {
+    desc: 'Save searches, enable alerts, and receive email notifications when new filings match.',
     icon: Bell,
     title: 'Real-Time Alerts',
-    desc: 'Save searches, enable alerts, and receive email notifications when new filings match.',
   },
   {
+    desc: 'Ask questions and get answers grounded in the actual filing data, with cited sources.',
     icon: MessageSquare,
     title: 'RAG-powered Chat Consultants',
-    desc: 'Ask questions and get answers grounded in the actual filing data, with cited sources.',
   },
   {
+    desc: 'AI-written articles, editorials, and news summaries generated fresh each day.',
     icon: Newspaper,
     title: 'Automated Daily Newspaper',
-    desc: 'AI-written articles, editorials, and news summaries generated fresh each day.',
   },
 ];
 
@@ -95,7 +95,12 @@ export default function AboutPage() {
         <p className="mt-2 text-sm text-on-surface-muted">
           <em>
             – by{' '}
-            <a href="https://bentonroberts.com" className="text-on-surface-muted" target="_blank">
+            <a
+              className="text-on-surface-muted"
+              href="https://bentonroberts.com"
+              rel="noreferrer"
+              target="_blank"
+            >
               benton
             </a>
           </em>
@@ -138,14 +143,15 @@ export default function AboutPage() {
             fontFamily: 'var(--do-font-heading)',
           }}
         >
-          How It's Built
+          How It&apos;s Built
         </h2>
         <div className="rounded-theme border border-border-theme bg-surface-card p-4">
           <p className="mb-3 text-sm text-on-surface-muted">
             This was built from scratch in under three weeks using AI-accelerated development. But
-            it's far from "vide coded". Every layer — data ingestion, search indexing, LLM
-            integration, and frontend — was designed and implemented with well-established software
-            architecture patterns and the hard-won lessons from decades of coding experience.
+            it&apos;s far from &quot;vibe coded&quot;. Every layer — data ingestion, search
+            indexing, LLM integration, and frontend — was designed and implemented with
+            well-established software architecture patterns and the hard-won lessons from decades of
+            coding experience.
           </p>
           <ul className="space-y-1.5">
             {techStack.map((item) => (
@@ -167,16 +173,16 @@ export default function AboutPage() {
             fontFamily: 'var(--do-font-heading)',
           }}
         >
-          What's Next
+          What&apos;s Next
         </h2>
         <div className="rounded-theme border border-border-theme bg-surface-card p-6 text-center">
           <p className="text-on-surface">
-            This product has lots of great features. If you'd like to hire me to make it even{' '}
-            <em>more</em> powerful, or you're interested in building something similar for your own
-            use case, send me an email! I'll be happy to give you a short demo of the administrative
-            interface, which exposes the prompts and other fine-grained controls for the LLM
-            inference calls, per-user cost tracking, and more. We could also talk about engineering
-            and look at some code, if that interests you.
+            This product has lots of great features. If you&apos;d like to hire me to make it even{' '}
+            <em>more</em> powerful, or you&apos;re interested in building something similar for your
+            own use case, send me an email! I&apos;ll be happy to give you a short demo of the
+            administrative interface, which exposes the prompts and other fine-grained controls for
+            the LLM inference calls, per-user cost tracking, and more. We could also talk about
+            engineering and look at some code, if that interests you.
             <hr className="my-4" />
             {portraitUrl && (
               <figure className="my-4 inline-block">
