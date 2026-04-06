@@ -67,7 +67,8 @@ app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 // Cost-incurring and state-mutating routes are explicitly protected below.
 app.use('/api/*', optionalAuth());
 
-// Admin routes — require admin role
+// Admin routes — require auth + admin role
+app.use('/api/admin/*', requireAuth());
 app.use('/api/admin/*', requireAdmin());
 app.use('/api/user/*', requireAuth());
 app.use('/api/conversations/*', requireAuth());
