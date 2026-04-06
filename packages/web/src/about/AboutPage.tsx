@@ -70,6 +70,14 @@ export default function AboutPage() {
         <p className="mt-2 text-lg text-on-surface-muted">
           AI-Powered Satellite Communications Industry Intelligence
         </p>
+        <p className="mt-2 text-sm text-on-surface-muted">
+          <em>
+            – by{' '}
+            <a href="https://bentonroberts.com" className="text-on-surface-muted" target="_blank">
+              benton
+            </a>
+          </em>
+        </p>
       </section>
 
       {/* Features */}
@@ -129,42 +137,53 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="rounded-theme border border-border-theme bg-surface-card p-6 text-center">
-        <p className="text-on-surface">
-          This product has lots of great features. If you'd like to hire me to make it even{' '}
-          <em>more</em> powerful, or you're interested in building something similar for your own
-          use case, send me an email! I'll be happy to give you a short demo of the administrative
-          interface, which exposes prompts and other fine-grained controls for the LLM inference
-          calls, per-user cost tracking, and more. We could also talk about engineering and look at
-          some code, if that interests you.
-          <hr className="my-4" />
+      <section>
+        <h2
+          className="mb-4 text-xl font-semibold"
+          style={{
+            color: 'var(--do-text-heading)',
+            fontFamily: 'var(--do-font-heading)',
+          }}
+        >
+          What's Next
+        </h2>
+        <div className="rounded-theme border border-border-theme bg-surface-card p-6 text-center">
           <p className="text-on-surface">
-            Contact me at{' '}
+            This product has lots of great features. If you'd like to hire me to make it even{' '}
+            <em>more</em> powerful, or you're interested in building something similar for your own
+            use case, send me an email! I'll be happy to give you a short demo of the administrative
+            interface, which exposes prompts and other fine-grained controls for the LLM inference
+            calls, per-user cost tracking, and more. We could also talk about engineering and look
+            at some code, if that interests you.
+            <hr className="my-4" />
+            <p className="text-on-surface">
+              Contact me at{' '}
+              <a
+                className="text-accent-theme underline hover:no-underline"
+                href="mailto:benton@bentonroberts.com"
+              >
+                benton@bentonroberts.com
+              </a>
+            </p>
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-4">
             <a
-              className="text-accent-theme underline hover:no-underline"
+              className="inline-flex items-center gap-1.5 rounded-theme border border-border-theme px-4 py-2 text-sm text-on-surface hover:bg-on-surface/5"
+              href="https://bentonroberts.com/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Full Resume
+            </a>
+            <a
+              className="inline-flex items-center gap-1.5 rounded-theme border border-border-theme px-4 py-2 text-sm text-on-surface hover:bg-on-surface/5"
               href="mailto:benton@bentonroberts.com"
             >
-              benton@bentonroberts.com
+              <Mail className="h-3.5 w-3.5" />
+              Get in Touch
             </a>
-          </p>
-        </p>
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <a
-            className="inline-flex items-center gap-1.5 rounded-theme border border-border-theme px-4 py-2 text-sm text-on-surface hover:bg-on-surface/5"
-            href="https://bentonroberts.com/"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Full Resume
-          </a>
-          <a
-            className="inline-flex items-center gap-1.5 rounded-theme border border-border-theme px-4 py-2 text-sm text-on-surface hover:bg-on-surface/5"
-            href="mailto:benton@bentonroberts.com"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Get in Touch
-          </a>
+          </div>
         </div>
       </section>
 
