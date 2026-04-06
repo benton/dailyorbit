@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Consultant, Conversation, Message } from './types.ts';
 import { ToastProvider, useToast } from '../ui/toast.tsx';
+import { useAuth } from '../user/AuthContext.tsx';
 import {
   createConversation,
   deleteConversation,
@@ -35,6 +36,15 @@ function ChatPageInner() {
   const baseCostRef = useRef<number>(0);
   const { toast } = useToast();
   const { cancel, reset, sendMessage, state: streamState } = useChatStream();
+  const { isAuthenticated } = useAuth();
+
+  const cannedReplies: Array<string> = [
+    "Sorry, Dear Reader. You'll have to [become a subscriber](/about) to chat with our editorial staff.",
+    "I'd love to help, but my editor says [subscribers only](/about). Head to our About page to learn more!",
+    'This conversation requires a [subscription](/about). Our editorial team is standing by for subscribers!',
+    'No freeloaders at the press desk! [Subscribe](/about) to unlock full access to our consultants.',
+  ];
+  const cannedReplyIndex = useRef<number>(0);
 
   // Build consultant lookup map
   const consultantMap: Map<number, Consultant> = new Map(
@@ -45,7 +55,10 @@ function ChatPageInner() {
   useEffect(() => {
     void (async () => {
       try {
-        const [c, convs] = await Promise.all([fetchConsultants(), fetchConversations()]);
+        const [c, convs] = await Promise.all([
+          fetchConsultants(),
+          isAuthenticated ? fetchConversations() : Promise.resolve([]),
+        ]);
         setConsultants(c);
         setConversations(convs);
         if (c.length > 0) {
@@ -177,6 +190,60 @@ function ChatPageInner() {
     [activeConvId, selectedConsultant, messages.length, sendMessage, toast],
   );
 
+  const handleFakeSend = useCallback(
+    (content: string) => {
+      if (selectedConsultant == null || consultants.length === 0) {
+        return;
+      }
+
+      // Pick a random consultant for each reply
+      const randomConsultant: Consultant =
+        consultants[Math.floor(Math.random() * consultants.length)]!;
+
+      // Add user message
+      const userMsg: Message = {
+        consultantId: null,
+        content,
+        conversationId: 'demo',
+        costCents: 0,
+        createdAt: new Date().toISOString(),
+        id: `demo-user-${String(Date.now())}`,
+        inputTokens: null,
+        modelId: null,
+        outputTokens: null,
+        role: 'user',
+        sequence: messages.length + 1,
+        sources: null,
+      };
+
+      // Pick next canned reply in rotation
+      const reply: string = cannedReplies[cannedReplyIndex.current % cannedReplies.length]!;
+      cannedReplyIndex.current += 1;
+
+      const assistantMsg: Message = {
+        consultantId: randomConsultant.id,
+        content: reply,
+        conversationId: 'demo',
+        costCents: 0,
+        createdAt: new Date().toISOString(),
+        id: `demo-asst-${String(Date.now())}`,
+        inputTokens: null,
+        modelId: null,
+        outputTokens: null,
+        role: 'assistant',
+        sequence: messages.length + 2,
+        sources: null,
+      };
+
+      setMessages((prev) => [...prev, userMsg]);
+      // Add a small delay for realism
+      setTimeout(() => {
+        setMessages((prev) => [...prev, assistantMsg]);
+      }, 500);
+    },
+    [selectedConsultant, consultants, messages.length],
+  );
+
   // Handle rename
   const handleRename = useCallback(
     async (id: string, title: string) => {
@@ -223,14 +290,16 @@ function ChatPageInner() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
       {/* Sidebar */}
-      <ConversationSidebar
-        activeId={activeConvId}
-        conversations={conversations}
-        onDelete={handleDelete}
-        onNew={handleNew}
-        onRename={handleRename}
-        onSelect={handleSelect}
-      />
+      {isAuthenticated && (
+        <ConversationSidebar
+          activeId={activeConvId}
+          conversations={conversations}
+          onDelete={handleDelete}
+          onNew={handleNew}
+          onRename={handleRename}
+          onSelect={handleSelect}
+        />
+      )}
 
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
@@ -250,9 +319,11 @@ function ChatPageInner() {
         ) : (
           <>
             {/* Cost badge header */}
-            <div className="flex items-center justify-end border-b border-border-theme/50 px-4 py-1">
-              <ChatCostBadge costCents={displayCostCents} />
-            </div>
+            {isAuthenticated && (
+              <div className="flex items-center justify-end border-b border-border-theme/50 px-4 py-1">
+                <ChatCostBadge costCents={displayCostCents} />
+              </div>
+            )}
             {/* Message thread */}
             <MessageThread
               consultants={consultantMap}
@@ -285,7 +356,7 @@ function ChatPageInner() {
           isStreaming={isStreaming}
           onCancel={cancel}
           onSelectConsultant={handleConsultantSwitch}
-          onSend={handleSend}
+          onSend={isAuthenticated ? handleSend : handleFakeSend}
           selectedConsultant={selectedConsultant}
         />
       </div>
