@@ -23,6 +23,7 @@ import { FlagToggle } from '../ui/FlagToggle.tsx';
 import { HideToggle } from '../ui/HideToggle.tsx';
 import { Input } from '../ui/input.tsx';
 import { Label } from '../ui/label.tsx';
+import { SubscribeDialog } from '../ui/SubscribeDialog.tsx';
 import { useAuth } from '../user/AuthContext.tsx';
 import { SavedSearchPicker, type SavedSearch } from './SavedSearchPicker.tsx';
 import { SaveSearchModal } from './SaveSearchModal.tsx';
@@ -1176,6 +1177,7 @@ export default function SearchPage() {
 
   // Save search modal state
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+  const [subscribeDialog, setSubscribeDialog] = useState<string | null>(null);
 
   // Flag, hide, and selection state
   const [flaggedKeys, setFlaggedKeys] = useState<Set<string>>(new Set());
@@ -1471,24 +1473,33 @@ export default function SearchPage() {
       size: 40,
     };
     const flagCol: ColumnDef<FilingSearchResult, unknown> = {
-      cell: ({ row }) => (
-        <FlagToggle
-          contentKey={row.original.file_number}
-          contentType="filing"
-          initialFlagged={flaggedKeys.has(row.original.file_number)}
-          onToggle={(nowFlagged: boolean) => {
-            setFlaggedKeys((prev: Set<string>) => {
-              const next: Set<string> = new Set(prev);
-              if (nowFlagged) {
-                next.add(row.original.file_number);
-              } else {
-                next.delete(row.original.file_number);
-              }
-              return next;
-            });
-          }}
-        />
-      ),
+      cell: ({ row }) =>
+        isAuthenticated ? (
+          <FlagToggle
+            contentKey={row.original.file_number}
+            contentType="filing"
+            initialFlagged={flaggedKeys.has(row.original.file_number)}
+            onToggle={(nowFlagged: boolean) => {
+              setFlaggedKeys((prev: Set<string>) => {
+                const next: Set<string> = new Set(prev);
+                if (nowFlagged) {
+                  next.add(row.original.file_number);
+                } else {
+                  next.delete(row.original.file_number);
+                }
+                return next;
+              });
+            }}
+          />
+        ) : (
+          <button
+            className="p-1 text-on-surface-muted/50 hover:text-on-surface-muted"
+            onClick={() => setSubscribeDialog('Become a Subscriber to Hide and Flag Filings')}
+            type="button"
+          >
+            <Flag className="h-4 w-4" />
+          </button>
+        ),
       header: () => <Flag className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'flag',
       size: 40,
@@ -1496,7 +1507,7 @@ export default function SearchPage() {
     const hideCol: ColumnDef<FilingSearchResult, unknown> = {
       cell: ({ row }) => {
         const isHidden: boolean = hiddenKeys.has(row.original.file_number);
-        return (
+        return isAuthenticated ? (
           <div className="flex items-center gap-1">
             <HideToggle
               contentKey={row.original.file_number}
@@ -1520,17 +1531,21 @@ export default function SearchPage() {
               </span>
             )}
           </div>
+        ) : (
+          <button
+            className="p-1 text-on-surface-muted/50 hover:text-on-surface-muted"
+            onClick={() => setSubscribeDialog('Become a Subscriber to Hide and Flag Filings')}
+            type="button"
+          >
+            <EyeOff className="h-4 w-4" />
+          </button>
         );
       },
       header: () => <EyeOff className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'hide',
       size: 80,
     };
-    return [
-      ...(isAuthenticated ? [selectCol] : []),
-      ...filingColumns,
-      ...(isAuthenticated ? [flagCol, hideCol] : []),
-    ];
+    return [...(isAuthenticated ? [selectCol] : []), ...filingColumns, flagCol, hideCol];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1569,24 +1584,33 @@ export default function SearchPage() {
       size: 40,
     };
     const flagCol: ColumnDef<ContentSearchResult, unknown> = {
-      cell: ({ row }) => (
-        <FlagToggle
-          contentKey={row.original.file_number}
-          contentType="filing"
-          initialFlagged={flaggedKeys.has(row.original.file_number)}
-          onToggle={(nowFlagged: boolean) => {
-            setFlaggedKeys((prev: Set<string>) => {
-              const next: Set<string> = new Set(prev);
-              if (nowFlagged) {
-                next.add(row.original.file_number);
-              } else {
-                next.delete(row.original.file_number);
-              }
-              return next;
-            });
-          }}
-        />
-      ),
+      cell: ({ row }) =>
+        isAuthenticated ? (
+          <FlagToggle
+            contentKey={row.original.file_number}
+            contentType="filing"
+            initialFlagged={flaggedKeys.has(row.original.file_number)}
+            onToggle={(nowFlagged: boolean) => {
+              setFlaggedKeys((prev: Set<string>) => {
+                const next: Set<string> = new Set(prev);
+                if (nowFlagged) {
+                  next.add(row.original.file_number);
+                } else {
+                  next.delete(row.original.file_number);
+                }
+                return next;
+              });
+            }}
+          />
+        ) : (
+          <button
+            className="p-1 text-on-surface-muted/50 hover:text-on-surface-muted"
+            onClick={() => setSubscribeDialog('Become a Subscriber to Hide and Flag Filings')}
+            type="button"
+          >
+            <Flag className="h-4 w-4" />
+          </button>
+        ),
       header: () => <Flag className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'flag',
       size: 40,
@@ -1594,7 +1618,7 @@ export default function SearchPage() {
     const hideCol: ColumnDef<ContentSearchResult, unknown> = {
       cell: ({ row }) => {
         const isHidden: boolean = hiddenKeys.has(row.original.file_number);
-        return (
+        return isAuthenticated ? (
           <div className="flex items-center gap-1">
             <HideToggle
               contentKey={row.original.file_number}
@@ -1618,17 +1642,21 @@ export default function SearchPage() {
               </span>
             )}
           </div>
+        ) : (
+          <button
+            className="p-1 text-on-surface-muted/50 hover:text-on-surface-muted"
+            onClick={() => setSubscribeDialog('Become a Subscriber to Hide and Flag Filings')}
+            type="button"
+          >
+            <EyeOff className="h-4 w-4" />
+          </button>
         );
       },
       header: () => <EyeOff className="h-4 w-4 text-on-surface-muted/70" />,
       id: 'hide',
       size: 80,
     };
-    return [
-      ...(isAuthenticated ? [selectCol] : []),
-      ...contentColumns,
-      ...(isAuthenticated ? [flagCol, hideCol] : []),
-    ];
+    return [...(isAuthenticated ? [selectCol] : []), ...contentColumns, flagCol, hideCol];
   }, [
     flaggedKeys,
     hiddenKeys,
@@ -1745,17 +1773,37 @@ export default function SearchPage() {
         <Button onClick={handleClear} size="sm" variant="outline">
           Clear
         </Button>
-        {isAuthenticated && activeTab === 'filings' && (
-          <Button onClick={() => setShowSaveModal(true)} size="sm" variant="outline">
+        {activeTab === 'filings' && (
+          <Button
+            onClick={() =>
+              isAuthenticated
+                ? setShowSaveModal(true)
+                : setSubscribeDialog('Subscribe Today to Enable Saved Searches')
+            }
+            size="sm"
+            variant="outline"
+          >
             <Bookmark className="mr-1.5 h-3.5 w-3.5" />
             Save Search
           </Button>
         )}
-        {isAuthenticated && <SavedSearchPicker onLoad={handleLoadSavedSearch} />}
-        {isAuthenticated && activeTab === 'filings' && (
+        {isAuthenticated ? (
+          <SavedSearchPicker onLoad={handleLoadSavedSearch} />
+        ) : (
+          <Button
+            onClick={() => setSubscribeDialog('Subscribe Today to Enable Saved Searches')}
+            size="sm"
+            variant="outline"
+          >
+            <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+            Saved Searches
+          </Button>
+        )}
+        {activeTab === 'filings' && (
           <label className="ml-4 flex items-center gap-1.5 text-sm text-on-surface-muted">
             <input
               checked={showHidden}
+              disabled={!isAuthenticated}
               onChange={(e) => setShowHidden(e.target.checked)}
               type="checkbox"
             />
@@ -1831,6 +1879,11 @@ export default function SearchPage() {
         onClose={() => setShowSaveModal(false)}
         onSave={handleSaveSearch}
         open={showSaveModal}
+      />
+      <SubscribeDialog
+        message={subscribeDialog ?? ''}
+        onClose={() => setSubscribeDialog(null)}
+        open={subscribeDialog != null}
       />
     </div>
   );

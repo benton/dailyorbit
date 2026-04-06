@@ -10,7 +10,11 @@ import { configRoutes } from './config/routes.ts';
 import { earthStationRoutes } from './earth-stations/routes.ts';
 import { filingRoutes } from './filings/routes.ts';
 import { getAuth } from './lib/auth.ts';
-import { requireAuth, requireAdmin } from './lib/auth-middleware.ts';
+import {
+  optionalAuth,
+  requireAuth,
+  requireAdmin,
+} from './lib/auth-middleware.ts';
 import { getConfigService } from './lib/config.ts';
 import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
@@ -59,17 +63,15 @@ app.use('*', requestLogger(getLogger()));
 
 app.all('/api/auth/*', (c) => getAuth().handler(c.req.raw));
 
-// Protected API routes — require authentication for ALL endpoints.
-// Newspaper images are public so <img> tags can load them without cookies.
-app.use('/api/*', async (c, next) => {
-  if (c.req.path.startsWith('/api/newspaper/images/')) {
-    return next();
-  }
-  return requireAuth()(c, next);
-});
+// Public API routes — populate user context if a session exists, but don't require it.
+// Cost-incurring and state-mutating routes are explicitly protected below.
+app.use('/api/*', optionalAuth());
 
-// Admin routes — require admin role
+// Admin routes — require auth + admin role
+app.use('/api/admin/*', requireAuth());
 app.use('/api/admin/*', requireAdmin());
+app.use('/api/user/*', requireAuth());
+app.use('/api/conversations/*', requireAuth());
 
 app.route('/api/me', userRoutes);
 app.route('/api/user', userProfileRoutes);

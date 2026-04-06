@@ -80,7 +80,7 @@ export function SavedSearchPicker({ onLoad }: SavedSearchPickerProps) {
       </Button>
 
       {open && (
-        <div className="absolute top-full right-0 z-50 mt-1 w-96 rounded-md border border-border-theme bg-white shadow-lg dark:border-border-theme dark:bg-on-surface">
+        <div className="absolute top-full right-0 z-50 mt-1 w-96 rounded-md border border-border-theme bg-white shadow-lg dark:border-border-theme dark:bg-surface-card">
           <div className="flex items-center justify-between border-b border-border-theme px-3 py-2 dark:border-border-theme">
             <span className="text-sm font-medium text-on-surface">Saved Searches</span>
             <button

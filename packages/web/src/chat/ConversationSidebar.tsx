@@ -56,7 +56,7 @@ export default function ConversationSidebar({
   }, [renamingId, renameValue, onRename]);
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border-theme bg-surface dark:border-border-theme dark:bg-on-surface">
+    <div className="flex h-full w-64 flex-col border-r border-border-theme bg-surface dark:border-border-theme dark:bg-surface-card">
       <div className="p-3">
         <Button className="w-full" onClick={onNew} size="sm" variant="outline">
           <MessageSquarePlus className="mr-2 h-4 w-4" />

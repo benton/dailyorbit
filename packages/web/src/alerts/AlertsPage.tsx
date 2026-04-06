@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
+import { useAuth } from '../user/AuthContext.tsx';
 
 type FlaggedItem = {
   content_key: string;
@@ -35,6 +36,7 @@ function formatDate(ts: string): string {
 export default function AlertsPage() {
   const [flags, setFlags] = useState<Array<FlaggedItem>>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { isAuthenticated } = useAuth();
 
   const fetchFlags = useCallback(async () => {
     try {
@@ -48,8 +50,12 @@ export default function AlertsPage() {
   }, []);
 
   useEffect(() => {
-    void fetchFlags();
-  }, [fetchFlags]);
+    if (isAuthenticated) {
+      void fetchFlags();
+    } else {
+      setLoading(false);
+    }
+  }, [fetchFlags, isAuthenticated]);
 
   const grouped: Map<string, Array<FlaggedItem>> = useMemo(() => {
     const map: Map<string, Array<FlaggedItem>> = new Map();
@@ -92,8 +98,19 @@ export default function AlertsPage() {
         <h1 className="text-xl font-semibold text-on-surface">Alerts</h1>
         <div className="rounded-theme border border-border-theme bg-surface-card p-8 text-center">
           <p className="text-on-surface-muted">
-            No new alert matches. When content matches your saved searches with alerts enabled, it
-            will appear here.
+            {isAuthenticated ? (
+              <>
+                No new alert matches. When content matches your saved searches with alerts enabled,
+                it will appear here.
+              </>
+            ) : (
+              <>
+                <Link className="text-accent-theme underline hover:no-underline" to="/about">
+                  Subscribe Now
+                </Link>{' '}
+                to Enable Personalized Email Alerts
+              </>
+            )}
           </p>
         </div>
       </div>

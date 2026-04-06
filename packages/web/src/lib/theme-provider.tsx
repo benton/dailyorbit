@@ -30,7 +30,7 @@ export function useTheme(): ThemeContextValue {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { settings, updateSetting } = useSettings();
   const [localTheme, setLocalTheme] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEY) ?? 'modern',
+    () => localStorage.getItem(STORAGE_KEY) ?? 'broadsheet',
   );
 
   const isAuthenticated: boolean = settings != null;
