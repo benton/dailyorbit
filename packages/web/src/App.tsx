@@ -1,5 +1,5 @@
-import { AnchorHTMLAttributes, lazy, Suspense } from 'react';
-import { LinkProps, Link as ReactRouterLink, Route, Routes } from 'react-router';
+import { lazy, Suspense } from 'react';
+import { Route, Routes } from 'react-router';
 import { Navigate } from 'react-router';
 import AdminLayout from './admin/AdminLayout.tsx';
 import ConfigEditor from './admin/ConfigEditor.tsx';
@@ -43,28 +43,7 @@ const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
 const ChatPage = lazy(() => import('./chat/ChatPage.tsx'));
 const AlertsPage = lazy(() => import('./alerts/AlertsPage.tsx'));
 const LogsPage = lazy(() => import('./admin/LogsPage.tsx'));
-
-const Link = ({ className, ...props }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => (
-  <ReactRouterLink
-    className={
-      'text-accent-theme underline hover:no-underline' + (className ? ` ${className}` : '')
-    }
-    {...props}
-  />
-);
-
-const About = () => (
-  <div className="m-6 mx-auto w-8/12 rounded-theme border border-border-theme bg-surface-card p-4 shadow-md">
-    <h1 className="text-4xl">
-      <fbt desc="About">About</fbt>
-    </h1>
-    <p className="my-4">
-      <Link to="/">
-        <fbt desc="Back to home link">Home</fbt>
-      </Link>
-    </p>
-  </div>
-);
+const AboutPage = lazy(() => import('./about/AboutPage.tsx'));
 
 export default function App() {
   return (
@@ -73,14 +52,8 @@ export default function App() {
         <ThemeProvider>
           <Routes>
             <Route element={<LoginPage />} path="/login" />
-            {/* All routes require authentication */}
-            <Route
-              element={
-                <RequireAuth>
-                  <PublicLayout />
-                </RequireAuth>
-              }
-            >
+            {/* Public routes — accessible without authentication */}
+            <Route element={<PublicLayout />}>
               <Route
                 element={
                   <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
@@ -105,7 +78,14 @@ export default function App() {
                 }
                 path="/newspaper/:date"
               />
-              <Route element={<About />} path="/about" />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <AboutPage />
+                  </Suspense>
+                }
+                path="/about"
+              />
               <Route element={<SearchPage />} path="/search" />
               <Route element={<FilingDetail />} path="/filings/*" />
               <Route element={<SatelliteDetail />} path="/satellites/:id" />
@@ -166,20 +146,36 @@ export default function App() {
                 }
                 path="/alerts"
               />
+              {/* Auth-required routes within the public layout */}
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <UserHomePage />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <UserHomePage />
+                    </Suspense>
+                  </RequireAuth>
                 }
                 path="/filings/unread"
               />
-              <Route element={<ProfilePage />} path="/profile" />
               <Route
                 element={
-                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
-                    <SettingsPage />
-                  </Suspense>
+                  <RequireAuth>
+                    <ProfilePage />
+                  </RequireAuth>
+                }
+                path="/profile"
+              />
+              <Route
+                element={
+                  <RequireAuth>
+                    <Suspense
+                      fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}
+                    >
+                      <SettingsPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
                 path="/settings"
               />
