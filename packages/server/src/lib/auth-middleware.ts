@@ -38,6 +38,37 @@ export function requireAuth(): MiddlewareHandler {
 }
 
 /**
+ * Middleware that populates `c.get('user')` from the session cookie if present,
+ * but does NOT return 401 if no valid session is found.
+ * Use on routes that are publicly accessible but behave differently when authenticated.
+ */
+export function optionalAuth(): MiddlewareHandler {
+  return async (c: Context, next) => {
+    try {
+      const auth = getAuth();
+      const session = await auth.api.getSession({
+        headers: c.req.raw.headers,
+      });
+
+      if (session != null) {
+        const user: SessionUser = {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          role:
+            ((session.user as Record<string, unknown>).role as string) ??
+            'user',
+        };
+        c.set('user', user);
+      }
+    } catch {
+      // No valid session — continue without user context
+    }
+    await next();
+  };
+}
+
+/**
  * Middleware that checks the current user has the 'admin' role.
  * Must be used after `requireAuth()`.
  * Returns 403 if the user is not an admin.
