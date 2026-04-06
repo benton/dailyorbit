@@ -62,14 +62,10 @@
     stroke: var(--do-border);
   }
 
-  /* Observable Plot tooltip dark mode */
-  :root:not([data-theme='broadsheet']) .plot svg [aria-label='tip'] rect {
-    fill: var(--do-bg-card) !important;
-    stroke: var(--do-border) !important;
-  }
-
-  :root:not([data-theme='broadsheet']) .plot svg [aria-label='tip'] text {
-    fill: var(--do-text) !important;
+  /* Observable Plot uses --plot-background for tooltip fill and currentColor for text/stroke */
+  :root:not([data-theme='broadsheet']) .plot {
+    --plot-background: var(--do-bg-card);
+    color: var(--do-text);
   }
 }
 
