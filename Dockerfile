@@ -63,7 +63,7 @@ COPY --from=build /app/packages/web/dist ./packages/web/dist
 COPY daily-orbit .
 
 # Entrypoint: starts Xvfb, then execs the app under tini
-COPY docker-entrypoint.sh .
+COPY deploy/docker-entrypoint.sh .
 
 ENV SERVE_STATIC=true
 
