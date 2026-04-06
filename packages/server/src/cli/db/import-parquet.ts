@@ -143,7 +143,7 @@ export const importParquetCommand = defineCommand({
     await conn.run(`INSTALL httpfs; LOAD httpfs;`);
     await conn.run(`INSTALL aws; LOAD aws;`);
     await conn.run(
-      `SET s3_region = '${region}'; SET s3_use_credential_chain = 'true';`,
+      `CREATE SECRET (TYPE S3, PROVIDER CREDENTIAL_CHAIN, REGION '${region}')`,
     );
 
     // 6. Load each table from its Parquet file
