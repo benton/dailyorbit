@@ -13,9 +13,9 @@ import { Link } from 'react-router';
 
 const features = [
   {
-    icon: Search,
-    title: 'Full-Text & Vector Search',
-    desc: 'BM25 keyword and semantic vector search across every FCC IBFS filing ever submitted.',
+    icon: Database,
+    title: 'Complete FCC IBFS Archive',
+    desc: 'Every international and satellite filing, comment, and attachment — fully indexed and searchable.',
   },
   {
     icon: Bot,
@@ -23,14 +23,9 @@ const features = [
     desc: 'LLM-generated summaries of every document and filing timeline, powered by multi-model inference.',
   },
   {
-    icon: MessageSquare,
-    title: 'RAG Chat Consultants',
-    desc: 'Ask questions and get answers grounded in the actual filing data, with cited sources.',
-  },
-  {
-    icon: Newspaper,
-    title: 'Automated Daily Newspaper',
-    desc: 'AI-written articles, editorials, and news summaries generated fresh each day.',
+    icon: Search,
+    title: 'Full-Text Keyword & Vector Search',
+    desc: 'BM25 keyword and semantic vector search across every FCC IBFS filing ever submitted.',
   },
   {
     icon: Bell,
@@ -38,9 +33,14 @@ const features = [
     desc: 'Save searches, enable alerts, and receive email notifications when new filings match.',
   },
   {
-    icon: Database,
-    title: 'Complete FCC IBFS Archive',
-    desc: 'Every international and satellite filing, comment, and attachment — fully indexed and searchable.',
+    icon: MessageSquare,
+    title: 'RAG-powered Chat Consultants',
+    desc: 'Ask questions and get answers grounded in the actual filing data, with cited sources.',
+  },
+  {
+    icon: Newspaper,
+    title: 'Automated Daily Newspaper',
+    desc: 'AI-written articles, editorials, and news summaries generated fresh each day.',
   },
 ];
 
@@ -60,7 +60,10 @@ export default function AboutPage() {
       <section className="text-center">
         <h1
           className="text-4xl font-bold"
-          style={{ color: 'var(--do-text-heading)', fontFamily: 'var(--do-font-heading)' }}
+          style={{
+            color: 'var(--do-text-heading)',
+            fontFamily: 'var(--do-font-heading)',
+          }}
         >
           The Daily Orbit
         </h1>
@@ -73,7 +76,10 @@ export default function AboutPage() {
       <section>
         <h2
           className="mb-4 text-xl font-semibold"
-          style={{ color: 'var(--do-text-heading)', fontFamily: 'var(--do-font-heading)' }}
+          style={{
+            color: 'var(--do-text-heading)',
+            fontFamily: 'var(--do-font-heading)',
+          }}
         >
           What It Does
         </h2>
@@ -97,15 +103,19 @@ export default function AboutPage() {
       <section>
         <h2
           className="mb-4 text-xl font-semibold"
-          style={{ color: 'var(--do-text-heading)', fontFamily: 'var(--do-font-heading)' }}
+          style={{
+            color: 'var(--do-text-heading)',
+            fontFamily: 'var(--do-font-heading)',
+          }}
         >
           How It's Built
         </h2>
         <div className="rounded-theme border border-border-theme bg-surface-card p-4">
           <p className="mb-3 text-sm text-on-surface-muted">
-            Built from scratch in under four weeks through rapid, AI-accelerated full-stack
-            development. Every layer — data ingestion, search indexing, LLM integration, and
-            frontend — was designed and implemented as a cohesive system.
+            Built from scratch in under three weeks through AI-accelerated development. But it's far
+            from "vide coded". Every layer — data ingestion, search indexing, LLM integration, and
+            frontend — was designed and implemented with well-established software architecture
+            patterns and hard-won lessons from decades of coding experience.
           </p>
           <ul className="space-y-1.5">
             {techStack.map((item) => (
@@ -121,14 +131,22 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="rounded-theme border border-border-theme bg-surface-card p-6 text-center">
         <p className="text-on-surface">
-          This product has lots of great features, but if you'd like to hire me to make it even more
-          powerful, contact me at{' '}
-          <a
-            className="text-accent-theme underline hover:no-underline"
-            href="mailto:benton@bentonroberts.com"
-          >
-            benton@bentonroberts.com
-          </a>
+          This product has lots of great features. If you'd like to hire me to make it even{' '}
+          <em>more</em> powerful, or you're interested in building something similar for your own
+          use case, send me an email! I'll be happy to give you a short demo of the administrative
+          interface, which exposes prompts and other fine-grained controls for the LLM inference
+          calls, per-user cost tracking, and more. We could also talk about engineering and look at
+          some code, if that interests you.
+          <hr className="my-4" />
+          <p className="text-on-surface">
+            Contact me at{' '}
+            <a
+              className="text-accent-theme underline hover:no-underline"
+              href="mailto:benton@bentonroberts.com"
+            >
+              benton@bentonroberts.com
+            </a>
+          </p>
         </p>
         <div className="mt-4 flex items-center justify-center gap-4">
           <a
