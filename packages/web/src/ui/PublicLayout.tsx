@@ -115,6 +115,7 @@ export default function PublicLayout() {
           <NavLink label="News" to="/news" />
           <NavLink label="Chat" to="/chat" />
           {isAuthenticated ? <AlertBadge /> : <NavLink label="Alerts" to="/alerts" />}
+          <NavLink label="About" to="/about" />
           <div className="ml-auto flex items-center gap-3">
             <ThemeToggle />
             <button
