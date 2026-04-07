@@ -156,6 +156,21 @@ describe('renderAdHtml', () => {
     expect(html).not.toContain('<script');
   });
 
+  test('contains no <style> blocks', () => {
+    const html: string = renderAdHtml(baseInput);
+    expect(html).not.toContain('<style');
+  });
+
+  test('URL-encodes the slug in the relative img src', () => {
+    const html: string = renderAdHtml({
+      ...baseInput,
+      slug: 'foo bar&baz',
+    });
+    expect(html).toContain('src="7-foo%20bar%26baz.webp"');
+    // Must NOT appear as HTML-escaped, which would break the file reference
+    expect(html).not.toContain('src="7-foo bar&amp;baz.webp"');
+  });
+
   test('snapshot — full output', () => {
     expect(renderAdHtml(baseInput)).toMatchSnapshot();
   });

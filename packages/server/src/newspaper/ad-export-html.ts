@@ -88,10 +88,12 @@ export type RenderAdHtmlInput = {
  */
 export function renderAdHtml(input: RenderAdHtmlInput): string {
   const tagline: string = escapeHtml(input.tagline);
-  const slug: string = escapeHtml(input.slug);
   const destinationUrl: string = escapeHtml(input.destinationUrl);
   const absoluteImageUrl: string = escapeHtml(input.absoluteImageUrl);
-  const relativeImageSrc: string = `${String(input.id)}-${slug}.webp`;
+  // The slug is a path component inside <img src>, so URL-encode it (not
+  // HTML-escape). For slugs produced by `slugify` this is a no-op, but the
+  // input type permits any string and we want correct behavior either way.
+  const relativeImageSrc: string = `${String(input.id)}-${encodeURIComponent(input.slug)}.webp`;
 
   return `<!doctype html>
 <html lang="en">
