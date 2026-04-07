@@ -79,6 +79,9 @@ export default function PublicLayout() {
   const { settings, updateSetting } = useSettings();
   const [localWide, setLocalWide] = useState<boolean>(false);
   const isWide: boolean = isAuthenticated ? (settings?.wideView ?? false) : localWide;
+  const location = useLocation();
+  // Pages that manage their own scrolling and should fill the viewport exactly.
+  const isFullHeightRoute: boolean = location.pathname === '/chat';
 
   const toggleWide = () => {
     if (isAuthenticated) {
@@ -89,7 +92,10 @@ export default function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--do-bg)' }}>
+    <div
+      className={isFullHeightRoute ? 'flex h-screen flex-col overflow-hidden' : 'min-h-screen'}
+      style={{ backgroundColor: 'var(--do-bg)' }}
+    >
       <header
         className="px-6 py-3"
         style={{
@@ -131,7 +137,13 @@ export default function PublicLayout() {
           </div>
         </nav>
       </header>
-      <main className={`mx-auto p-6 ${isWide ? '' : 'max-w-6xl'}`}>
+      <main
+        className={
+          isFullHeightRoute
+            ? 'min-h-0 flex-1 overflow-hidden'
+            : `mx-auto p-6 ${isWide ? '' : 'max-w-6xl'}`
+        }
+      >
         <Outlet />
       </main>
     </div>
