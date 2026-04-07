@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { apiFetch } from '../lib/api.ts';
 
 type DailyFilingCount = {
@@ -31,15 +32,15 @@ export default function MastheadFilingVolume({ editionDate }: MastheadFilingVolu
 
   if (days.length === 0) {
     return (
-      <div className="masthead-widget masthead-filing-volume">
+      <Link className="masthead-widget masthead-filing-volume" to="/dashboard">
         <span className="masthead-widget-label">Last Week&rsquo;s Volume</span>
         <span className="masthead-widget-note">No filings recorded</span>
-      </div>
+      </Link>
     );
   }
 
   return (
-    <div className="masthead-widget masthead-filing-volume">
+    <Link className="masthead-widget masthead-filing-volume" to="/dashboard">
       <span className="masthead-widget-label">Last Week&rsquo;s Volume</span>
       <div className="filing-bars">
         {days.map((d: DailyFilingCount) => (
@@ -54,6 +55,6 @@ export default function MastheadFilingVolume({ editionDate }: MastheadFilingVolu
         ))}
       </div>
       <span className="masthead-widget-note">total: {total}</span>
-    </div>
+    </Link>
   );
 }

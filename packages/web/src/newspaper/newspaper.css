@@ -83,6 +83,12 @@
   border: double 3px var(--np-sepia-light);
   opacity: 0.75;
   justify-content: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.masthead-widget:hover {
+  opacity: 1;
 }
 
 .masthead-widget-label {
@@ -388,6 +394,18 @@
 
 .house-ad-features li {
   margin: 0.2rem 0;
+}
+
+.house-ad-features a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--np-sepia-medium);
+}
+
+.house-ad-features a:hover {
+  text-decoration-style: solid;
+  text-decoration-color: var(--np-ink-black);
 }
 
 .house-ad-label {

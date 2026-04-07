@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
 import { libraryImageUrl } from '../types.ts';
 
@@ -19,6 +20,20 @@ function renderFeature(text: string): React.ReactNode {
     return text;
   }
   return parts.map((part: string, i: number) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
+}
+
+/**
+ * Map feature text to a destination route. Matches by keyword so ordering
+ * or minor phrasing tweaks on the server don't silently break the links.
+ */
+function featureLink(text: string): string | null {
+  if (/chat/i.test(text)) {
+    return '/chat';
+  }
+  if (/search|saved|alerts/i.test(text)) {
+    return '/search';
+  }
+  return null;
 }
 
 export default function HouseAd({ editionDate }: HouseAdProps) {
@@ -58,9 +73,11 @@ export default function HouseAd({ editionDate }: HouseAdProps) {
         Subscribe to <em>The Daily Orbit</em> today!
       </p>
       <ul className="house-ad-features">
-        {ad.features.map((feature: string) => (
-          <li key={feature}>{renderFeature(feature)}</li>
-        ))}
+        {ad.features.map((feature: string) => {
+          const to: string | null = featureLink(feature);
+          const body: React.ReactNode = renderFeature(feature);
+          return <li key={feature}>{to == null ? body : <Link to={to}>{body}</Link>}</li>;
+        })}
       </ul>
       <div className="house-ad-label">&#x2550;&#x2550; An Advertisement &#x2550;&#x2550;</div>
     </div>
