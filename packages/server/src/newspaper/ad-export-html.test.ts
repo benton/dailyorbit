@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { slugify } from './ad-export-html.ts';
+import { escapeHtml, slugify } from './ad-export-html.ts';
 
 describe('slugify', () => {
   test('lowercases ASCII and replaces spaces with hyphens', () => {
@@ -37,5 +37,25 @@ describe('slugify', () => {
 
   test('handles all-symbol input by returning empty string', () => {
     expect(slugify('!!!')).toBe('');
+  });
+});
+
+describe('escapeHtml', () => {
+  test('escapes the five HTML special characters', () => {
+    expect(escapeHtml(`<a href="x" title='y'>&</a>`)).toBe(
+      '&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;&amp;&lt;/a&gt;',
+    );
+  });
+
+  test('passes plain text through unchanged', () => {
+    expect(escapeHtml('Three Miles Up')).toBe('Three Miles Up');
+  });
+
+  test('escapes & before introducing new entities (no double-escape)', () => {
+    expect(escapeHtml('Tom & Jerry')).toBe('Tom &amp; Jerry');
+  });
+
+  test('handles empty string', () => {
+    expect(escapeHtml('')).toBe('');
   });
 });

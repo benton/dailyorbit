@@ -35,3 +35,19 @@ export function slugify(input: string): string {
   }
   return truncated.slice(0, lastHyphen);
 }
+
+/**
+ * Escape the five HTML special characters so an arbitrary string is safe
+ * to interpolate into element text or double-quoted attribute values.
+ *
+ * Order matters: `&` MUST be replaced first to avoid double-escaping
+ * the entities introduced by the later replacements.
+ */
+export function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
