@@ -908,5 +908,125 @@ export const newspaperCommand = defineCommand({
         }
       },
     }),
+
+    'pull-images': defineCommand({
+      meta: {
+        name: 'pull-images',
+        description:
+          'Download all newspaper images from the configured S3 bucket to data/newspaper/images',
+      },
+      args: {
+        database: databaseArg,
+        keyFile: keyFileArg,
+      },
+      async run({ args }) {
+        const log = getLogger();
+        const dbInstance = await createDb(args.database);
+        const conn: DuckDBConnection =
+          await DuckDBConnection.create(dbInstance);
+
+        try {
+          const { ConfigService } = await import('../../lib/config-service.ts');
+          const { setConfigService } = await import('../../lib/config.ts');
+          const { readKeyFile: readKey } =
+            await import('../../lib/encryption.ts');
+          const { S3Client, ListObjectsV2Command, GetObjectCommand } =
+            await import('@aws-sdk/client-s3');
+          const { resolve, dirname } = await import('node:path');
+          const { mkdir, writeFile, stat } = await import('node:fs/promises');
+
+          const key: Buffer = readKey(resolveFromRoot(args.keyFile));
+          const config = new ConfigService(dbInstance, key);
+          await config.load();
+          setConfigService(config);
+
+          const bucket: string = String(
+            config.get('newspaperImagesBucket') ?? '',
+          );
+          const region: string = process.env.AWS_REGION ?? 'us-east-2';
+
+          if (!bucket) {
+            log.error(
+              'newspaperImagesBucket is not configured — set it via: ./daily-orbit config set newspaperImagesBucket <bucket-name>',
+            );
+            process.exit(1);
+          }
+
+          const imagesRoot: string = resolve('data', 'newspaper', 'images');
+          const prefix: string = 'newspaper/images/';
+          const client = new S3Client({ region });
+
+          let downloaded: number = 0;
+          let skipped: number = 0;
+          let failed: number = 0;
+          let continuationToken: string | undefined;
+
+          do {
+            const listResp = await client.send(
+              new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: prefix,
+                ContinuationToken: continuationToken,
+              }),
+            );
+
+            for (const obj of listResp.Contents ?? []) {
+              const s3Key: string | undefined = obj.Key;
+              if (s3Key == null || s3Key.endsWith('/')) continue;
+              if (s3Key.endsWith('.DS_Store')) continue;
+
+              // s3Key is like "newspaper/images/library/masthead.webp"
+              // strip the prefix to get a path relative to imagesRoot
+              const relative: string = s3Key.slice(prefix.length);
+              const localPath: string = resolve(imagesRoot, relative);
+
+              // Skip if a local file already matches the S3 size
+              try {
+                const info = await stat(localPath);
+                if (info.isFile() && info.size === obj.Size) {
+                  skipped++;
+                  continue;
+                }
+              } catch {
+                // File missing — fall through and download
+              }
+
+              try {
+                const getResp = await client.send(
+                  new GetObjectCommand({ Bucket: bucket, Key: s3Key }),
+                );
+                const body = getResp.Body;
+                if (body == null) {
+                  throw new Error('Empty response body');
+                }
+                const bytes: Uint8Array = await (
+                  body as { transformToByteArray: () => Promise<Uint8Array> }
+                ).transformToByteArray();
+
+                await mkdir(dirname(localPath), { recursive: true });
+                await writeFile(localPath, bytes);
+                downloaded++;
+              } catch (err: unknown) {
+                const msg: string =
+                  err instanceof Error ? err.message : String(err);
+                log.warn({ error: msg, s3Key }, 'Failed to download');
+                failed++;
+              }
+            }
+
+            continuationToken = listResp.IsTruncated
+              ? listResp.NextContinuationToken
+              : undefined;
+          } while (continuationToken != null);
+
+          log.info(
+            { downloaded, skipped, failed, bucket, imagesRoot },
+            'Image pull complete',
+          );
+        } finally {
+          conn.closeSync();
+        }
+      },
+    }),
   },
 });
