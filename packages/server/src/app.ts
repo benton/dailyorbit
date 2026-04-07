@@ -20,6 +20,12 @@ import { satelliteRoutes } from './satellites/routes.ts';
 import { companyRoutes, companyAdminRoutes } from './companies/routes.ts';
 import { newsRoutes, newsAdminRoutes } from './news/routes.ts';
 import { newspaperRoutes, newspaperAdminRoutes } from './newspaper/routes.ts';
+import { createAdExportRoutes } from './newspaper/ad-export-routes.ts';
+import { DuckDBConnection } from '@duckdb/node-api';
+import { getDb } from './lib/db.ts';
+import { trackConnection } from './lib/graceful-shutdown.ts';
+import { ensureNewspaperTables } from './newspaper/schema.ts';
+import { getHouseAdById } from './newspaper/repository.ts';
 import { buildInferenceRoutes } from './inference/routes.ts';
 import { autocompleteRoutes, searchRoutes } from './search/routes.ts';
 import { publicStatsRoutes, statsRoutes } from './stats/routes.ts';
@@ -99,6 +105,29 @@ app.route('/api/autocomplete', autocompleteRoutes);
 app.route('/api/companies', companyRoutes);
 app.route('/api/news', newsRoutes);
 app.route('/api/newspaper', newspaperRoutes);
+
+// House ad export — mounted OUTSIDE /api/* so URLs are short and shareable
+// (e.g. https://dailyorbit.org/ads/7-three-miles-up.html). No auth.
+app.route(
+  '/ads',
+  createAdExportRoutes({
+    async lookupAd(id: number) {
+      const db = await getDb();
+      const conn: DuckDBConnection = await DuckDBConnection.create(db);
+      trackConnection(conn);
+      try {
+        await ensureNewspaperTables(conn);
+        const ad = await getHouseAdById(conn, id);
+        if (ad == null) return null;
+        return { id: ad.id, tagline: ad.tagline, imagePath: ad.imagePath };
+      } finally {
+        conn.closeSync();
+      }
+    },
+    getDestinationBaseUrl: () =>
+      getConfigService().get('houseAdDestinationUrl') as string,
+  }),
+);
 app.route('/api/query', queryRoutes);
 app.route('/api/stats', publicStatsRoutes);
 app.route('/api/consultants', consultantRoutes);
