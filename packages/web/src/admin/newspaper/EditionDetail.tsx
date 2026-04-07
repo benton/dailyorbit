@@ -129,7 +129,11 @@ export default function EditionDetail() {
       }
       setRegenerating(slug);
       try {
-        await apiFetch(`/api/newspaper/edition/${date}/regenerate/${slug}`, {
+        // Admin generate endpoint resets the article AND synchronously runs
+        // the generator. The older /edition/:date/regenerate/:slug route
+        // only reset to pending and left the body stale, which looked like
+        // a broken regenerate button to users.
+        await apiFetch(`/api/admin/newspaper/generate/${date}/${slug}`, {
           method: 'POST',
         });
         await fetchEdition();
