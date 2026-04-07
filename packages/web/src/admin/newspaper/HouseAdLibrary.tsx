@@ -5,12 +5,12 @@ import { libraryImageUrl } from '../../newspaper/types.ts';
 import { Button } from '../../ui/button.tsx';
 
 type HouseAdListItem = {
-  id: number;
-  tagline: string;
-  slug: string;
   htmlPath: string;
+  id: number;
   imagePath: string;
   imageSubpath: string;
+  slug: string;
+  tagline: string;
 };
 
 type ListResponse = {
@@ -30,9 +30,9 @@ export default function HouseAdLibrary() {
           setAds(data.ads);
         }
       })
-      .catch((err: unknown) => {
+      .catch((error_: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load house ads');
+          setError(error_ instanceof Error ? error_.message : 'Failed to load house ads');
         }
       })
       .finally(() => {
