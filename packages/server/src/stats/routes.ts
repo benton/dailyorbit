@@ -33,9 +33,39 @@ function lastBusinessDate(): string {
   return lastBusinessDayBefore(todayEasternIso);
 }
 
-/** Returns the day name for the last business date (e.g., "Friday" on weekends). */
-function lastBusinessDayLabel(): string {
-  return weekdayLabel(lastBusinessDate());
+/**
+ * Resolve the target business day and weekday label for `/recent-filings`,
+ * honoring an optional `?before=YYYY-MM-DD` query parameter.
+ *
+ * - If `beforeRaw` is present and well-formed, the result is scoped to the
+ *   last business day strictly before that date (weekend-skipping).
+ * - If `beforeRaw` is absent or empty, the result is scoped to the current
+ *   last business day (wall-clock, US Eastern), preserving the existing
+ *   homepage/dashboard semantics.
+ * - If `beforeRaw` is malformed, returns `{ ok: false, error }` so the
+ *   caller can emit a 400.
+ *
+ * Exported so unit tests can cover the pure logic without a route harness.
+ */
+export type RecentFilingsTarget =
+  | { ok: true; targetDate: string; dayLabel: string }
+  | { ok: false; error: string };
+
+export function resolveRecentFilingsTarget(
+  beforeRaw: string | undefined,
+): RecentFilingsTarget {
+  if (beforeRaw == null || beforeRaw.length === 0) {
+    const targetDate: string = lastBusinessDate();
+    return { ok: true, targetDate, dayLabel: weekdayLabel(targetDate) };
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(beforeRaw)) {
+    return {
+      ok: false,
+      error: 'Invalid before date format, expected YYYY-MM-DD',
+    };
+  }
+  const targetDate: string = lastBusinessDayBefore(beforeRaw);
+  return { ok: true, targetDate, dayLabel: weekdayLabel(targetDate) };
 }
 
 /** Returns today's date in YYYY-MM-DD format using US Eastern timezone. */
@@ -111,12 +141,16 @@ publicStatsRoutes.get('/filing-volume', async (c) => {
 });
 
 publicStatsRoutes.get('/recent-filings', async (c) => {
+  const resolved = resolveRecentFilingsTarget(c.req.query('before'));
+  if (!resolved.ok) {
+    return c.json({ error: resolved.error }, 400);
+  }
+  const { targetDate, dayLabel } = resolved;
+
   const db = await getDb();
   const conn: DuckDBConnection = await DuckDBConnection.create(db);
   trackConnection(conn);
   try {
-    const targetDate: string = lastBusinessDate();
-    const dayLabel: string = lastBusinessDayLabel();
     const filings = await getRecentFilings(conn, targetDate);
     return c.json({ date: targetDate, dayLabel, filings });
   } finally {

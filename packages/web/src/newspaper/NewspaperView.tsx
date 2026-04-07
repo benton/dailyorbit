@@ -88,7 +88,9 @@ export default function NewspaperView({ latest }: { latest?: boolean } = {}) {
 
       const editionDate: string = data.editionDate;
       const [filings, news, adjacent] = await Promise.all([
-        apiFetch<RecentFilingsResponse>('/api/stats/recent-filings'),
+        apiFetch<RecentFilingsResponse>(
+          `/api/stats/recent-filings?before=${encodeURIComponent(editionDate)}`,
+        ),
         apiFetch<PaginatedNewsResponse>(`/api/newspaper/edition/${editionDate}/news`),
         apiFetch<{ next: string | null; prev: string | null }>(
           `/api/newspaper/edition/${editionDate}/adjacent`,
