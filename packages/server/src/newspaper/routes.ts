@@ -541,7 +541,7 @@ type HouseAdListItem = {
   thumbnailUrl: string;
 };
 
-function mapHouseAdToListItem(ad: HouseAd): HouseAdListItem {
+export function mapHouseAdToListItem(ad: HouseAd): HouseAdListItem {
   const slug: string = slugify(ad.tagline);
   const filename: string = ad.imagePath.split('/').pop() ?? '';
   return {
