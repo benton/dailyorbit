@@ -324,11 +324,22 @@ export const DOCKET_VARIABLES: ReadonlyArray<TemplateVariable> = [
     source: 'db query',
     example: '- SpaceX: 3 filings\n- Hughes: 2 filings',
   },
+  {
+    name: 'filingSummaries',
+    description:
+      "Markdown list of the actual filings shown in the reader's Yesterday's Filings table",
+    source: 'db query',
+    example:
+      '- SAT-STA-20260406-00153 (SAT-STA) — SpaceX [Pending Review]\n- SES-RWL-20260406-00861 (SES-RWL) — KABC Television, LLC [Pending Review]',
+  },
 ];
 
 export const DEFAULT_DOCKET_SYSTEM_PROMPT: string = `You are a court reporter for "The Daily Orbit" newspaper. You write the daily "The Docket" column — a brief, factual snapshot of yesterday's FCC filing activity. Your tone is crisp and reportorial. Write in flowing prose — no bullet points.`;
 
 export const DEFAULT_DOCKET_USER_PROMPT: string = `Write today's "The Docket" column for {{editionDate}}.
+
+Yesterday's filings (exactly what our readers see alongside your column — do not contradict this list):
+{{{filingSummaries}}}
 
 Yesterday's filings by subsystem:
 {{{filingsBySubsystem}}}
@@ -336,7 +347,7 @@ Yesterday's filings by subsystem:
 Top applicants:
 {{{topApplicants}}}
 
-Write 1-2 short paragraphs summarizing the filing activity. Reference specific numbers, subsystems, and notable applicants.`;
+Write 1-2 short paragraphs summarizing the filing activity. Reference specific file numbers, subsystems, and notable applicants drawn from the list above. If the list is empty, say plainly that no filings were recorded; otherwise never describe the day as "quiet" or "no submissions."`;
 
 // ── Spectrum Watch template variables ───────────────────────────
 

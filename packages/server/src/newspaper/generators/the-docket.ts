@@ -1,5 +1,7 @@
-import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import { renderPrompt } from '../../inference/prompts.ts';
+import { lastBusinessDayBefore } from '../../stats/business-day.ts';
+import { getRecentFilings } from '../../stats/repository.ts';
+import type { RecentFiling } from '../../stats/types.ts';
 import {
   DEFAULT_DOCKET_SYSTEM_PROMPT,
   DEFAULT_DOCKET_USER_PROMPT,
@@ -18,54 +20,46 @@ type TopApplicant = {
   filingCount: number;
 };
 
-// ── Query helpers ───────────────────────────────────────────────
+// ── Aggregators ─────────────────────────────────────────────────
 
-/**
- * Count yesterday's filings grouped by subsystem code.
- */
-export async function queryYesterdayFilingsBySubsystem(
-  conn: DuckDBConnection,
-  editionDate: string,
-): Promise<SubsystemCount[]> {
-  const reader = await conn.runAndReadAll(
-    `SELECT subsystem_code, COUNT(*) AS cnt
-     FROM filing
-     WHERE date_filed = CAST(? AS DATE) - INTERVAL 1 DAY
-       AND subsystem_code IS NOT NULL
-     GROUP BY subsystem_code
-     ORDER BY cnt DESC`,
-    [editionDate] as DuckDBValue[],
-  );
-
-  return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({
-    subsystemCode: String(r.subsystem_code),
-    count: Number(r.cnt),
-  }));
+/** Group filings by subsystem code, descending by count. */
+export function aggregateBySubsystem(
+  filings: ReadonlyArray<RecentFiling>,
+): SubsystemCount[] {
+  const counts: Map<string, number> = new Map();
+  for (const f of filings) {
+    counts.set(f.subsystem_code, (counts.get(f.subsystem_code) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([subsystemCode, count]: [string, number]) => ({
+      subsystemCode,
+      count,
+    }))
+    .sort((a: SubsystemCount, b: SubsystemCount) => b.count - a.count);
 }
 
 /**
- * Get the top 5 applicants from yesterday's filings.
+ * Group filings by applicant, descending by count. Uses `company_name` when
+ * present (matching the "Company" column in Yesterday's Filings), falling
+ * back to `address_attention` (the raw "Applicant" string on the filing)
+ * for un-linked filings. Returns the top 5.
  */
-export async function queryYesterdayTopApplicants(
-  conn: DuckDBConnection,
-  editionDate: string,
-): Promise<TopApplicant[]> {
-  const reader = await conn.runAndReadAll(
-    `SELECT c.name AS company_name, COUNT(*) AS filing_count
-     FROM filing f
-     JOIN company_alias ca ON UPPER(f.address_attention) = UPPER(ca.alias_name)
-     JOIN company c ON c.id = ca.company_id
-     WHERE f.date_filed = CAST(? AS DATE) - INTERVAL 1 DAY
-     GROUP BY c.name
-     ORDER BY filing_count DESC
-     LIMIT 5`,
-    [editionDate] as DuckDBValue[],
-  );
-
-  return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({
-    companyName: String(r.company_name),
-    filingCount: Number(r.filing_count),
-  }));
+export function aggregateTopApplicants(
+  filings: ReadonlyArray<RecentFiling>,
+): TopApplicant[] {
+  const counts: Map<string, number> = new Map();
+  for (const f of filings) {
+    const name: string | null = f.company_name ?? f.address_attention;
+    if (name == null || name.length === 0) continue;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([companyName, filingCount]: [string, number]) => ({
+      companyName,
+      filingCount,
+    }))
+    .sort((a: TopApplicant, b: TopApplicant) => b.filingCount - a.filingCount)
+    .slice(0, 5);
 }
 
 // ── Formatters ──────────────────────────────────────────────────
@@ -100,6 +94,27 @@ export function formatTopApplicants(rows: TopApplicant[]): string {
     .join('\n');
 }
 
+/**
+ * Render the raw filing list as a markdown bullet list. This is the same
+ * data the reader sees in the "Yesterday's Filings" table — giving it to
+ * the LLM lets the column reference specific file numbers, applicants,
+ * and statuses instead of only aggregate counts.
+ */
+export function formatFilingSummaries(
+  filings: ReadonlyArray<RecentFiling>,
+): string {
+  if (filings.length === 0) return '_No filings recorded._';
+  return filings
+    .map((f: RecentFiling) => {
+      const applicant: string =
+        f.company_name ?? f.address_attention ?? 'Unknown applicant';
+      const type: string = `${f.subsystem_code}-${f.app_type_code}`;
+      const status: string = f.status_code ?? 'Unknown status';
+      return `- ${f.file_number} (${type}) — ${applicant} [${status}]`;
+    })
+    .join('\n');
+}
+
 // ── Generator ───────────────────────────────────────────────────
 
 export async function generateTheDocket(
@@ -107,21 +122,20 @@ export async function generateTheDocket(
 ): Promise<GeneratorResult> {
   const { conn, editionDate, inferenceService, config, log } = opts;
 
-  // 1. Query data
-  log('info', "Querying yesterday's filing activity for The Docket...");
-  const filingsBySubsystem: SubsystemCount[] =
-    await queryYesterdayFilingsBySubsystem(conn, editionDate);
-  const topApplicants: TopApplicant[] = await queryYesterdayTopApplicants(
-    conn,
-    editionDate,
-  );
-
+  // 1. Query the same row set the reader sees in "Yesterday's Filings".
+  const targetDate: string = lastBusinessDayBefore(editionDate);
   log(
     'info',
-    `Found ${String(filingsBySubsystem.length)} subsystems, ${String(topApplicants.length)} top applicants`,
+    `Querying The Docket filings for ${targetDate} (edition ${editionDate})...`,
   );
+  const filings: RecentFiling[] = await getRecentFilings(conn, targetDate);
+  log('info', `Found ${String(filings.length)} filings for ${targetDate}`);
 
-  // 2. Build prompt
+  // 2. Derive aggregates in JS from that single source of truth.
+  const filingsBySubsystem: SubsystemCount[] = aggregateBySubsystem(filings);
+  const topApplicants: TopApplicant[] = aggregateTopApplicants(filings);
+
+  // 3. Build prompt
   const modelId: string = config.get('newspaperCopyModel') as string;
   const systemPrompt: string =
     (config.get('newspaperDocketSystemPrompt') as string) ||
@@ -134,9 +148,10 @@ export async function generateTheDocket(
     editionDate: formatEditionDate(editionDate),
     filingsBySubsystem: formatFilingsBySubsystem(filingsBySubsystem),
     topApplicants: formatTopApplicants(topApplicants),
+    filingSummaries: formatFilingSummaries(filings),
   });
 
-  // 3. Call inference
+  // 4. Call inference
   log('info', `Generating The Docket with ${modelId}...`);
   const response = await inferenceService.complete({
     modelId,
@@ -144,7 +159,7 @@ export async function generateTheDocket(
     params: { systemPrompt },
   });
 
-  // 4. Parse response
+  // 5. Parse response
   const lines: string[] = response.content.split('\n');
   const headline: string = lines[0]?.replace(/^#+\s*/, '') ?? 'The Docket';
   const body: string = response.content;
@@ -153,10 +168,13 @@ export async function generateTheDocket(
     headline,
     body,
     sourceData: {
+      targetDate,
+      filingCount: filings.length,
       filingsBySubsystem: filingsBySubsystem.map(
         (r: SubsystemCount) => `${r.subsystemCode}: ${String(r.count)}`,
       ),
       topApplicants: topApplicants.map((r: TopApplicant) => r.companyName),
+      fileNumbers: filings.map((f: RecentFiling) => f.file_number),
       modelId,
     },
   };
