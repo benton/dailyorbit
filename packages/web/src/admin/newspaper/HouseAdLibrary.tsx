@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
 import { Button } from '../../ui/button.tsx';
@@ -44,7 +44,10 @@ export default function HouseAdLibrary() {
     };
   }, []);
 
-  const origin: string = typeof window === 'undefined' ? '' : window.location.origin;
+  const origin: string = useMemo(
+    () => (typeof window === 'undefined' ? '' : window.location.origin),
+    [],
+  );
 
   const allHtmlUrls: string = useMemo(
     () => ads.map((ad: HouseAdListItem) => `${origin}${ad.htmlPath}`).join('\n'),
@@ -142,12 +145,25 @@ function CopyButton({
   value: string;
 }) {
   const [copied, setCopied] = useState<boolean>(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    },
+    [],
+  );
 
   const handleClick = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => setCopied(false), 1500);
     } catch {
       /* clipboard blocked — leave label unchanged */
     }
