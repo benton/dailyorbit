@@ -46,7 +46,7 @@ export default function UserMenu() {
 
   const handleLogout = () => {
     void AuthClient.signOut().then(() => {
-      void navigate('/login');
+      void navigate('/');
     });
   };
 
