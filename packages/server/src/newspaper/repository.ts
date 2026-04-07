@@ -538,3 +538,16 @@ export async function listHouseAds(conn: DuckDBConnection): Promise<HouseAd[]> {
   const reader = await conn.runAndReadAll(`SELECT * FROM house_ad ORDER BY id`);
   return reader.getRowObjectsJS().map(rowToHouseAd);
 }
+
+export async function getHouseAdById(
+  conn: DuckDBConnection,
+  id: number,
+): Promise<HouseAd | null> {
+  const reader = await conn.runAndReadAll(
+    `SELECT * FROM house_ad WHERE id = ?`,
+    [id] as DuckDBValue[],
+  );
+  const rows = reader.getRowObjectsJS();
+  if (rows.length === 0) return null;
+  return rowToHouseAd(rows[0]!);
+}
