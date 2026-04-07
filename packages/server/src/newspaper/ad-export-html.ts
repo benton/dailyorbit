@@ -51,3 +51,17 @@ export function escapeHtml(input: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+/**
+ * Append the standard daily-orbit UTM tracking params to a base URL,
+ * preserving any path/query already present. Overrides utm_* params
+ * on conflict so the canonical campaign attribution always wins.
+ */
+export function buildAdDestinationUrl(baseUrl: string, adId: number): string {
+  const url: URL = new URL(baseUrl);
+  url.searchParams.set('utm_source', 'daily_orbit');
+  url.searchParams.set('utm_medium', 'house_ad');
+  url.searchParams.set('utm_campaign', 'launch');
+  url.searchParams.set('utm_content', `ad-${String(adId)}`);
+  return url.toString();
+}

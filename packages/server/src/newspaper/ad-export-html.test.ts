@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { escapeHtml, slugify } from './ad-export-html.ts';
+import {
+  buildAdDestinationUrl,
+  escapeHtml,
+  slugify,
+} from './ad-export-html.ts';
 
 describe('slugify', () => {
   test('lowercases ASCII and replaces spaces with hyphens', () => {
@@ -57,5 +61,45 @@ describe('escapeHtml', () => {
 
   test('handles empty string', () => {
     expect(escapeHtml('')).toBe('');
+  });
+});
+
+describe('buildAdDestinationUrl', () => {
+  test('appends UTM params to a bare base URL', () => {
+    const result: string = buildAdDestinationUrl('https://dailyorbit.org/', 7);
+    const url: URL = new URL(result);
+    expect(url.origin).toBe('https://dailyorbit.org');
+    expect(url.pathname).toBe('/');
+    expect(url.searchParams.get('utm_source')).toBe('daily_orbit');
+    expect(url.searchParams.get('utm_medium')).toBe('house_ad');
+    expect(url.searchParams.get('utm_campaign')).toBe('launch');
+    expect(url.searchParams.get('utm_content')).toBe('ad-7');
+  });
+
+  test('preserves an existing path', () => {
+    const result: string = buildAdDestinationUrl(
+      'https://dailyorbit.org/welcome',
+      3,
+    );
+    expect(new URL(result).pathname).toBe('/welcome');
+  });
+
+  test('preserves existing query params and overrides on conflict', () => {
+    const result: string = buildAdDestinationUrl(
+      'https://dailyorbit.org/?ref=foo&utm_source=manual',
+      12,
+    );
+    const url: URL = new URL(result);
+    expect(url.searchParams.get('ref')).toBe('foo');
+    expect(url.searchParams.get('utm_source')).toBe('daily_orbit');
+    expect(url.searchParams.get('utm_content')).toBe('ad-12');
+  });
+
+  test('uses numeric id for utm_content even when id is large', () => {
+    const result: string = buildAdDestinationUrl(
+      'https://dailyorbit.org/',
+      999,
+    );
+    expect(new URL(result).searchParams.get('utm_content')).toBe('ad-999');
   });
 });
