@@ -31,15 +31,15 @@ You produce a daily digest column called "300 Miles Up" that summarizes the day'
 
 export const DEFAULT_DIGEST_USER_PROMPT: string = `Write today's "300 Miles Up" column for {{editionDate}}.
 
-Today's notable filings:
-{{{filingSummaries}}}
-
-Recent industry news:
+Recent industry news — this is your primary material, lead with it:
 {{{newsSummaries}}}
+
+Yesterday's FCC filings — use these for corroboration or color, not as the main story:
+{{{filingSummaries}}}
 
 IMPORTANT: This edition is for {{editionDate}}. Only discuss events from on or before this date.
 
-Write 2-3 paragraphs. Reference specific file numbers and company names. Include links to Daily Orbit filing pages as [Company Name](/filings/FILE-NUMBER). At the bottom, include source attributions as "Source: [Publication Name](original-url)".`;
+Write 2-3 paragraphs that lead with the most significant news stories above. Draw connections to the filing activity where it actually corroborates, contextualizes, or complicates a news item — otherwise leave the filings out. Reference specific news outlets and company names. When you cite a filing, include a link as [Company Name](/filings/FILE-NUMBER). End with source attributions as "Source: [Publication Name](original-url)".`;
 
 // ── Fake Ad template variables ─────────────────────────────────────
 

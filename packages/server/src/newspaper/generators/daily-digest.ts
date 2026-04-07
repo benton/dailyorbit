@@ -1,5 +1,6 @@
 import type { DuckDBConnection, DuckDBValue } from '@duckdb/node-api';
 import { renderPrompt } from '../../inference/prompts.ts';
+import { lastBusinessDayBefore } from '../../stats/business-day.ts';
 import {
   DEFAULT_DIGEST_SYSTEM_PROMPT,
   DEFAULT_DIGEST_USER_PROMPT,
@@ -25,22 +26,29 @@ type NewsSummary = {
 
 // ── Query helpers ───────────────────────────────────────────────────
 
+/**
+ * Query filings from the last business day before the edition. Mirrors
+ * The Docket's single-day window so the lead column's concrete filing
+ * references match the Yesterday's Filings table on the same page. On
+ * Monday editions "yesterday" resolves to Friday via the shared
+ * `lastBusinessDayBefore` helper.
+ */
 export async function queryRecentFilings(
   conn: DuckDBConnection,
   editionDate: string,
 ): Promise<FilingSummary[]> {
+  const targetDate: string = lastBusinessDayBefore(editionDate);
   const reader = await conn.runAndReadAll(
     `SELECT f.file_number, f.address_attention AS applicant_name,
             CAST(f.date_filed AS VARCHAR) AS date_filed,
             a.summary
      FROM filing f
      JOIN attachment a ON a.filing_key = f.filing_key
-     WHERE f.date_filed >= CAST(? AS DATE) - INTERVAL 1 DAY
-       AND f.date_filed <= CAST(? AS DATE)
+     WHERE f.date_filed::DATE = CAST(? AS DATE)
        AND a.summary IS NOT NULL AND LENGTH(a.summary) > 0
      ORDER BY f.date_filed DESC
      LIMIT 20`,
-    [editionDate, editionDate] as DuckDBValue[],
+    [targetDate] as DuckDBValue[],
   );
 
   return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({
@@ -51,20 +59,26 @@ export async function queryRecentFilings(
   }));
 }
 
+/**
+ * Query news items from the last business day through end-of-edition-day.
+ * Wider than the filings window because news items are less frequent and
+ * weekend stories should still surface in Monday's edition.
+ */
 export async function queryRecentNews(
   conn: DuckDBConnection,
   editionDate: string,
 ): Promise<NewsSummary[]> {
+  const targetDate: string = lastBusinessDayBefore(editionDate);
   const reader = await conn.runAndReadAll(
     `SELECT ni.id, ni.title, ni.source_url, ns.name AS source_name, ni.summary
      FROM news_item ni
      JOIN news_source ns ON ns.id = ni.news_source_id
-     WHERE ni.published_at >= CAST(? AS TIMESTAMP) - INTERVAL 1 DAY
+     WHERE ni.published_at >= CAST(? AS TIMESTAMP)
        AND ni.published_at < CAST(? AS DATE) + INTERVAL 1 DAY
        AND ni.summary IS NOT NULL AND LENGTH(ni.summary) > 0
      ORDER BY ni.published_at DESC
      LIMIT 15`,
-    [editionDate, editionDate] as DuckDBValue[],
+    [targetDate, editionDate] as DuckDBValue[],
   );
 
   return reader.getRowObjectsJS().map((r: Record<string, unknown>) => ({

@@ -146,14 +146,15 @@ describe('generateDailyDigest', () => {
   });
 
   it('calls inference with formatted prompt when data exists', async () => {
-    // Insert a filing + attachment with summary
+    // Edition = Tuesday 2026-03-24 → lastBusinessDayBefore = Monday 2026-03-23.
+    // Filings must be dated on that business day to surface in the digest.
     await conn.run(
       `INSERT INTO filing (filing_key, file_number, date_filed, address_attention)
-       VALUES (1, 'SAT-LOA-20260324-00042', '2026-03-24', 'Hughes Network Systems')`,
+       VALUES (1, 'SAT-LOA-20260323-00042', '2026-03-23', 'Hughes Network Systems')`,
     );
     await conn.run(
       `INSERT INTO attachment (attachment_key, filing_key, file_number, attachment_name, summary)
-       VALUES (1, 1, 'SAT-LOA-20260324-00042', 'application.pdf', 'Application for new orbital license.')`,
+       VALUES (1, 1, 'SAT-LOA-20260323-00042', 'application.pdf', 'Application for new orbital license.')`,
     );
 
     const responseText: string =
@@ -173,7 +174,7 @@ describe('generateDailyDigest', () => {
 
     expect(result.headline).toEqual('Busy Day at the Bureau');
     expect(result.body).toContain('FCC received several notable filings');
-    expect(result.sourceData.filings).toContain('SAT-LOA-20260324-00042');
+    expect(result.sourceData.filings).toContain('SAT-LOA-20260323-00042');
     expect(result.sourceData.modelId).toEqual('test-model');
 
     // Verify the inference call
@@ -181,8 +182,45 @@ describe('generateDailyDigest', () => {
     const call = inferenceService.complete.mock.calls[0]![0]!;
     expect(call.modelId).toEqual('test-model');
     expect(call.messages[0]!.content).toContain('Tuesday, March 24, 2026');
-    expect(call.messages[0]!.content).toContain('SAT-LOA-20260324-00042');
+    expect(call.messages[0]!.content).toContain('SAT-LOA-20260323-00042');
     expect(call.params!.systemPrompt).toContain('Daily Orbit');
+  });
+
+  it('surfaces Friday filings on a Monday edition (weekend-skip regression)', async () => {
+    // Edition = Monday 2026-03-30 → lastBusinessDayBefore = Friday 2026-03-27.
+    // This is the exact scenario the pre-1.28.3 scoping got wrong: the naive
+    // [editionDate - 1 day, editionDate] window would have hit only Sunday
+    // and Monday and missed Friday entirely.
+    await conn.run(
+      `INSERT INTO filing (filing_key, file_number, date_filed, address_attention)
+       VALUES
+         (1, 'SAT-STA-20260327-00010', '2026-03-27', 'SpaceX'),
+         (2, 'SES-MOD-20260329-00020', '2026-03-29', 'Should not appear')`,
+    );
+    await conn.run(
+      `INSERT INTO attachment (attachment_key, filing_key, file_number, attachment_name, summary)
+       VALUES
+         (1, 1, 'SAT-STA-20260327-00010', 'sta.pdf', 'Friday STA request.'),
+         (2, 2, 'SES-MOD-20260329-00020', 'mod.pdf', 'Sunday modification.')`,
+    );
+
+    const inferenceService = makeMockInferenceService(
+      '# Monday Recap\n\nFriday was busy at the Commission.',
+    );
+    const config = makeMockConfig();
+
+    const result: GeneratorResult = await generateDailyDigest({
+      conn,
+      editionId: 2,
+      editionDate: '2026-03-30',
+      inferenceService:
+        inferenceService as unknown as GenerateOptions['inferenceService'],
+      config: config as unknown as GenerateOptions['config'],
+      log: vi.fn(),
+    });
+
+    expect(result.sourceData.filings).toContain('SAT-STA-20260327-00010');
+    expect(result.sourceData.filings).not.toContain('SES-MOD-20260329-00020');
   });
 
   it('includes news items in source data when present', async () => {
