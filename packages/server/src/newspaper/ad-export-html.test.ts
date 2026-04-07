@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   buildAdDestinationUrl,
   escapeHtml,
+  renderAdHtml,
   slugify,
 } from './ad-export-html.ts';
 
@@ -101,5 +102,61 @@ describe('buildAdDestinationUrl', () => {
       999,
     );
     expect(new URL(result).searchParams.get('utm_content')).toBe('ad-999');
+  });
+});
+
+describe('renderAdHtml', () => {
+  const baseInput = {
+    id: 7,
+    slug: 'three-miles-up',
+    tagline: 'Three Miles Up & Counting',
+    destinationUrl: 'https://dailyorbit.org/?utm_source=daily_orbit',
+    absoluteImageUrl: 'https://dailyorbit.org/ads/7-three-miles-up.webp',
+  };
+
+  test('starts with <!doctype html>', () => {
+    expect(renderAdHtml(baseInput).startsWith('<!doctype html>')).toBe(true);
+  });
+
+  test('uses the relative image src so save-as works', () => {
+    const html: string = renderAdHtml(baseInput);
+    expect(html).toContain('src="7-three-miles-up.webp"');
+  });
+
+  test('embeds the tagline (HTML-escaped) in title and visible text', () => {
+    const html: string = renderAdHtml({
+      ...baseInput,
+      tagline: 'Tom & "Jerry"',
+    });
+    expect(html).toContain('Tom &amp; &quot;Jerry&quot;');
+  });
+
+  test('uses the destinationUrl on the wrapping anchor', () => {
+    const html: string = renderAdHtml(baseInput);
+    expect(html).toContain(
+      'href="https://dailyorbit.org/?utm_source=daily_orbit"',
+    );
+  });
+
+  test('uses the absoluteImageUrl in og:image meta tag', () => {
+    const html: string = renderAdHtml(baseInput);
+    expect(html).toContain(
+      '<meta property="og:image" content="https://dailyorbit.org/ads/7-three-miles-up.webp">',
+    );
+  });
+
+  test('contains exactly one anchor element (single click target)', () => {
+    const html: string = renderAdHtml(baseInput);
+    const anchorCount: number = (html.match(/<a /g) ?? []).length;
+    expect(anchorCount).toBe(1);
+  });
+
+  test('contains no <script> tags', () => {
+    const html: string = renderAdHtml(baseInput);
+    expect(html).not.toContain('<script');
+  });
+
+  test('snapshot — full output', () => {
+    expect(renderAdHtml(baseInput)).toMatchSnapshot();
   });
 });

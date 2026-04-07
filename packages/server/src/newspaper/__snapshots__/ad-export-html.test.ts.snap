@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderAdHtml > snapshot — full output 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Daily Orbit — Three Miles Up &amp; Counting</title>
+<meta property="og:title" content="The Daily Orbit">
+<meta property="og:description" content="Three Miles Up &amp; Counting">
+<meta property="og:image" content="https://dailyorbit.org/ads/7-three-miles-up.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital@0;1&family=Josefin+Slab:wght@600&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:24px;background:#faf7f0;font-family:'Libre Baskerville',Georgia,'Times New Roman',serif;color:#1a1a1a">
+<a href="https://dailyorbit.org/?utm_source=daily_orbit" style="display:block;max-width:480px;margin:1rem auto;padding:1.25rem 1.5rem;background:#faf7f0;border:3px double #5c4a32;text-align:center;text-decoration:none;color:inherit">
+<img src="7-three-miles-up.webp" alt="Three Miles Up &amp; Counting" width="320" height="320" style="display:block;max-width:100%;height:auto;margin:0 auto 0.75rem;border:1px solid #b8a88a">
+<p style="font-family:'Libre Baskerville',Georgia,serif;font-style:italic;font-size:1.15rem;line-height:1.4;color:#5c4a32;margin:0.5rem 0">&ldquo;Three Miles Up &amp; Counting&rdquo;</p>
+<p style="font-family:'Josefin Slab','Courier New',serif;font-size:1rem;font-weight:600;color:#1a1a1a;margin:0.75rem 0 0.5rem">Subscribe to <em>The Daily Orbit</em> today!</p>
+<p style="font-family:'Josefin Slab','Courier New',serif;font-size:0.7rem;font-variant:small-caps;letter-spacing:0.15em;color:#8b7355;margin:0.75rem 0 0">&#x2550;&#x2550; An Advertisement &#x2550;&#x2550;</p>
+</a>
+</body>
+</html>
+"
+`;
