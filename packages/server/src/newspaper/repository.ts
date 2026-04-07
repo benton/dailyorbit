@@ -347,21 +347,37 @@ export async function getArticle(
 }
 
 /**
- * Find the most recent generated article with the given slug across all editions.
- * Useful for cross-edition dependencies (e.g. editorial cartoon needs an editorial
- * that may have been generated on a different day).
+ * Find the most recent generated article with the given slug.
+ *
+ * - If `beforeDate` is supplied, only considers editions dated on or before
+ *   that date. This is important for backfill / regeneration: when
+ *   regenerating an old edition we want the article that was current at
+ *   that time, not a newer article from a later edition.
+ * - Without `beforeDate`, returns the absolute most recent matching
+ *   article.
+ *
+ * Useful for cross-edition dependencies (e.g. editorial cartoon needs an
+ * editorial that may have been generated on a different day).
  */
 export async function getRecentArticleBySlug(
   conn: DuckDBConnection,
   slug: string,
+  beforeDate?: string,
 ): Promise<NewspaperArticle | null> {
+  const dateFilter: string =
+    beforeDate != null ? ' AND e.edition_date <= CAST(? AS DATE)' : '';
+  const params: DuckDBValue[] =
+    beforeDate != null
+      ? ([slug, beforeDate] as DuckDBValue[])
+      : ([slug] as DuckDBValue[]);
+
   const reader = await conn.runAndReadAll(
     `SELECT a.* FROM newspaper_article a
      JOIN newspaper_edition e ON a.edition_id = e.id
-     WHERE a.slug = ? AND a.status = 'generated'
+     WHERE a.slug = ? AND a.status = 'generated'${dateFilter}
      ORDER BY e.edition_date DESC
      LIMIT 1`,
-    [slug] as DuckDBValue[],
+    params,
   );
   const rows = reader.getRowObjectsJS();
   if (rows.length === 0) return null;

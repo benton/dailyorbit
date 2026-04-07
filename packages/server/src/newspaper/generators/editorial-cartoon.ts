@@ -46,10 +46,17 @@ export async function generateEditorialCartoon(
   } = opts;
   const dataDir: string = _dataDir ?? 'data';
 
-  // 1. Read the editorial to get the theme — prefer today's, fall back to most recent
+  // 1. Read the editorial to get the theme — prefer today's, fall back to the
+  // most recent editorial at or before this edition's date. Bounding by
+  // editionDate ensures backfill regeneration uses the editorial that was
+  // current at the time, not a newer one from a later edition.
   let editorial = await getArticle(conn, editionId, 'over-the-horizon');
   if (editorial == null || editorial.status !== 'generated') {
-    editorial = await getRecentArticleBySlug(conn, 'over-the-horizon');
+    editorial = await getRecentArticleBySlug(
+      conn,
+      'over-the-horizon',
+      editionDate,
+    );
   }
   if (editorial == null) {
     throw new Error(

@@ -11,6 +11,7 @@ import {
   getEditionByDate,
   getImageByPath,
   getLatestEdition,
+  getRecentArticleBySlug,
   insertImage,
   listEditions,
   listImagesByType,
@@ -283,6 +284,72 @@ describe('newspaper repository', () => {
 
       const article = await getArticle(conn, edition.id, 'three-miles-up');
       expect(article!.status).toEqual('pending');
+    });
+  });
+
+  describe('getRecentArticleBySlug', () => {
+    it('returns null when no matching article exists', async () => {
+      const result = await getRecentArticleBySlug(conn, 'over-the-horizon');
+      expect(result).toBeNull();
+    });
+
+    it('returns the absolute most recent article when no beforeDate is passed', async () => {
+      const ed1 = await ensureEdition(conn, '2026-03-16');
+      await upsertArticle(conn, ed1.id, {
+        contentType: 'editorial',
+        slug: 'over-the-horizon',
+        body: 'Older editorial body.',
+        status: 'generated',
+      });
+      const ed2 = await ensureEdition(conn, '2026-03-30');
+      await upsertArticle(conn, ed2.id, {
+        contentType: 'editorial',
+        slug: 'over-the-horizon',
+        body: 'Newer editorial body.',
+        status: 'generated',
+      });
+
+      const result = await getRecentArticleBySlug(conn, 'over-the-horizon');
+      expect(result!.body).toEqual('Newer editorial body.');
+    });
+
+    it('respects beforeDate so backfill regeneration gets the edition-current article', async () => {
+      const ed1 = await ensureEdition(conn, '2026-03-16');
+      await upsertArticle(conn, ed1.id, {
+        contentType: 'editorial',
+        slug: 'over-the-horizon',
+        body: 'Editorial from 2026-03-16.',
+        status: 'generated',
+      });
+      const ed2 = await ensureEdition(conn, '2026-03-30');
+      await upsertArticle(conn, ed2.id, {
+        contentType: 'editorial',
+        slug: 'over-the-horizon',
+        body: 'Editorial from 2026-03-30.',
+        status: 'generated',
+      });
+
+      // Regenerating the 2026-03-20 edition should see the 03-16 editorial,
+      // not the 03-30 one.
+      const result = await getRecentArticleBySlug(
+        conn,
+        'over-the-horizon',
+        '2026-03-20',
+      );
+      expect(result!.body).toEqual('Editorial from 2026-03-16.');
+    });
+
+    it('ignores articles that are not in generated status', async () => {
+      const edition = await ensureEdition(conn, '2026-03-20');
+      await upsertArticle(conn, edition.id, {
+        contentType: 'editorial',
+        slug: 'over-the-horizon',
+        body: 'Pending, should be ignored.',
+        status: 'pending',
+      });
+
+      const result = await getRecentArticleBySlug(conn, 'over-the-horizon');
+      expect(result).toBeNull();
     });
   });
 
