@@ -157,6 +157,13 @@ export const CONFIG_SCHEMA: Record<string, ConfigFieldDef> = {
     encrypted: false,
     description: 'Application base URL for links in emails',
   },
+  houseAdDestinationUrl: {
+    key: 'houseAdDestinationUrl',
+    defaultValue: 'https://dailyorbit.org/',
+    encrypted: false,
+    description:
+      'Base URL used as the click-target for exported house ads (UTM params are appended automatically).',
+  },
   snapshotBucket: {
     key: 'snapshotBucket',
     defaultValue: '',
