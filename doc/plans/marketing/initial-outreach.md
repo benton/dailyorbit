@@ -45,6 +45,27 @@ Walk through: search a filing, browse the newspaper, chat with a consultant. Pos
 
 Technical-audience version: architecture decisions, AI integration patterns (multi-model inference, RAG pipeline, automated newspaper generation), DuckDB as the universal data layer, what worked and what didn't. Post on personal blog, cross-post to Hacker News.
 
+## Tracking URLs
+
+Use UTM params on every outbound link so analytics can slice traffic by channel. Keep `utm_campaign=launch` identical across all channels — that gives total launch traffic in one query, while `utm_source` breaks it down by referrer.
+
+Standard Google/GA convention: `utm_source` = where the click came from, `utm_medium` = type of channel, `utm_campaign` = the campaign name, `utm_content` = optional A/B variant.
+
+| Channel | URL to paste |
+|---|---|
+| LinkedIn post | `https://dailyorbit.org/?utm_source=linkedin&utm_medium=social&utm_campaign=launch` |
+| Law firm email | `https://dailyorbit.org/?utm_source=law_outreach&utm_medium=email&utm_campaign=launch` |
+| Reddit r/satellitecomm | `https://dailyorbit.org/?utm_source=reddit&utm_medium=social&utm_campaign=launch&utm_content=satellitecomm` |
+| Space Policy Online | `https://dailyorbit.org/?utm_source=spacepolicy&utm_medium=referral&utm_campaign=launch` |
+| SatNews | `https://dailyorbit.org/?utm_source=satnews&utm_medium=referral&utm_campaign=launch` |
+| Via Satellite forums | `https://dailyorbit.org/?utm_source=viasat_forum&utm_medium=referral&utm_campaign=launch` |
+| Hacker News blog post | `https://dailyorbit.org/?utm_source=hackernews&utm_medium=referral&utm_campaign=launch` |
+| House ads (auto) | `?utm_source=daily_orbit&utm_medium=house_ad&utm_campaign=launch&utm_content=ad-{id}` |
+
+The house-ad row is appended automatically by the `/ads/:id-:slug.html` endpoint via `houseAdDestinationUrl` config — no manual action needed.
+
+**Caveat:** LinkedIn's in-app browser sometimes strips query strings on preview-card clicks. UTMs survive normal browser clicks but expect LinkedIn-attributed numbers to undercount slightly.
+
 ## Not Worth Doing Now
 
 - SEO optimization, paid ads, social media presence — overkill for a job-hunting demo
