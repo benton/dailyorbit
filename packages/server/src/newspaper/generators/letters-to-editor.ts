@@ -16,6 +16,13 @@ type PreviousEditionContent = {
 
 // ── Query helpers ───────────────────────────────────────────────
 
+/**
+ * Pull content from the most recent edition strictly before `editionDate`.
+ * Using a subquery (rather than `editionDate - 1 day`) means the column
+ * still works if there was a gap in publishing — and, more importantly,
+ * if the letters slot ever moves to a day where "yesterday" would be a
+ * weekend with no edition at all.
+ */
 export async function queryPreviousEditionContent(
   conn: DuckDBConnection,
   editionDate: string,
@@ -24,7 +31,10 @@ export async function queryPreviousEditionContent(
     `SELECT na.content_type, na.body
      FROM newspaper_article na
      JOIN newspaper_edition ne ON ne.id = na.edition_id
-     WHERE ne.edition_date = CAST(? AS DATE) - INTERVAL 1 DAY
+     WHERE ne.edition_date = (
+       SELECT MAX(edition_date) FROM newspaper_edition
+       WHERE edition_date < CAST(? AS DATE)
+     )
        AND na.content_type IN ('daily_digest', 'editorial', 'counsels_brief', 'letters_to_editor', 'market_signals', 'press_gallery')
        AND na.status = 'generated'
      ORDER BY na.display_order`,
