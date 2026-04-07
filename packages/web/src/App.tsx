@@ -37,6 +37,7 @@ const BackupsPage = lazy(() => import('./admin/BackupsPage.tsx'));
 const EditionBrowser = lazy(() => import('./admin/newspaper/EditionBrowser.tsx'));
 const EditionDetail = lazy(() => import('./admin/newspaper/EditionDetail.tsx'));
 const PortraitLibrary = lazy(() => import('./admin/newspaper/PortraitLibrary.tsx'));
+const HouseAdLibrary = lazy(() => import('./admin/newspaper/HouseAdLibrary.tsx'));
 const NewspaperView = lazy(() => import('./newspaper/NewspaperView.tsx'));
 const NewsDetail = lazy(() => import('./news/NewsDetail.tsx'));
 const NewsPage = lazy(() => import('./news/NewsPage.tsx'));
@@ -298,6 +299,14 @@ export default function App() {
                   </Suspense>
                 }
                 path="maintain/newspaper/portraits"
+              />
+              <Route
+                element={
+                  <Suspense fallback={<p className="text-sm text-on-surface-muted">Loading...</p>}>
+                    <HouseAdLibrary />
+                  </Suspense>
+                }
+                path="maintain/newspaper/house-ads"
               />
               {/* Info */}
               <Route

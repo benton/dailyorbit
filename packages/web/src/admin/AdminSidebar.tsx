@@ -35,6 +35,7 @@ const navGroups: Array<NavGroup> = [
       { label: 'Hidden Items', path: '/admin/maintain/hidden-items' },
       { label: 'Backups', path: '/admin/maintain/backups' },
       { label: 'Newspaper', path: '/admin/maintain/newspaper' },
+      { label: 'House Ads', path: '/admin/maintain/newspaper/house-ads' },
     ],
     label: 'Maintenance',
     prefix: '/admin/maintain',
