@@ -10,7 +10,7 @@ AWS_REGION=us-east-2
 ECR_REPO=daily-orbit
 ECR_URI="${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
 SSH_HOST=api.dailyorbit.org
-SSH_OPTS="-i ~/elaptop/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
 FRONTEND_BUCKET=daily-orbit-prod-frontend
 CLOUDFRONT_DIST_ID=E2YVC4MEMBIV20
 
