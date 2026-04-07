@@ -64,7 +64,7 @@ export default function PipelineStep({
   const cfg = STATUS_CONFIG[status];
 
   return (
-    <div className="flex items-center gap-3 rounded-theme border border-border-theme bg-white px-3 py-2 dark:border-border-theme dark:bg-on-surface">
+    <div className="flex items-center gap-3 rounded-theme border border-border-theme bg-surface-card px-3 py-2">
       {/* Status icon */}
       <div className="shrink-0">{cfg.icon}</div>
 

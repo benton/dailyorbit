@@ -533,7 +533,7 @@ function ArticleCard({
     article.updatedAt !== article.createdAt && article.status === 'generated';
 
   return (
-    <div className="rounded-theme border border-border-theme bg-white p-5 dark:border-border-theme dark:bg-on-surface">
+    <div className="rounded-theme border border-border-theme bg-surface-card p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {editing ? (

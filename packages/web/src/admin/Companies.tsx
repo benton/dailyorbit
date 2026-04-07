@@ -110,7 +110,7 @@ export default function Companies() {
 
       {/* Attribution coverage banner */}
       {stats != null && (
-        <div className="mb-6 rounded-theme border border-border-theme bg-white p-4 dark:border-border-theme dark:bg-on-surface">
+        <div className="mb-6 rounded-theme border border-border-theme bg-surface-card p-4">
           <h2 className="mb-2 text-sm font-semibold tracking-wider text-on-surface-muted uppercase dark:text-on-surface-muted">
             Attribution Coverage
           </h2>

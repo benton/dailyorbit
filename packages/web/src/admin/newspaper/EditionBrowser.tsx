@@ -192,7 +192,7 @@ export default function EditionBrowser() {
       ) : (
         <div className="overflow-hidden rounded-theme border border-border-theme">
           <table className="w-full text-sm">
-            <thead className="bg-surface text-left text-on-surface-muted dark:bg-on-surface dark:text-on-surface-muted">
+            <thead className="bg-surface text-left text-on-surface-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Type</th>
@@ -209,7 +209,7 @@ export default function EditionBrowser() {
 
                 return (
                   <tr
-                    className="bg-white transition-colors hover:bg-surface dark:hover:bg-on-surface"
+                    className="bg-surface-card transition-colors hover:bg-surface"
                     key={edition.id}
                   >
                     <td className="px-4 py-3">

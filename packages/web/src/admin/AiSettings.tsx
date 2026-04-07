@@ -168,7 +168,7 @@ function UnifiedPromptEditor({ configEntries, onSave, promptSets }: UnifiedPromp
   }
 
   return (
-    <div className="rounded-theme border border-border-theme bg-white dark:border-border-theme dark:bg-on-surface">
+    <div className="rounded-theme border border-border-theme bg-surface-card">
       {/* Header with dropdown */}
       <div className="border-b border-border-theme px-6 py-4 dark:border-border-theme">
         <h2 className="mb-3 text-lg font-medium">Prompt Templates</h2>
@@ -177,7 +177,7 @@ function UnifiedPromptEditor({ configEntries, onSave, promptSets }: UnifiedPromp
           built-in default.
         </p>
         <select
-          className="flex h-10 w-full rounded-theme border border-border-theme bg-white px-3 py-2 text-sm dark:border-border-theme dark:bg-on-surface dark:text-on-surface"
+          className="flex h-10 w-full rounded-theme border border-border-theme bg-surface-card px-3 py-2 text-sm text-on-surface"
           onChange={(e) => setSelectedSlug(e.target.value)}
           value={selectedSlug}
         >
@@ -526,7 +526,7 @@ function AiSettingsInner() {
       </div>
 
       {/* Bedrock Configuration */}
-      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
+      <div className="rounded-theme border border-border-theme bg-surface-card p-6">
         <h2 className="mb-4 text-lg font-medium">Bedrock Configuration</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -536,7 +536,7 @@ function AiSettingsInner() {
           <div>
             <Label htmlFor="bedrock-model">Default Model ID</Label>
             <select
-              className="flex h-10 w-full rounded-theme border border-border-theme bg-white px-3 py-2 text-sm dark:border-border-theme dark:bg-on-surface dark:text-on-surface"
+              className="flex h-10 w-full rounded-theme border border-border-theme bg-surface-card px-3 py-2 text-sm text-on-surface"
               id="bedrock-model"
               onChange={(e) => setDefaultModel(e.target.value)}
               value={defaultModel}
@@ -555,7 +555,7 @@ function AiSettingsInner() {
       </div>
 
       {/* Model Selection */}
-      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
+      <div className="rounded-theme border border-border-theme bg-surface-card p-6">
         <h2 className="mb-4 text-lg font-medium">Model Selection</h2>
 
         {/* Summarization Model */}
@@ -679,7 +679,7 @@ function AiSettingsInner() {
           <div>
             <Label htmlFor="embedding-dimensions">Dimensions</Label>
             <select
-              className="flex h-10 w-full rounded-theme border border-border-theme bg-white px-3 py-2 text-sm dark:border-border-theme dark:bg-on-surface dark:text-on-surface"
+              className="flex h-10 w-full rounded-theme border border-border-theme bg-surface-card px-3 py-2 text-sm text-on-surface"
               id="embedding-dimensions"
               onChange={(e) => setEmbeddingDimensions(e.target.value)}
               value={embeddingDimensions}
@@ -716,7 +716,7 @@ function AiSettingsInner() {
       )}
 
       {/* Test Inference */}
-      <div className="rounded-theme border border-border-theme bg-white p-6 dark:border-border-theme dark:bg-on-surface">
+      <div className="rounded-theme border border-border-theme bg-surface-card p-6">
         <h2 className="mb-4 text-lg font-medium">Test Inference</h2>
         <div className="flex gap-2">
           <Input

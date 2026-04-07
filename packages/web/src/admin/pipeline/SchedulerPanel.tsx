@@ -160,7 +160,7 @@ export default function SchedulerPanel() {
   const isRunning: boolean = status.running;
 
   return (
-    <div className="mb-6 rounded-theme border border-border-theme bg-surface p-4 dark:border-border-theme dark:bg-on-surface">
+    <div className="mb-6 rounded-theme border border-border-theme bg-surface-card p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-on-surface-muted" />
