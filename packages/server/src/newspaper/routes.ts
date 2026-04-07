@@ -538,7 +538,7 @@ type HouseAdListItem = {
   slug: string;
   htmlPath: string;
   imagePath: string;
-  thumbnailUrl: string;
+  imageSubpath: string;
 };
 
 export function mapHouseAdToListItem(ad: HouseAd): HouseAdListItem {
@@ -550,7 +550,10 @@ export function mapHouseAdToListItem(ad: HouseAd): HouseAdListItem {
     slug,
     htmlPath: `/ads/${String(ad.id)}-${slug}.html`,
     imagePath: `/ads/${String(ad.id)}-${slug}.webp`,
-    thumbnailUrl: `/api/newspaper/images/library/house-ads/${filename}`,
+    // Library subpath only — the client builds the absolute URL via
+    // libraryImageUrl() so the asset host can differ from the API host
+    // (CDN in prod, API server in dev — Vite doesn't proxy image paths).
+    imageSubpath: `house-ads/${filename}`,
   };
 }
 

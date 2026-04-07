@@ -45,7 +45,7 @@ describe('mapHouseAdToListItem / admin house-ads list', () => {
       slug: 'three-miles-up',
       htmlPath: `/ads/${String(ad1.id)}-three-miles-up.html`,
       imagePath: `/ads/${String(ad1.id)}-three-miles-up.webp`,
-      thumbnailUrl: `/api/newspaper/images/library/house-ads/three-miles-up.webp`,
+      imageSubpath: `house-ads/three-miles-up.webp`,
     });
 
     expect(items[1]).toEqual({
@@ -54,7 +54,7 @@ describe('mapHouseAdToListItem / admin house-ads list', () => {
       slug: 'all-the-frequencies',
       htmlPath: `/ads/${String(ad2.id)}-all-the-frequencies.html`,
       imagePath: `/ads/${String(ad2.id)}-all-the-frequencies.webp`,
-      thumbnailUrl: `/api/newspaper/images/library/house-ads/all-the-frequencies.webp`,
+      imageSubpath: `house-ads/all-the-frequencies.webp`,
     });
   });
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch } from '../../lib/api.ts';
+import { libraryImageUrl } from '../../newspaper/types.ts';
 import { Button } from '../../ui/button.tsx';
 
 type HouseAdListItem = {
@@ -9,7 +10,7 @@ type HouseAdListItem = {
   slug: string;
   htmlPath: string;
   imagePath: string;
-  thumbnailUrl: string;
+  imageSubpath: string;
 };
 
 type ListResponse = {
@@ -111,7 +112,11 @@ function HouseAdCard({ ad, origin }: { ad: HouseAdListItem; origin: string }) {
   return (
     <div className="overflow-hidden rounded-theme border border-border-theme bg-surface-card p-3">
       <a className="block" href={ad.htmlPath} rel="noreferrer" target="_blank">
-        <img alt={ad.tagline} className="aspect-square w-full object-cover" src={ad.thumbnailUrl} />
+        <img
+          alt={ad.tagline}
+          className="aspect-square w-full object-cover"
+          src={libraryImageUrl(ad.imageSubpath)}
+        />
       </a>
       <p className="mt-2 font-serif text-sm text-on-surface italic" title={ad.tagline}>
         &ldquo;{ad.tagline}&rdquo;
