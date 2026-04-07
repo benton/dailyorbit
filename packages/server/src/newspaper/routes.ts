@@ -14,6 +14,7 @@ import {
   getImageByPath,
   getLatestEdition,
   listEditions,
+  listHouseAds,
   listImagesByType,
   publishEdition,
   resetArticle,
@@ -21,7 +22,8 @@ import {
   updateArticle,
 } from './repository.ts';
 import { getPortraitForPerson } from './portrait-assignment.ts';
-import type { NewspaperContentType } from './types.ts';
+import { slugify } from './ad-export-html.ts';
+import type { HouseAd, NewspaperContentType } from './types.ts';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -526,6 +528,39 @@ newspaperAdminRoutes.post('/regenerate/:date', async (c) => {
   });
 
   return c.json(result);
+});
+
+// ── House ad library admin ──────────────────────────────────────────
+
+type HouseAdListItem = {
+  id: number;
+  tagline: string;
+  slug: string;
+  htmlPath: string;
+  imagePath: string;
+  thumbnailUrl: string;
+};
+
+function mapHouseAdToListItem(ad: HouseAd): HouseAdListItem {
+  const slug: string = slugify(ad.tagline);
+  const filename: string = ad.imagePath.split('/').pop() ?? '';
+  return {
+    id: ad.id,
+    tagline: ad.tagline,
+    slug,
+    htmlPath: `/ads/${String(ad.id)}-${slug}.html`,
+    imagePath: `/ads/${String(ad.id)}-${slug}.webp`,
+    thumbnailUrl: `/api/newspaper/images/library/house-ads/${filename}`,
+  };
+}
+
+/** GET /api/admin/newspaper/house-ads — list every entry in the house ad library */
+newspaperAdminRoutes.get('/house-ads', async (c) => {
+  const ads = await withConn(async (conn) => {
+    const rows = await listHouseAds(conn);
+    return rows.map(mapHouseAdToListItem);
+  });
+  return c.json({ ads });
 });
 
 export { newspaperRoutes, newspaperAdminRoutes };
