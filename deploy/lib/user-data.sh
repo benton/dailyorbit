@@ -44,13 +44,31 @@ EBS_DEVICE="/dev/sdf"
 
 mkdir -pv /data
 
-# Attach the persistent EBS volume
+# Attach the persistent EBS volume.
+#
+# During a rolling instance refresh the new box can boot before the old one
+# has fully released the volume — `attach-volume` then fails with VolumeInUse.
+# Retry with linear backoff up to ~2 minutes, which is plenty of headroom for
+# a normal terminating instance to release the volume on shutdown.
 echo "Attaching EBS volume $DATA_VOLUME_ID..."
-aws ec2 attach-volume \
-  --volume-id "$DATA_VOLUME_ID" \
-  --instance-id "$INSTANCE_ID" \
-  --device "$EBS_DEVICE" \
-  --region "$REGION"
+attached=false
+for attempt in $(seq 1 12); do
+  if aws ec2 attach-volume \
+      --volume-id "$DATA_VOLUME_ID" \
+      --instance-id "$INSTANCE_ID" \
+      --device "$EBS_DEVICE" \
+      --region "$REGION"; then
+    echo "attach-volume succeeded on attempt $attempt"
+    attached=true
+    break
+  fi
+  echo "attach-volume failed on attempt $attempt/12 — likely still attached to terminating instance, sleeping 10s..."
+  sleep 10
+done
+if [ "$attached" != "true" ]; then
+  echo "ERROR: attach-volume never succeeded after 12 attempts (~2 minutes). Aborting."
+  exit 1
+fi
 
 # Wait for EBS volume attachment via AWS API (up to 60 seconds)
 # NOTE: Do NOT check /dev/nvme1n1 — r6gd instances have local NVMe instance
