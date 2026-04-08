@@ -86,7 +86,16 @@ For the full CLI reference, see [doc/CLI.md](doc/CLI.md).
 
 ## 7. Architecture
 
-The project is a pnpm monorepo with two packages:
+### Data flow
+
+![Daily Orbit data flow](doc/design/daily-orbit-data-flow.png)
+_Daily Orbit data flow_
+
+---
+
+### Components
+
+The project is a `pnpm` monorepo.
 
 ```mermaid
 graph TD
@@ -105,6 +114,13 @@ graph TD
     FCC -- "attachments" --> Blob
     Server -- "attachment URLs" --> Blob
 ```
+_Daily Orbit Components_
+
+1. The **scrape process** fetches Application metadata and attachments from the FCC IBFS feed and stores them in DuckDB + blob storage.
+2. The **server** exposes a REST API consumed by the browser frontend and enforces session-based auth via Better Auth.
+3. The **web** client renders Application, Applicant, and Comment views driven entirely by the API.
+
+---
 
 ### Packages
 
@@ -113,22 +129,17 @@ graph TD
 | `@daily-orbit/web`    | `packages/web/`    | 5173 | Vite + React + fbtee frontend         |
 | `@daily-orbit/server` | `packages/server/` | 9000 | Hono REST API + auth + data ingestion |
 
-### Data flow
-
-1. The **scrape CLI** fetches Application metadata and attachments from the FCC IBFS feed and stores them in DuckDB + blob storage.
-2. The **server** exposes a REST API consumed by the browser frontend and enforces session-based auth via Better Auth.
-3. The **web** client renders Application, Applicant, and Comment views driven entirely by the API.
+---
 
 ## 8. Technologies
 
 ### Frontend (`packages/web`)
 
 - [Vite](https://vitejs.dev/) + [React 19](https://reactjs.org/) with [React Compiler](https://react.dev/learn/react-compiler)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [fbtee](https://github.com/nkzw-tech/fbtee) for i18n
 - [Better Auth](https://www.better-auth.com/) for authentication
 - [React Router v7](https://reactrouter.com/)
 - [Cosmograph](https://cosmograph.app/)
+- [Tailwind CSS](https://tailwindcss.com/)
 
 ### Backend (`packages/server`)
 
