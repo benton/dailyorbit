@@ -285,6 +285,28 @@ export class DailyOrbitStack extends Stack {
     // EC2 needs write access for newspaper image uploads
     frontendBucket.grantReadWrite(instanceRole);
 
+    // Separate bucket for CloudFront standard access logs.
+    // CloudFront log delivery uses the legacy ACL-based mechanism, which
+    // requires `BUCKET_OWNER_PREFERRED` ownership (not the modern enforced
+    // mode). Logs are gzipped and land within ~5-15 minutes of each request.
+    const cloudfrontLogBucket: s3.Bucket = new s3.Bucket(
+      this,
+      "CloudFrontLogBucket",
+      {
+        bucketName: `${config.stackName}-cloudfront-logs`,
+        removalPolicy: RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        lifecycleRules: [
+          {
+            id: "expire-old-logs",
+            expiration: Duration.days(30),
+          },
+        ],
+      },
+    );
+
     const cloudfrontCert: acm.ICertificate = acm.Certificate.fromCertificateArn(
       this,
       "CloudFrontCert",
@@ -341,6 +363,10 @@ function handler(event) {
         domainNames: [config.domainName],
         certificate: cloudfrontCert,
         defaultRootObject: "index.html",
+        enableLogging: true,
+        logBucket: cloudfrontLogBucket,
+        logFilePrefix: "cf-logs/",
+        logIncludesCookies: false,
       },
     );
 
