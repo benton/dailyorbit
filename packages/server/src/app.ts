@@ -126,6 +126,7 @@ app.route(
     },
     getDestinationBaseUrl: () =>
       getConfigService().get('houseAdDestinationUrl') as string,
+    getAppBaseUrl: () => getConfigService().get('appBaseUrl') as string,
   }),
 );
 app.route('/api/query', queryRoutes);

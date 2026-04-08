@@ -36,6 +36,14 @@ export type AdExportDeps = {
   lookupAd(id: number): Promise<AdExportRecord | null>;
   /** Return the configured base destination URL for the click target. */
   getDestinationBaseUrl(): string;
+  /**
+   * Return the public-facing app base URL (e.g. `https://dailyorbit.org`).
+   * Used to build the absolute `og:image` URL so the value is independent
+   * of which host the request happens to arrive on (CloudFront proxies the
+   * request through with `Host: api.dailyorbit.org`, but we want the og
+   * tags to reference the canonical apex domain).
+   */
+  getAppBaseUrl(): string;
 };
 
 /**
@@ -58,11 +66,16 @@ function canonicalSlugFor(record: AdExportRecord): string {
   return slugify(record.tagline);
 }
 
-function absoluteImageUrl(reqUrl: string, id: number, slug: string): string {
-  // Use the inbound request URL to derive scheme + host so dev (localhost)
-  // and prod both work without extra config.
-  const u: URL = new URL(reqUrl);
-  return `${u.origin}/ads/${String(id)}-${slug}.webp`;
+function absoluteImageUrl(
+  appBaseUrl: string,
+  id: number,
+  slug: string,
+): string {
+  // Pinned to the configured public app base URL — never the inbound
+  // request URL — so og:image always references the apex domain even
+  // when the request is proxied through a different host (CloudFront).
+  const origin: string = new URL(appBaseUrl).origin;
+  return `${origin}/ads/${String(id)}-${slug}.webp`;
 }
 
 export function createAdExportRoutes(deps: AdExportDeps): Hono {
@@ -93,7 +106,11 @@ export function createAdExportRoutes(deps: AdExportDeps): Hono {
         deps.getDestinationBaseUrl(),
         record.id,
       ),
-      absoluteImageUrl: absoluteImageUrl(c.req.url, record.id, canonical),
+      absoluteImageUrl: absoluteImageUrl(
+        deps.getAppBaseUrl(),
+        record.id,
+        canonical,
+      ),
     });
 
     return new Response(html, {

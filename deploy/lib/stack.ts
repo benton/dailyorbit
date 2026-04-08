@@ -359,6 +359,19 @@ function handler(event) {
             cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             compress: true,
           },
+          // Reverse-proxy /ads/* to the API server so the public house-ad
+          // export URLs live under the apex domain (dailyorbit.org/ads/...)
+          // instead of the API host. The API mounts these routes at /ads/*
+          // outside /api/* so the path passes through unchanged.
+          "ads/*": {
+            origin: new origins.HttpOrigin("api.dailyorbit.org", {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+            }),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+            compress: true,
+          },
         },
         domainNames: [config.domainName],
         certificate: cloudfrontCert,

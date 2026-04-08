@@ -40,6 +40,7 @@ beforeAll(async () => {
       return null;
     },
     getDestinationBaseUrl: () => 'https://dailyorbit.org/',
+    getAppBaseUrl: () => 'https://dailyorbit.org',
   };
 
   app = new Hono();
