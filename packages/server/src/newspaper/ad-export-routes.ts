@@ -139,30 +139,41 @@ export function createAdExportRoutes(deps: AdExportDeps): Hono {
       return c.redirect(`/ads/${String(record.id)}-${canonical}.webp`, 302);
     }
 
-    // Defense in depth: confine the file read to the house-ads directory
+    // Try the local filesystem first. In dev (and on whichever instance
+    // generated the library), the bytes are right there and we can serve
+    // them inline — that preserves "Save Page As…" semantics where the
+    // saved HTML and saved .webp end up in one folder.
+    //
+    // Defense in depth: confine the local read to the house-ads directory
     // even though imagePath is sourced from the DB, never user input.
     const resolvedImagePath: string = resolve(record.imagePath);
-    if (!resolvedImagePath.startsWith(HOUSE_ADS_IMAGE_ROOT)) {
-      return c.json({ error: 'Not found' }, 404);
+    if (resolvedImagePath.startsWith(HOUSE_ADS_IMAGE_ROOT)) {
+      try {
+        const info = await stat(resolvedImagePath);
+        if (info.isFile()) {
+          const data: Buffer = await readFile(resolvedImagePath);
+          return new Response(data, {
+            status: 200,
+            headers: {
+              'Content-Type': 'image/webp',
+              'Content-Length': String(data.length),
+              'Cache-Control': 'public, max-age=86400',
+            },
+          });
+        }
+      } catch {
+        // Fall through to the CDN redirect below.
+      }
     }
 
-    try {
-      const info = await stat(resolvedImagePath);
-      if (!info.isFile()) {
-        return c.json({ error: 'Not found' }, 404);
-      }
-      const data: Buffer = await readFile(resolvedImagePath);
-      return new Response(data, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/webp',
-          'Content-Length': String(data.length),
-          'Cache-Control': 'public, max-age=86400',
-        },
-      });
-    } catch {
-      return c.json({ error: 'Not found' }, 404);
-    }
+    // Fall back to the canonical CDN-served path. The bytes live in S3,
+    // uploaded by the generator, and a fresh EC2 instance won't have a
+    // local copy on its EBS snapshot. Redirecting keeps the route correct
+    // on every instance without dragging an S3 client into the request
+    // path.
+    const filename: string = record.imagePath.split('/').pop() ?? '';
+    const cdnUrl: string = `${new URL(deps.getAppBaseUrl()).origin}/newspaper/images/library/house-ads/${filename}`;
+    return c.redirect(cdnUrl, 302);
   });
 
   return routes;
