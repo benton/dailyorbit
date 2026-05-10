@@ -48,11 +48,14 @@ mkdir -pv /data
 #
 # During a rolling instance refresh the new box can boot before the old one
 # has fully released the volume — `attach-volume` then fails with VolumeInUse.
-# Retry with linear backoff up to ~2 minutes, which is plenty of headroom for
-# a normal terminating instance to release the volume on shutdown.
+# A graceful shutdown usually releases the volume in seconds, but a stuck or
+# unresponsive prior instance can hold it until EC2 force-detaches, which can
+# take much longer. Retry for up to an hour so a slow release never strands
+# the new instance.
 echo "Attaching EBS volume $DATA_VOLUME_ID..."
 attached=false
-for attempt in $(seq 1 12); do
+MAX_ATTACH_ATTEMPTS=360  # 360 × 10s = ~1 hour
+for attempt in $(seq 1 $MAX_ATTACH_ATTEMPTS); do
   if aws ec2 attach-volume \
       --volume-id "$DATA_VOLUME_ID" \
       --instance-id "$INSTANCE_ID" \
@@ -62,18 +65,18 @@ for attempt in $(seq 1 12); do
     attached=true
     break
   fi
-  echo "attach-volume failed on attempt $attempt/12 — likely still attached to terminating instance, sleeping 10s..."
+  echo "attach-volume failed on attempt $attempt/$MAX_ATTACH_ATTEMPTS — likely still attached to terminating instance, sleeping 10s..."
   sleep 10
 done
 if [ "$attached" != "true" ]; then
-  echo "ERROR: attach-volume never succeeded after 12 attempts (~2 minutes). Aborting."
+  echo "ERROR: attach-volume never succeeded after $MAX_ATTACH_ATTEMPTS attempts (~1 hour). Aborting."
   exit 1
 fi
 
-# Wait for EBS volume attachment via AWS API (up to 60 seconds)
-# NOTE: Do NOT check /dev/nvme1n1 — r6gd instances have local NVMe instance
-# store at nvme1n1 which causes a false-positive before the EBS volume attaches.
-for i in $(seq 1 30); do
+# Wait for EBS volume attachment via AWS API (up to 10 minutes).
+# Normally this flips to `attached` within seconds of a successful attach-volume
+# call, but keep a generous ceiling in case the control plane is slow.
+for i in $(seq 1 300); do
   state=$(aws ec2 describe-volumes \
     --volume-ids "$DATA_VOLUME_ID" \
     --region "$REGION" \
@@ -87,8 +90,33 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-# Mount the EBS volume
-FILESYSTEM_DEV="/dev/nvme2n1"
+# Resolve the EBS volume's NVMe device node via its volume ID.
+# On Nitro instances, udev creates a stable symlink per EBS volume at
+# /dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_vol<id-no-dash>,
+# which points to the kernel-assigned /dev/nvmeXnY. This works on any
+# instance type — with or without a local instance-store drive — so we
+# can freely diversify the ASG's spot instance pool across families.
+VOLUME_SERIAL="${DATA_VOLUME_ID//-/}"
+BY_ID_PATH="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${VOLUME_SERIAL}"
+# Wait up to 5 minutes for udev to create the symlink after attach.
+for i in $(seq 1 150); do
+  if [ -e "$BY_ID_PATH" ]; then
+    break
+  fi
+  echo "Waiting for udev symlink $BY_ID_PATH..."
+  sleep 2
+done
+if [ ! -e "$BY_ID_PATH" ]; then
+  echo "ERROR: udev never created $BY_ID_PATH for $DATA_VOLUME_ID"
+  exit 1
+fi
+FILESYSTEM_DEV=$(readlink -f "$BY_ID_PATH")
+if [ ! -b "$FILESYSTEM_DEV" ]; then
+  echo "ERROR: $BY_ID_PATH resolved to $FILESYSTEM_DEV which is not a block device"
+  exit 1
+fi
+echo "Resolved $DATA_VOLUME_ID → $FILESYSTEM_DEV"
+
 mount "$FILESYSTEM_DEV" /data
 echo "Mounted $FILESYSTEM_DEV → /data: $(df -h /data | tail -1)"
 

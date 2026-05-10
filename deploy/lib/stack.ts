@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as cdk from "aws-cdk-lib";
 import {
   Stack,
   StackProps,
@@ -113,18 +112,12 @@ export class DailyOrbitStack extends Stack {
     );
 
     // ── 5d2. Persistent EBS Data Volume ─────────────────────────────────
-    const dataVolume = new ec2.Volume(this, "DataVolume", {
+    // Manually-created XFS volume replacing the original CDK-managed ext4
+    // volume (which is orphaned via RETAIN and can be deleted once verified).
+    const dataVolume = ec2.Volume.fromVolumeAttributes(this, "DataVolumeV2", {
+      volumeId: "vol-0283624e12ef2be3a",
       availabilityZone: config.availabilityZone,
-      size: cdk.Size.gibibytes(config.ebsVolumeSize),
-      volumeType: ec2.EbsDeviceVolumeType.GP3,
-      iops: config.ebsVolumeIops,
-      throughput: config.ebsVolumeThroughput,
-      encrypted: true,
-      removalPolicy: RemovalPolicy.RETAIN,
     });
-
-    Tags.of(dataVolume).add("Name", `${config.stackName}-data`);
-    Tags.of(dataVolume).add("daily-orbit-role", "data-volume");
 
     // ── 5e. Container Registry ───────────────────────────────────────────
     const ecrRepo: ecr.Repository = new ecr.Repository(this, "EcrRepo", {
@@ -251,6 +244,50 @@ export class DailyOrbitStack extends Stack {
       },
     );
 
+    // Broad pool of ARM64 instance types for spot capacity diversity.
+    // Constraints: ARM64 AMI and ≥16 GB RAM (observed peak usage is <8 GB,
+    // so 16 GB is comfortable headroom). Both `d` (local instance store)
+    // and non-`d` (EBS-only) variants are fine because user-data.sh
+    // resolves the data volume by its EBS volume ID via /dev/disk/by-id
+    // symlinks, not a hardcoded device path.
+    const spotInstanceTypes: string[] = [
+      // ── 16 GB tier ─────────────────────────────────────────────────
+      // Memory-optimized (r*, 8 GB/vCPU) — .large = 2 vCPU / 16 GB
+      "r6g.large",
+      "r6gd.large",
+      "r7g.large",
+      "r7gd.large",
+      "r8g.large",
+      "r8gd.large",
+      // General-purpose (m*, 4 GB/vCPU) — .xlarge = 4 vCPU / 16 GB
+      "m6g.xlarge",
+      "m6gd.xlarge",
+      "m7g.xlarge",
+      "m7gd.xlarge",
+      "m8g.xlarge",
+      "m8gd.xlarge",
+      // Compute-optimized (c*, 2 GB/vCPU) — .2xlarge = 8 vCPU / 16 GB
+      "c6g.2xlarge",
+      "c6gd.2xlarge",
+      "c7g.2xlarge",
+      "c7gd.2xlarge",
+      "c8g.2xlarge",
+      "c8gd.2xlarge",
+      // ── 32 GB tier ─────────────────────────────────────────────────
+      "r6g.xlarge",
+      "r6gd.xlarge",
+      "r7g.xlarge",
+      "r7gd.xlarge",
+      "r8g.xlarge",
+      "r8gd.xlarge",
+      "m6g.2xlarge",
+      "m6gd.2xlarge",
+      "m7g.2xlarge",
+      "m7gd.2xlarge",
+      "m8g.2xlarge",
+      "m8gd.2xlarge",
+    ];
+
     new autoscaling.AutoScalingGroup(this, "Asg", {
       vpc,
       vpcSubnets: {
@@ -264,13 +301,19 @@ export class DailyOrbitStack extends Stack {
             autoscaling.SpotAllocationStrategy.PRICE_CAPACITY_OPTIMIZED,
         },
         launchTemplate,
+        launchTemplateOverrides: spotInstanceTypes.map((t) => ({
+          instanceType: new ec2.InstanceType(t),
+        })),
       },
       minCapacity: 1,
       maxCapacity: 1,
       desiredCapacity: 1,
-      defaultInstanceWarmup: Duration.seconds(300),
+      // Matches the ~1 hour attach-volume retry window in user-data.sh:
+      // a prior instance can take a long time to release the data volume,
+      // and we don't want the ASG to kill a new instance mid-attach.
+      defaultInstanceWarmup: Duration.hours(1),
       healthCheck: autoscaling.HealthCheck.ec2({
-        grace: Duration.seconds(300),
+        grace: Duration.hours(1),
       }),
     });
 
