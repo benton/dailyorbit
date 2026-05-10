@@ -1,6 +1,6 @@
 {
   "name": "@daily-orbit/web",
-  "version": "1.29.8",
+  "version": "1.29.9",
   "type": "module",
   "scripts": {
     "build": "vite build",
