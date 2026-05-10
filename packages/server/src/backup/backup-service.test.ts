@@ -23,6 +23,7 @@ describe('BackupService', () => {
       upload: vi.fn().mockResolvedValue(undefined),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
+      deleteObject: vi.fn().mockResolvedValue(undefined),
     };
 
     const service: BackupService = createBackupService({
@@ -52,6 +53,7 @@ describe('BackupService', () => {
         ),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
+      deleteObject: vi.fn().mockResolvedValue(undefined),
     };
 
     const service: BackupService = createBackupService({
@@ -78,6 +80,7 @@ describe('BackupService', () => {
       upload: vi.fn().mockResolvedValue(undefined),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
+      deleteObject: vi.fn().mockResolvedValue(undefined),
     };
 
     const service: BackupService = createBackupService({

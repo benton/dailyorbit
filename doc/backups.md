@@ -9,10 +9,11 @@ A backup runs these steps in order:
 1. **Checkpoint** — `CHECKPOINT` flushes the DuckDB write-ahead log into the main file
 2. **Copy** — async copy of the DB file to `<db-path>.snap` (non-blocking)
 3. **Upload** — multipart upload of the snapshot to S3 as `<prefix><YYYYMMDD-HHMM>.duckdb` (100 MB parts, 4 concurrent streams)
-4. **Copy latest** — S3 server-side `CopyObject` to `<prefix>latest.duckdb` (instant, no data transfer)
-5. **Upload key** — if `<db-path>.key` exists, upload it as `<prefix>daily-orbit.key`
-6. **Cleanup** — delete the local `.snap` temp file
-7. **Record** — write status, S3 key, and size to the `backup_snapshot` table
+4. **Upload key** — if `<db-path>.key` exists, upload it as `<prefix>daily-orbit.key`
+5. **Cleanup** — delete the local `.snap` temp file
+6. **Record** — write status, S3 key, and size to the `backup_snapshot` table
+7. **Prune** — if `retentionCount` is set, delete older `.duckdb` snapshots beyond that count (non-fatal: snapshot already succeeded)
+8. **Parquet DR export** — if configured, export all base tables to Parquet (non-fatal)
 
 A mutex prevents concurrent backups. If a backup is already running, new requests are rejected.
 
@@ -70,9 +71,14 @@ With the default prefix `db/`, a typical bucket looks like:
 ```
 s3://daily-orbit-data/db/20260323-1815.duckdb
 s3://daily-orbit-data/db/20260324-0600.duckdb
-s3://daily-orbit-data/db/latest.duckdb          <- always points to most recent
 s3://daily-orbit-data/db/daily-orbit.key         <- encryption key (if present)
 ```
+
+## Retention
+
+The backup service prunes older `.duckdb` snapshots after each successful upload. The default in production is `retentionCount: 2` (set in `backup/routes.ts` and `cli/db/snapshot.ts`), which keeps the two most-recent snapshots and deletes everything older. Pruning is non-fatal — a snapshot that uploads successfully but fails to prune is still considered complete.
+
+Without retention, every snapshot accumulates indefinitely in S3 Standard. At a 2-hour interval and a 150 GB+ DuckDB file, this can reach tens of TiB and many hundreds of dollars per month within weeks.
 
 ## Database Schema
 
@@ -146,6 +152,6 @@ When the API server starts and detects that FTS schemas are missing (e.g. after 
 
 The search page shows a degraded-mode banner during rebuild. FTS search modes (`keyword`, `hybrid`) are disabled with a `(rebuilding…)` label until complete. The status endpoint is `GET /api/search/index-status`.
 
-## Coexistence with Cron Script
+## Shutdown Hook
 
-The existing cron-based `db-snapshot.sh` in `deploy/lib/user-data.sh` can run alongside in-app backups safely. The BackupService mutex only prevents concurrent in-app backups; the cron script's `cp` is atomic at the filesystem level. Once in-app backups are proven stable, the cron script can be retired in favor of the scheduler and/or the shutdown hook calling `./daily-orbit db snapshot`.
+`deploy/lib/user-data.sh` installs a systemd unit (`db-snapshot-on-shutdown.service`) that calls `docker exec daily-orbit ./daily-orbit db snapshot` when the instance stops. This runs the same CLI path as a manual snapshot, so retention is enforced on shutdown the same way it is on the scheduled interval.

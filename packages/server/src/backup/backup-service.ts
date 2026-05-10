@@ -21,6 +21,11 @@ export type BackupServiceConfig = {
   uploader: S3Uploader;
   dbPath: string;
   snapshotPrefix: string;
+  /**
+   * Max number of timestamped snapshots to keep in S3. Older ones are deleted
+   * after each successful upload. Omit to skip pruning.
+   */
+  retentionCount?: number;
   /** If set, run a Parquet DR export after each successful snapshot. */
   parquetExport?: ParquetExportConfig;
 };
@@ -78,7 +83,25 @@ export function createBackupService(
       await completeBackupSnapshot(config.conn, id, fullS3Key, snapStat.size);
       log.info(`[backup] Snapshot ${s3Key} uploaded successfully`);
 
-      // 7. Parquet DR export (non-fatal — snapshot already succeeded)
+      // 7. Prune older snapshots (non-fatal — snapshot already succeeded)
+      if (config.retentionCount != null && config.retentionCount > 0) {
+        try {
+          const all = await config.uploader.listSnapshots();
+          const toDelete = all.slice(config.retentionCount);
+          for (const entry of toDelete) {
+            await config.uploader.deleteObject(entry.key);
+            log.info(`[backup] Pruned old snapshot ${entry.key}`);
+          }
+        } catch (pruneErr: unknown) {
+          const pruneMsg =
+            pruneErr instanceof Error ? pruneErr.message : String(pruneErr);
+          log.error(
+            `[backup] Snapshot prune failed (snapshot still succeeded): ${pruneMsg}`,
+          );
+        }
+      }
+
+      // 8. Parquet DR export (non-fatal — snapshot already succeeded)
       if (config.parquetExport != null) {
         try {
           const result = await runParquetExport(

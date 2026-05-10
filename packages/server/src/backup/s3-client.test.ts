@@ -11,5 +11,6 @@ describe('createS3Uploader', () => {
     expect(typeof uploader.upload).toBe('function');
     expect(typeof uploader.copyObject).toBe('function');
     expect(typeof uploader.listSnapshots).toBe('function');
+    expect(typeof uploader.deleteObject).toBe('function');
   });
 });

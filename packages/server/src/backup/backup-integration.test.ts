@@ -40,6 +40,7 @@ describe('backup integration', () => {
         }),
       copyObject: vi.fn().mockResolvedValue(undefined),
       listSnapshots: vi.fn().mockResolvedValue([]),
+      deleteObject: vi.fn().mockResolvedValue(undefined),
     };
 
     const service: BackupService = createBackupService({
@@ -65,5 +66,64 @@ describe('backup integration', () => {
 
     // Temp snap file should be cleaned up
     expect(existsSync(`${tmpDb}.snap`)).toBe(false);
+  });
+
+  it('prunes snapshots beyond retentionCount after a successful upload', async () => {
+    // listSnapshots returns 5 entries, newest first (matching prod sort order)
+    const snapshots = [
+      {
+        key: 'db/20260510-1400.duckdb',
+        lastModified: new Date(5),
+        sizeBytes: 1,
+      },
+      {
+        key: 'db/20260510-1200.duckdb',
+        lastModified: new Date(4),
+        sizeBytes: 1,
+      },
+      {
+        key: 'db/20260510-1000.duckdb',
+        lastModified: new Date(3),
+        sizeBytes: 1,
+      },
+      {
+        key: 'db/20260510-0800.duckdb',
+        lastModified: new Date(2),
+        sizeBytes: 1,
+      },
+      {
+        key: 'db/20260510-0600.duckdb',
+        lastModified: new Date(1),
+        sizeBytes: 1,
+      },
+    ];
+    const mockUploader: S3Uploader = {
+      upload: vi.fn().mockResolvedValue(undefined),
+      copyObject: vi.fn().mockResolvedValue(undefined),
+      listSnapshots: vi.fn().mockResolvedValue(snapshots),
+      deleteObject: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const service: BackupService = createBackupService({
+      conn,
+      uploader: mockUploader,
+      dbPath: tmpDb,
+      snapshotPrefix: 'db/',
+      retentionCount: 2,
+    });
+
+    await service.runBackup('test');
+
+    // 5 existing - 2 retained = 3 deleted (oldest first)
+    expect(mockUploader.deleteObject).toHaveBeenCalledTimes(3);
+    expect(mockUploader.deleteObject).toHaveBeenCalledWith(
+      'db/20260510-1000.duckdb',
+    );
+    expect(mockUploader.deleteObject).toHaveBeenCalledWith(
+      'db/20260510-0800.duckdb',
+    );
+    expect(mockUploader.deleteObject).toHaveBeenCalledWith(
+      'db/20260510-0600.duckdb',
+    );
   });
 });

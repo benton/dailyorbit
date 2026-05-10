@@ -55,6 +55,7 @@ export const snapshotCommand = defineCommand({
       uploader,
       dbPath,
       snapshotPrefix: prefix,
+      retentionCount: 2,
       parquetExport: { bucket, region, prefix: 'parquet/' },
     });
 

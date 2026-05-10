@@ -1,5 +1,6 @@
 import {
   CopyObjectCommand,
+  DeleteObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -22,6 +23,7 @@ export type S3Uploader = {
   upload: (localPath: string, s3Key: string) => Promise<void>;
   copyObject: (sourceKey: string, destKey: string) => Promise<void>;
   listSnapshots: () => Promise<S3SnapshotEntry[]>;
+  deleteObject: (fullKey: string) => Promise<void>;
 };
 
 export function createS3Uploader(config: S3UploaderConfig): S3Uploader {
@@ -78,5 +80,11 @@ export function createS3Uploader(config: S3UploaderConfig): S3Uploader {
     return entries;
   }
 
-  return { upload, copyObject, listSnapshots };
+  async function deleteObject(fullKey: string): Promise<void> {
+    await client.send(
+      new DeleteObjectCommand({ Bucket: config.bucket, Key: fullKey }),
+    );
+  }
+
+  return { upload, copyObject, listSnapshots, deleteObject };
 }
