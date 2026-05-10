@@ -46,30 +46,48 @@ mkdir -pv /data
 
 # Attach the persistent EBS volume.
 #
-# During a rolling instance refresh the new box can boot before the old one
-# has fully released the volume — `attach-volume` then fails with VolumeInUse.
-# A graceful shutdown usually releases the volume in seconds, but a stuck or
-# unresponsive prior instance can hold it until EC2 force-detaches, which can
-# take much longer. Retry for up to an hour so a slow release never strands
-# the new instance.
+# We poll describe-volumes as the source of truth rather than relying on the
+# attach-volume exit code, which has two failure modes that look identical:
+#   1. Volume still attached to the terminating prior instance (real failure)
+#   2. Volume already attached to *this* instance from a prior loop iteration
+#      where the AWS API succeeded but exited non-zero during a transient state
+# A naive `if attach-volume; then break` retry loop hits case #2 forever once
+# the attach lands, and the box never moves on to mount.
+#
+# Loop logic per iteration:
+#   - attached to us       → done
+#   - unattached           → call attach-volume, recheck next iteration
+#   - attached elsewhere   → wait for the prior instance to release
 echo "Attaching EBS volume $DATA_VOLUME_ID..."
 attached=false
 MAX_ATTACH_ATTEMPTS=360  # 360 × 10s = ~1 hour
 for attempt in $(seq 1 $MAX_ATTACH_ATTEMPTS); do
-  if aws ec2 attach-volume \
-      --volume-id "$DATA_VOLUME_ID" \
-      --instance-id "$INSTANCE_ID" \
-      --device "$EBS_DEVICE" \
-      --region "$REGION"; then
-    echo "attach-volume succeeded on attempt $attempt"
+  current_attach=$(aws ec2 describe-volumes \
+    --volume-ids "$DATA_VOLUME_ID" \
+    --region "$REGION" \
+    --query 'Volumes[0].Attachments[0].InstanceId' \
+    --output text 2>/dev/null || echo "None")
+
+  if [ "$current_attach" = "$INSTANCE_ID" ]; then
+    echo "Volume attached to this instance ($INSTANCE_ID) on attempt $attempt"
     attached=true
     break
   fi
-  echo "attach-volume failed on attempt $attempt/$MAX_ATTACH_ATTEMPTS — likely still attached to terminating instance, sleeping 10s..."
+
+  if [ "$current_attach" = "None" ] || [ -z "$current_attach" ]; then
+    echo "Volume unattached, calling attach-volume (attempt $attempt/$MAX_ATTACH_ATTEMPTS)..."
+    aws ec2 attach-volume \
+      --volume-id "$DATA_VOLUME_ID" \
+      --instance-id "$INSTANCE_ID" \
+      --device "$EBS_DEVICE" \
+      --region "$REGION" || true
+  else
+    echo "attempt $attempt/$MAX_ATTACH_ATTEMPTS — volume still attached to $current_attach, sleeping 10s..."
+  fi
   sleep 10
 done
 if [ "$attached" != "true" ]; then
-  echo "ERROR: attach-volume never succeeded after $MAX_ATTACH_ATTEMPTS attempts (~1 hour). Aborting."
+  echo "ERROR: volume never attached to this instance after $MAX_ATTACH_ATTEMPTS attempts (~1 hour). Aborting."
   exit 1
 fi
 
