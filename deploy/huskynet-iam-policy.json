@@ -5,22 +5,44 @@
       "Sid": "BedrockInvoke",
       "Effect": "Allow",
       "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
-      "Resource": "*"
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/*",
+        "arn:aws:bedrock:*:665226324657:*"
+      ]
     },
     {
       "Sid": "SesSend",
       "Effect": "Allow",
       "Action": ["ses:SendEmail", "ses:SendRawEmail"],
-      "Resource": "*"
+      "Resource": "arn:aws:ses:us-east-2:665226324657:identity/dailyorbit.org"
     },
     {
-      "Sid": "SnapshotAndMigrationBucket",
+      "Sid": "StorageBucketList",
       "Effect": "Allow",
-      "Action": ["s3:ListBucket", "s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::daily-orbit-storage"
+    },
+    {
+      "Sid": "StorageBucketRead",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::daily-orbit-storage/*"
+    },
+    {
+      "Sid": "StorageBucketWrite",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
       "Resource": [
-        "arn:aws:s3:::daily-orbit-storage",
-        "arn:aws:s3:::daily-orbit-storage/*"
+        "arn:aws:s3:::daily-orbit-storage/db/*",
+        "arn:aws:s3:::daily-orbit-storage/attachments/*",
+        "arn:aws:s3:::daily-orbit-storage/parquet/*"
       ]
+    },
+    {
+      "Sid": "SnapshotRetentionPrune",
+      "Effect": "Allow",
+      "Action": "s3:DeleteObject",
+      "Resource": "arn:aws:s3:::daily-orbit-storage/db/*"
     },
     {
       "Sid": "NewspaperImageMigrationRead",
