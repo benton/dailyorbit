@@ -256,10 +256,12 @@ alias doconf='docker run --rm --env-file /zp1/dailyorbit/daily-orbit.env -v /zp1
 doconf unset tlsCert          # Caddy terminates TLS now
 doconf unset tlsKey
 doconf unset newspaperImagesBucket   # serve newspaper images from local disk via the API
+# REHEARSAL-ONLY guards (AWS prod is still live — ed must not double-run it):
+doconf set schedulerAutoStart false  # no pipeline runs / alert emails from ed
+doconf unset snapshotBucket          # no S3 snapshot uploads (retention prune could delete prod's chain)
 # Attachments stay on S3 for Phase 1 — verify, don't change:
 doconf get storageBackend     # expect: s3
 doconf get storageBucket      # expect: daily-orbit-storage
-doconf get snapshotBucket     # expect: daily-orbit-storage (interim backups continue)
 ```
 
 (`clientDomain`, `appBaseUrl`, `betterAuthUrl` are untouched — domains don't change.)
@@ -443,7 +445,7 @@ aws s3 sync s3://daily-orbit-prod-frontend/newspaper/images/ /data/newspaper/ima
 chown -R 1000:1000 /zp1/dailyorbit
 ```
 
-Re-apply Task 5 Step 2 config changes (the final snapshot restores production config values — `tlsCert`, `newspaperImagesBucket` come back): rerun the `doconf unset` commands.
+Re-apply the huskynet config changes (the final snapshot restores production config values — `tlsCert`, `newspaperImagesBucket` come back): rerun `doconf unset tlsCert`, `doconf unset tlsKey`, `doconf unset newspaperImagesBucket`. Do **not** re-apply the rehearsal-only guards: `schedulerAutoStart` and `snapshotBucket` keep their restored production values (`true` / `daily-orbit-storage`) — ed is production from this point.
 
 ```bash
 systemctl start daily-orbit && curl -fsS http://127.0.0.1:9010/api/health
