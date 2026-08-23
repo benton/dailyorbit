@@ -29,13 +29,13 @@ Daily Orbit attribution (~$234/mo pre-tax, ~91% of the bill):
 
 Not Daily Orbit (~$21): us-west-1 $18.7 (`valheim`/`skyrim` EBS volumes + snapshots, `jacksonroberts.us` S3), us-west-2 $1.6 (old snapshot + Aurora backup), personal-site buckets in us-east-1 (~$0.7).
 
-August MTD (21 days) S3 is already **$173** — on track for ~$255/mo from S3 alone. Post-migration residual AWS spend is ~$55/mo (attachments in Glacier IR ~$48 + Bedrock + Route53 + SES). **Net savings ≈ $190–240/mo and climbing** (attachments stay off-prem; see Design Decisions).
+**CORRECTION (2026-08-22, during execution):** the bucket's 12.3 TiB is NOT attachments. True composition: `db/` = 672 GB (2 current snapshots), `attachments/` = **79 GB** (254k objects; the DB's live set is 98.3 GB / 340k files — prod serves attachments from local disk with `storageBackend=fs`; S3 is just the sync backup), and **~11.6 TiB of stranded incomplete multipart uploads** — 88 failed 336 GB snapshot uploads since March, invisible to listings, never cleaned because the bucket had no lifecycle rule. Fixed 2026-08-22 with an `AbortIncompleteMultipartUpload` (1 day) lifecycle rule; S3 storage cost drops to ~$18/mo (~$250/mo saved) independent of the migration. Root-cause follow-up: the backup service (`packages/server/src/backup/s3-client.ts`) should abort its own failed multipart uploads.
 
-One-time migration egress: DB snapshot ~336 GB ≈ $30 (Phase 1). Attachments never leave AWS — Phase 2 is a lifecycle transition (~$8 one-time), not a transfer.
+One-time migration egress: DB snapshot ~336 GB ≈ $30 + attachments ~79 GB ≈ $7 (Phase 1). No Glacier tiering — pointless at 79 GB.
 
 ## Design Decisions
 
-- **Two-phase data move.** Phase 1 moves compute + DB to `ed` and kills EC2/EBS/EIP/ECR/CloudFront (~$85/mo). Attachments stay on `storageBackend=s3` permanently — Phase 2 transitions the 11.7 TiB `attachments/` prefix to **S3 Glacier Instant Retrieval** via a lifecycle rule (~$275/mo → ~$48/mo) instead of moving it on-prem. GIR is a normal S3 GET with millisecond latency plus a $0.03/GB retrieval fee, so the OpenDAL `s3` backend needs **zero code changes**; and since attachment text is already extracted into DuckDB for search/summaries, raw-blob retrievals are rare (a thousand 33 MB document opens ≈ $1/mo). This avoids ~$1,080 of egress, days of transfer, and 12 TiB of on-prem storage that neither `ed` (1.75 TiB pool) nor the NAS (16.77 TiB, would start 70% full and the bucket is growing) can comfortably hold. Optional later: tier objects >1 year old to Deep Archive ($12/mo) once a restore-request UX exists.
+- **Data move (revised after the multipart discovery).** Production uses `storageBackend=fs` — attachments (98 GB live) are served from local disk and synced to S3 as backup. So `ed` hosts everything: 336 GB DB + ~100 GB attachments + newspaper images on `zp1/ROOT/dailyorbit`, all comfortably inside the 900 GB quota. Attachments seed from `s3://daily-orbit-storage/attachments/` (79 GB — note it lags the live 98 GB set; reconcile the delta at cutover from the instance or by triggering prod's sync first). No Glacier tiering — the S3 cost problem was stranded multipart uploads, already fixed by lifecycle rule.
 - **TLS: no cert to generate.** The current cert is all-AWS (ACM export, stored in DuckDB `tlsCert`/`tlsKey` config). On huskynet, Caddy auto-provisions Let's Encrypt certs. With only 443 port-forwarded, Caddy uses the TLS-ALPN-01 challenge automatically; forwarding 80 as well is recommended (HTTP→HTTPS redirects for stray plain-HTTP hits) but not required. `tlsCert`/`tlsKey` get unset so the Node server serves plain HTTP on 9000 (existing behavior when unset).
 - **Frontend from the container.** The image already contains `packages/web/dist` and serves it when `SERVE_STATIC=true` (set in the Dockerfile). CloudFront + frontend bucket become unnecessary. Newspaper images switch to the API-served local-filesystem path (`data/newspaper/images`, the existing dev pattern) by building with `VITE_NEWSPAPER_IMAGES_URL=""` and unsetting `newspaperImagesBucket`.
 - **amd64 images.** `ed` is x86_64; CI currently builds arm64-only. The build job goes multi-arch (`linux/amd64,linux/arm64`) during the transition so AWS rollback stays possible; drop arm64 after decommission. amd64 builds natively on the x86 shared runner — the QEMU tax now falls on the arm64 half only.
@@ -260,7 +260,7 @@ doconf unset newspaperImagesBucket   # serve newspaper images from local disk vi
 doconf set schedulerAutoStart false  # no pipeline runs / alert emails from ed
 doconf unset snapshotBucket          # no S3 snapshot uploads (retention prune could delete prod's chain)
 # Attachments stay on S3 for Phase 1 — verify, don't change:
-doconf get storageBackend     # expect: s3
+doconf get storageBackend     # expect: fs (attachments served from /app/data/attachments)
 doconf get storageBucket      # expect: daily-orbit-storage
 ```
 
@@ -388,7 +388,7 @@ deploy:
   script:
     - SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
     - |
-      ssh -p 2222 -o StrictHostKeyChecking=accept-new dailyorbit-deploy@ed.h.usky.io "
+      ssh -p 2222 -o StrictHostKeyChecking=yes dailyorbit-deploy@ed.h.usky.io  # host key pinned in known_hosts (see .gitlab-ci.yml) "
         set -euo pipefail
         sudo docker pull registry.h.usky.io/benton/daily-orbit:$SANITIZED_TAG
         sudo sed -i 's|registry.h.usky.io/benton/daily-orbit:[^ ]*|registry.h.usky.io/benton/daily-orbit:$SANITIZED_TAG|' /etc/systemd/system/daily-orbit.service
@@ -484,32 +484,17 @@ chmod +x /etc/cron.daily/dailyorbit-zfs-snapshot
 
 ---
 
-### Task 9: Phase 2 — attachments to Glacier Instant Retrieval
+### Task 9: Phase 2 — S3 hygiene and backup-path cleanup (revised)
 
-`storageBackend=s3` stays; a lifecycle rule moves the ~11.7 TiB `attachments/` prefix to GIR (~$275/mo → ~$48/mo). No egress, no code changes, retrieval stays a normal GET (ms latency, $0.03/GB — negligible at this app's raw-blob access rate). Can run any time after cutover; new attachments from ingest land in Standard and transition after 30 days.
+The original Glacier plan is obsolete: the 12.3 TiB was ~11.6 TiB of stranded incomplete multipart uploads (88 failed 336 GB snapshot uploads since March), not attachments. Remaining work:
 
-- [ ] **Step 1: Growth audit first** — the bucket grew ~6.8 → 12.3 TiB between July and 2026-08-22. Before paying to store it anywhere, confirm that's legitimate ingest (new filings) and not duplicate uploads: compare `attachment` table counts/sizes in DuckDB against `aws s3 ls --summarize` per service prefix (SAT/, SES/, ITC/…). Prune duplicates if found.
+- [x] **Lifecycle rule applied 2026-08-22:** `AbortIncompleteMultipartUpload` after 1 day on the whole bucket. S3 aborts the stale parts within ~a day of rule evaluation.
 
-- [ ] **Step 2: Apply the lifecycle rule**
+- [ ] **Step 1: Verify reclaim** — a day or two after cutover work, confirm `list-multipart-uploads` is empty (aside from any in-flight upload) and CloudWatch `BucketSizeBytes` has fallen from ~12.3 TiB to ~0.75 TiB. Expect the S3 bill line to land around ~$18/mo (672 GB snapshots + 79 GB attachments).
 
-```bash
-export AWS_PROFILE=personal
-aws s3api put-bucket-lifecycle-configuration --bucket daily-orbit-storage \
-  --lifecycle-configuration '{
-    "Rules": [{
-      "ID": "attachments-to-glacier-ir",
-      "Status": "Enabled",
-      "Filter": {"Prefix": "attachments/"},
-      "Transitions": [{"Days": 30, "StorageClass": "GLACIER_IR"}]
-    }]
-  }'
-```
+- [ ] **Step 2: Root-cause fix in the backup service** — `packages/server/src/backup/s3-client.ts` leaves parts behind when a multipart snapshot upload fails (Spot interruptions mid-upload are routine). Make failed uploads abort themselves: with `@aws-sdk/lib-storage`'s `Upload`, that's `leavePartsOnError: false` (or an explicit `AbortMultipartUpload` in the failure path). Add a test that a failed upload calls abort. The lifecycle rule stays as the backstop.
 
-Transition of ~370k existing objects costs ~$8 (one-time) and happens within a day or two of each object passing the age filter — existing objects are all >30 days old, so effectively immediately. Note GIR bills a 90-day minimum per object and a 128 KB minimum size — both fine for an append-only archive of multi-MB documents.
-
-- [ ] **Step 3: Verify** — after the transition shows in the console/`aws s3api head-object` (`StorageClass: GLACIER_IR`), open several attachments across services (SAT, SES, ITC…) in the UI; confirm normal latency. Watch the next month's bill: S3 storage line should drop to ~$50.
-
-- [ ] **Step 4 (optional, later): Deep Archive tier** — once a restore-request UX exists in the storage backend, add a second transition (`Days: 365 → DEEP_ARCHIVE`) to cut storage to ~$12/mo. Not part of this migration.
+- [ ] **Step 3 (after NAS backups exist): shrink the snapshot chain** — with ZFS snapshots + NAS replication in place, S3 `db/` (672 GB, ~$16/mo) becomes the third copy; drop `retentionCount` to 1 or unset `snapshotBucket` entirely (see Task 10).
 
 ---
 
@@ -520,13 +505,13 @@ After ≥ 1 week stable on huskynet (Phase 1 items) / after Phase 2 (storage):
 - [ ] `make deploy-destroy` — removes ASG/EC2, EIP, launch template, CloudFront, frontend bucket, ECR, IAM instance role. Then **verify the three DNS A records survived** (Task 8 Step 4 gotcha) and that the zone itself remains.
 - [ ] Delete the orphaned data volume if the stack retained it: `aws ec2 delete-volume --volume-id vol-0283624e12ef2be3a --region us-east-2` (only after confirming the site runs from `ed`'s copy).
 - [ ] Delete `daily-orbit-prod-cloudfront-logs` bucket and `cdk-dailyorbit-assets-*` if the stack is gone for good.
-- [ ] After NAS backup process exists: `doconf unset snapshotBucket`, delete the `db/` prefix from `s3://daily-orbit-storage`. The bucket itself stays — `attachments/` lives there in Glacier IR permanently.
+- [ ] After NAS backup process exists: `doconf unset snapshotBucket`, delete the `db/` prefix from `s3://daily-orbit-storage`; keep or drop the 79 GB `attachments/` backup copy (~$1.8/mo) as desired.
 - [ ] Drop `linux/arm64` from the CI build platform list and remove the leftover binfmt line: `git commit -m "ci: build amd64 only after aws decommission"`.
 - [ ] Remove AWS deployer CI variables from GitLab; delete the `gitlab-ci-deployer` IAM user; tighten `daily-orbit-huskynet` policy (drop the `daily-orbit-prod-frontend` read statement; keep `daily-orbit-storage` access — attachments live there permanently).
 - [ ] Docs: mark `doc/deployment-aws.md` as historical, write `doc/deployment-huskynet.md` from this plan's end state; update `doc/backups.md` (ZFS/NAS) and `doc/debugging-production.md` (SSH target is now `ed`).
 - [ ] Roadmap: add `v?.x.x [ ] NAS backup replication for /zp1/dailyorbit` under Bug fixes/Nice-to-have.
 
-**Not decommissioned (stays on AWS, ~$55/mo):** attachments in `s3://daily-orbit-storage` at Glacier IR (~$48), Bedrock (us-east-2 + us-east-1 Nova Canvas), SES, Route53 zone `dailyorbit.org`, the `daily-orbit-huskynet` IAM user.
+**Not decommissioned (stays on AWS, ~$5–20/mo):** Bedrock (us-east-2 + us-east-1 Nova Canvas), SES, Route53 zone `dailyorbit.org`, the `daily-orbit-huskynet` IAM user, and `s3://daily-orbit-storage` while it still carries interim DB snapshots (~$16/mo until NAS backups; then ~$2/mo or deleted).
 
 ## Rollback
 
@@ -537,3 +522,4 @@ Until Task 10, rollback = repoint the three DNS records back (CloudFront aliases
 - 2026-08-22: Tasks 1–4 complete. v1.29.13 tagged/pushed (first multi-arch build). ZFS: `/var` refreservation freed, 900G quota set; DB seed (312.8 GiB) + newspaper images landed in 77 min (250G on disk after lz4). IAM user `daily-orbit-huskynet` live with least-privilege policy (tightened after security review); creds at `/zp1/dailyorbit/daily-orbit.env`.
 - 2026-08-22: Task 5 partial — systemd unit installed on `ed` (port 9010, v1.29.13); `doconf` config re-point + first service start pending the image build. Task 6 done — Caddy block added and reloaded (cert issuance deferred to DNS cutover by design). Task 7 done except one manual step: add CI variable `ED_DEPLOY_KEY` (see below); `dailyorbit-deploy` user + scoped sudoers live and smoke-tested over SSH:2222.
 - **Pending user action:** paste the private key from the session scratchpad (`dailyorbit-ci`) into GitLab → Settings → CI/CD → Variables as `ED_DEPLOY_KEY` (masked, protected).
+- 2026-08-22 (late): **Multipart discovery.** Production `storageBackend` turned out to be `fs`; S3 `attachments/` is only 79 GB and the bucket's 12.3 TiB was ~11.6 TiB of stranded incomplete multipart uploads. Applied `AbortIncompleteMultipartUpload` lifecycle rule (saves ~$250/mo by itself); scrapped the Glacier plan (Task 9 rewritten as S3 hygiene + backup-service root-cause fix); attachments seed (79 GB) started to `/zp1/dailyorbit/attachments`. Deploy-job SSH now pins ed's host key (security review). Known delta to reconcile at cutover: DB says 98.3 GB of attachments; S3 backup holds 79 GB — trigger prod's attachment sync (or rsync from the instance) before the final pull. Also: the old EC2 SSH key (`~/elaptop/.ssh/id_rsa`) was rejected — restore instance SSH access before cutover day.
