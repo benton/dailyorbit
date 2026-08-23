@@ -70,7 +70,7 @@ Consequences and follow-ups:
 
 - SSH to `ed` is on **port 2222** (port 22 is the GitLab container's git SSH).
 - The GitLab container registry is **`registry.h.usky.io`** (`registry_external_url`; the `registry.git.h.usky.io` name in doc/local-arm-runner.md is stale). Root on `ed` is already logged in.
-- **Port 9000 is taken** (rustfs, an S3-compatible store). Daily Orbit publishes `127.0.0.1:9010 → container 9000`; app-internal port config stays 9000.
+- **Port 9000 is taken** (rustfs, an S3-compatible store). Daily Orbit publishes `127.0.0.1:9010 → container 9900` (the production DB `port` config is 9900 — it was dormant on AWS where TLS mode served 443).
 - Caddy runs as a **container** (`caddy`, host network, restart=no) with its Caddyfile on the NAS NFS mount at `/mnt/nfs/proxy.h.usky.io/config/Caddyfile`. Site-block pattern: `host { reverse_proxy localhost:PORT; import husky-tls }` — but public domains omit `husky-tls` (that's the internal `*.h.usky.io` static cert) so Caddy uses Let's Encrypt. Reload with `docker exec caddy caddy reload --config /etc/caddy/Caddyfile`. If the Caddyfile is under IaC in the huskynet repo, mirror the block there.
 - Cert issuance for `dailyorbit.org` **cannot succeed until DNS points at the fixed IP** (ACME validates via public DNS). Caddy retries with backoff; certs land within ~a minute of the DNS flip at cutover. This supersedes the pre-cutover `--resolve` TLS check in Task 6 — pre-cutover verification is `curl http://127.0.0.1:9010/...` on `ed` instead.
 - rustfs on `ed` is a possible future S3-compatible target for DB snapshots (instead of AWS S3) once NAS backups are designed.
@@ -285,7 +285,7 @@ TimeoutStartSec=120
 ExecStartPre=-/usr/bin/docker rm -f daily-orbit
 ExecStart=/usr/bin/docker run \
   --name daily-orbit \
-  -p 127.0.0.1:9010:9000 \
+  -p 127.0.0.1:9010:9900 \
   --log-opt max-size=100m \
   --log-opt max-file=3 \
   --env-file /zp1/dailyorbit/daily-orbit.env \
@@ -523,3 +523,4 @@ Until Task 10, rollback = repoint the three DNS records back (CloudFront aliases
 - 2026-08-22: Task 5 partial — systemd unit installed on `ed` (port 9010, v1.29.13); `doconf` config re-point + first service start pending the image build. Task 6 done — Caddy block added and reloaded (cert issuance deferred to DNS cutover by design). Task 7 done except one manual step: add CI variable `ED_DEPLOY_KEY` (see below); `dailyorbit-deploy` user + scoped sudoers live and smoke-tested over SSH:2222.
 - **Pending user action:** paste the private key from the session scratchpad (`dailyorbit-ci`) into GitLab → Settings → CI/CD → Variables as `ED_DEPLOY_KEY` (masked, protected).
 - 2026-08-22 (late): **Multipart discovery.** Production `storageBackend` turned out to be `fs`; S3 `attachments/` is only 79 GB and the bucket's 12.3 TiB was ~11.6 TiB of stranded incomplete multipart uploads. Applied `AbortIncompleteMultipartUpload` lifecycle rule (saves ~$250/mo by itself); scrapped the Glacier plan (Task 9 rewritten as S3 hygiene + backup-service root-cause fix); attachments seed (79 GB) started to `/zp1/dailyorbit/attachments`. Deploy-job SSH now pins ed's host key (security review). Known delta to reconcile at cutover: DB says 98.3 GB of attachments; S3 backup holds 79 GB — trigger prod's attachment sync (or rsync from the instance) before the final pull. Also: the old EC2 SSH key (`~/elaptop/.ssh/id_rsa`) was rejected — restore instance SSH access before cutover day.
+- 2026-08-23: **Task 5 complete.** Rehearsal instance live on ed: v1.29.13 container healthy behind Caddy, SPA + API + newspaper images all serving on 127.0.0.1:9010 (container port 9900 — prod DB `port` config). Attachments seed running in background (`dailyorbit-attach-seed`). Remaining before cutover: ED_DEPLOY_KEY CI variable (user), attachment delta + final DB pull, DNS flip, merge feat/huskynet-deploy + tag.
