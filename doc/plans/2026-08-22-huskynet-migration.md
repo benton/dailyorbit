@@ -4,7 +4,7 @@
 
 **Goal:** Move Daily Orbit production hosting from AWS (EC2 Spot + EBS + S3 + CloudFront) to `ed.h.usky.io` on the huskynet, keeping only Bedrock inference, SES email, and Route53 DNS on AWS.
 
-**Architecture:** The existing Docker image (which already serves the frontend via `SERVE_STATIC=true`) runs as a systemd-managed container on `ed`, with `/app/data` on a new ZFS dataset `zp1/dailyorbit`. Caddy on `ed` terminates TLS (Let's Encrypt, automatic) and reverse-proxies `dailyorbit.org` / `www` / `api.dailyorbit.org` to the container on `127.0.0.1:9000`. CI keeps the current tag-triggered pipeline with a manual deploy gate, but the deploy job SSHes to `ed` and restarts the service instead of pushing to ECR/ASG. Images come from the GitLab container registry (`registry.git.h.usky.io`) that the build job already pushes to — ECR drops out entirely.
+**Architecture:** The existing Docker image (which already serves the frontend via `SERVE_STATIC=true`) runs as a systemd-managed container on `ed`, with `/app/data` on a new ZFS dataset `zp1/dailyorbit`. Caddy on `ed` terminates TLS (Let's Encrypt, automatic) and reverse-proxies `dailyorbit.org` / `www` / `api.dailyorbit.org` to the container on `127.0.0.1:9000`. CI keeps the current tag-triggered pipeline with a manual deploy gate, but the deploy job SSHes to `ed` and restarts the service instead of pushing to ECR/ASG. Images come from the GitLab container registry (`registry.h.usky.io`) that the build job already pushes to — ECR drops out entirely.
 
 **Tech Stack:** GitLab CI (self-hosted, git.h.usky.io), Docker, systemd, Caddy, ZFS, DuckDB, AWS CLI (migration only).
 
@@ -66,10 +66,18 @@ Consequences and follow-ups:
 - Reclaim candidates: `zp1/ROOT/gitlab` is 447 GB — registry cleanup policy + `gitlab-ctl registry-garbage-collect` should shrink it (the CI `buildcache,mode=max` push accumulates there); audit why the DB grew 52→336 GB since April (embeddings/FTS bloat? prunable?).
 - Expansion triggers (pool >75–80% or DB >500 GB): add a SATA SSD (2–4 TB, ports are free) as a new pool/vdev for the dailyorbit dataset, or upsize the NVMes.
 
-## Open Questions (answer before Task 4)
+## `ed` Environment Facts (surveyed during execution, 2026-08-22)
 
-1. Is port 9000 free on `ed`? (`ss -tlnp | grep 9000`) If not, pick another and set the app `port` config to match the Caddy upstream.
-2. Will port 80 be forwarded alongside 443? (Recommended, not required.)
+- SSH to `ed` is on **port 2222** (port 22 is the GitLab container's git SSH).
+- The GitLab container registry is **`registry.h.usky.io`** (`registry_external_url`; the `registry.git.h.usky.io` name in doc/local-arm-runner.md is stale). Root on `ed` is already logged in.
+- **Port 9000 is taken** (rustfs, an S3-compatible store). Daily Orbit publishes `127.0.0.1:9010 → container 9000`; app-internal port config stays 9000.
+- Caddy runs as a **container** (`caddy`, host network, restart=no) with its Caddyfile on the NAS NFS mount at `/mnt/nfs/proxy.h.usky.io/config/Caddyfile`. Site-block pattern: `host { reverse_proxy localhost:PORT; import husky-tls }` — but public domains omit `husky-tls` (that's the internal `*.h.usky.io` static cert) so Caddy uses Let's Encrypt. Reload with `docker exec caddy caddy reload --config /etc/caddy/Caddyfile`. If the Caddyfile is under IaC in the huskynet repo, mirror the block there.
+- Cert issuance for `dailyorbit.org` **cannot succeed until DNS points at the fixed IP** (ACME validates via public DNS). Caddy retries with backoff; certs land within ~a minute of the DNS flip at cutover. This supersedes the pre-cutover `--resolve` TLS check in Task 6 — pre-cutover verification is `curl http://127.0.0.1:9010/...` on `ed` instead.
+- rustfs on `ed` is a possible future S3-compatible target for DB snapshots (instead of AWS S3) once NAS backups are designed.
+
+## Open Questions
+
+1. Will port 80 be forwarded alongside 443? (Recommended, not required.)
 
 ---
 
@@ -79,7 +87,7 @@ Consequences and follow-ups:
 - Modify: `.gitlab-ci.yml` (build job, ~line 50)
 
 **Interfaces:**
-- Produces: `registry.git.h.usky.io/benton/daily-orbit:<tag>` pullable for `linux/amd64` — consumed by Tasks 6 and 9.
+- Produces: `registry.h.usky.io/benton/daily-orbit:<tag>` pullable for `linux/amd64` — consumed by Tasks 6 and 9.
 
 - [ ] **Step 1: Change the buildx platform list and frontend build args**
 
@@ -114,7 +122,7 @@ git commit -m "ci: build multi-arch images and serve newspaper images from the A
 Push a tag per the release flow (`/release-version` — bump version, tag, push tag). Confirm in the GitLab UI that `build` is green and the registry shows both architectures:
 
 ```bash
-docker manifest inspect registry.git.h.usky.io/benton/daily-orbit:v<X.Y.Z> | grep -A2 architecture
+docker manifest inspect registry.h.usky.io/benton/daily-orbit:v<X.Y.Z> | grep -A2 architecture
 ```
 
 Expected: entries for `amd64` and `arm64`. (Build will be slower this transition period — amd64 native + arm64 emulated.)
@@ -236,13 +244,13 @@ Expected: DB ≈ 336 GB, images present, ownership uid 1000.
 Create a GitLab **deploy token** (read_registry) at `https://git.h.usky.io/benton/daily-orbit/-/settings/repository`. Then on `ed`:
 
 ```bash
-docker login registry.git.h.usky.io -u <token-username>   # paste token
+docker login registry.h.usky.io -u <token-username>   # paste token
 ```
 
 - [ ] **Step 2: Reconfigure the DB copy for huskynet (existing throwaway-container pattern)**
 
 ```bash
-IMG=registry.git.h.usky.io/benton/daily-orbit:v<X.Y.Z>   # the Task 1 multi-arch tag
+IMG=registry.h.usky.io/benton/daily-orbit:v<X.Y.Z>   # the Task 1 multi-arch tag
 docker pull $IMG
 alias doconf='docker run --rm --env-file /zp1/dailyorbit/daily-orbit.env -v /zp1/dailyorbit:/app/data $IMG config'
 doconf unset tlsCert          # Caddy terminates TLS now
@@ -275,13 +283,13 @@ TimeoutStartSec=120
 ExecStartPre=-/usr/bin/docker rm -f daily-orbit
 ExecStart=/usr/bin/docker run \
   --name daily-orbit \
-  -p 127.0.0.1:9000:9000 \
+  -p 127.0.0.1:9010:9000 \
   --log-opt max-size=100m \
   --log-opt max-file=3 \
   --env-file /zp1/dailyorbit/daily-orbit.env \
   -e NODE_ENV=production \
   -v /zp1/dailyorbit:/app/data \
-  registry.git.h.usky.io/benton/daily-orbit:v<X.Y.Z>
+  registry.h.usky.io/benton/daily-orbit:v<X.Y.Z>
 
 ExecStop=/usr/bin/docker stop daily-orbit
 ExecStopPost=-/usr/bin/docker rm -f daily-orbit
@@ -297,7 +305,7 @@ systemctl daemon-reload && systemctl enable --now daily-orbit
 - [ ] **Step 4: Verify locally on `ed`**
 
 ```bash
-curl -fsS http://127.0.0.1:9000/api/health
+curl -fsS http://127.0.0.1:9010/api/health
 curl -fsS http://127.0.0.1:9000/ | head -5        # SPA index.html (SERVE_STATIC)
 curl -fsSI http://127.0.0.1:9000/api/newspaper/images/library/masthead.webp
 journalctl -u daily-orbit -n 50 --no-pager        # no errors; scheduler + FTS index status OK
@@ -313,7 +321,7 @@ Expected: health 200, HTML served, image 200. Note: the rehearsal DB will drift 
 
 ```caddyfile
 dailyorbit.org, www.dailyorbit.org, api.dailyorbit.org {
-	reverse_proxy 127.0.0.1:9000
+	reverse_proxy localhost:9010
 }
 ```
 
@@ -378,16 +386,16 @@ deploy:
   script:
     - SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
     - |
-      ssh -o StrictHostKeyChecking=accept-new dailyorbit-deploy@$ED_DEPLOY_HOST "
+      ssh -p 2222 -o StrictHostKeyChecking=accept-new dailyorbit-deploy@ed.h.usky.io "
         set -euo pipefail
-        sudo docker pull registry.git.h.usky.io/benton/daily-orbit:$SANITIZED_TAG
-        sudo sed -i 's|registry.git.h.usky.io/benton/daily-orbit:[^ ]*|registry.git.h.usky.io/benton/daily-orbit:$SANITIZED_TAG|' /etc/systemd/system/daily-orbit.service
+        sudo docker pull registry.h.usky.io/benton/daily-orbit:$SANITIZED_TAG
+        sudo sed -i 's|registry.h.usky.io/benton/daily-orbit:[^ ]*|registry.h.usky.io/benton/daily-orbit:$SANITIZED_TAG|' /etc/systemd/system/daily-orbit.service
         sudo systemctl daemon-reload
         sudo systemctl restart daily-orbit
         sleep 5
         sudo systemctl is-active daily-orbit || { sudo journalctl -u daily-orbit -n 30 --no-pager; exit 1; }
       "
-    - curl -fsS --retry 10 --retry-delay 3 --retry-all-errors https://api.dailyorbit.org/api/health
+    - curl -fsS --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1:9010/api/health  # run inside the ssh session on ed
   environment:
     name: production
     url: https://dailyorbit.org
@@ -438,7 +446,7 @@ chown -R 1000:1000 /zp1/dailyorbit
 Re-apply Task 5 Step 2 config changes (the final snapshot restores production config values — `tlsCert`, `newspaperImagesBucket` come back): rerun the `doconf unset` commands.
 
 ```bash
-systemctl start daily-orbit && curl -fsS http://127.0.0.1:9000/api/health
+systemctl start daily-orbit && curl -fsS http://127.0.0.1:9010/api/health
 ```
 
 - [ ] **Step 4: Repoint DNS**
@@ -521,3 +529,9 @@ After ≥ 1 week stable on huskynet (Phase 1 items) / after Phase 2 (storage):
 ## Rollback
 
 Until Task 10, rollback = repoint the three DNS records back (CloudFront aliases + EIP), start the EC2 service (`sudo systemctl start daily-orbit` on the instance), and revert the `.gitlab-ci.yml` deploy job commit. Images are multi-arch, so tags built during the transition run on both targets. The S3 data is untouched until the very last step.
+
+## Progress Log
+
+- 2026-08-22: Tasks 1–4 complete. v1.29.13 tagged/pushed (first multi-arch build). ZFS: `/var` refreservation freed, 900G quota set; DB seed (312.8 GiB) + newspaper images landed in 77 min (250G on disk after lz4). IAM user `daily-orbit-huskynet` live with least-privilege policy (tightened after security review); creds at `/zp1/dailyorbit/daily-orbit.env`.
+- 2026-08-22: Task 5 partial — systemd unit installed on `ed` (port 9010, v1.29.13); `doconf` config re-point + first service start pending the image build. Task 6 done — Caddy block added and reloaded (cert issuance deferred to DNS cutover by design). Task 7 done except one manual step: add CI variable `ED_DEPLOY_KEY` (see below); `dailyorbit-deploy` user + scoped sudoers live and smoke-tested over SSH:2222.
+- **Pending user action:** paste the private key from the session scratchpad (`dailyorbit-ci`) into GitLab → Settings → CI/CD → Variables as `ED_DEPLOY_KEY` (masked, protected).
