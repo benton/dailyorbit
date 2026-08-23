@@ -16,12 +16,9 @@ stages:
 
 variables:
   GL_IMAGE: $CI_REGISTRY_IMAGE
-  ECR_IMAGE: 665226324657.dkr.ecr.us-east-2.amazonaws.com/daily-orbit
   CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   VITE_SERVER_URL: "https://api.dailyorbit.org"
   VITE_NEWSPAPER_IMAGES_URL: ""
-  FRONTEND_BUCKET: "daily-orbit-prod-frontend"
-  AWS_DEFAULT_REGION: "us-east-2"
   SAST_DEFAULT_ANALYZERS: "semgrep"
 
 # ---------------------------------------------------------------------------
@@ -87,69 +84,29 @@ container_scanning:
     - if: $CI_COMMIT_TAG
 
 # ---------------------------------------------------------------------------
-# Deploy — tagged releases only, manual gate
+# Deploy — tagged releases only, manual gate; deploys to ed (huskynet)
 # ---------------------------------------------------------------------------
 deploy:
   stage: deploy
   needs: [build, test]
-  image: docker:27
-  services:
-    - docker:27-dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
+  image: alpine:3.22
   before_script:
-    # apk upgrade ensures libexpat matches the version aws-cli's pyexpat
-    # was compiled against — without it, aws CLI crashes on import with
-    # `XML_SetAllocTrackerActivationThreshold: symbol not found`.
-    - apk upgrade --no-cache && apk add --no-cache aws-cli
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - aws ecr get-login-password --region $AWS_DEFAULT_REGION |
-      docker login --username AWS --password-stdin $ECR_IMAGE
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$ED_DEPLOY_KEY" | tr -d '\r' | ssh-add -
   script:
     - SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
-
-    # Push image to ECR
-    - docker pull --platform linux/arm64 $GL_IMAGE:$SANITIZED_TAG
-    - docker tag $GL_IMAGE:$SANITIZED_TAG $ECR_IMAGE:$SANITIZED_TAG
-    - docker tag $GL_IMAGE:$SANITIZED_TAG $ECR_IMAGE:latest
-    - docker push $ECR_IMAGE:$SANITIZED_TAG
-    - docker push $ECR_IMAGE:latest
-
-    # Deploy frontend — extract built assets from the image
-    - CONTAINER_ID=$(docker create $GL_IMAGE:$SANITIZED_TAG)
-    - docker cp $CONTAINER_ID:/app/packages/web/dist /tmp/frontend-dist
-    - docker rm $CONTAINER_ID
-    - aws s3 sync /tmp/frontend-dist/ s3://$FRONTEND_BUCKET/
-        --delete --cache-control "public,max-age=31536000,immutable"
-        --exclude "index.html" --exclude "newspaper/*"
-    - aws s3 cp /tmp/frontend-dist/index.html s3://$FRONTEND_BUCKET/index.html
-        --cache-control "no-cache"
-
-    # Verify newspaper images survived the sync
     - |
-      IMG_COUNT=$(aws s3 ls s3://$FRONTEND_BUCKET/newspaper/images/ --recursive \
-        --summarize | grep "Total Objects:" | awk '{print $3}')
-      if [ "${IMG_COUNT:-0}" -lt 1 ]; then
-        echo "FATAL: newspaper images missing from S3 after frontend sync"
-        echo "The --exclude 'newspaper/*' flag may have been removed from the s3 sync command"
-        exit 1
-      fi
-      echo "Verified: ${IMG_COUNT} newspaper images in S3"
-
-    # Invalidate CloudFront index.html
-    - |
-      DISTRIBUTION_ID=$(aws cloudfront list-distributions \
-        --query 'DistributionList.Items[?Aliases.Items[0]==`dailyorbit.org`].Id | [0]' \
-        --output text)
-      aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/index.html"
-
-    # Trigger ASG instance refresh (rolling replace)
-    - |
-      ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
-        --query 'AutoScalingGroups[?Tags[?Key==`Project`&&Value==`daily-orbit`]].AutoScalingGroupName | [0]' \
-        --output text)
-      aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME" \
-        --preferences '{"MinHealthyPercentage": 0}'
+      ssh -p 2222 -o StrictHostKeyChecking=accept-new dailyorbit-deploy@ed.h.usky.io "
+        set -eu
+        sudo docker pull $CI_REGISTRY_IMAGE:$SANITIZED_TAG
+        sudo sed -i \"s|$CI_REGISTRY_IMAGE:[^ ]*|$CI_REGISTRY_IMAGE:$SANITIZED_TAG|\" /etc/systemd/system/daily-orbit.service
+        sudo systemctl daemon-reload
+        sudo systemctl restart daily-orbit
+        sleep 5
+        sudo systemctl is-active daily-orbit || { sudo journalctl -u daily-orbit -n 30 --no-pager; exit 1; }
+        curl -fsS --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1:9010/api/health
+      "
   environment:
     name: production
     url: https://dailyorbit.org
