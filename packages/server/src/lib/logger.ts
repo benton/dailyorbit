@@ -5,6 +5,7 @@ export type AppLogger = Logger;
 export type LoggerOptions = {
   env?: string;
   destination?: DestinationStream;
+  level?: pino.LevelWithSilent;
 };
 
 export function createLogger(options: LoggerOptions = {}): AppLogger {
@@ -18,7 +19,7 @@ export function createLogger(options: LoggerOptions = {}): AppLogger {
 
   return pino(
     {
-      level: 'info',
+      level: options.level ?? 'info',
       timestamp: pino.stdTimeFunctions.isoTime,
       ...(transport ? { transport } : {}),
     },
