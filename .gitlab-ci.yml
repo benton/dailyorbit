@@ -64,6 +64,11 @@ test:
   image: node:23-slim
   variables:
     CI: "true"
+    # Log-noise reduction: silence env warnings that don't indicate problems
+    DEBIAN_FRONTEND: "noninteractive"
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+    BROWSERSLIST_IGNORE_OLD_DATA: "1"
+    NODE_OPTIONS: "--disable-warning=ExperimentalWarning"
   before_script:
     - apt-get update -qq && apt-get install -y -qq file >/dev/null
     - corepack enable pnpm
