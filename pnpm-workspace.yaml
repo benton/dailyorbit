@@ -2,6 +2,10 @@ packages:
   - "packages/*"
   - "deploy"
 
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+
 onlyBuiltDependencies:
   - "@swc/core"
   - "@tailwindcss/oxide"
