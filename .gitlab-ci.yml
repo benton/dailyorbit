@@ -105,17 +105,10 @@ deploy:
     - echo "[ed.h.usky.io]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJFhZM0a7Ppu1aJeawOjWPWYM3RLCqNZoTbKc2YasirQ" > ~/.ssh/known_hosts
   script:
     - SANITIZED_TAG=$(echo "$CI_COMMIT_TAG" | sed 's/[^a-zA-Z0-9._-]/-/g')
-    - |
-      ssh -p 2222 -o StrictHostKeyChecking=yes dailyorbit-deploy@ed.h.usky.io "
-        set -eu
-        sudo docker pull $CI_REGISTRY_IMAGE:$SANITIZED_TAG
-        sudo sed -i \"s|$CI_REGISTRY_IMAGE:[^ ]*|$CI_REGISTRY_IMAGE:$SANITIZED_TAG|\" /etc/systemd/system/daily-orbit.service
-        sudo systemctl daemon-reload
-        sudo systemctl restart daily-orbit
-        sleep 5
-        sudo systemctl is-active daily-orbit || { sudo journalctl -u daily-orbit -n 30 --no-pager; exit 1; }
-        curl -fsS --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1:9010/api/health
-      "
+    # The deploy user's key is bound to a forced command that runs
+    # /usr/local/bin/dailyorbit-release on ed — the whole deploy lives there;
+    # the "command" sent here is just the tag argument.
+    - ssh -p 2222 -o StrictHostKeyChecking=yes dailyorbit-deploy@ed.h.usky.io "$SANITIZED_TAG"
   environment:
     name: production
     url: https://dailyorbit.org
