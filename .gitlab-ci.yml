@@ -108,7 +108,7 @@ deploy:
     # The deploy user's key is bound to a forced command that runs
     # /usr/local/bin/dailyorbit-release on ed — the whole deploy lives there;
     # the "command" sent here is just the tag argument.
-    - ssh -p 2222 -o StrictHostKeyChecking=yes dailyorbit-deploy@ed.h.usky.io "$SANITIZED_TAG"
+    - ssh -p 2222 -o StrictHostKeyChecking=yes -- dailyorbit-deploy@ed.h.usky.io "$SANITIZED_TAG"
   environment:
     name: production
     url: https://dailyorbit.org
