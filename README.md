@@ -143,7 +143,7 @@ _Daily Orbit Components_
 
 ### Backend (`packages/server`)
 
-- [Hono](https://hono.dev/) on [Node.js 23+](https://nodejs.org/) (native TypeScript strip-types)
+- [Hono](https://hono.dev/) on [Node.js 24+](https://nodejs.org/) (native TypeScript strip-types)
 - [DuckDB](https://duckdb.org/) via `@duckdb/node-api`
 - [Apache OpenDAL](https://opendal.apache.org/) for storage abstraction (local FS in dev, S3 in production)
 - [Better Auth](https://www.better-auth.com/) with a custom DuckDB adapter
