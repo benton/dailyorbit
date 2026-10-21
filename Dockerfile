@@ -1,5 +1,5 @@
 # ── Stage 1: Install all dependencies ─────────────────────────────
-FROM node:23-slim AS deps
+FROM node:24-slim AS deps
 
 RUN corepack enable pnpm
 WORKDIR /app
@@ -23,7 +23,7 @@ ENV VITE_NEWSPAPER_IMAGES_URL=${VITE_NEWSPAPER_IMAGES_URL}
 RUN pnpm build
 
 # ── Stage 3: Production dependencies only ────────────────────────
-FROM node:23-slim AS prod-deps
+FROM node:24-slim AS prod-deps
 
 RUN corepack enable pnpm
 WORKDIR /app
@@ -35,7 +35,7 @@ COPY packages/web/package.json packages/web/
 RUN pnpm install --frozen-lockfile --prod
 
 # ── Stage 4: Final runtime image ─────────────────────────────────
-FROM node:23-slim
+FROM node:24-slim
 
 WORKDIR /app
 
