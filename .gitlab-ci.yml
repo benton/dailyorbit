@@ -61,7 +61,7 @@ build:
 # ---------------------------------------------------------------------------
 test:
   stage: test
-  image: node:24-slim
+  image: node:24.22.1-slim
   variables:
     CI: "true"
     # Log-noise reduction: silence env warnings that don't indicate problems
