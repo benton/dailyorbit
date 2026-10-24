@@ -1,5 +1,4 @@
 include:
-  - template: Jobs/Code-Quality.gitlab-ci.yml
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
   - template: Security/Container-Scanning.gitlab-ci.yml
@@ -75,6 +74,43 @@ test:
     - pnpm install --frozen-lockfile
   script:
     - pnpm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG
+
+# Code Quality — oxlint findings published as a GitLab codequality report
+# (MR widget + inline diff annotations). Replaces the CodeClimate-based
+# Jobs/Code-Quality template, whose engine images no longer exist on Docker
+# Hub. Lint *enforcement* stays in `pnpm test`; this job only reports, so a
+# non-zero oxlint exit marks it as a warning rather than failing the pipeline.
+# oxlint emits repo-relative paths, so per-package runs need no rewriting, but
+# the codequality report type accepts a single file, so the two are merged.
+code_quality:
+  stage: test
+  image: node:24.22.1-slim
+  variables:
+    CI: "true"
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+    NODE_OPTIONS: "--disable-warning=ExperimentalWarning"
+  before_script:
+    - corepack enable pnpm
+    - pnpm install --frozen-lockfile
+  script:
+    - packages/server/node_modules/.bin/oxlint -c packages/server/oxlint.config.ts --format gitlab packages/server > gl-code-quality-server.json || LINT_STATUS=1
+    - packages/web/node_modules/.bin/oxlint -c packages/web/oxlint.config.ts --format gitlab packages/web > gl-code-quality-web.json || LINT_STATUS=1
+    - |
+      node -e '
+        const fs = require("node:fs");
+        const merged = process.argv.slice(1).flatMap((f) => JSON.parse(fs.readFileSync(f, "utf8")));
+        fs.writeFileSync("gl-code-quality-report.json", JSON.stringify(merged));
+        console.log(`${merged.length} code quality findings`);
+      ' gl-code-quality-server.json gl-code-quality-web.json
+    - exit ${LINT_STATUS:-0}
+  allow_failure: true
+  artifacts:
+    when: always
+    reports:
+      codequality: gl-code-quality-report.json
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_TAG

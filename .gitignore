@@ -32,3 +32,6 @@ deploy/node_modules/
 deploy/cdk.out/
 deploy/config/aws-[0-9]*-*-seed.json
 !deploy/config/aws-EXAMPLE-*-seed.json
+
+# GitLab codequality report artifacts (generated in CI)
+gl-code-quality-*.json
